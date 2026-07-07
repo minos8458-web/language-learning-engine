@@ -1,19 +1,42 @@
 # Language Learning Engine (LLE)
 
-An open-source language learning engine focused on grammar automation rather than vocabulary memorization.
+> An open-source grammar automation engine for multilingual language learning.
 
-The goal of this project is to help learners build practical language skills through reusable grammar structures that can be shared across multiple languages.
+## Features
 
-## Vision
-
-Traditional language learning often emphasizes memorizing thousands of words.
-
-Language Learning Engine (LLE) takes a different approach by focusing on grammar patterns that learners can automatically apply in real conversations.
-
-The long-term goal is to create a language-independent learning engine that supports multiple languages through reusable grammar graphs and language packs.
+- Grammar-first learning
+- Language-independent architecture
+- Grammar Graph system
+- Reusable Language Packs
+- Open-source
 
 ## Current Status
 
+🚧 Active Development
+
+Current milestone:
+- Project Vision ✔
+- Learning Theory ✔
+- Grammar Schema ✔
+- English Grammar Graph (In Progress)
+
+## Documentation
+
+- Project Vision
+- Learning Theory
+- Grammar Schema
+
+## Roadmap
+
+- English Grammar Graph
+- Vietnamese Language Pack
+- Language Pack SDK
+- Learning Engine API
+- Version 1.0
+
+## License
+
+MIT
 This project is currently under active development.
 
 Current work includes:
