@@ -1,24 +1,59 @@
-# LLE (Language Learning Engine)
+# Language Learning Engine (LLE)
 
-> 이 문서는 새로운 개발자·새로운 세션이 프로젝트 전체를 **5분 안에** 이해하기 위한 진입점이다. 상세한 실시간 현황은 [`PROJECT_STATUS.md`](#project_statusmd-참조)를 본다.
+An open-source language learning engine focused on grammar automation rather than vocabulary memorization.
 
----
+The goal of this project is to help learners build practical language skills through reusable grammar structures that can be shared across multiple languages.
 
-## 프로젝트 소개
+## Vision
 
-LLE는 언어 독립적인 **문법 자동화 학습 엔진**이다. 게이미피케이션 앱(Duolingo류)이 아니라, 문법을 서로 연결된 그래프로 다뤄 "이미 배운 문법만으로 새로운 문장·문제·회화를 생성"하는 엔진을 만드는 것이 목표다.
+Traditional language learning often emphasizes memorizing thousands of words.
 
-첫 구현 언어는 베트남어(VI)였고, 이후 영어(EN)·일본어(JA)·중국어(ZH) 세 언어로 Core Standard의 언어 독립성을 검증했다. 현재 **Core Standard v1.0이 Frozen** 상태이며, 다섯 번째 언어부터는 Language Pack만 추가하면 되는 구조다.
+Language Learning Engine (LLE) takes a different approach by focusing on grammar patterns that learners can automatically apply in real conversations.
 
----
+The long-term goal is to create a language-independent learning engine that supports multiple languages through reusable grammar graphs and language packs.
 
-## 프로젝트 철학
+## Current Status
 
-- **게임이 아니라 엔진.** 산출물은 "재미있는 앱"이 아니라 "언어를 갈아 끼울 수 있는 엔진"이다.
-- **절대 우선순위**: 학습 효과 > 교육 설계 > 시스템 아키텍처 > 데이터 구조 > 확장성 > 유지보수성 > UI
-- **기능 필터**: 모든 기능은 "이 기능이 실제 회화 능력 향상에 도움이 되는가?"를 통과해야 한다.
-- **다섯 학습 원칙**: Active Recall, Spaced Repetition, Interleaving, Elaboration, Generation Practice — 모든 메커니즘은 이 중 최소 하나를 구현해야 한다.
-- **Grammar Graph**: 문법은 고립된 항목이 아니라 노드+관계로 연결된 그래프다. AI는 학습자가 이미 습득한(Practicing 이상) 노드만으로 생성한다.
+This project is currently under active development.
+
+Current work includes:
+
+- Learning theory design
+- Grammar schema specification
+- Grammar Graph architecture
+- English Grammar Graph implementation
+- Future multilingual language packs
+
+## Repository Structure
+
+```
+docs/
+    PROJECT_VISION.md
+    LEARNING_THEORY.md
+    GRAMMAR_SCHEMA.md
+
+grammar-graphs/
+    en/
+    vi/
+```
+
+## Roadmap
+
+- Build the core Grammar Graph system
+- Complete the English grammar graph
+- Add Vietnamese language pack
+- Develop additional language packs
+- Release the first open-source version
+
+## Open Source
+
+This project is released under the MIT License.
+
+Contributions, suggestions, and discussions are welcome.
+
+## Author
+
+Mino TV- **Grammar Graph**: 문법은 고립된 항목이 아니라 노드+관계로 연결된 그래프다. AI는 학습자가 이미 습득한(Practicing 이상) 노드만으로 생성한다.
 - **하지 않는 것**: 단어장 앱, 정적 콘텐츠 소비 앱, 게이미피케이션 중심 앱이 되지 않는다.
 
 ---
