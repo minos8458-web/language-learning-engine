@@ -7,6 +7,8 @@
 **개정**: 2026-07-10 (v1.3) — Tier D 콘텐츠(VI/EN/JA/ZH) 실제 적재 완료 반영, Relation 수치 54→52 정정
 **전제**: Phase 2 공식 완료(미노 승인, 2026-07-09). 이 문서는 코드 작업 계획이 아니라 **Validation Level 3 진입을 위해 무엇을, 어떤 순서로 확보해야 하는지**만 정리한다.
 
+> ⚠️ **2026-07-11 현재 상태 정정**: 이 문서가 서술하는 "Blocker 0건, 175/175 PASS, Tier D 적재 완료" 상태는 **당시 세션의 코드베이스(`/home/claude/lle-production/`) 기준이며, 그 코드베이스는 GitHub에 push되지 않은 채 세션 종료로 유실되었다.** 아래 본문은 "과거 세션 보고 기준 목표 상태"로서 재구현의 Definition of Done 근거로는 유효하지만, **현재 GitHub 코드 기준으로는 175/175도, Tier D 적재도, `validateLanguagePack` 통과도 전부 미검증(재현 전) 상태다.** 특히 §2 표의 Relation 수치(52개)는 이 문서 v1.3 정정치이며, `VALIDATION_LEVEL3.md` 원문은 아직 옛 값(54개)을 그대로 갖고 있다는 점도 별도로 확인됐다(`CODE_REBUILD_GAP_REPORT.md` §5.1). 상세 경위는 `CODE_REBUILD_GAP_REPORT.md`, 재구현 계획은 `CODE_REBUILD_PLAN.md` 참고. 본문은 과거 기록 그대로 보존한다(정정하지 않음).
+
 ---
 
 ## 1. 현재 완료 상태
