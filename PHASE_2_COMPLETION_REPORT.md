@@ -5,6 +5,8 @@
 **승인**: 미노, 2026-07-09 (Phase 2 전체 범위 완료 선언)
 **개정**: 2026-07-09 — `LEARNING_PROTOCOL.md` 확보로 `start_session` 구현 완료, 본 문서 §1·§3·§4·§7 갱신(하단 개정 이력 참고)
 
+> ⚠️ **2026-07-11 현재 상태 정정**: 이 문서가 서술하는 완료 상태(8개 Engine, API Layer, 153/153 PASS)는 **당시 세션의 코드베이스(`/home/claude/lle-production/`) 기준이며, 그 코드베이스는 GitHub에 push되지 않은 채 세션 종료로 유실되었다.** 아래 본문은 "과거 세션 보고 기준 목표 상태"로서 재구현의 근거 문서로는 유효하지만, **현재 GitHub 코드 기준으로는 어떤 항목도 검증되지 않은 상태다.** 상세 경위는 `CODE_REBUILD_GAP_REPORT.md`, 재구현 계획은 `CODE_REBUILD_PLAN.md`, 계약 동기화는 `REBUILD_CONTRACT_RECONCILIATION.md` 참고. 본문은 과거 기록 그대로 보존한다(정정하지 않음).
+
 ---
 
 ## 1. 완료 범위
@@ -148,3 +150,4 @@ Resolved 항목(AC-001, AC-002, AC-003, AC-005, AC-009)은 `ARCHITECTURE_CLARIFI
 |---|---|---|
 | 1.0 | 2026-07-09 | 최초 작성 — Phase 2 완료 선언(8개 Engine + API Layer, `start_session`·`auth/convert` 제외), 143/143 PASS |
 | 1.1 | 2026-07-09 | `LEARNING_PROTOCOL.md` 확보로 `start_session` 구현 완료 반영. §1·§2·§3·§4·§6·§7·§8 갱신, 153/153 PASS로 갱신 |
+| 1.2 | 2026-07-11 | **현재 상태 정정 고지 추가**(본문 상단) — 코드베이스가 GitHub에 push되지 않은 채 유실되어, 이 문서의 완료 상태는 "과거 세션 보고 기준"일 뿐 현재 GitHub 코드 기준으로는 미검증임을 명시. 본문 내용 자체는 과거 기록으로 보존, 수정하지 않음 |
