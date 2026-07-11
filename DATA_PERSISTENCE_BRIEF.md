@@ -1,7 +1,7 @@
 # DATA_PERSISTENCE_BRIEF.md
 ## LLE Production 데이터 영속성 지시서 (Tier C, Production Track 1/5)
 
-> 이 문서는 코드가 아니라 **지시서**다. `PRODUCTION_ARCHITECTURE_OVERVIEW.md`가 확정한 결정(서버+DB, 계층 단위 분해)을 전제로, "무엇을 어떤 스키마로 저장하는가"만 다룬다. 이 문서가 정의하는 것을 소비해 실제 로직을 다루는 것은 다음 문서 `DOMAIN_LOGIC_BRIEF.md`의 몫이다.
+> 이 문서는 코드가 아니라 **지시서**다. `PRODUCTION_ARCHITECTURE_OVERVIEW.md`가 확정한 결정(서버+DB, 계층 단위 분해)을 전제로, "무엇을 떤어 스키마로 저장하는가"만 다룬다. 이 문서가 정의하는 것을 소비해 실제 로직을 다루는 것은 다음 문서 `DOMAIN_LOGIC_BRIEF.md`의 몫이다.
 >
 > 상위 문서(`CONCEPT_SCHEMA.md`, `GRAMMAR_SCHEMA.md`, `CONTENT_SCHEMA.md`, `PROGRESS_SCHEMA.md`, `VOCABULARY_SCHEMA.md`, `IDENTIFIER_STANDARD.md`)가 최종 권위를 가진다. 이 문서와 상위 문서가 충돌하면 상위 문서가 우선한다.
 
@@ -105,7 +105,8 @@
 | `author` | TEXT | |
 | `created_at` | TIMESTAMPTZ | AI Generation Engine이 "최근 생성된 예문"을 조회해 표층 변주 프롬프트에 활용하는 데 필요(AI_INTEGRATION_BRIEF §2) |
 | `is_active` | BOOLEAN, 기본값 true | `CONTENT_PRODUCTION_STANDARD.md`(Tier D)의 Content Lifecycle — Deprecated 콘텐츠는 삭제 대신 이 값을 false로 바꿔 비활성화한다. 모든 콘텐츠 조회 쿼리(`get_content` 등)는 반드시 `is_active = true` 조건을 포함해야 한다 |
-| `type_specific_metadata` | JSONB, NULL 허용 | `answer_key`(QUIZ), `speaker_roles`(DIALOGUE) 등 타입 전용 필드. 별도 컬럼으로 만들지 않는 이유는 §6 참고 |
+| `explanation_level` | TEXT, NULL 허용 | **AC-004(2026-07-08 Resolved) 반영**: `get_content`(API_CONTRACT §7.1)가 이미 이 필드를 WHERE 조건으로 쓰도록 설계돼 있었으나 저장 컬럼이 없었던 것을 보완. ENUM이 아니라 TEXT(허용값 전체 목록이 `CONTENT_SCHEMA.md`에서 미확인 상태라 유연성 우선). 확인된 값은 `BEGINNER`(기존 Tier D 255개 콘텐츠 전부). `EXPLANATION` 타입은 애플리케이션 레벨에서 NOT NULL 강제, 나머지 9종은 NULL 허용(금지 아님) |
+| `type_specific_metadata` | JSONB, NULL 허용 | `answer_key`(QUIZ), `speaker_roles`(DIALOGUE), **`error_attributed_node_id`(AC-011, 2026-07-08 Resolved — TEXT, nullable, 단일 `grammar_node_id`. 채점 가능한 content_type에 선택적 적용, QUIZ 한정 아님. 키 부재·null·`primary_node_id`와 동일 값은 전부 SELF로 처리)** 등 타입 전용 필드. 별도 컬럼으로 만들지 않는 이유는 §6 참고 |
 
 ### 3.6 `progress` + `attempt_records`
 
@@ -136,6 +137,7 @@
 | `attempt_id` | UUID, PK | |
 | `user_id` | UUID | |
 | `node_id` | TEXT | |
+| `content_id` | TEXT, FK → `content`, NULL 허용 | **AC-008(2026-07-08 Resolved) 반영**: `submit_attempt`(API_CONTRACT §10.2)가 어떤 Content를 풀었는지 식별하지 못해 SELF/TRANSFER 진단이 불가능했던 연쇄적 계약 공백(`generate_problem` 출력·`submit_attempt` 입력·`get_content` 단독 조회 모드와 함께 4개 지점 연쇄 패치) 중 하나. 클라이언트는 직전에 받은 값을 그대로 되돌려줄 뿐 스스로 생성하지 않는다 |
 | `attempted_at` | TIMESTAMPTZ | |
 | `is_correct` | BOOLEAN | Tier A 명칭 그대로(v1.1에서는 `result` ENUM으로 잘못 표기했던 것을 정정) |
 | `response_time_ms` | INTEGER, NULL 허용 | 난이도 정규화는 애플리케이션 계층에서 수행 |
@@ -154,7 +156,7 @@
 | `vocab_id` | TEXT, PK | 예: `VOCAB_EN_GO` |
 | `lemma` | TEXT | 기본형(예: "go") |
 | `language` | TEXT | |
-| `pos` | ENUM(11종: `NOUN`/`VERB`/`ADJECTIVE`/`ADVERB`/`PRONOUN`/`PREPOSITION`/`CONJUNCTION`/`DETERMINER`/`INTERJECTION`/`CLASSIFIER`/`NUMERAL`) | |
+| `pos` | ENUM(12종: `NOUN`/`VERB`/`ADJECTIVE`/`ADVERB`/`PRONOUN`/`PREPOSITION`/`CONJUNCTION`/`DETERMINER`/`INTERJECTION`/`CLASSIFIER`/`NUMERAL`/**`PARTICLE`**) | **⚠️ 미채번 스키마 보정(AC 번호 없음, 2026-07-10 미노 승인)**: Tier D 적재 중 `ZH_LANGUAGE_PACK.md`의 `VOCAB_ZH_LE`(了/le, 완료상 조사)가 `POS=PARTICLE`을 요구하는데 기존 11종 ENUM에 없어 발견. 새 Architecture 정책이 아니라 실제 언어팩 데이터와 DB enum의 불일치 보정. 근거는 GitHub 문서가 아니라 과거 세션(migration `012_add_particle_to_pos_enum.sql`) 기록뿐이므로, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`에 정식 AC로 재제출해 번호를 받는 것을 권장(REBUILD_CONTRACT_RECONCILIATION.md §6 참고) |
 | `canonical_gloss` | TEXT | 최소 의미 힌트 1개(상세 설명은 Content의 몫, VOCABULARY_SCHEMA §6) |
 | `irregular_surface_forms` | JSONB(배열, `{surface_form, realizes_grammar_node_id}`) | `realizes_grammar_node_id`는 `grammar_nodes.node_id` 참조(애플리케이션 레벨 FK — VOCABULARY_SCHEMA §7 단방향 원칙, Vocabulary→Grammar Node만 참조하고 역방향 저장 없음) |
 | `features` | JSONB, NULL 허용 | 예약 필드(가산/불가산, 격식 등), Controlled Open, 현재 로직 미사용(§8) |
@@ -166,6 +168,8 @@
 ### 3.8 `cascade_jobs` (Production 신설 — `API_LAYER_BRIEF.md` 트랜잭션 경계 결정에서 발견된 요구사항)
 
 Review Cascade의 부가 효과(선행 노드들의 `next_review_at` 앞당김)를 재시도 가능한 형태로 분리하기 위한 아웃박스 테이블(`API_LAYER_BRIEF.md` §5.2). 핵심 트랜잭션(attempt 삽입+state 전이+자기 노드 `next_review_at` 갱신)과 같은 트랜잭션에 삽입되어야 "일이 일어났다는 사실"이 유실되지 않는다.
+
+**AC-002 복구 메모(Backlog 원문 미제출 — 과거 세션 기록 기준, 2026-07-11 재정리)**: `cascade_jobs`는 8개 Engine에 속하지 않는 별도 인프라 컴포넌트다. `submit_attempt`의 TRANSFER 경로에서 `cascade_jobs` 삽입은 `progressEngine.recordAttempt` 트랜잭션 안에서 함께 처리한다(위 아웃박스 원칙의 구체적 적용 지점). 워커(`src/worker/cascadeJobsWorker.js`)는 `PENDING` job을 처리해 `progress.next_review_at`을 앞당기고 `DONE`/`FAILED` 상태를 갱신하며, Progress에 대한 쓰기는 이번에도 Progress Engine을 통해서만 수행한다(ENGINE_INTERFACE §5 단일 쓰기 경로 원칙과 동일). 이 메모는 새 설계가 아니라 과거 Resolved 결정의 복구이며, 정식 AC 번호는 아직 없다 — Architecture 재제출 권장(REBUILD_CONTRACT_RECONCILIATION.md §6).
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
@@ -244,3 +248,7 @@ v1.0에서 미확정으로 남겼던 두 항목을 `CONCEPT_SCHEMA.md`·`VOCABUL
 | 1.3 | 2026-07-07 | `API_LAYER_BRIEF.md` 작성 중 발견된 요구사항 반영 — Review Cascade의 비동기 아웃박스 패턴 구현을 위한 `cascade_jobs` 테이블 신설, 관련 인덱스 추가 |
 | 1.4 | 2026-07-07 | `AI_INTEGRATION_BRIEF.md` 작성 중 발견 — `content` 테이블에 `created_at`이 없어 "최근 AI 생성 예문" 조회(표층 변주 프롬프트용)가 불가능했던 것을 보완 |
 | 1.5 | 2026-07-07 | `CONTENT_PRODUCTION_STANDARD.md`(Tier D) 작성 중 발견 — `human_reviewed`/`is_canonical` 두 boolean 조합만으로는 Content Lifecycle의 Deprecated 상태를 표현할 자리가 없어 `content.is_active` 컬럼 추가 |
+| 1.6 | 2026-07-08 | AC-008 Resolved 반영 — `attempt_records.content_id`(FK→`content`) 추가(§3.6) |
+| 1.7 | 2026-07-08 | AC-011 Resolved 반영 — `content.type_specific_metadata`에 `error_attributed_node_id` 키 확정(§3.5) |
+| 1.8 | 2026-07-08 | AC-004 Resolved 반영 — `content.explanation_level` 전용 컬럼 추가(§3.5) |
+| 1.9 | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전 일괄 반영. (1) 위 v1.6~v1.8(AC-008/011/004)을 GitHub 본문에 실제 적용(그동안 v1.5에 머물러 있었음). (2) `vocabulary.pos`에 `PARTICLE` 추가 및 `cascade_jobs` AC-002 복구 메모 — 둘 다 정식 AC 번호가 없어 별도로 표시, Architecture 재제출 권장. 새로운 설계 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md` |
