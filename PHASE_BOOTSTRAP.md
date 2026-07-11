@@ -119,6 +119,7 @@ Every new development session must:
 4. Summarize the current project state.
 5. Present the implementation plan.
 6. Wait for approval before major architectural changes.
+7. Update PROJECT_MASTER_INDEX.md and VALIDATION_STATUS.md whenever the project state changes.
 
 ---
 
