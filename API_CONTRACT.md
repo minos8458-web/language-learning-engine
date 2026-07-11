@@ -191,12 +191,14 @@
 |---|---|
 | API 이름 | `generate_problem` |
 | 호출 주체 | Learning Flow Engine |
-| 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | `{content, source: AI_GENERATED\|PRE_MADE, ladder_step: 1~4}` |
-| 빈 결과 | 사다리 1~3단계 모두 실패 → `content = null`, `ladder_step = 4`(콘텐츠 공백 신호). 이는 에러가 아니라 정상적으로 판단한 결과가 없다는 빈 결과 |
-| 에러 | `target_concept_id`가 존재하지 않는 Concept ID, `language` 코드 오류 |
+| 입력 | `user_id`, `language`, `target_concept_id`(선택, 1~2단계용), `target_node_id`(선택, **3단계 PRE_MADE fallback 전용** — AC-005, 2026-07-08 Resolved) |
+| 출력 | `{content, content_id, source: AI_GENERATED\|PRE_MADE, ladder_step: 1~4}` — **`content_id` 추가(AC-008, 2026-07-08 Resolved)**: AI_GENERATED든 PRE_MADE든 반환 전 `content` 테이블에 영속화된 ID |
+| 빈 결과 | 사다리 1~3단계 모두 실패 → `content = null`, `content_id = null`, `ladder_step = 4`(콘텐츠 공백 신호). 이는 에러가 아니라 정상적으로 판단한 결과가 없다는 빈 결과 |
+| 에러 | `target_concept_id`가 존재하지 않는 Concept ID, `target_node_id`가 존재하지 않는 Grammar Node ID, `language` 코드 오류 |
 | 호출 가능한 하위 Engine | AI Generation Engine, Content Engine |
 | 금지 사항 | 어느 단계에서 왜 실패했는지의 상세 내역(예: "후보 3개 중 2개 필터 탈락")을 응답에 포함하지 않는다 — `ladder_step`과 최종 결과만 반환 |
+
+**AC-005 관련 규칙**: `target_node_id`는 Generation Engine이 계산하지 않는다 — Learning Flow Engine이 이미 보유한 Progress Engine 읽기 권한으로 결정해 전달하며, Generation Engine은 3단계에서 이 값을 Content Engine으로 그대로 릴레이만 한다. 클라이언트는 이 값을 알거나 전달할 필요가 없다(전적으로 서버 내부 결정). 선택 규칙 자체는 `DOMAIN_LOGIC_BRIEF.md` §8.1(AC-009, Provisional) 참고.
 
 ---
 
@@ -209,7 +211,7 @@
 | API 이름 | `generate_combination` |
 | 호출 주체 | Generation Engine |
 | 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | 생성된 문제/문장(둘 이상의 노드 조합) 또는 실패 신호 |
+| 출력 | 생성된 문제/문장(둘 이상의 노드 조합) + `content_id`(영속화된 ID, AC-008) 또는 실패 신호 |
 | 빈 결과 | 조합 가능한 후보가 2개 미만이라 생성 불가 → 실패 신호(빈 결과, 에러 아님) |
 | 에러 | `user_id`/`language` 형식 오류 |
 | 호출 가능한 하위 Engine | Graph Engine(읽기), Progress Engine(읽기) |
@@ -222,7 +224,7 @@
 | API 이름 | `generate_single_node` |
 | 호출 주체 | Generation Engine |
 | 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | 생성된 문제/문장(단일 노드) 또는 실패 신호 |
+| 출력 | 생성된 문제/문장(단일 노드) + `content_id`(영속화된 ID, AC-008) 또는 실패 신호 |
 | 빈 결과 | Practicing 이상 노드가 0개 → 실패 신호 |
 | 에러 | `user_id`/`language` 형식 오류 |
 | 호출 가능한 하위 Engine | Graph Engine(읽기), Progress Engine(읽기) |
@@ -237,11 +239,11 @@
 | 항목 | 내용 |
 |---|---|
 | API 이름 | `get_content` |
-| 호출 주체 | Generation Engine(`EXAMPLE` 조회), Learning Flow Engine(`EXPLANATION` 조회) |
-| 입력 | `node_id`, `content_type`, `meta_language`(선택), `explanation_level`(선택) |
-| 출력 | 조건에 맞는 Content 레코드 목록 |
+| 호출 주체 | Generation Engine(`EXAMPLE` 조회), Learning Flow Engine(`EXPLANATION` 조회, `content_id` 단독 조회로 진단 정보 조회) |
+| 입력 | 조건 기반 모드: `node_id`, `content_type`, `meta_language`(선택), `explanation_level`(선택) / **단독 정확 조회 모드(AC-008, 2026-07-08 Resolved)**: `content_id` 단독 — 기존 조건 기반 조회와 별개 모드로, 정확히 그 레코드 하나만 반환 |
+| 출력 | 조건에 맞는 Content 레코드 목록(조건 기반) / 단일 Content 레코드(단독 조회) — `type_specific_metadata` 포함(Learning Flow Engine이 SELF/TRANSFER 분류에 사용) |
 | 빈 결과 | 조건에 맞는 콘텐츠가 없음 → 빈 목록(정상, Generation Engine의 사다리 4단계 판단 근거) |
-| 에러 | `node_id` 미존재, `content_type`이 정의되지 않은 값 |
+| 에러 | `node_id` 미존재, `content_id` 미존재(단독 조회 모드), `content_type`이 정의되지 않은 값 |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | 콘텐츠가 없을 때 유사한 다른 콘텐츠로 임의 대체해 반환하지 않는다 — 빈 결과는 빈 결과 그대로, 대체 판단은 호출자의 몫 |
 
@@ -255,12 +257,12 @@
 |---|---|
 | API 이름 | `get_cascade` |
 | 호출 주체 | Learning Flow Engine |
-| 입력 | `node_id`, `error_category`(SELF\|TRANSFER), `max_cascade_depth` |
+| 입력 | `node_id`, `error_category`(SELF\|TRANSFER), `max_cascade_depth`, **`progress_snapshot`**(AC-001, 2026-07-08 Resolved — `{node_id: state}` 맵, 해당 언어 전체 노드 상태를 Learning Flow Engine이 `get_progress`로 미리 조회해 전달) |
 | 출력 | `{node_id, reason}` 우선순위 목록 |
 | 빈 결과 | `error_category = SELF`인 경우(탐색 자체를 하지 않으므로 원천적으로 빈 목록), 또는 TRANSFER지만 선행 관계가 없는 노드인 경우 |
 | 에러 | `node_id` 미존재, `max_cascade_depth` < 1 |
 | 호출 가능한 하위 Engine | Graph Engine(읽기) |
-| 금지 사항 | 각 노드가 선정된 정확한 가중치 계산 과정을 노출하지 않는다 — "이 관계 때문에 선정됨" 수준의 근거 요약만 포함 |
+| 금지 사항 | 각 노드가 선정된 정확한 가중치 계산 과정을 노출하지 않는다 — "이 관계 때문에 선정됨" 수준의 근거 요약만 포함. Review Engine은 Progress Engine을 직접 호출하지 않는다 — `progress_snapshot`에 없는 노드는 `NOT_INTRODUCED`로 처리(안전한 기본값) |
 
 ---
 
@@ -304,12 +306,14 @@
 |---|---|
 | API 이름 | `submit_attempt` |
 | 호출 주체 | 외부 클라이언트(사용자) |
-| 입력 | `user_id`, `node_id`, `is_correct`, `response_time_ms`, `correction_count`, `hint_used` |
+| 입력 | `user_id`, `node_id`, `is_correct`, `response_time_ms`, `correction_count`, `hint_used`, **`content_id`**(AC-008, 2026-07-08 Resolved — 클라이언트는 직전 `generate_problem`/`get_content` 응답에서 받은 값을 그대로 되돌려줄 뿐 스스로 만들어내지 않는다) |
 | 출력 | `{is_correct, updated_state, cascade(오답인 경우), next_content}` |
 | 빈 결과 | 오답이지만 Cascade 결과가 빈 목록인 경우(선행 관계 없는 노드) → `cascade = []` 그대로 반환 |
-| 에러 | `user_id`/`node_id` 미존재 |
-| 호출 가능한 하위 Engine | Progress Engine, Review Engine, Interleaving Engine, Generation Engine |
-| 금지 사항 | 오답 원인 분류(SELF/TRANSFER)의 판단 근거를 상세히 설명하지 않는다 — 분류 결과와 다음 행동만 반환 |
+| 에러 | `user_id`/`node_id` 미존재, `content_id` 미존재 |
+| 호출 가능한 하위 Engine | Progress Engine, Review Engine, Interleaving Engine, Generation Engine, Content Engine(AC-008 — `content_id`로 `type_specific_metadata` 조회해 SELF/TRANSFER 진단) |
+| 금지 사항 | 오답 원인 분류(SELF/TRANSFER)의 판단 근거를 상세히 설명하지 않는다 — 분류 결과와 다음 행동만 반환. `error_category`를 클라이언트가 직접 지정하도록 허용하지 않는다(서버가 `content_id` 기반으로 판정) |
+
+**AC-008 진단 규칙**: `content.type_specific_metadata.error_attributed_node_id`(AC-011, `DOMAIN_LOGIC_BRIEF.md` §5.1)가 있으면 그 값을, 없거나 `primary_node_id`와 같으면 SELF로 분류한다. 진단 정보가 없으면 항상 SELF가 기본값 — 이 패치는 진단을 **가능**하게 할 뿐 TRANSFER를 강제하지 않는다.
 
 ### 10.3 request_practice
 
@@ -318,11 +322,45 @@
 | API 이름 | `request_practice` |
 | 호출 주체 | 외부 클라이언트(사용자) |
 | 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | Generation Engine의 `generate_problem` 결과를 그대로 전달 |
+| 출력 | Generation Engine의 `generate_problem` 결과를 그대로 전달(`content_id` 포함, AC-008) |
 | 빈 결과 | `ladder_step = 4`(콘텐츠 공백)인 경우 → 빈 결과 그대로 전달, 클라이언트에는 "아직 준비되지 않음" 신호로 노출 |
 | 에러 | `language` 코드 오류 |
 | 호출 가능한 하위 Engine | Generation Engine |
 | 금지 사항 | 없음 |
+
+**참조(AC-009, 2026-07-08 Provisional)**: `target_concept_id`가 여러 노드에 대응할 때 Generation Engine 3단계로 넘길 `target_node_id`를 어떻게 좁히는지의 선택 규칙은 이 API의 계약이 아니라 `DOMAIN_LOGIC_BRIEF.md` §8.1(Provisional)에 정의되어 있다. 이 규칙은 `LEARNING_PROTOCOL.md` 확보 후 재검토 예정이며, 확정 전까지는 Provisional 상태로 적용된다.
+
+### 10.4 submit_self_reported_confidence
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `submit_self_reported_confidence` |
+| 호출 주체 | 외부 클라이언트(사용자) |
+| 입력 | `user_id`, `node_id`, `confidence_self_reported` |
+| 출력 | Progress Engine `record_self_reported_confidence`(4.5)의 결과를 그대로 전달 — 계산된 `confidence_calibration_delta` |
+| 빈 결과 | 해당 없음 |
+| 에러 | `confidence_self_reported`가 0~1 범위를 벗어난 경우, 비교할 `confidence_inferred`가 아직 없는 경우(4.5와 동일) |
+| 호출 가능한 하위 Engine | Progress Engine |
+| 금지 사항 | 보정 계산식을 응답에 포함하지 않는다 |
+
+> **MIGRATION_GUIDE.md Entry 004 반영(2026-07-07)**: `record_self_reported_confidence`(4.5)가 "호출 주체: Learning Flow Engine"으로 정의되어 있었으나 이를 트리거할 외부 진입점이 이 장에 없어 도달 불가능한 API였다는 점을 발견해 신설. API 개수 19개 → 20개.
+
+### 10.5 start_session
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `start_session` |
+| 호출 주체 | 외부 클라이언트(사용자) |
+| 입력 | `user_id`, `language` |
+| 출력 | `next_action`(단일 결정값 — `REVIEW`\|`NEW_GRAMMAR`\|`INTERLEAVING`\|`CONVERSATION`\|`IDLE` 중 하나) + 해당 액션 수행에 필요한 데이터(예: `REVIEW`면 `get_due_reviews` 결과, `NEW_GRAMMAR`면 다음 노드 정보) |
+| 빈 결과 | 오늘 더 이상 할 것이 없음 → `next_action = IDLE` |
+| 에러 | `user_id` 미존재, `language` 코드 오류 |
+| 호출 가능한 하위 Engine | Progress Engine, Review Engine, Generation Engine, Interleaving Engine |
+| 금지 사항 | 클라이언트가 정책을 재판단하지 않도록, 원시 후보 목록이 아니라 `next_action` 단일 결정값만 반환한다(설계 원칙) |
+
+> **MIGRATION_GUIDE.md Entry 005 반영(2026-07-07)**: 기존 4개 외부 API 중 어떤 것도 "지금 어떤 `node_id`를 다뤄야 하는가"를 클라이언트에 알려주지 않아 세션을 시작할 방법 자체가 없었다는 공백을 발견해 신설. API 개수 20개 → 21개.
+>
+> ⚠️ **복구 근거 및 불확실성 표시**: 이 절의 필드 정의는 `MIGRATION_GUIDE_ENTRIES_004_005.md`, `PHASE_2_COMPLETION_REPORT.md` §3.1(`next_action` 9개 분기: REVIEW 2경로·NEW_GRAMMAR·제외·동시진행제한·INTERLEAVING 2건·CONVERSATION·IDLE 언급), `BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`(API 5개 전제)를 근거로 **재구성한 것이며, 원본 API_CONTRACT.md v1.3의 정확한 원문(예: 출력 필드의 정확한 명칭, 9개 분기 각각의 정밀한 트리거 조건)은 코드베이스 유실로 확인 불가하다.** 재구현 착수 전 이 절을 검토해 원문과 다르면 수정 지시 바란다.
 
 ---
 
@@ -354,3 +392,10 @@
 | 0.1 | 2026-07-05 | 목차 승인 |
 | 1.0 | 2026-07-05 | 본문 최초 작성 — 8개 Engine, 총 18개 API의 입출력 계약 정의. 각 API에 API 이름/호출 주체/입력/출력/빈 결과/에러/호출 가능한 하위 Engine/금지 사항 8항목 전부 포함. empty_result·error 공통 형식 및 error_code 체계 정의. Learning Flow Engine API만 외부 노출된다는 원칙 명시 |
 | 1.1 | 2026-07-06 | Progress Engine API에 `get_due_reviews`(4.7) 추가 — PROGRESS_SCHEMA §5가 정의한 "Review Queue는 저장 엔터티가 아니다" 원칙을 실제로 조회할 수 있는 배치 조회 API. 19개 API로 확장. MIGRATION_GUIDE.md Entry 001과 연동 |
+| 1.2 | 2026-07-07 | `submit_self_reported_confidence`(10.4) 추가 — MIGRATION_GUIDE.md Entry 004. API 20개로 확장 |
+| 1.3 | 2026-07-07 | `start_session`(10.5) 추가 — MIGRATION_GUIDE.md Entry 005. API 21개로 확장 |
+| 1.4 | 2026-07-08 | AC-001 Resolved 반영 — `get_cascade`(8.1) 입력에 `progress_snapshot` 추가 |
+| 1.5 | 2026-07-08 | AC-005 Resolved 반영 — `generate_problem`(5.1) 입력에 `target_node_id` 추가 |
+| 1.6 | 2026-07-08 | AC-008 Resolved 반영 — `generate_problem`(5.1)·`generate_combination`(6.1)·`generate_single_node`(6.2) 출력에 `content_id` 추가, `submit_attempt`(10.2) 입력에 `content_id` 추가, `get_content`(7.1)에 `content_id` 단독 조회 모드 추가 |
+| 1.7 | 2026-07-08 | AC-009 Provisional 반영 — `request_practice`(10.3)에 `DOMAIN_LOGIC_BRIEF.md` §8.1 참조 추가 |
+| 1.8 | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.1에 머물러 있던 것을 위 AC-001~AC-011 Resolved 결정과 MIGRATION_GUIDE Entry 004/005 기준으로 일괄 반영. 새로운 설계 결정 없음, 전부 기존 Resolved 사항의 문서 동기화. `10.5 start_session`은 원본 세부 필드 재구성이라 별도 불확실성 표시 있음(해당 절 참고). 근거: `REBUILD_CONTRACT_RECONCILIATION.md` |
