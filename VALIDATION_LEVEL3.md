@@ -1,0 +1,256 @@
+# VALIDATION_LEVEL3.md
+## LLE Validation Level 3 — End-to-End 동작 검증 (Tier C 부속)
+
+> 이 문서는 **새로운 기능을 설계하지 않는다.** Tier A~D가 이미 확정한 설계(Grammar Graph, State 전이, Review Cascade, AI Generation 게이팅, Content Lifecycle)가 실제로 그 설계대로 동작하는지 검증하는 절차만 정의한다. 상위 문서와 충돌하는 결정을 이 문서가 새로 내리지 않는다 — 충돌이나 공백이 발견되면 §0에 기록하고, 해결은 해당 상위 문서의 개정 절차(`CORE_STANDARD_V1_FREEZE.md` §5)를 따른다.
+
+문서 계층: Tier A(Core Standard) → Tier B(Language Pack) → Tier C(Production 지시서, **이 문서 포함**) → Tier D(Content)
+
+---
+
+## 0. 문서의 지위
+
+- **Validation Level 체계 안에서의 위치**: `CONTENT_PRODUCTION_STANDARD.md` §4.2가 "Level 0(Schema Validation)"을 인용하며, 프로젝트 메모리에는 "Tier B(Language Pack) VI/EN/JA/ZH 4개 완료, Level 0~2 PASS"라는 기록이 있다. 이로부터 **Level 0~2는 이미 통과된 정적 검증(스키마·구조·유형론적 다양성)**이고, **Level 3는 그 위에서 처음 수행되는 동적/런타임 검증(실제 API 호출, 실제 데이터로 실제 흐름을 실행)**이라는 위치를 추론할 수 있다. 다만 `VALIDATION_FRAMEWORK.md` 원문이 이 세션에 없어 Level 0~2의 정확한 판정 기준을 인용할 수는 없다 — 이 문서는 그 기준과 **충돌하지 않는 범위**에서 Level 3를 자기완결적으로 정의한다.
+- **알려진 문서 접근 공백**: Tier A 12개 문서 중 `CONCEPT_SCHEMA.md`·`VOCABULARY_SCHEMA.md`를 제외한 10개(PROJECT_VISION, LEARNING_THEORY, LEARNING_PROTOCOL, GRAMMAR_SCHEMA, GRAMMAR_GRAPH, IDENTIFIER_STANDARD, VALIDATION_FRAMEWORK, PROGRESS_SCHEMA, LANGUAGE_PACK_STANDARD)와 Freeze 근거 문서(`LANGUAGE_VALIDATION_SUMMARY_V1.md`, `PINYIN_NORMALIZATION_STRESS_TEST.md`)의 원문이 이 세션에 없다. 이 문서의 근거는 이들을 직접 인용한 Tier C 문서(`DOMAIN_LOGIC_BRIEF.md`, `AI_INTEGRATION_BRIEF.md`, `API_CONTRACT.md`, `ENGINE_INTERFACE.md`, `CLIENT_BRIEF.md`, `DATA_PERSISTENCE_BRIEF.md`)를 통한 **간접 근거**다. 원문 대조가 필요한 항목은 각 절에 명시한다.
+- **소비 대상 문서**: `DOMAIN_LOGIC_BRIEF.md`(v1.0), `AI_INTEGRATION_BRIEF.md`(v1.0), `API_CONTRACT.md`(v1.3), `ENGINE_INTERFACE.md`(v1.6), `DATA_PERSISTENCE_BRIEF.md`(v1.4), `CLIENT_BRIEF.md`(v1.0), `CONTENT_PRODUCTION_STANDARD.md`(v1.0), `VI/EN/JA/ZH_CONTENT.md`(각 v1.0).
+- **전제**: Tier D 콘텐츠 제작이 완료된 시점(85개 Grammar Node, 255개 Canonical Content, 4개 언어)에서 수행하는 검증이다.
+
+---
+
+## 1. Validation Level 3의 목적
+
+Level 0~2가 "설계가 내적으로 일관되는가"(스키마 구조, 필드 정의, 유형론적 다양성)를 검증했다면, Level 3는 **"그 설계 위에 실제로 동작을 올렸을 때 설계대로 움직이는가"**를 검증한다.
+
+구체적으로 다음 4가지를 확인한다.
+
+1. `DOMAIN_LOGIC_BRIEF.md`가 정의한 알고리즘(State 전이, Review Cascade, AI Generation 게이팅)이 실제 입력에 대해 문서가 약속한 출력을 내는가.
+2. `API_CONTRACT.md`가 정의한 5개 외부 API가 `CLIENT_BRIEF.md`의 화면 흐름과 실제로 맞물려 하루 학습 프로토콜을 완주할 수 있는가.
+3. Tier D의 85개 Grammar Node·255개 Content가 실제 조회·조합 상황에서 "이미 배운 문법만 사용" 원칙을 위반 없이 서빙되는가.
+4. `AI_INTEGRATION_BRIEF.md`의 화이트리스트·사후 검증 메커니즘이 실제 생성 시나리오에서 위반을 걸러내는가.
+
+**이 문서가 하지 않는 것**: 새 알고리즘 제안, 새 API 추가, 새 Engine 설계, Tier A~D 문서의 재해석을 통한 사양 변경. 이 문서에서 발견된 불일치는 전부 해당 Tier 문서의 개정 대상으로 넘기고, 이 문서 자체는 "무엇을 어떻게 검증했는가"만 기록한다.
+
+---
+
+## 2. 검증 범위
+
+### 2.1 포함(In Scope)
+
+| 영역 | 대상 |
+|---|---|
+| 외부 API | `API_CONTRACT.md` §10의 5개(`start_explicit_study`, `submit_attempt`, `request_practice`, `submit_self_reported_confidence`, `start_session`) |
+| Engine | Learning Flow, Graph, Progress, Generation, AI Generation, Content, Review, Interleaving (8개, `ENGINE_INTERFACE.md` §2) |
+| 콘텐츠 | VI(24노드/72Content)·EN(21/63)·JA(19/57)·ZH(21/63) = 85노드/255Content |
+| 클라이언트 흐름 | `CLIENT_BRIEF.md` §2 세션 흐름(REVIEW/NEW_GRAMMAR/INTERLEAVING/IDLE 4개 분기) |
+| 관계 무결성 | 4개 언어 전체 Grammar Relation(VI 16 + EN 15 + JA 12 + ZH 11 = 54개) |
+
+### 2.2 제외(Out of Scope) — 명시적 범위 제한
+
+| 영역 | 제외 사유 |
+|---|---|
+| Conversation Engine 내부 동작 | 미설계(`CLIENT_BRIEF.md` §8). §9에서 진입 조건만 검증 |
+| Event Engine, Audit/Logging Engine | `ENGINE_INTERFACE.md` §15~16, Reserved·미구현 |
+| 클라이언트 UI 렌더링 세부(픽셀 단위 화면) | `CLIENT_BRIEF.md`는 화면 흐름·API 매핑만 정의, 실제 프론트 구현은 이 문서 범위 밖 |
+| Vocabulary `features` 필드 | Controlled Open, 현재 로직 미사용(`DATA_PERSISTENCE_BRIEF.md` §3.7) |
+| 5번째 언어 이후 확장성 | Tier B/C의 계속 진행 중인 영역, Level 3는 현재 4개 언어 기준 |
+
+### 2.3 알려진 Pending과의 관계
+
+`JA_CONTENT.md`의 Content Gap(RARERU 五段活用 예문 부재) 1건과 `EN_CONTENT.md`의 Structural Gap(NOT_YET의 `haven't...yet`) 1건은 이미 Non-blocking으로 분류되어 있다. Level 3는 이 두 건을 **새로 검증하지 않는다** — 이미 알려진 제약으로 취급하고 §12 Pass/Fail 기준에서 "통과를 막지 않는 항목"으로 명시한다.
+
+---
+
+## 3. End-to-End 학습 시나리오
+
+`CLIENT_BRIEF.md` §2의 세션 흐름을 실제로 끝까지 실행하는 5개 시나리오를 정의한다. 각 시나리오는 4개 언어(VI/EN/JA/ZH) 각각에 대해 최소 1회 실행한다.
+
+| ID | 시나리오 | 진입 `next_action` | 커버하는 API |
+|---|---|---|---|
+| E2E-1 | 신규 게스트 사용자 — 첫 문법 학습부터 State 승격까지 | `NEW_GRAMMAR` | `start_explicit_study` → `submit_attempt`(정답 반복) → State가 PRACTICING 이상 도달 시 `submit_self_reported_confidence` |
+| E2E-2 | 오답 발생 — Review Cascade 트리거 | `NEW_GRAMMAR` 또는 `REVIEW` | `submit_attempt`(오답) → 응답의 `cascade` 필드 검증 → 선행 노드 `next_review_at` 앞당김 확인 |
+| E2E-3 | 복습 배치 소진 — 재호출 원칙 | `REVIEW` | `submit_attempt` 반복 → `review_batch` 소진 → `start_session` 재호출 → 새 `next_action` 수신 |
+| E2E-4 | 교차 연습 세트 | `INTERLEAVING` | `submit_attempt`(`node_sequence` 순서대로) |
+| E2E-5 | 오늘 할 일 없음 | `IDLE` | `start_session`만 — Reflection 화면 생략 확인(`CLIENT_BRIEF.md` §6 예외) |
+
+**시나리오 통과 조건**: 각 단계에서 `API_CONTRACT.md` §10이 정의한 출력 스키마와 정확히 일치하고, 클라이언트가 정책을 재계산하지 않고(§10.5 금지 사항) 서버 응답을 그대로 화면에 반영하는지 확인한다.
+
+**오프라인 정책 별도 시나리오(E2E-6)**: `CLIENT_BRIEF.md` §5의 전송 실패 로컬 큐잉을 별도로 검증한다 — `submit_attempt` 인위적 실패 → 로컬 큐 저장 → 재전송 성공 시 지연된 승격 감지가 정상 작동하는지.
+
+---
+
+## 4. Golden Test Set 설계
+
+### 4.1 설계 원칙 — 새 데이터를 만들지 않는다
+
+Golden Test Set은 Tier D가 이미 제작한 Canonical Content를 **그대로 재사용**한다. 특히 QUIZ Content의 `type_specific_metadata.answer_key`는 이미 "입력(한국어 문제) → 기대 출력(정답 문장)" 쌍으로 존재하므로, 이를 검증용 정답 데이터로 직접 채택한다 — 별도의 테스트 데이터셋을 새로 저작하지 않는다(`CONTENT_PRODUCTION_STANDARD.md`의 제작 원칙과 이중 작업을 피하기 위함).
+
+### 4.2 커버리지 기준
+
+| 계층 | 기준 | 수량 |
+|---|---|---|
+| 노드 단위 | 85개 Grammar Node 전체, 최소 1개 QUIZ answer_key 포함 | 85/85 |
+| 관계 단위 | `grammar_node_ids`에 2개 이상 노드가 걸린 QUIZ(Related/Contrast/Prerequisite 반영 사례) | 54개 관계 중 실제 QUIZ로 실현된 것 전수 |
+| 시나리오 단위 | `VI/EN/JA/ZH_LANGUAGE_PACK.md` §6의 Learning Outcome Scenario(언어당 4개 = 16개) | 16/16(단, JA 시나리오2·EN 시나리오4는 부분 실현으로 별도 표기, §12 참고) |
+| 동형이의 단위 | 각 언어 문서가 명시적으로 검증한 동형이의·다음자 사례(VI 3건, EN 3건, JA 4건, ZH 8건 = 18건) | 18/18 |
+
+### 4.3 실행 방식
+
+각 Golden Test 항목은 `{input, expected_output, source_content_id}` 삼중항으로 구성한다. `source_content_id`는 Tier D 문서의 실제 Content ID(예: `CONTENT_VI_TA_QUIZ_1`)를 그대로 참조해, 테스트 실패 시 어느 Tier D 콘텐츠로 소급해야 하는지 즉시 추적 가능하게 한다.
+
+---
+
+## 5. Grammar Gate 검증
+
+`DOMAIN_LOGIC_BRIEF.md` §8이 정의한 **최소 자격 기준**과 **4단계 사다리**가 실제로 지켜지는지 검증한다. (이 문서에서 "Grammar Gate"는 §8이 정의한 게이팅 로직 전체를 가리키는 이 문서 고유의 지칭이며, 상위 문서가 이 명칭을 쓰지는 않는다 — 개념은 §8을 그대로 따른다.)
+
+### 5.1 최소 자격 기준 검증
+
+- **긍정 케이스**: 조합에 포함된 모든 노드가 `PRACTICING` 이상인 사용자에게 조합 생성이 실제로 시도되는지.
+- **부정 케이스**: 조합 중 단 하나의 노드만 `STUDYING`(자격 미달)인 경우, 그 조합 전체가 후보에서 제외되는지 — "부분 자격"으로 조합이 느슨하게 통과하지 않는지가 핵심 검증 지점이다.
+
+### 5.2 4단계 사다리 강제 진입 테스트
+
+인위적으로 각 단계까지 강등되는 조건을 만들어(예: AI 호출 자체를 실패하도록 모킹) 다음을 확인한다.
+
+| 단계 | 강제 진입 방법 | 기대 동작 |
+|---|---|---|
+| 1(조합 생성) | 정상 조건 | 조합 생성 시도 |
+| 2(단일 노드) | 1단계 후보 0개로 모킹 | 단일 노드 생성으로 완화 |
+| 3(사전 제작 콘텐츠) | 1·2단계 모두 실패로 모킹 | `is_canonical=true`인 Tier D Content 반환 |
+| 4(콘텐츠 공백) | 3단계까지 후보 없는 노드로 테스트(신규 언어 등 극단 사례) | 사용자 비노출, 저작 필요 로그만 기록(§11) |
+
+---
+
+## 6. White List 검증
+
+`AI_INTEGRATION_BRIEF.md` §5의 사후 검증 알고리즘을 검증한다.
+
+### 6.1 Rule 기반 1차 검증(전 단계 공통)
+
+- 허용되지 않은 Grammar Node의 `surface_forms`가 생성 텍스트에 포함되면 위반으로 판정되는지(양성 탐지).
+- 허용된 어휘(열린 집합)를 자유롭게 썼을 때 오탐하지 않는지(음성 탐지 — `VOCABULARY_SCHEMA.md` §0 원칙과의 정합성).
+- 동형이의 표층형(예: EN `have`의 세 용법, ZH `了`의 le/liǎo)에 대해 문법 기능 단위로 정확히 판정하는지 — 표층형 문자열만 스캔하면 오탐 위험이 가장 높은 지점이므로 별도로 표시한다.
+
+### 6.2 LLM 기반 2차 검증(사다리 1단계·조합 생성 전용)
+
+- **독립성 원칙 검증**: 검증 호출이 생성 호출과 다른 프레이밍("이 문장을 분석해서 사용된 문법을 나열하라")을 실제로 사용하는지 — 같은 프롬프트를 재사용해 자기 확인 편향이 발생하지 않는지 확인한다.
+- 단일 노드 생성(사다리 2단계)에는 LLM 기반 검증이 적용되지 않는다는 §5.2의 비용 절감 결정이 실제로 지켜지는지(Rule 기반만 호출됐는지 로그로 확인).
+
+---
+
+## 7. Related / Contrast / Alternative 검증
+
+Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 16 + EN 15 + JA 12 + ZH 11)를, 이번엔 **런타임 관점**에서 재확인한다 — 저작 시점의 "콘텐츠에 반영했는가"가 아니라 "Graph Engine이 실제로 이 관계를 정확히 반환하는가"를 검증한다.
+
+| 검증 항목 | 방법 |
+|---|---|
+| `find_related_nodes`(`API_CONTRACT.md` §3.2) | 54개 관계 각각에 대해 대상 노드 ID로 호출 시 상대 노드가 정확히 반환되는지 |
+| Prerequisite 순환 없음 | `DOMAIN_LOGIC_BRIEF.md` §2.3 순환 검증 알고리즘을 4개 언어 전체 그래프에 실행 |
+| Alternative 0건의 정당성 | EN·JA·ZH는 Alternative 관계가 0건(구조상 이중 기능 조동사 없음), VI만 1건(CO_THE↔DUOC_ABILITY) — 이 비대칭이 데이터 누락이 아니라 언어 구조 차이임을 각 언어 자체 검증 기록(Tier D 문서)과 대조 |
+| 방향성(UNIDIRECTIONAL/BIDIRECTIONAL) | Prerequisite류(UNIDIRECTIONAL)가 역방향 조회 시 반환되지 않는지, Related/Contrast류(BIDIRECTIONAL)가 양방향 모두 반환되는지 |
+
+---
+
+## 8. Review Engine 검증
+
+`DOMAIN_LOGIC_BRIEF.md` §5~6을 검증한다.
+
+- **원인 분류(SELF/TRANSFER)**: 동일 노드 반복 오답(SELF 예상)과 선행 노드 오답으로 인한 연쇄(TRANSFER 예상) 각각에 대해 `attempt_records.error_category`가 올바르게 기록되는지.
+- **Cascade 깊이 제한**: `max_depth=2`가 실제로 지켜지는지 — 3-hop 이상 떨어진 선행 노드까지 `next_review_at`이 앞당겨지지 않는지.
+- **`get_due_reviews` 우선순위**: `DOMAIN_LOGIC_BRIEF.md` §6.2가 정의한 우선순위 규칙대로 정렬되어 반환되는지.
+- **State 연동 고정 간격**: `INTRODUCED`~`AUTOMATIC` 각 State의 복습 간격(1일~21일)이 `next_review_at` 계산에 정확히 반영되는지.
+- **아웃박스 재시도 가능성**: `cascade_jobs` 테이블(`DATA_PERSISTENCE_BRIEF.md` §3.8)을 통한 비동기 Cascade 부가 효과가, 핵심 트랜잭션 실패 시에도 유실되지 않는지(장애 주입 테스트).
+
+---
+
+## 9. Conversation 검증 — 범위 제한 명시
+
+**Conversation Engine 자체는 검증 대상이 아니다** — 설계되지 않았기 때문이다(§0, §2.2). 이 절에서 검증 가능한 것은 **경계까지만**이다.
+
+| 검증 항목 | 대상 |
+|---|---|
+| 진입 조건 트리거 | `start_session`이 조건 충족 시 `next_action=CONVERSATION`을 정확히 반환하는지 |
+| 클라이언트 표시 | `CLIENT_BRIEF.md` §1이 명시한 "범위 밖 표시"가 실제로 노출되는지(기능 없음을 사용자에게 명확히 알리는지, 빈 화면이나 에러로 보이지 않는지) |
+| 세션 흐름 유지 | `CONVERSATION` 진입 후에도 세션이 깨지지 않고 다음 `start_session` 호출로 정상 복귀하는지 |
+
+**PASS 기준**: 위 3개 항목만 통과하면 이 절은 통과로 간주한다. Conversation Engine의 내부 품질(대화 자연스러움 등)은 애초에 검증 대상 자체가 아니므로 Beta Release Gate를 막지 않는다(§13).
+
+---
+
+## 10. AI Generation 검증
+
+`AI_INTEGRATION_BRIEF.md` 전체를 검증한다. §5~6(White List·게이팅)은 §5~6에서 이미 다뤘으므로, 이 절은 그 외 항목에 집중한다.
+
+- **표층 변주**: 동일 노드(조합)에 대한 반복 요청 시 `content WHERE ... ORDER BY created_at DESC LIMIT 5`로 조회한 최근 예문과 실제로 겹치지 않는 문장이 생성되는지.
+- **구조화 출력**: 자유 텍스트 파싱이 아니라 JSON Schema 강제 방식이 실제로 쓰이는지, 파싱 실패 자체가 발생하지 않는지.
+- **`self_reported_node_ids` 비신뢰 원칙**: AI가 자체 보고한 노드 ID를 실제 검증 근거로 쓰지 않고, 항상 §5의 독립적 절차로 재검증하는지.
+- **실패 처리 분기**: 기술적 실패(즉시 1회 재시도)와 제약 위반(위반 사실 명시 후 최대 2회 재생성)이 서로 다른 재시도 횟수로 정확히 분기되는지.
+
+---
+
+## 11. 로그 수집 기준 — 정식 Logging Engine을 전제하지 않음
+
+`ENGINE_INTERFACE.md` §16(Audit/Logging Engine)은 Reserved·미구현이다. 이 절은 **미래의 정식 로깅 계층을 앞당겨 설계하지 않는다** — Level 3 검증을 실행하고 결과를 추적하기 위한 **최소 임시 로그**만 정의한다. 별도 DB 테이블을 신설하지 않고(`AI_INTEGRATION_BRIEF.md` §6 "애플리케이션 로그/관측성 도구로 충분" 원칙 재사용), 검증 실행 도구 자체의 로그로 남긴다.
+
+| 필드 | 내용 |
+|---|---|
+| `scenario_id` | §3~10의 시나리오/검증 ID(예: `E2E-1`, `GATE-3`) |
+| `language` | VI/EN/JA/ZH |
+| `input` | 호출에 사용한 입력값 |
+| `expected` | Golden Test Set 또는 상위 문서가 약속한 기대 출력 |
+| `actual` | 실제 응답 |
+| `result` | PASS/FAIL |
+| `timestamp` | 실행 시각 |
+
+**명시적 한계**: 이 로그는 사용자별 영속 데이터가 아니라 이번 검증 실행의 디버깅용이며, `AI_INTEGRATION_BRIEF.md` §6이 정의한 실패·재시도·강등 이력 로그 원칙과 같은 성격이다. 실제 운영 단계에서 "왜 이 학습자에게 이 문제가 나왔는가"를 추적하는 정식 Audit 계층은 `ENGINE_INTERFACE.md` §16이 정의한 시점(누적 필요 확인 시)에 별도로 설계한다 — 이 문서가 그 설계를 대신하지 않는다.
+
+---
+
+## 12. Pass / Fail 기준
+
+| 절 | PASS 조건 |
+|---|---|
+| §3 E2E 시나리오 | 5개 시나리오 × 4개 언어 = 20개 실행 전부 API 스키마 일치 |
+| §4 Golden Test Set | 노드 85/85, 관계는 실현된 것 전수, 시나리오 16/16(부분 실현 2건은 "실현된 범위 내 통과"로 별도 표기) |
+| §5 Grammar Gate | 최소 자격 기준 위반 0건, 4단계 사다리 각 단계 정상 진입·강등 확인 |
+| §6 White List | Rule 기반 양성 탐지율 100%, 음성 탐지(오탐) 0건, LLM 기반 독립성 원칙 확인 |
+| §7 관계 검증 | 54개 관계 전수 `find_related_nodes` 정확 반환, 순환 0건 |
+| §8 Review Engine | Cascade 깊이 위반 0건, `get_due_reviews` 우선순위 규칙 일치 |
+| §9 Conversation | 3개 경계 항목만 통과(내부 동작은 판정 대상 아님) |
+| §10 AI Generation | 표층 변주 중복 0건, 실패 처리 분기 정확 |
+
+**부분 실현 사례의 취급**: JA 시나리오2(`する` 대체)·EN 시나리오4(`go`→`work` 대체)는 "문법 조합은 완전 실현, 어휘만 대체"로 이미 각 언어 문서에 기록되어 있다. Level 3는 이 두 건을 **FAIL로 재판정하지 않는다** — 어휘 대체가 문서화된 판단에 따른 것이므로, "문법 조합 기준" PASS로 취급한다.
+
+---
+
+## 13. Beta Release Gate
+
+다음 조건을 **모두** 충족하면 Beta Release가 가능하다.
+
+1. §12의 모든 절이 PASS.
+2. Pending 2건(JA RARERU Content Gap, EN NOT_YET Structural Gap)은 이미 Non-blocking으로 분류되어 있으므로 Gate를 막지 않는다 — 다만 Beta 공지에 알려진 제약으로 명시한다.
+3. Conversation 기능은 Beta 범위에서 "제공되지 않음"으로 명시한다(§9) — 이는 검증 실패가 아니라 기능 범위 결정이다.
+4. §11의 임시 로그를 통해 §3~10 전체 실행 기록이 재현 가능한 형태로 남아 있다.
+
+**Gate를 막는 조건**(다음 중 하나라도 발생 시 Beta 보류):
+- Grammar Gate 최소 자격 기준 위반이 실제로 발생(§5.1 부정 케이스 실패)
+- White List Rule 기반 검증이 허용되지 않은 문법을 실제로 통과시킴(§6.1 양성 탐지 실패)
+- 4개 언어 중 하나라도 E2E 시나리오가 세션 흐름을 완주하지 못함(§3)
+- Review Cascade가 `max_depth=2`를 위반해 무제한 확산(§8)
+
+**이 문서가 최종 승인을 대신하지 않는다**: §13의 조건 충족 여부 판정과 실제 Beta Release 결정은 `PROJECT_VISION.md` §6 의사결정 원칙(원문 미확인, §0 참고)에 준하는 사용자 승인 사항이다. 이 문서는 판정 기준만 제공한다.
+
+---
+
+## 14. 다음 단계(제안)
+
+1. §11 임시 로그 형식으로 §3~10을 실제 실행 — 이 문서가 아니라 별도 실행 산출물(테스트 리포트)로 남긴다.
+2. `VALIDATION_FRAMEWORK.md` 원문 확보 시 §0의 추론(Level 0~2 위치)을 원문 대조로 확정.
+3. 실행 결과 §12에서 FAIL이 나온 항목은 해당 Tier 문서(A~D)의 개정 대상으로 넘긴다 — 이 문서를 고쳐 기준을 낮추지 않는다.
+
+---
+
+## 15. 개정 이력
+
+| 버전 | 날짜 | 변경 내용 |
+|---|---|---|
+| 1.0 | 2026-07-08 | 최초 작성. 작성 전 Tier A 문서 접근 공백(10/12 부재) 및 `VALIDATION_FRAMEWORK.md` 부재를 발견해 §0에 기록, Tier C 문서를 통한 간접 근거로 진행. Conversation Engine 미정의(§9 범위를 진입 조건까지로 제한)와 Audit/Logging Engine 미구현(§11을 최소 임시 로그로 한정)을 반영해 상위 문서와 충돌하지 않도록 설계. End-to-End 시나리오 5종, Golden Test Set(85노드/54관계/16시나리오/18동형이의 기준), Grammar Gate(최소 자격+4단계 사다리), White List(Rule+LLM 이중 검증), Related/Contrast/Alternative 런타임 재검증, Review Engine(Cascade+Scheduling), AI Generation(표층 변주+독립성 원칙), Pass/Fail 기준, Beta Release Gate 정의 |
