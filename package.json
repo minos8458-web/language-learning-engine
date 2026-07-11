@@ -1,0 +1,18 @@
+{
+  "name": "lle-production",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Language Learning Engine (LLE) — Production backend (Node.js + PostgreSQL + Express). Phase 0 scaffolding only.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {}
+}
