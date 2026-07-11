@@ -70,9 +70,9 @@ Learning Flow Engine
 |---|---|
 | **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점 |
 | **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임) |
-| **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`). 이 4개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.4) |
+| **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, MIGRATION_GUIDE Entry 005 — 2026-07-07 신설)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
-| **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4) |
+| **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
 | **6. 의존하면 안 되는 Engine** | 없음(최상위 진입점). 단, **다른 어떤 Engine으로부터도 호출되어서는 안 된다** — 이 Engine은 오직 최초 진입점 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4(Learning Flow Engine, 실수 처리 루프) |
 | **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다 |
@@ -115,8 +115,8 @@ Learning Flow Engine
 |---|---|
 | **1. 책임** | 문제/문장 생성의 전체 오케스트레이션. GRAMMAR_GRAPH §6.2의 4단계 난이도 사다리(조합→단일 노드→사전 제작 콘텐츠→콘텐츠 공백 신호) 중 **현재 어느 단계로 진행할지 판단**하고 AI Generation Engine 또는 Content Engine에 위임. 4단계(콘텐츠 공백)에 도달하면 그 사실을 Learning Flow Engine에 보고 |
 | **2. 하지 않는 일** | 실제 AI 문장 생성을 직접 수행하지 않는다(AI Generation Engine에 위임). 사전 제작 콘텐츠를 직접 조회하지 않는다(Content Engine에 위임). Practicing 이상 필터를 직접 계산하지 않는다(AI Generation Engine의 책임). Graph Engine·Progress Engine을 직접 호출하지 않는다 |
-| **3. 입력 데이터** | 사용자 ID, 언어, target_concept_id(선택) |
-| **4. 출력 데이터** | 최종 생성 결과(출처가 AI든 사전 제작이든 동일한 형식으로 정규화), 도달한 사다리 단계 번호(로깅용) |
+| **3. 입력 데이터** | 사용자 ID, 언어, target_concept_id(선택, 1~2단계용), **target_node_id(선택, 3단계 PRE_MADE fallback 전용 — AC-005, 2026-07-08 Resolved. Learning Flow Engine이 결정해 전달, 이 Engine은 3단계에서 Content Engine으로 그대로 릴레이만 함)** |
+| **4. 출력 데이터** | 최종 생성 결과(출처가 AI든 사전 제작이든 동일한 형식으로 정규화), **`content_id`(AC-008, 2026-07-08 Resolved — 반환 전 `content` 테이블에 영속화된 ID)**, 도달한 사다리 단계 번호(로깅용) |
 | **5. 호출 가능한 하위 Engine** | AI Generation Engine, Content Engine |
 | **6. 의존하면 안 되는 Engine** | Graph Engine, Progress Engine(직접 호출 금지 — 필요하면 AI Generation Engine에 위임하고 결과만 받는다). Review Engine, Interleaving Engine, Learning Flow Engine |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §6.2 |
@@ -131,7 +131,7 @@ Learning Flow Engine
 | **1. 책임** | 난이도 사다리 **1~2단계만**(조합 생성, 단일 노드 생성) 수행. GRAMMAR_GRAPH §6.1 필터 파이프라인(최우선 필터 포함) 실행 |
 | **2. 하지 않는 일** | 사다리 3~4단계(사전 제작 콘텐츠, 사용자 안내)를 처리하지 않는다 — 실패 시 "실패했다"는 신호만 반환하고, 그 다음 단계 판단은 Generation Engine의 몫이다. 어떤 언어를 생성할지 스스로 정하지 않는다(입력으로 받음). Progress 데이터를 쓰지 않는다(읽기 전용) |
 | **3. 입력 데이터** | 사용자 ID, 언어, target_concept_id(선택), 시도할 사다리 단계(1 또는 2) |
-| **4. 출력 데이터** | 생성된 문제/문장(성공 시), 또는 "1~2단계 모두 실패"라는 명확한 실패 신호 |
+| **4. 출력 데이터** | 생성된 문제/문장(성공 시) + `content_id`(AC-008, 2026-07-08 Resolved — 반환 전 영속화), 또는 "1~2단계 모두 실패"라는 명확한 실패 신호 |
 | **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, ALTERNATIVE 관계 조회), Progress Engine(읽기, Practicing 이상 필터) |
 | **6. 의존하면 안 되는 Engine** | Content Engine(형제 — Generation Engine을 거치지 않고 직접 호출 금지), Review Engine, Interleaving Engine, Learning Flow Engine, Generation Engine(자신을 호출한 상위를 역으로 호출 금지) |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §6.1, §6.2(1~2단계) |
@@ -145,8 +145,8 @@ Learning Flow Engine
 |---|---|
 | **1. 책임** | 사전 제작 Content(GRAMMAR_SCHEMA §3) 조회 전용. Content ID 조회, content_type/meta_language/explanation_level 조건에 맞는 항목 선택 |
 | **2. 하지 않는 일** | 콘텐츠를 생성하지 않는다(사전 제작된 것만 조회). 언제 자신이 호출되어야 하는지 스스로 판단하지 않는다(Generation Engine의 지시를 따름). Practicing 이상 같은 학습 수준 필터를 적용하지 않는다 — 사전 제작 콘텐츠는 그런 필터의 대상이 아니다(GRAMMAR_GRAPH §6.2 3단계) |
-| **3. 입력 데이터** | Grammar Node ID, content_type, meta_language(선택), explanation_level(선택) |
-| **4. 출력 데이터** | 조건에 맞는 Content 레코드, 또는 빈 결과 |
+| **3. 입력 데이터** | 조건 기반 모드: Grammar Node ID, content_type, meta_language(선택), explanation_level(선택) / **단독 정확 조회 모드(AC-008, 2026-07-08 Resolved): `content_id` 단독** — Learning Flow Engine이 SELF/TRANSFER 진단용 `type_specific_metadata` 조회에 사용(AC-008의 예외 호출 경로, 기존엔 EXPLANATION 조회만 있었음) |
+| **4. 출력 데이터** | 조건에 맞는 Content 레코드, 또는 빈 결과. 단독 조회 시 `type_specific_metadata` 포함 |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_SCHEMA §3, GRAMMAR_GRAPH §6.2(3단계) |
@@ -160,7 +160,7 @@ Learning Flow Engine
 |---|---|
 | **1. 책임** | Review Cascade 수행(GRAMMAR_GRAPH §5): 실수 처리 루프의 선행 탐색·Cascade 생성, 정기 복습 대상 산출 |
 | **2. 하지 않는 일** | 실제 복습 문제를 생성하지 않는다(결과를 Generation Engine·Interleaving Engine에 전달). Progress 상태를 직접 갱신하지 않는다. 오답 원인을 스스로 판단하지 않는다 — 원인 분류(SELF/TRANSFER)는 Learning Flow Engine의 실수 처리 루프 2단계에서 이미 결정되어 입력으로 들어온다 |
-| **3. 입력 데이터** | 노드 ID, error_category(SELF/TRANSFER), max_cascade_depth |
+| **3. 입력 데이터** | 노드 ID, error_category(SELF/TRANSFER), max_cascade_depth, **progress_snapshot(AC-001, 2026-07-08 Resolved — `{node_id: state}` 맵. Learning Flow Engine이 `get_cascade` 호출 전 해당 언어 전체 노드 상태를 `get_progress`로 미리 조회해 전달. 맵에 없는 노드는 NOT_INTRODUCED로 처리)** |
 | **4. 출력 데이터** | 우선순위가 매겨진 복습 대상 노드 목록(선정 근거 포함) |
 | **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, 선행 탐색) |
 | **6. 의존하면 안 되는 Engine** | Progress Engine(직접 호출 금지 — 필요한 상태는 입력으로 전달받음), Generation Engine, AI Generation Engine, Content Engine, Interleaving Engine, Learning Flow Engine |
@@ -272,3 +272,8 @@ Learning Flow Engine
 | 1.3 | 2026-07-05 | Learning Flow Engine이 Content Engine을 직접 호출할 수 있는 경로 추가(레슨 설명 조회, GRAMMAR_GRAPH §4.4와의 불일치 수정). Content Engine의 실제 호출 주체가 Generation Engine과 Learning Flow Engine 둘임을 명시 |
 | 1.4 | 2026-07-06 | Progress Engine 출력 데이터에 `get_due_reviews`(API_CONTRACT §4.7, Review Queue 배치 조회) 반영 |
 | 1.5 | 2026-07-07 | `API_LAYER_BRIEF.md` 작성 이후 `API_CONTRACT.md` v1.2(외부 API 4개로 확장)와 대조 — Learning Flow Engine §3 입력 데이터에서 `request_practice`가 누락되어 있던 것을 발견해 추가, 4개 외부 API 전체를 API_CONTRACT.md §10.1~10.4 참조와 함께 명시. `submit_self_reported_confidence`는 이 문서에 이미 "자기보고 Confidence"로 반영되어 있었음을 확인(API_CONTRACT.md가 뒤늦게 따라잡은 사례) |
+| 1.6 | 2026-07-07 | `start_session`(MIGRATION_GUIDE Entry 005) 반영 — Learning Flow Engine §3 입력 데이터를 5개 외부 API로 갱신(API_CONTRACT.md §10.1~10.5) |
+| 1.7 | 2026-07-08 | AC-001 Resolved 반영 — Review Engine §9 입력 데이터에 `progress_snapshot` 추가 |
+| 1.8 | 2026-07-08 | AC-005 Resolved 반영 — Generation Engine §6 입력에 `target_node_id`, AI Generation Engine §7 출력에 `content_id` 추가 |
+| 1.9 | 2026-07-08 | AC-008 Resolved 반영 — Content Engine §8 입력에 `content_id` 단독 조회 모드, Learning Flow Engine §3 호출 가능 하위 Engine에 진단 조회 예외 경로, Generation Engine §6 출력에 `content_id` 추가 |
+| — | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.5에 머물러 있던 것을 위 AC-001/005/008 Resolved 결정 기준으로 일괄 반영. 새로운 설계 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md`. (버전 번호는 AC Backlog가 이미 명명한 1.6~1.9를 그대로 사용) |
