@@ -106,7 +106,7 @@
 | `created_at` | TIMESTAMPTZ | AI Generation Engine이 "최근 생성된 예문"을 조회해 표층 변주 프롬프트에 활용하는 데 필요(AI_INTEGRATION_BRIEF §2) |
 | `is_active` | BOOLEAN, 기본값 true | `CONTENT_PRODUCTION_STANDARD.md`(Tier D)의 Content Lifecycle — Deprecated 콘텐츠는 삭제 대신 이 값을 false로 바꿔 비활성화한다. 모든 콘텐츠 조회 쿼리(`get_content` 등)는 반드시 `is_active = true` 조건을 포함해야 한다 |
 | `explanation_level` | TEXT, NULL 허용 | **AC-004(2026-07-08 Resolved) 반영**: `get_content`(API_CONTRACT §7.1)가 이미 이 필드를 WHERE 조건으로 쓰도록 설계돼 있었으나 저장 컬럼이 없었던 것을 보완. ENUM이 아니라 TEXT(허용값 전체 목록이 `CONTENT_SCHEMA.md`에서 미확인 상태라 유연성 우선). 확인된 값은 `BEGINNER`(기존 Tier D 255개 콘텐츠 전부). `EXPLANATION` 타입은 애플리케이션 레벨에서 NOT NULL 강제, 나머지 9종은 NULL 허용(금지 아님) |
-| `type_specific_metadata` | JSONB, NULL 허용 | `answer_key`(QUIZ), `speaker_roles`(DIALOGUE), **`error_attributed_node_id`(AC-011, 2026-07-08 Resolved — TEXT, nullable, 단일 `grammar_node_id`. 채점 가능한 content_type에 선택적 적용, QUIZ 한정 아님. 키 부재·null·`primary_node_id`와 동일 값은 전부 SELF로 처리)** 등 타입 전용 필드. 별도 컬럼으로 만들지 않는 이유는 §2의 컬럼/JSONB 판단 기준 참고 |
+| `type_specific_metadata` | JSONB, NULL 허용 | `answer_key`(QUIZ), `speaker_roles`(DIALOGUE), **`error_attributed_node_id`(AC-011, 2026-07-08 Resolved — TEXT, nullable, 단일 `grammar_node_id`. 채점 가능한 content_type에 선택적 적용, QUIZ 한정 아님. 키 부재·null·`primary_node_id`와 동일 값은 전부 SELF로 처리)** 등 타입 전용 필드. 별도 컬럼으로 만들지 않는 이유는 §2의 물리 저장 판단 기준 참고 |
 
 ### 3.6 `progress` + `attempt_records`
 
