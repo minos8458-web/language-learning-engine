@@ -9,13 +9,18 @@
 
 | ID | 제목 | 상태 |
 |---|---|---|
-| AC-001 | `get_cascade` 입력 계약 불일치 | ✅ Resolved |
-| AC-002~003, 006~007, 010 | (Development 세션에서 아직 이 문서로 제출되지 않음) | ⏳ 미제출 |
-| AC-004 | `content.explanation_level` 저장 위치 부재 | ✅ Resolved(재상정 — non-blocking→blocking) |
-| AC-005 | Generation Engine 3단계 PRE_MADE fallback 대상 node_id 특정 불가 | ✅ Resolved |
-| AC-008 | `submit_attempt`에 SELF/TRANSFER 진단용 content_id 부재 | ✅ Resolved |
-| AC-009 | `request_practice`의 `target_node_id` 선택 규칙 미정 | 🟡 Provisional(LEARNING_PROTOCOL.md 확보 후 재검토 필요) |
-| AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved |
+| AC-001 | `get_cascade` 입력 계약 불일치 | ✅ Resolved(2026-07-11: 본문 문서 반영 완료 — API_CONTRACT v1.4, ENGINE_INTERFACE v1.7) |
+| AC-002 | `cascade_jobs` 트랜잭션 아웃박스 패턴 | 🟠 복구 메모(정식 재제출 필요) — §AC-002 참고 |
+| AC-003 | Concept-Node prerequisite 정합성 | 🟠 복구 메모(정식 재제출 필요) — §AC-003 참고 |
+| AC-004 | `content.explanation_level` 저장 위치 부재 | ✅ Resolved(재상정 — non-blocking→blocking)(2026-07-11: 본문 반영 완료 — DATA_PERSISTENCE_BRIEF v1.8) |
+| AC-005 | Generation Engine 3단계 PRE_MADE fallback 대상 node_id 특정 불가 | ✅ Resolved(2026-07-11: 본문 반영 완료 — API_CONTRACT v1.5, ENGINE_INTERFACE v1.8) |
+| AC-006~007, 010 | (Development 세션에서 아직 이 문서로 제출되지 않음) | ⏳ 미제출 |
+| AC-008 | `submit_attempt`에 SELF/TRANSFER 진단용 content_id 부재 | ✅ Resolved(2026-07-11: 본문 반영 완료 — API_CONTRACT v1.6, ENGINE_INTERFACE v1.9, DATA_PERSISTENCE_BRIEF v1.6) |
+| AC-009 | `request_practice`의 `target_node_id` 선택 규칙 미정 | 🟡 Provisional(LEARNING_PROTOCOL.md 확보 후 재검토 필요)(2026-07-11: 본문 반영 완료 — API_CONTRACT v1.7, DOMAIN_LOGIC_BRIEF v1.1) |
+| AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved(2026-07-11: 본문 반영 완료 — DOMAIN_LOGIC_BRIEF v1.2, DATA_PERSISTENCE_BRIEF v1.7) |
+| (미채번) | `vocabulary.pos` ENUM에 `PARTICLE` 누락 | 🟠 복구 메모(정식 AC 번호 재제출 필요) — §미채번 항목 참고 |
+
+**2026-07-11 기록**: 코드베이스 유실 후 재구현 준비 과정(`REBUILD_CONTRACT_RECONCILIATION.md`)에서, 위 Resolved/Provisional 항목들이 이 Backlog 문서에는 이미 기록되어 있었지만 실제로 패치 대상이라고 명시한 `API_CONTRACT.md`·`ENGINE_INTERFACE.md`·`DATA_PERSISTENCE_BRIEF.md`·`DOMAIN_LOGIC_BRIEF.md` 본문에는 반영되지 않은 채로 GitHub에 남아 있던 사실이 발견됐다. 오늘 날짜로 4개 문서 본문에 일괄 반영했다(각 문서 개정 이력 참고). 새로운 Architecture 결정이 아니라 기존 Resolved 결정의 문서 동기화다.
 
 ---
 
@@ -52,6 +57,39 @@ progress_snapshot: {
 **패치 문서**:
 - `API_CONTRACT.md` v1.3 → **v1.4**(§8.1)
 - `ENGINE_INTERFACE.md` v1.6 → **v1.7**(§9.3)
+
+---
+
+## AC-002 — `cascade_jobs` 트랜잭션 아웃박스 패턴
+
+**상태**: 🟠 **복구 메모**(2026-07-11) — 이 문서에 정식 제출된 적이 없다("⏳ 미제출" 상태였음). `PHASE_2_COMPLETION_REPORT.md`는 이를 Resolved로 서술하지만 본문 근거가 이 문서 어디에도 없었다. 아래 내용은 코드베이스 유실 후 과거 세션 기록(`REBUILD_CONTRACT_RECONCILIATION.md` 작성 과정에서 대조)을 근거로 복구한 메모이며, **새로운 Architecture 결정이 아니다.** 정식 AC로 인정받으려면 이 메모를 근거로 정식 재제출·재승인 절차를 밟기를 권장한다(GAP_REPORT §5.2 동일 지적).
+
+**Source(복구 근거)**: `DATA_PERSISTENCE_BRIEF.md` §3.8(`cascade_jobs` 테이블), `API_LAYER_BRIEF.md` §5.2(아웃박스 패턴 언급), 과거 세션 기록(코드 자체는 유실).
+
+**유효 사양(복구된 내용)**:
+- `cascade_jobs`는 8개 Engine에 속하지 않는 별도 인프라 컴포넌트다.
+- `submit_attempt`의 TRANSFER 경로에서 `cascade_jobs` 레코드가 생성된다.
+- `cascade_jobs` 삽입은 `progressEngine.recordAttempt` 트랜잭션 안에서 핵심 트랜잭션(attempt 삽입+state 전이+`next_review_at` 갱신)과 함께 원자적으로 처리한다 — 아웃박스 패턴의 핵심(`DATA_PERSISTENCE_BRIEF.md` §3.8 원칙과 일치).
+- 워커(`src/worker/cascadeJobsWorker.js`)는 `status='PENDING'`인 job을 오래된 순으로 폴링해 처리하고, 대상 노드의 `progress.next_review_at`을 앞당긴 뒤 `DONE`/`FAILED`로 상태를 전이한다.
+- Progress에 대한 쓰기는 이번에도 Progress Engine을 통해서만 이루어진다(ENGINE_INTERFACE §5 단일 쓰기 경로 원칙 재확인 — 워커가 `progress` 테이블에 직접 쓰지 않고 Progress Engine의 쓰기 API를 호출).
+
+**Freeze 영향**: 없음으로 추정 — `DATA_PERSISTENCE_BRIEF.md` §3.8이 이미 선언한 아웃박스 원칙의 구체적 적용이다. 다만 정식 제출 근거 문서가 없었으므로 이 판단 자체도 재확인 대상이다.
+
+---
+
+## AC-003 — Concept-Node prerequisite 정합성
+
+**상태**: 🟠 **복구 메모**(2026-07-11) — AC-002와 동일한 사유로 정식 제출 근거 없음. 아래는 복구 메모이며 새로운 Architecture 결정이 아니다.
+
+**Source(복구 근거)**: `DATA_PERSISTENCE_BRIEF.md` §3.2(`concepts.prerequisite_concept_ids`), `ENGINE_INTERFACE.md` §4(Graph Engine — "Concept-Node 정합성 검증"이 책임으로 이미 명시됨), 과거 세션 기록.
+
+**유효 사양(복구된 내용)**:
+- Concept 레벨 `prerequisite_concept_ids`(`concepts` 테이블)와 Grammar Node 레벨 `PREREQUISITE` 관계(`grammar_relations` 테이블)는 서로 다른 층위이지만, 상위(Concept)가 요구하는 선행 순서를 하위(Node)가 어겨서는 안 된다.
+- `graphEngine.validateLanguagePack`(이미 순환 검증을 담당하는 함수, `API_CONTRACT.md` §3.3)이 Concept-Node 정합성 검증도 함께 수행해야 한다 — 별도 API를 신설하지 않고 기존 검증 파이프라인에 포함.
+- 판정 규칙: Concept A가 Concept B를 prerequisite로 요구하는데, A에 대응하는 Grammar Node들과 B에 대응하는 Grammar Node들 사이에 `PREREQUISITE` 관계가 전혀 없으면 validation error로 취급한다.
+- 순환 검증(`DOMAIN_LOGIC_BRIEF.md` §2.3)·Relation Integrity 검증(Validation Level 3 §7)의 일부로 포함해 실행한다 — 별도 실행 경로를 새로 만들지 않는다.
+
+**Freeze 영향**: 없음으로 추정 — `ENGINE_INTERFACE.md` §4가 이미 "Concept-Node 정합성 검증"을 Graph Engine 책임으로 명시하고 있었다는 점에서 AC-001과 같은 성격의 계약 완성으로 보인다. 다만 AC-002와 마찬가지로 정식 재확인이 필요하다.
 
 ---
 
@@ -211,6 +249,22 @@ Learning Flow Engine은 이미 보유한 Content Engine 예외 호출 경로(AC-
 
 ---
 
+## (미채번) — `vocabulary.pos` ENUM에 `PARTICLE` 누락
+
+**상태**: 🟠 **복구 메모**(2026-07-11), 정식 AC 번호 미부여 — Architecture 재제출·번호 부여 권장.
+
+**Source(복구 근거)**: 과거 세션 기록(migration `012_add_particle_to_pos_enum.sql`, 코드 자체는 유실). GitHub 문서 어디에도 이 결정의 근거가 없다.
+
+**Problem**: Tier D 적재 중 `ZH_LANGUAGE_PACK.md`의 `VOCAB_ZH_LE`(了/le, 완료상 조사)가 `POS=PARTICLE`을 요구했는데, `DATA_PERSISTENCE_BRIEF.md` §3.7이 정의한 `pos` ENUM 11종에는 `PARTICLE`이 없었다.
+
+**Decision(과거 세션 기록상 미노 승인, 2026-07-10)**: `pos` ENUM에 `PARTICLE` 추가(`ALTER TYPE pos_enum ADD VALUE`, 멱등성 보장).
+
+**Freeze 영향**: 없음으로 추정 — 새 Architecture 정책이 아니라 실제 언어팩 데이터와 DB enum의 불일치 보정. 다만 정식 AC 절차를 거치지 않았으므로 재확인 필요.
+
+**패치 문서**: `DATA_PERSISTENCE_BRIEF.md` v1.8 → **v1.9**(§3.7, 2026-07-11 복구 반영)
+
+---
+
 ## 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -221,3 +275,4 @@ Learning Flow Engine은 이미 보유한 Content Engine 예외 호출 경로(AC-
 | 1.3 | 2026-07-08 | AC-009(request_practice target_node_id 선택 규칙 미정) **Provisional**로 기록 — 이전 3건과 달리 신규 정책 판단이라 등급을 구분. `DOMAIN_LOGIC_BRIEF.md` v1.1(§8.1 신설), `API_CONTRACT.md` v1.7 반영. LEARNING_PROTOCOL.md 확보 후 재검토 예정 |
 | 1.4 | 2026-07-08 | AC-011(SELF/TRANSFER 진단 키 이름 미정) Resolved로 기록 — `error_attributed_node_id` 확정. `DOMAIN_LOGIC_BRIEF.md` v1.2, `DATA_PERSISTENCE_BRIEF.md` v1.7 반영. 별도로, LEARNING_PROTOCOL.md는 이 세션에 파일이 없을 뿐 v1.0 Frozen 상태로 이미 작성 완료된 문서임을 확인(사용자 질문에 답변, 문서 변경 없음) |
 | 1.5 | 2026-07-08 | AC-004(explanation_level 저장 위치 부재) 재상정 — 최초 non-blocking 분류를 blocking으로 재분류하는 데 동의하고 Resolved로 기록. `content.explanation_level` 전용 컬럼 추가(`DATA_PERSISTENCE_BRIEF.md` §2 기존 원칙 적용). `DATA_PERSISTENCE_BRIEF.md` v1.8 반영. ID 순서 유지를 위해 AC-001과 AC-005 사이에 삽입 |
+| 1.6 | 2026-07-11 | **Contract Reconciliation** — 코드베이스 유실 후 재구현 준비 중 두 가지 발견 반영: (1) AC-001/004/005/008/009/011이 Resolved로 기록되어 있었으나 대상 본문 문서(API_CONTRACT/ENGINE_INTERFACE/DATA_PERSISTENCE_BRIEF/DOMAIN_LOGIC_BRIEF)에는 미반영 상태였던 것을 확인하고 오늘 날짜로 4개 문서에 일괄 반영. (2) AC-002·AC-003 복구 메모 신설(정식 재제출 필요), `vocabulary.pos` PARTICLE 미채번 항목 신설(정식 AC 번호 부여 필요). 새로운 Architecture 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md` |
