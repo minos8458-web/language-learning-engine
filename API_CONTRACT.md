@@ -131,12 +131,14 @@
 |---|---|
 | API 이름 | `record_attempt` |
 | 호출 주체 | Learning Flow Engine |
-| 입력 | `user_id`, `node_id`, `is_correct`, `response_time_ms`, `correction_count`, `hint_used`, `error_category`(선택), `error_subcategory`(선택) |
+| 입력 | `user_id`, `node_id`, `is_correct`, `response_time_ms`, `correction_count`, `hint_used`, `error_category`(선택), `error_subcategory`(선택), **`content_id`(선택, nullable — AC-008 후속 반영, 2026-07-13)** |
 | 출력 | 갱신된 `state`, `accuracy`, `confidence_inferred` |
 | 빈 결과 | 해당 없음 |
 | 에러 | `is_correct=true`인데 `error_category`가 null이 아닌 경우(GRAMMAR_SCHEMA §5 제약 위반), `node_id` 미존재 |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | 상태가 바뀐 계산 근거(수식)를 응답에 포함하지 않는다 |
+
+**AC-008 후속 반영 메모(2026-07-13)**: 원래 AC-008 결정(§5.1/§7.1/§10.2, `DATA_PERSISTENCE_BRIEF.md` §3.6)은 `attempt_records.content_id` 컬럼을 추가했지만, 이 컬럼에 값을 쓸 수 있는 유일한 경로인 `record_attempt`(본 절)의 입력 목록에는 `content_id`가 없었다 — AC-008 원 결정문에도 이 5번째 지점은 명시되지 않은 채 남아 있던 갭이다(`ENGINE_INTERFACE.md` §2.2 단일 쓰기 경로 원칙상 Progress Engine을 거치지 않고는 이 컬럼에 쓸 방법이 없으므로, 이 갭은 AC-008 결정이 실행 불가능한 상태로 남아 있었음을 뜻한다). Phase 1-B 구현 중 발견해 이 절에 추가한다 — 새로운 설계가 아니라 이미 승인된 AC-008 결정을 실제로 동작하게 만드는 데 필요한 마지막 조각이다. `content_id`가 없으면(예: 사전 학습 문제가 아닌 경우) `NULL`로 저장된다.
 
 ### 4.5 record_self_reported_confidence
 
@@ -399,3 +401,4 @@
 | 1.6 | 2026-07-08 | AC-008 Resolved 반영 — `generate_problem`(5.1)·`generate_combination`(6.1)·`generate_single_node`(6.2) 출력에 `content_id` 추가, `submit_attempt`(10.2) 입력에 `content_id` 추가, `get_content`(7.1)에 `content_id` 단독 조회 모드 추가 |
 | 1.7 | 2026-07-08 | AC-009 Provisional 반영 — `request_practice`(10.3)에 `DOMAIN_LOGIC_BRIEF.md` §8.1 참조 추가 |
 | 1.8 | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.1에 머물러 있던 것을 위 AC-001~AC-011 Resolved 결정과 MIGRATION_GUIDE Entry 004/005 기준으로 일괄 반영. 새로운 설계 결정 없음, 전부 기존 Resolved 사항의 문서 동기화. `10.5 start_session`은 원본 세부 필드 재구성이라 별도 불확실성 표시 있음(해당 절 참고). 근거: `REBUILD_CONTRACT_RECONCILIATION.md` |
+| 1.9 | 2026-07-13 | **AC-008 후속 반영** — Phase 1-B(Progress Engine) 구현 중 발견: `record_attempt`(4.4)에 `content_id`가 없어 `attempt_records.content_id`(AC-008이 만든 컬럼)를 채울 유일한 쓰기 경로가 실행 불가능한 상태였음. `record_attempt` 입력에 `content_id`(선택, nullable) 추가. 새로운 설계 아님 — AC-008 결정을 실제로 동작시키는 데 필요했던 5번째(마지막) 반영 지점 |
