@@ -63,6 +63,14 @@ const REVIEW_INTERVAL_DAYS = {
   AUTOMATIC: 21,
 };
 
+// AUD-002(Frozen Core Standard Amendment, DOMAIN_LOGIC_BRIEF.md §3.2.1/§3.2.2) —
+// Spaced Review Evidence 최소 횟수. "3"·"2" 모두 문서가 명시한 Provisional/tunable
+// default다(LEARNING_THEORY 원문 수치 미확보 상태에서 원칙만 확정, 수치는 조정 가능).
+const AUD002_SPACED_REVIEW = {
+  practicingToMasteredMinQualifyingSpacedReviews: 3, // §3.2.1: 최근 10회 윈도우 안 qualifying spaced review
+  masteredToAutomaticMinSpacedReviews: 2, // §3.2.2: mastered_at 이후 qualifying spaced review
+};
+
 module.exports = {
   STATE_ORDER,
   STATE_ORDINAL,
@@ -70,4 +78,5 @@ module.exports = {
   DIFFICULTY_BASELINE_MS,
   CONFIDENCE_EMA,
   REVIEW_INTERVAL_DAYS,
+  AUD002_SPACED_REVIEW,
 };

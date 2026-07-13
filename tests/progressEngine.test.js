@@ -135,8 +135,8 @@ describe('Progress Engine (Phase 1-B)', () => {
       });
       assert.equal(r.state, 'PRACTICING');
 
-      // 6~9번째 시도: 윈도우(10) 표본 부족 -> PRACTICING 유지
-      for (let i = 0; i < 4; i++) {
+      // 6~7번째 시도: 윈도우(10) 표본 부족 -> PRACTICING 유지
+      for (let i = 0; i < 2; i++) {
         r = await progressEngine.recordAttempt(pool, userId, 'NODE_LIFECYCLE', {
           isCorrect: true,
           responseTimeMs: 1000,
@@ -144,19 +144,36 @@ describe('Progress Engine (Phase 1-B)', () => {
         assert.equal(r.state, 'PRACTICING');
       }
 
-      // 10번째 시도: 최근 10회 정확도 1.0>=0.85 AND confidence>=0.75 -> MASTERED
-      r = await progressEngine.recordAttempt(pool, userId, 'NODE_LIFECYCLE', {
-        isCorrect: true,
-        responseTimeMs: 1000,
-      });
+      // 8~10번째 시도: AUD-002(Frozen Core Standard Amendment) — burst만으로는 더 이상
+      // MASTERED에 도달할 수 없다. 최근10 윈도우 안에 qualifying spaced review(강제 due)
+      // 3회가 있어야 한다. 10번째 시도 자체가 spaced review이자 MASTERED 진입 트리거.
+      for (let i = 0; i < 3; i++) {
+        await pool.query(
+          `UPDATE progress SET next_review_at = now() - interval '1 hour' WHERE user_id=$1 AND node_id=$2`,
+          [userId, 'NODE_LIFECYCLE']
+        );
+        r = await progressEngine.recordAttempt(pool, userId, 'NODE_LIFECYCLE', {
+          isCorrect: true,
+          responseTimeMs: 1000,
+        });
+      }
       assert.equal(r.state, 'MASTERED');
       assert.ok(r.confidence_inferred >= 0.75, `confidence_inferred=${r.confidence_inferred}`);
+      assert.ok(r.mastered_at, 'mastered_at이 설정되지 않음(AUD-002)');
 
-      // 11번째 시도: 최근 10회 정확도 1.0>=0.85 AND avg_response_time(1000ms) <= baseline(2000)*0.7(=1400) -> AUTOMATIC
-      r = await progressEngine.recordAttempt(pool, userId, 'NODE_LIFECYCLE', {
-        isCorrect: true,
-        responseTimeMs: 1000,
-      });
+      // 11~12번째 시도: AUD-002 — MASTERED 진입에 쓰인 10번째 시도(그 자체도 spaced)는
+      // AUTOMATIC evidence로 재사용되지 않으므로, mastered_at 이후 새로운 spaced review가
+      // 2회 더 필요하다(응답시간은 기존 baseline(2000)×0.7=1400ms 기준 그대로 충족).
+      for (let i = 0; i < 2; i++) {
+        await pool.query(
+          `UPDATE progress SET next_review_at = now() - interval '1 hour' WHERE user_id=$1 AND node_id=$2`,
+          [userId, 'NODE_LIFECYCLE']
+        );
+        r = await progressEngine.recordAttempt(pool, userId, 'NODE_LIFECYCLE', {
+          isCorrect: true,
+          responseTimeMs: 1000,
+        });
+      }
       assert.equal(r.state, 'AUTOMATIC');
     });
 

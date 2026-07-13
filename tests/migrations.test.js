@@ -23,9 +23,9 @@ describe('DB migrations (Phase 1-A)', () => {
     await pool.end();
   });
 
-  test('마이그레이션 파일이 001~010 순서로 10개 존재한다', () => {
+  test('마이그레이션 파일이 001~011 순서로 11개 존재한다', () => {
     const files = listMigrationFiles();
-    assert.equal(files.length, 10);
+    assert.equal(files.length, 11);
     assert.deepEqual(
       files,
       [
@@ -39,20 +39,21 @@ describe('DB migrations (Phase 1-A)', () => {
         '008_create_vocabulary.sql',
         '009_create_cascade_jobs.sql',
         '010_create_indexes.sql',
+        '011_add_aud002_spaced_review.sql',
       ]
     );
   });
 
   test('전체 마이그레이션 적용 성공 (최초 실행)', async () => {
     const { applied, skipped } = await runMigrations();
-    assert.equal(applied.length, 10);
+    assert.equal(applied.length, 11);
     assert.equal(skipped.length, 0);
   });
 
   test('재실행 시 전부 SKIP되어 안전하게 통과한다', async () => {
     const { applied, skipped } = await runMigrations();
     assert.equal(applied.length, 0);
-    assert.equal(skipped.length, 10);
+    assert.equal(skipped.length, 11);
   });
 
   test('schema_migrations 테이블이 러너에 의해 자동 생성되어 있다', async () => {
@@ -63,7 +64,7 @@ describe('DB migrations (Phase 1-A)', () => {
     assert.equal(rows.length, 1);
 
     const { rows: countRows } = await pool.query('SELECT count(*) AS n FROM schema_migrations');
-    assert.equal(Number(countRows[0].n), 10);
+    assert.equal(Number(countRows[0].n), 11);
   });
 
   test('9개 LLE 도메인 테이블이 전부 존재한다', async () => {
