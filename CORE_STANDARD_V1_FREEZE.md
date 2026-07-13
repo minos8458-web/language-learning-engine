@@ -110,3 +110,4 @@ Tier A Frozen 구성 요소를 변경하려면 다음을 전부 충족해야 한
 |---|---|---|
 | 1.0 | 2026-07-06 | 최초 작성 — Freeze 범위·구성요소별 최종 등급·거버넌스 절차·잔여 Open 항목 정리, 최종 권고 제시(승인 대기) |
 | 1.1 | 2026-07-06 | **사용자 승인 완료 — LLE Core Standard v1.0 공식 Freeze 확정.** §7 갱신 |
+| 1.2 | 2026-07-13 | **Freeze 이후 첫 공식 Core Standard Amendment 승인·처리(§5 절차 완료).** Independent Architecture Audit(AUD-002) — `PROGRESS_SCHEMA.md` §3(State Model에 `mastered_at` 추가)·§4(AttemptRecord에 `is_spaced_review` 추가)·§6, `DOMAIN_LOGIC_BRIEF.md` §3.2.1/§3.2.2 개정. 상위 LEARNING_THEORY의 Spaced Repetition 원칙을 State 전이 알고리즘이 표현하지 못해 burst 승격이 가능했던 공백을 수정. 상세는 `PROGRESS_SCHEMA_AMENDMENT_ENTRY.md`·`MIGRATION_GUIDE_ENTRY_006.md` 참고 |

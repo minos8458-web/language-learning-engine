@@ -51,6 +51,14 @@
 | **타입** | `timestamp \| null` |
 | **제약 조건** | 이 값이 없으면 `state`는 `INTRODUCED` 이상이 될 수 없다 |
 
+| 필드 | `mastered_at` |
+|---|---|
+| **목적** | 현재 연속으로 `MASTERED` 상태에 머문 구간의 시작 시점을 저장 |
+| **타입** | `TIMESTAMPTZ \| null` |
+| **갱신 규칙** | `state`가 정확히 `MASTERED`가 되는 모든 전이에서 `now()`로 갱신한다. 방향은 구분하지 않으며 `PRACTICING → MASTERED`, `AUTOMATIC → MASTERED` 모두 포함한다 |
+| **보존 정책** | `MASTERED` 아래로 퇴행해도 삭제하지 않는다. 다음 `MASTERED` 진입 시 덮어쓴다 |
+| **성격** | audit log나 별도 판정 기록 엔터티가 아니라 Progress 자신의 state boundary field다 |
+
 ---
 
 ## 4. Confidence & Attempt History
@@ -63,7 +71,9 @@
 | `avg_response_time_ms` | Automatic 상태 진입 판정의 핵심 근거(문항 난이도로 정규화된 값) |
 | `recent_attempts` | `array<AttemptRecord>`, **최근 N개로 크기 제한**(예: 20개). 무제한 누적 로그로 설계하지 않는다 |
 
-**AttemptRecord 구조**: `timestamp`, `is_correct(bool)`, `response_time_ms`, `correction_count`, `hint_used(bool)`, `preceding_streak(int)`, `error_category`(`SELF`\|`TRANSFER`\|`null`), `error_subcategory`(예약 필드, 현재 미사용).
+**AttemptRecord 구조**: `timestamp`, `is_correct(bool)`, `response_time_ms`, `correction_count`, `hint_used(bool)`, `preceding_streak(int)`, `error_category`(`SELF`\|`TRANSFER`\|`null`), `error_subcategory`(예약 필드, 현재 미사용), `is_spaced_review(bool)`.
+
+`is_spaced_review`는 attempt 처리 및 Progress 갱신 **직전**의 `next_review_at` snapshot을 기준으로 계산한다. `next_review_at IS NULL`이면 `false`, 그렇지 않고 `timestamp >= pre-update next_review_at`이면 `true`다. 같은 attempt 안에서 새로 계산된 `next_review_at`은 비교 기준으로 사용하지 않는다. `next_review_at`은 현재 예정 시점 하나만 보유하고 과거 snapshot history를 저장하지 않으므로, 이 값은 attempt 처리 시 계산·고정해 AttemptRecord에 저장한다.
 
 **제약**: `is_correct = true`인 시도는 `error_category`/`error_subcategory` 모두 `null`이어야 한다.
 
@@ -111,6 +121,8 @@
 
 **향후 감사(audit) 필요성**: "왜 이 노드가 Automatic으로 판정되었는가"를 사후에 추적하고 싶어지면, 이는 ENGINE_INTERFACE.md §16에 예약된 **Audit/Logging Engine**(Reserved, 미구현)의 영역이다. 지금 이 문서에 감사 로그 필드를 미리 만들지 않는다.
 
+**AUD-002 명확화**: `mastered_at`은 별도 판정 기록 엔터티가 아니라 §3 State Model의 일부인 Progress 자신의 state boundary field다. `is_spaced_review`는 §4 AttemptRecord의 evidence field다. `AUTOMATIC` 판정은 이 두 저장 의미를 사용하지만, 별도 판정 이력 엔터티나 감사 로그를 신설하지 않는다는 기존 원칙은 유지된다.
+
 ---
 
 ## 7. Derived Metrics (파생 지표)
@@ -155,6 +167,8 @@ VALIDATION_FRAMEWORK Level 0(Schema Validation)에 포함되어야 할 규칙.
 - `confidence_self_reported`가 없는데 `confidence_calibration_delta`가 존재하지 않는가(근거 없는 보정값 금지)
 - `recent_attempts`가 크기 제한을 넘지 않는가
 - `explicit_study_event_at`이 없는데 `state`가 `INTRODUCED` 이상인 경우가 없는가(LEARNING_THEORY §6 게이팅 원칙 위반 탐지)
+- 모든 AttemptRecord의 `is_spaced_review`가 boolean 값으로 존재하는가(`next_review_at IS NULL`인 경우도 `false`로 확정)
+- `state = AUTOMATIC`인 Progress 레코드에 `mastered_at`이 존재하는가(`MASTERED` 진입 경계를 거치지 않은 AUTOMATIC 상태 방지)
 
 ---
 
@@ -167,6 +181,8 @@ VALIDATION_FRAMEWORK Level 0(Schema Validation)에 포함되어야 할 규칙.
 - 상태 퇴행을 막는 것 — 퇴행은 LEARNING_THEORY §2의 정상 동작이며, 이를 금지하는 구현이 오히려 이 표준 위반이다
 - `AUTOMATIC` 판정을 위한 별도 감사 로그 필드를 이 문서에 추가하는 것(6장 — 그 역할은 Audit/Logging Engine의 몫)
 
+`mastered_at`과 `is_spaced_review`는 이 금지 사항이 가리키는 별도 감사 로그가 아니다. 각각 Progress state boundary field와 AttemptRecord evidence field이며, 기존 Progress/AttemptRecord 엔터티 내부의 authoritative state/evidence를 표현한다.
+
 ---
 
 ## 12. 개정 이력
@@ -175,3 +191,4 @@ VALIDATION_FRAMEWORK Level 0(Schema Validation)에 포함되어야 할 규칙.
 |---|---|---|
 | 0.1 | 2026-07-06 | 목차 승인, Tier A 배치 확정. Review Queue/Derived Metrics는 계산값으로, Content/Conversation Progress는 향후 형제 엔터티로 처리하는 방향 합의 |
 | 1.0 | 2026-07-06 | 본문 최초 작성 — GRAMMAR_SCHEMA §4~5의 State/Confidence/AttemptRecord 정의를 완전 이관. Review Scheduling에서 Review Queue 비저장 원칙 명문화(API_CONTRACT.md 배치 조회 API 공백 발견). Derived Metrics 4종(Retention/Transfer Score/Automation Score/Confidence Trend) 신규 정의. Future Extension(Content/Conversation Progress)에 범주 오류 근거와 형제 엔터티 확장 방향 명시 |
+| 1.1 | 2026-07-13 | AUD-002 Frozen Core Standard Amendment — §3에 `mastered_at`, §4 AttemptRecord에 `is_spaced_review` 추가. §6에서 두 필드가 별도 감사/판정 이력 엔터티가 아님을 명확화하고 §10·§11 정합성 규칙을 반영. Spaced Repetition evidence를 MASTERED/AUTOMATIC 전이에서 표현할 수 있도록 Progress 의미 모델을 확장 |
