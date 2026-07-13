@@ -10,7 +10,9 @@
 | ID | 제목 | 상태 |
 |---|---|---|
 | AC-001 | `get_cascade` 입력 계약 불일치 | ✅ Resolved |
-| AC-002~003, 006~007, 010 | (Development 세션에서 아직 이 문서로 제출되지 않음) | ⏳ 미제출 |
+| AC-002 | `cascade_jobs` 트랜잭션 아웃박스 패턴 | 🟠 복구 메모(정식 재제출 필요) — §AC-002 참고 |
+| AC-003 | Concept-Node prerequisite 정합성 | 🟠 복구 메모(정식 재제출 필요) — §AC-003 참고 |
+| AC-006~007, 010 | (Development 세션에서 아직 이 문서로 제출되지 않음) | ⏳ 미제출 |
 | AC-004 | `content.explanation_level` 저장 위치 부재 | ✅ Resolved(재상정 — non-blocking→blocking) |
 | AC-005 | Generation Engine 3단계 PRE_MADE fallback 대상 node_id 특정 불가 | ✅ Resolved |
 | AC-008 | `submit_attempt`에 SELF/TRANSFER 진단용 content_id 부재 | ✅ Resolved |
@@ -54,6 +56,39 @@ progress_snapshot: {
 **패치 문서**:
 - `API_CONTRACT.md` v1.3 → **v1.4**(§8.1)
 - `ENGINE_INTERFACE.md` v1.6 → **v1.7**(§9.3)
+
+---
+
+## AC-002 — `cascade_jobs` 트랜잭션 아웃박스 패턴
+
+**상태**: 🟠 **복구 메모**(2026-07-11) — 이 문서에 정식 제출된 적이 없다("⏳ 미제출" 상태였음). `PHASE_2_COMPLETION_REPORT.md`는 이를 Resolved로 서술하지만 본문 근거가 이 문서 어디에도 없었다. 아래 내용은 코드베이스 유실 후 과거 세션 기록(`REBUILD_CONTRACT_RECONCILIATION.md` 작성 과정에서 대조)을 근거로 복구한 메모이며, **새로운 Architecture 결정이 아니다.** 정식 AC로 인정받으려면 이 메모를 근거로 정식 재제출·재승인 절차를 밟기를 권장한다(GAP_REPORT §5.2 동일 지적).
+
+**Source(복구 근거)**: `DATA_PERSISTENCE_BRIEF.md` §3.8(`cascade_jobs` 테이블), `API_LAYER_BRIEF.md` §5.2(아웃박스 패턴 언급), 과거 세션 기록(코드 자체는 유실).
+
+**유효 사양(복구된 내용)**:
+- `cascade_jobs`는 8개 Engine에 속하지 않는 별도 인프라 컴포넌트다.
+- `submit_attempt`의 TRANSFER 경로에서 `cascade_jobs` 레코드가 생성된다.
+- `cascade_jobs` 삽입은 `progressEngine.recordAttempt` 트랜잭션 안에서 핵심 트랜잭션(attempt 삽입+state 전이+`next_review_at` 갱신)과 함께 원자적으로 처리한다 — 아웃박스 패턴의 핵심(`DATA_PERSISTENCE_BRIEF.md` §3.8 원칙과 일치).
+- 워커(`src/worker/cascadeJobsWorker.js`)는 `status='PENDING'`인 job을 오래된 순으로 폴링해 처리하고, 대상 노드의 `progress.next_review_at`을 앞당긴 뒤 `DONE`/`FAILED`로 상태를 전이한다.
+- Progress에 대한 쓰기는 이번에도 Progress Engine을 통해서만 이루어진다(ENGINE_INTERFACE §5 단일 쓰기 경로 원칙 재확인 — 워커가 `progress` 테이블에 직접 쓰지 않고 Progress Engine의 쓰기 API를 호출).
+
+**Freeze 영향**: 없음으로 추정 — `DATA_PERSISTENCE_BRIEF.md` §3.8이 이미 선언한 아웃박스 원칙의 구체적 적용이다. 다만 정식 제출 근거 문서가 없었으므로 이 판단 자체도 재확인 대상이다.
+
+---
+
+## AC-003 — Concept-Node prerequisite 정합성
+
+**상태**: 🟠 **복구 메모**(2026-07-11) — AC-002와 동일한 사유로 정식 제출 근거 없음. 아래는 복구 메모이며 새로운 Architecture 결정이 아니다.
+
+**Source(복구 근거)**: `DATA_PERSISTENCE_BRIEF.md` §3.2(`concepts.prerequisite_concept_ids`), `ENGINE_INTERFACE.md` §4(Graph Engine — "Concept-Node 정합성 검증"이 책임으로 이미 명시됨), 과거 세션 기록.
+
+**유효 사양(복구된 내용)**:
+- Concept 레벨 `prerequisite_concept_ids`(`concepts` 테이블)와 Grammar Node 레벨 `PREREQUISITE` 관계(`grammar_relations` 테이블)는 서로 다른 층위이지만, 상위(Concept)가 요구하는 선행 순서를 하위(Node)가 어겨서는 안 된다.
+- `graphEngine.validateLanguagePack`(이미 순환 검증을 담당하는 함수, `API_CONTRACT.md` §3.3)이 Concept-Node 정합성 검증도 함께 수행해야 한다 — 별도 API를 신설하지 않고 기존 검증 파이프라인에 포함.
+- 판정 규칙: Concept A가 Concept B를 prerequisite로 요구하는데, A에 대응하는 Grammar Node들과 B에 대응하는 Grammar Node들 사이에 `PREREQUISITE` 관계가 전혀 없으면 validation error로 취급한다.
+- 순환 검증(`DOMAIN_LOGIC_BRIEF.md` §2.3)·Relation Integrity 검증(Validation Level 3 §7)의 일부로 포함해 실행한다 — 별도 실행 경로를 새로 만들지 않는다.
+
+**Freeze 영향**: 없음으로 추정 — `ENGINE_INTERFACE.md` §4가 이미 "Concept-Node 정합성 검증"을 Graph Engine 책임으로 명시하고 있었다는 점에서 AC-001과 같은 성격의 계약 완성으로 보인다. 다만 AC-002와 마찬가지로 정식 재확인이 필요하다.
 
 ---
 
