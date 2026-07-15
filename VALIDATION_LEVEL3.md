@@ -164,6 +164,24 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | Alternative 0건의 정당성 | EN·JA·ZH는 Alternative 관계가 0건(구조상 이중 기능 조동사 없음), VI만 1건(CO_THE↔DUOC_ABILITY) — 이 비대칭이 데이터 누락이 아니라 언어 구조 차이임을 각 언어 자체 검증 기록(Tier D 문서)과 대조 |
 | 방향성(UNIDIRECTIONAL/BIDIRECTIONAL) | Prerequisite류(UNIDIRECTIONAL)가 역방향 조회 시 반환되지 않는지, Related/Contrast류(BIDIRECTIONAL)가 양방향 모두 반환되는지 |
 
+### 7.1 Language Boundary 검증 (AUD-003, Frozen Core Standard Amendment, 2026-07-13)
+
+`GRAMMAR_SCHEMA.md` §6의 same-language invariant와 `GRAMMAR_GRAPH.md` §3의 defense-in-depth가 실제로 지켜지는지 검증한다. 이 절은 두 종류의 검증을 분리한다 — 기존 정상 same-language relation fixture에 대한 **회귀 검증**(마지막 항목)과, **의도적으로 주입한 cross-language 위반 fixture**에 대한 **음성 검증**(그 앞의 항목들, 시스템이 이를 정확히 거부·차단하는지 확인).
+
+| 검증 항목 | 방법 |
+|---|---|
+| Cross-language `PREREQUISITE` 위반 탐지 | 테스트 픽스처에 VI→EN `PREREQUISITE` 관계(예: `GRAMMAR_VI_DA → GRAMMAR_EN_PAST_SIMPLE`)를 인위적으로 주입한 뒤 `validate_language_pack`이 이를 `language_boundary_violations`에 정확히 보고하는지 |
+| Cross-language `RELATED` 위반 탐지 | 동일 방식으로 `RELATED` 관계 주입 후 탐지 확인 |
+| Cross-language `CONTRAST` 위반 탐지 | 동일 방식으로 `CONTRAST` 관계 주입 후 탐지 확인 |
+| Cross-language `ALTERNATIVE` 위반 탐지 | 동일 방식으로 `ALTERNATIVE` 관계 주입 후 탐지 확인 |
+| `is_valid` 정합성 | 위 4종 중 하나라도 위반이 존재하면 `cycle_violations`·`concept_consistency_violations`가 둘 다 비어 있어도 `is_valid = false`가 되는지 |
+| `prerequisite_search`(선행 탐색) foreign-language 미반환 | 위반 데이터가 (검증 우회를 가정해) 존재하는 상황을 모킹했을 때도, 선행 탐색 결과에 시작 노드와 다른 `language`의 노드가 포함되지 않는지(runtime defense-in-depth가 배포 전 검증과 독립적으로 작동하는지) |
+| `dependent_search`(후행 탐색) foreign-language 미반환 | 동일 방식으로 후행 탐색 확인 |
+| `find_related_nodes` foreign-language 미반환 | 동일 방식으로 관련/대조/대체 관계 조회 확인 |
+| 정상 same-language relation 회귀 없음 | 위 음성 테스트 주입 이후에도, 기존 정상 same-language relation fixture에 대한 `find_related_nodes`·선행/후행 탐색 결과가 이 Amendment 이전과 동일하게 반환되는지(§7 상단 표 항목 재실행) |
+
+**주의**: AUD-003은 기존 관계 총수나 과거 PASS 상태를 새로 확정하지 않는다 — 이 표는 Amendment로 신설된 검증 **항목**만 정의하며, 실행 결과는 별도 실행 산출물(§14 참고)로 기록한다. 관계 총수 표기(§7 상단)의 정합성은 이 Amendment의 범위 밖이며, 필요시 별도 audit/status reconciliation 대상이다.
+
 ---
 
 ## 8. Review Engine 검증
@@ -248,7 +266,7 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | §4 Golden Test Set | 노드 85/85, 관계는 실현된 것 전수, 시나리오 16/16(부분 실현 2건은 "실현된 범위 내 통과"로 별도 표기) |
 | §5 Grammar Gate | 최소 자격 기준 위반 0건, 4단계 사다리 각 단계 정상 진입·강등 확인 |
 | §6 White List | Rule 기반 양성 탐지율 100%, 음성 탐지(오탐) 0건, LLM 기반 독립성 원칙 확인 |
-| §7 관계 검증 | 54개 관계 전수 `find_related_nodes` 정확 반환, 순환 0건 |
+| §7 관계 검증 | 54개 관계 전수 `find_related_nodes` 정확 반환, 순환 0건, **Language Boundary 위반 주입 테스트(§7.1) 전부 정확히 탐지·차단** |
 | §8 Review Engine | Cascade 깊이 위반 0건, `get_due_reviews` 우선순위 규칙 일치 |
 | §9 Conversation | 3개 경계 항목만 통과(내부 동작은 판정 대상 아님) |
 | §10 AI Generation | 표층 변주 중복 0건, 실패 처리 분기 정확 |
@@ -274,6 +292,7 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 - White List Rule 기반 검증이 허용되지 않은 문법을 실제로 통과시킴(§6.1 양성 탐지 실패)
 - 4개 언어 중 하나라도 E2E 시나리오가 세션 흐름을 완주하지 못함(§3)
 - Review Cascade가 `max_depth=2`를 위반해 무제한 확산(§8)
+- **Cross-language 관계 위반이 `language_boundary_violations`로 탐지되지 않거나, runtime traversal이 foreign-language 노드를 반환함(§7.1, AUD-003)**
 
 **이 문서가 최종 승인을 대신하지 않는다**: §13의 조건 충족 여부 판정과 실제 Beta Release 결정은 `PROJECT_VISION.md` §6 의사결정 원칙(원문 미확인, §0 참고)에 준하는 사용자 승인 사항이다. 이 문서는 판정 기준만 제공한다.
 
@@ -296,3 +315,4 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | 1.2 | 2026-07-08 | 전체 Blocker 해소 후 마지막 Architecture 결정 — Level 3를 Mock LLM으로 실행할지 실제 LLM으로 실행할지 질의에 **2단계(C안)** 채택. §2.4 신설 — §5.2가 이미 모킹을 전제로 설계돼 있었던 것을 근거로, 결정론적 재현이 필요한 항목(§3~5, §7~9, §10 일부)은 1차 Mock, 정의상 실제 생성 결과가 있어야만 성립하는 항목(§6 LLM 기반 검증, §10 표층 변주)은 2차 실제 LLM으로 명확히 분리. §13 Beta Release Gate를 1차 PASS만 필요조건으로 하고 2차는 별도 트랙(생성 품질 개선 백로그)으로 관리하도록 갱신 |
 | 1.3 | 2026-07-13 | Independent Architecture Audit(AUD-002), **Frozen Core Standard Amendment** — §8.1 신설. `DOMAIN_LOGIC_BRIEF.md` §3.2.1·§3.2.2(Spaced Review Evidence)가 실제로 burst 승격을 차단하는지 검증하는 5개 항목 정의(Burst 차단, `is_spaced_review` 계산 시점, `mastered_at` 방향 무관 갱신, 퇴행 후 evidence 격리, AUTOMATIC 2회 조건). "Burst 승격 차단"은 이 Amendment의 존재 이유이므로 예외 없이 PASS해야 함을 명시 |
 | 1.4 | 2026-07-13 | AUD-002 Scheduling/Evidence Clarification 반영 — §8.1에 검증 항목 4개 추가(조기 연습이 due를 미루지 않는지, due 이후 시도가 정확히 qualifying 기록되는지, 비교 기준 스냅샷 오류 방지, `next_review_at IS NULL` 안전 처리). "조기 연습이 due를 미루지 않는지"도 Burst 차단과 동급의 무예외 PASS 기준으로 승격 |
+| 1.5 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — §7.1 신설(Language Boundary 검증). Cross-language `PREREQUISITE`/`RELATED`/`CONTRAST`/`ALTERNATIVE` 4종 위반 주입 탐지, `is_valid` 정합성, runtime traversal(선행/후행 탐색·`find_related_nodes`) foreign-language 미반환, 정상 same-language relation fixture 회귀 없음까지 9개 검증 항목 정의. §12 Pass/Fail 기준과 §13 Beta Release Gate 차단 조건에 반영. AUD-003은 기존 관계 총수나 과거 PASS 상태를 새로 확정하지 않음을 명시(§7.1 하단 주의) — 관계 총수 표기 정합성은 이 Amendment 범위 밖 |

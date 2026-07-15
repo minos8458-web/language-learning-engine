@@ -54,7 +54,7 @@
 | 빈 결과 | 해당 노드에 선행 관계가 전혀 없음 → 빈 목록(정상) |
 | 에러 | `node_id`가 존재하지 않는 Grammar Node ID인 경우, `max_depth` < 1인 경우 |
 | 호출 가능한 하위 Engine | 없음(리프) |
-| 금지 사항 | 탐색 알고리즘(순회 방식 등)을 응답에 포함하지 않는다 |
+| 금지 사항 | 탐색 알고리즘(순회 방식 등)을 응답에 포함하지 않는다. **시작 노드의 `language`를 벗어난 노드를 반환하지 않는다(defense-in-depth, `GRAMMAR_GRAPH.md` §3, AUD-003)** |
 
 ### 3.2 find_related_nodes
 
@@ -67,7 +67,7 @@
 | 빈 결과 | 해당 조건의 관계가 없음 → 빈 목록 |
 | 에러 | `node_id` 미존재, `relation_type`이 정의되지 않은 값 |
 | 호출 가능한 하위 Engine | 없음 |
-| 금지 사항 | `weight`를 어떻게 활용할지(정렬 기준 등)는 이 API가 정하지 않는다 — 호출자의 몫 |
+| 금지 사항 | `weight`를 어떻게 활용할지(정렬 기준 등)는 이 API가 정하지 않는다 — 호출자의 몫. **시작 노드의 `language`를 벗어난 노드를 반환하지 않는다(defense-in-depth, `GRAMMAR_GRAPH.md` §3, AUD-003)** |
 
 ### 3.3 validate_language_pack
 
@@ -76,11 +76,13 @@
 | API 이름 | `validate_language_pack` |
 | 호출 주체 | Language Pack 배포 파이프라인(실시간 사용자 요청이 아님, GRAMMAR_GRAPH §3 배포 전 검증) |
 | 입력 | `language` |
-| 출력 | `{is_valid, cycle_violations[], concept_consistency_violations[]}` |
+| 출력 | `{is_valid, cycle_violations[], concept_consistency_violations[], language_boundary_violations[]}` — **`language_boundary_violations[]` 추가(AUD-003, Frozen Core Standard Amendment, 2026-07-13)** |
 | 빈 결과 | 위반 사항이 없으면 위반 목록은 빈 배열 — 이는 empty_result가 아니라 **정상적인 유효 응답**(구분 주의) |
 | 에러 | 해당 `language`의 Grammar Node/Relation 데이터가 아예 존재하지 않는 경우 |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | 검증 알고리즘의 세부 로직을 응답에 포함하지 않는다 — 위반 목록만 반환 |
+
+**AUD-003 반영**: `is_valid`는 `cycle_violations`·`concept_consistency_violations`·`language_boundary_violations` **세 목록이 모두 비어 있을 때만** `true`다. `language_boundary_violations`는 `GRAMMAR_SCHEMA.md` §6의 same-language invariant(`from_node_id`·`to_node_id`가 참조하는 Grammar Node의 `language`가 동일해야 함)를 위반하는 `grammar_relations` 레코드를 보고한다 — `PREREQUISITE`·`RELATED`·`CONTRAST`·`ALTERNATIVE` 4종 전부 대상.
 
 ---
 
@@ -402,3 +404,4 @@
 | 1.7 | 2026-07-08 | AC-009 Provisional 반영 — `request_practice`(10.3)에 `DOMAIN_LOGIC_BRIEF.md` §8.1 참조 추가 |
 | 1.8 | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.1에 머물러 있던 것을 위 AC-001~AC-011 Resolved 결정과 MIGRATION_GUIDE Entry 004/005 기준으로 일괄 반영. 새로운 설계 결정 없음, 전부 기존 Resolved 사항의 문서 동기화. `10.5 start_session`은 원본 세부 필드 재구성이라 별도 불확실성 표시 있음(해당 절 참고). 근거: `REBUILD_CONTRACT_RECONCILIATION.md` |
 | 1.9 | 2026-07-13 | **AC-008 후속 반영** — Phase 1-B(Progress Engine) 구현 중 발견: `record_attempt`(4.4)에 `content_id`가 없어 `attempt_records.content_id`(AC-008이 만든 컬럼)를 채울 유일한 쓰기 경로가 실행 불가능한 상태였음. `record_attempt` 입력에 `content_id`(선택, nullable) 추가. 새로운 설계 아님 — AC-008 결정을 실제로 동작시키는 데 필요했던 5번째(마지막) 반영 지점 |
+| 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — `validate_language_pack`(3.3) 출력에 `language_boundary_violations[]` 추가, `is_valid` 판정을 3개 violation 목록 전부 기준으로 정합화. `find_prerequisites`(3.1)·`find_related_nodes`(3.2) 금지 사항에 시작 노드 language 밖 노드 미반환(defense-in-depth) 명시. `GRAMMAR_SCHEMA.md` §6 same-language invariant, `GRAMMAR_GRAPH.md` §3, `ENGINE_INTERFACE.md`, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |

@@ -83,14 +83,14 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3) |
+| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행 |
 | **2. 하지 않는 일** | 사용자 Progress를 조회·저장하지 않는다. 노드 상태에 따른 필터링 판단을 하지 않는다(Practicing 이상 여부는 호출자가 Progress Engine 결과와 조합해 판단). "이 노드를 복습해야 한다"거나 "생성해야 한다" 같은 정책적 판단을 내리지 않는다 — 순수 구조 조회만 한다 |
 | **3. 입력 데이터** | 노드 ID, 탐색 방향(선행/후행), 최대 깊이(max_depth) |
-| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과 |
+| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)** |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부. Graph Engine은 어떤 상위 Engine도 호출해서는 안 된다 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §2, §3 |
-| **8. 향후 구현 시 주의사항** | "상태가 입혀진 그래프"(State-Colored Graph, GRAMMAR_GRAPH §2)는 이 Engine이 만들지 않는다. 호출자가 이 Engine의 순수 구조 결과와 Progress Engine의 상태 결과를 **조합**해야 한다. Graph Engine 자체가 Progress를 알게 되는 순간 재사용성이 떨어진다 |
+| **8. 향후 구현 시 주의사항** | "상태가 입혀진 그래프"(State-Colored Graph, GRAMMAR_GRAPH §2)는 이 Engine이 만들지 않는다. 호출자가 이 Engine의 순수 구조 결과와 Progress Engine의 상태 결과를 **조합**해야 한다. Graph Engine 자체가 Progress를 알게 되는 순간 재사용성이 떨어진다. **선행/후행 탐색·관계 조회 함수는 항상 시작 노드의 `language`를 벗어난 노드를 반환하지 않도록 구현해야 한다(defense-in-depth, `GRAMMAR_GRAPH.md` §3, AUD-003) — 배포 전 검증(same-language invariant)이 이미 이를 막았다는 것을 신뢰하지 않고 이중으로 방어한다** |
 
 ---
 
@@ -277,3 +277,4 @@ Learning Flow Engine
 | 1.8 | 2026-07-08 | AC-005 Resolved 반영 — Generation Engine §6 입력에 `target_node_id`, AI Generation Engine §7 출력에 `content_id` 추가 |
 | 1.9 | 2026-07-08 | AC-008 Resolved 반영 — Content Engine §8 입력에 `content_id` 단독 조회 모드, Learning Flow Engine §3 호출 가능 하위 Engine에 진단 조회 예외 경로, Generation Engine §6 출력에 `content_id` 추가 |
 | — | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.5에 머물러 있던 것을 위 AC-001/005/008 Resolved 결정 기준으로 일괄 반영. 새로운 설계 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md`. (버전 번호는 AC Backlog가 이미 명명한 1.6~1.9를 그대로 사용) |
+| 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — Graph Engine §4 책임에 Language boundary 검증(배포 전 정적 검증) 추가, 출력 데이터에 `language_boundary_violations` 목록 추가, "향후 구현 시 주의사항"에 선행/후행 탐색·관계 조회 함수의 runtime defense-in-depth(시작 노드 language 밖 노드 미반환) 명시. `GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, `API_CONTRACT.md` §3.3, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |

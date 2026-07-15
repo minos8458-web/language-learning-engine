@@ -70,6 +70,23 @@
 | 하위 호환성 | **깨짐 — 마이그레이션 필요.** 기존 `progress`/`attempt_records` 행에는 `mastered_at`·`is_spaced_review`가 없다(NULL/기본값 `false`로 채워짐). 이미 `MASTERED`/`AUTOMATIC` 상태인 기존 사용자 행에 대해 `mastered_at`을 소급 계산할지, 이번 배포 시점을 기준으로 새로 시작할지는 **별도 결정 필요**(이 Entry의 범위 밖 — 구현 착수 시 재상정 권장). Scheduling 규칙 변경 자체는 스키마 변경이 없어 추가 마이그레이션 대상 없음 |
 | Entry 번호 참고 | 이 Entry는 canonical main의 마지막 확정 Entry(002) 다음 순번인 **003**으로 병합됐다. 이전에 병합 대기 상태에서 "Entry 006"으로 잠정 표기됐던 것은 canonical 번호가 아니었다(§1 참고) |
 
+### Entry 004
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-13 |
+| 대상 문서 | `GRAMMAR_SCHEMA.md`(v1.6 → v1.7), `GRAMMAR_GRAPH.md`(v1.4 → v1.5), `API_CONTRACT.md`(v1.9 → v1.10), `ENGINE_INTERFACE.md`(v1.9 → v1.10), `VALIDATION_LEVEL3.md`(v1.4 → v1.5) |
+| 변경 유형 | **Frozen Core Standard Amendment**(Tier A 구조 확장 — Grammar Relation 엔터티에 새 invariant 추가) |
+| 발견 경위 | Independent Architecture Audit(AUD-003) — `src/engines/graphEngine.js`의 `prerequisiteSearchInternal`·`findRelatedNodes`·`validateLanguagePack`이 `grammar_relations`의 `from_node_id`/`to_node_id` 양 끝 Grammar Node의 `language` 일치를 전혀 확인하지 않아, cross-language 관계(예: `GRAMMAR_VI_* → GRAMMAR_EN_*`인 `PREREQUISITE`)가 적재·탐색·validation 통과 모두 가능한 상태였음을 발견. `GRAMMAR_SCHEMA.md` §6은 `from_node_id`/`to_node_id`의 존재성·self-reference 금지·PREREQUISITE 방향 제약은 있었지만 same-language 요구는 명시한 적이 없었다 — Tier A 계약 공백으로 판정 |
+| Same-language invariant(최종 확정) | `grammar_relations.from_node_id`가 참조하는 Grammar Node의 `language`와 `grammar_relations.to_node_id`가 참조하는 Grammar Node의 `language`는 반드시 동일해야 한다. `PREREQUISITE`·`RELATED`·`CONTRAST`·`ALTERNATIVE` **4종 전부** 적용 |
+| Cross-language pedagogical mapping | Grammar Relation에 저장하지 않는다 — 기존 Universal Concept layer(`GRAMMAR_SCHEMA.md` 2장, `concept_ids`)로 처리한다. 새로운 cross-language relation 엔터티는 만들지 않는다(과설계 방지) |
+| Governance 근거 | `CORE_STANDARD_V1_FREEZE.md` §5 절차 4단계 전부 완료 — 1차 판정(Architecture Clarification, 필드 추가 없음을 근거)에서 재심사를 거쳐 **Tier A Amendment로 철회·재분류**됐다(entity의 admissible state space를 좁히는 것 자체가 엔터티 정의 변경에 해당하며, `GRAMMAR_GRAPH.md` §2의 기존 문언만으로는 이 invariant가 이미 규범적으로 강제됐다고 확정할 문헌적 근거가 불충분했기 때문). 대안 비교: A(DB hard constraint 없음 — 3중 논리 방어만) 채택, B(DB trigger — 이 프로젝트가 지금까지 도메인 로직을 Engine 계층에 두고 DB는 저장·기본 참조무결성만 담당해온 스타일에서 벗어나는 첫 사례라 기각), C(`grammar_relations.language` 중복 컬럼 — `grammar_nodes`에서 이미 유도 가능한 값의 불필요한 중복이라 기각), D(runtime traversal filter만 — 배포 전 정적 검증 없이는 무의미한 edge가 저장 계층에 영구히 남아 기각) |
+| DB Enforcement | **DB trigger 없음. `grammar_relations.language` 컬럼 추가 없음. 일반 CHECK constraint 없음.** 현재 `grammar_relations` 스키마에는 `language` 컬럼이 없어(다른 테이블 `grammar_nodes`를 참조해야 판정 가능) 일반 CHECK로는 표현 불가능하다. 대신 3중 논리 방어: ① `GRAMMAR_SCHEMA.md` §6 Tier A invariant(저작 시 준수 규칙) ② `validate_language_pack` 배포 전 정적 검증(hard gate) ③ runtime traversal defense-in-depth |
+| `validate_language_pack` output 변경 | `{is_valid, cycle_violations[], concept_consistency_violations[], language_boundary_violations[]}` — `language_boundary_violations[]` 신규 추가. `is_valid`는 세 violation 목록이 전부 비어 있을 때만 `true` |
+| Runtime traversal defense-in-depth | `prerequisite_search`(선행 탐색)·`dependent_search`(후행 탐색)·`find_related_nodes`가 시작 노드의 `language`를 벗어난 노드를 따라가거나 반환하지 않는다. 배포 전 검증 통과 여부와 무관하게 항상 적용(LLE Stability over Speed 원칙) |
+| DB schema / SQL migration | **없음.** `grammar_relations`·`grammar_nodes` 테이블 컬럼 변경이 전혀 없다 — 이번 Amendment는 기존 필드(`from_node_id`, `to_node_id`, `language`)의 조합에 새 invariant를 추가하는 것뿐이며, `validate_language_pack`의 출력 필드 추가와 Graph Engine 함수들의 필터 로직 추가만 필요하다 |
+| Entry 번호 참고 | 이 Entry는 canonical main의 마지막 확정 Entry(003) 다음 순번인 **004**다 |
+
 ---
 
 ## 3. 개정 이력
@@ -78,3 +95,4 @@
 |---|---|---|
 | 1.0 | 2026-07-06 | 최초 작성 — Entry 001(Content 구조 변경, BREAKING), Entry 002(`get_due_reviews` 추가, ADDITIVE) 기록 |
 | 1.1 | 2026-07-13 | Entry 003 추가 — AUD-002 Frozen Core Standard Amendment 및 같은 root cause에서 파생된 Review Scheduling Clarification을 canonical migration record로 병합 |
+| 1.2 | 2026-07-13 | Entry 004 추가 — AUD-003 Frozen Core Standard Amendment(Grammar Relation same-language invariant, `validate_language_pack` output 확장, runtime traversal defense-in-depth)를 canonical migration record로 병합. DB schema/SQL migration 없음을 명시 |

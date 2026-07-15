@@ -20,6 +20,7 @@
 | AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — 🟡 Repository Reconciliation **PENDING MERGE**(패치 파일은 준비 완료, GitHub main 반영은 범위 밖). 상세는 §AUD-001 참고 |
+| AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
 
 ---
 
@@ -314,6 +315,51 @@ GitHub main (repository-wide SSOT)
 
 ---
 
+## AUD-003 — Graph가 cross-language relation을 허용·순회함
+
+**상태**: ✅ **CLOSED**(2026-07-13) — **Frozen Core Standard Amendment**(Independent Architecture Audit 발견)
+
+**Source**: `src/engines/graphEngine.js`(`prerequisiteSearchInternal`, `findRelatedNodes`, `validateLanguagePack` — GitHub main 코드 직접 조회), `GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §2~3, Independent Architecture Audit
+
+**Problem**: `prerequisiteSearchInternal`은 `grammar_relations`의 `PREREQUISITE` 관계를 따라갈 때 양 끝 Grammar Node의 `language` 일치를 확인하지 않아, `GRAMMAR_VI_* → GRAMMAR_EN_*` 같은 cross-language `PREREQUISITE`도 그대로 순회 대상이 됐다. `findRelatedNodes`도 `RELATED`/`CONTRAST`/`ALTERNATIVE` 조회에서 동일한 필터 부재. `validateLanguagePack`은 `from_node_id` 쪽 언어만 확인하고 `to_node_id`는 확인하지 않으며, cross-language relation 자체를 위반으로 보고하는 필드도 없었다. `GRAMMAR_SCHEMA.md` §6은 `from_node_id`/`to_node_id`의 존재성·self-reference 금지·PREREQUISITE 방향 제약은 이미 갖고 있었지만 same-language 요구는 명시한 적이 없었다.
+
+### 1차 adjudication(철회됨) — provenance 보존
+
+최초 판정은 이 결정을 **"Architecture Clarification"**(Tier A Amendment 아님)로 분류했다 — 근거: "새 필드를 추가하지 않고 기존 필드 쌍(`from_node_id`/`to_node_id`)에 제약 하나를 더하는 것뿐"이라는 논리, 그리고 4개 언어 54개 관계가 이미 전부 same-language였다는 실증적 사실.
+
+Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md` §2·§4 및 `API_CONTRACT.md` canonical 원문을 대조한 결과, 1차 Architecture 판정의 Freeze governance 해석에 이의가 제기되어 재심사를 요청했다 — §2·§4 문언("엔터티 정의·필드 구조 변경은 Freeze 대상")을 근거로, "필드 추가가 아니므로 Clarification"이라는 1차 판정의 논리는 §4가 보호하는 "엔터티 정의"를 "새 컬럼 여부"로 축소해석한 오류였다는 지적이었다. 또한 최초 판정이 `GRAMMAR_GRAPH.md` §2("언어별 서브그래프는 조회 조건으로 구성되는 view")를 근거로 "이미 규범적으로 강제됐다"고 주장했으나, 재검토 결과 이 문언은 반대 방향(저장 계층에 cross-language edge가 존재하고 view가 그걸 필터링한다는 뜻)으로도 읽힐 수 있어 문헌적 근거로 부족함이 확인됐다.
+
+**재심사 결과 철회 — Tier A Amendment로 재분류.**
+
+### 최종 확정 Architecture 결정
+
+1. **Same-language invariant**: `grammar_relations.from_node_id`가 참조하는 Grammar Node의 `language`와 `grammar_relations.to_node_id`가 참조하는 Grammar Node의 `language`는 반드시 동일해야 한다.
+2. **적용 범위**: `PREREQUISITE`·`RELATED`·`CONTRAST`·`ALTERNATIVE` **4종 전부**.
+3. **Cross-language pedagogical mapping**: Grammar Relation에 저장하지 않는다 — 기존 Universal Concept layer(`concept_ids`)로 처리. 새 엔터티를 만들지 않는다(과설계 방지, 예: `CONCEPT_MODALITY_ABILITY`가 이미 VI/EN/JA/ZH 4개 언어 능력 표현 노드를 공유).
+4. **DB Enforcement**: DB trigger 없음, `grammar_relations.language` 중복 컬럼 없음, 일반 CHECK constraint 없음(현재 스키마상 `grammar_relations`에 `language` 컬럼이 없어 다른 테이블을 참조해야 판정 가능 — 일반 CHECK로 표현 불가능함이 재검토 과정에서 확인됨). 대신 3중 논리 방어: ① `GRAMMAR_SCHEMA.md` §6 Tier A invariant ② `validate_language_pack` 배포 전 정적 검증(hard gate) ③ runtime traversal defense-in-depth.
+5. **`validate_language_pack` output**: `{is_valid, cycle_violations[], concept_consistency_violations[], language_boundary_violations[]}` — `language_boundary_violations[]` 신규. `is_valid`는 세 목록이 전부 비어 있을 때만 `true`.
+6. **Runtime traversal defense-in-depth**: `prerequisite_search`(선행 탐색)·`dependent_search`(후행 탐색)·`find_related_nodes`가 시작 노드의 `language`를 벗어난 노드를 따라가거나 반환하지 않는다 — 배포 전 검증 통과 여부와 무관하게 항상 적용.
+
+**기각된 DB Enforcement 대안**: (B) DB trigger — 이 프로젝트가 지금까지 도메인 로직을 Engine 계층(Node.js)에 두고 DB는 저장·기본 참조무결성만 담당해온 스타일에서 벗어나는 첫 사례가 되어 기각. (C) `grammar_relations.language` 중복 컬럼 — `grammar_nodes`에서 이미 유도 가능한 값의 불필요한 중복이라 기각. (D) runtime traversal filter만(정적 검증 없이) — 저장 계층에 무의미한 edge가 영구히 남고 `validate_language_pack`의 "배포 전 정적 검증" 존재 이유 자체가 무력화되어 기각.
+
+**Governance 처리**: `CORE_STANDARD_V1_FREEZE.md` §5 절차 4단계 전부 완료 — ① 근거 문서화(counterexample: GitHub main 코드 직접 조회로 확인된 cross-language traversal 가능성) ② 대안 비교(traversal filter only / DB trigger / 중복 language 컬럼 / Tier A invariant+validation+runtime defense 3중 방어 — 4안 채택) ③ 명시적 사용자 승인 완료 ④ 개정 이력 기록(본 항목, `CORE_STANDARD_V1_FREEZE.md` §8, 각 canonical 문서 개정 이력).
+
+**패치 문서**(canonical, GitHub main 원문 기준 targeted patch):
+- `GRAMMAR_SCHEMA.md` v1.6 → **v1.7**(§6 same-language invariant, §10 금지 사항)
+- `GRAMMAR_GRAPH.md` v1.4 → **v1.5**(§2 언어별 서브그래프 명확화, §3 Language boundary 검증 및 runtime defense-in-depth, §10 금지 사항)
+- `API_CONTRACT.md` v1.9 → **v1.10**(§3.1·3.2 금지 사항, §3.3 `language_boundary_violations[]`)
+- `ENGINE_INTERFACE.md` v1.9 → **v1.10**(§4 Graph Engine 책임·출력·주의사항)
+- `VALIDATION_LEVEL3.md` v1.4 → **v1.5**(§7.1 신설, §12·§13 반영)
+- `MIGRATION_GUIDE.md` v1.1 → **v1.2**(Entry 004)
+- `CORE_STANDARD_V1_FREEZE.md` v1.2 → **v1.3**(§8 Amendment 기록)
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(본 문서, 이 항목)
+
+**DB schema/SQL migration**: 없음 — 기존 필드(`from_node_id`, `to_node_id`, `language`)의 조합에 논리적 invariant만 추가되며, `grammar_relations`·`grammar_nodes` 컬럼 변경이 전혀 없다.
+
+**미착수 항목(범위 밖으로 명시적 제외)**: AUD-001 Repository Reconciliation(별도 트랙, PENDING MERGE 유지), AUD-004, 구현 수정 전부 — 별도 지시 대기.
+
+---
+
 ## 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -327,3 +373,4 @@ GitHub main (repository-wide SSOT)
 | 1.6 | 2026-07-13 | AUD-002(MASTERED/AUTOMATIC Temporal Stability Contract) **CLOSED**로 기록 — Independent Architecture Audit 발견, Frozen Core Standard Amendment로 처리. 8개 Architecture 결정 최종 확정(Spaced Review Evidence 필수, pre-update snapshot 기준, `next_review_at` 조건부 갱신 Candidate A, `mastered_at`/`is_spaced_review` 필드 채택 등). `DOMAIN_LOGIC_BRIEF.md` v1.5, `DATA_PERSISTENCE_BRIEF.md` v1.10, `VALIDATION_LEVEL3.md` v1.4, `CORE_STANDARD_V1_FREEZE.md` v1.2, `PROGRESS_SCHEMA_AMENDMENT_ENTRY.md`·`MIGRATION_GUIDE_ENTRY_006.md`(신규) 반영. AC-series와 달리 최초 결정 부분은 Tier A amendment 절차(§5) 완료, scheduling 역설 후속 수정 부분은 일반 Tier C Clarification으로 등급 구분해 처리 |
 | 1.7 | 2026-07-13 | AUD-001(GitHub main 문서 간 current/historical 상태 혼동) Architecture/Documentation Decision **CLOSED**, Repository Reconciliation **PENDING MERGE**로 기록 — `BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`/`VALIDATION_STATUS.md` 3개 문서 전면 교체(SSOT 계층 분리, Current Verified State/Historical Validation Record 분리). 검증 경로 불일치(브라우저 기반 fetch vs GitHub API/connector) 발생 및 해소 경위 기록. 코드 존재(Phase 0/1, Graph·Progress Engine)와 Validation PASS 여부(§5~13 전 구간 미재검증)를 명확히 분리 |
 | 1.8 | 2026-07-13 | AUD-002 canonical merge 완료 기록 — GitHub main 원문(`PROGRESS_SCHEMA.md` §0~12, `MIGRATION_GUIDE.md` §0~3) 대조 결과 병합 대기 파일의 잠정 번호(Entry 006)가 canonical 번호가 아니었음을 확인, `MIGRATION_GUIDE.md` Entry 003으로 재번호. `PROGRESS_SCHEMA.md` v1.0→v1.1(§3/§4/§6/§10/§11/§12), `MIGRATION_GUIDE.md` v1.0→v1.1(§2 Entry 003, §3) canonical 교체본 작성 — 미확인 섹션(§0~2, §5, §7~9, Entry 001·002)은 원문 미보유로 명시적 placeholder 처리, 임의 텍스트로 채우지 않음 |
+| 1.9 | 2026-07-13 | AUD-003(Graph가 cross-language relation을 허용·순회함) **CLOSED**로 기록 — Independent Architecture Audit 발견(GitHub main `src/engines/graphEngine.js` 코드 직접 조회로 확인), Frozen Core Standard Amendment로 최종 처리. **1차 adjudication("Architecture Clarification", 새 필드 없음을 근거)을 재심사 후 철회하고 Tier A Amendment로 재분류한 provenance를 §AUD-003에 보존.** Same-language invariant(4 relation type 전부), 3중 논리 방어(DB enforcement 없음), `validate_language_pack` output 확장(`language_boundary_violations[]`), runtime traversal defense-in-depth 최종 확정. `GRAMMAR_SCHEMA.md` v1.7, `GRAMMAR_GRAPH.md` v1.5, `API_CONTRACT.md` v1.10, `ENGINE_INTERFACE.md` v1.10, `VALIDATION_LEVEL3.md` v1.5, `MIGRATION_GUIDE.md` v1.2(Entry 004), `CORE_STANDARD_V1_FREEZE.md` v1.3 반영. DB schema/SQL migration 없음. AUD-001·AUD-002 기록 및 AC-002/AC-003 복구 메모 전부 보존(삭제·축약 없음) |
