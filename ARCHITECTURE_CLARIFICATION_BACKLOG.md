@@ -325,7 +325,7 @@ GitHub main (repository-wide SSOT)
 
 ### 1차 adjudication(철회됨) — provenance 보존
 
-최초 판정은 이 결정을 **"Architecture Clarification"**(Tier A Amendment 아님)로 분류했다 — 근거: "새 필드를 추가하지 않고 기존 필드 쌍(`from_node_id`/`to_node_id`)에 제약 하나를 더하는 것뿐"이라는 논리, 그리고 4개 언어 54개 관계가 이미 전부 same-language였다는 실증적 사실.
+최초 판정은 이 결정을 **"Architecture Clarification"**(Tier A Amendment 아님)로 분류했다 — 근거: "새 필드를 추가하지 않고 기존 필드 쌍(`from_node_id`/`to_node_id`)에 제약 하나를 더하는 것뿐"이라는 논리, 그리고 확인된 기존 Language Pack 관계에서 cross-language 사례가 필요했던 적이 없다는 관찰.
 
 Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md` §2·§4 및 `API_CONTRACT.md` canonical 원문을 대조한 결과, 1차 Architecture 판정의 Freeze governance 해석에 이의가 제기되어 재심사를 요청했다 — §2·§4 문언("엔터티 정의·필드 구조 변경은 Freeze 대상")을 근거로, "필드 추가가 아니므로 Clarification"이라는 1차 판정의 논리는 §4가 보호하는 "엔터티 정의"를 "새 컬럼 여부"로 축소해석한 오류였다는 지적이었다. 또한 최초 판정이 `GRAMMAR_GRAPH.md` §2("언어별 서브그래프는 조회 조건으로 구성되는 view")를 근거로 "이미 규범적으로 강제됐다"고 주장했으나, 재검토 결과 이 문언은 반대 방향(저장 계층에 cross-language edge가 존재하고 view가 그걸 필터링한다는 뜻)으로도 읽힐 수 있어 문헌적 근거로 부족함이 확인됐다.
 
