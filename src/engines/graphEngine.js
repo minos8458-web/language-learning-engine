@@ -9,6 +9,18 @@
 //
 // 구현하는 API(API_CONTRACT.md §3): find_prerequisites(3.1), find_related_nodes(3.2),
 // validate_language_pack(3.3).
+//
+// ⚠️ AUD-003 반영(2026-07-13, Frozen Core Standard Amendment — GitHub main HEAD
+// 53c974aff676e8e9437363301e55849694822160의 canonical 문서 기준, clean-room 방식으로
+// 처음부터 새로 작성): GRAMMAR_SCHEMA.md §6 same-language invariant(PREREQUISITE·
+// RELATED·CONTRAST·ALTERNATIVE 4종 전부, from/to 노드의 language가 반드시 동일)를
+// 3중 방어로 구현한다 — (1) Schema invariant는 문서 저작 규칙(DB 강제 없음),
+// (2) validate_language_pack의 language_boundary_violations[](배포 전 hard gate),
+// (3) prerequisiteSearchInternal·findRelatedNodes의 runtime traversal defense-in-depth
+// (시작 노드 language를 벗어난 노드는 frontier/visited에 아예 넣지 않음 — 최종 반환값
+// 필터링이 아니라 순회 자체를 경계에서 멈춤, GRAMMAR_GRAPH.md §3). 순환 검증·
+// Concept-Node 정합성 검증(AC-003)·BFS depth·max_depth 검증·에러 클래스·public export는
+// 변경하지 않았다.
 
 class NotFoundError extends Error {
   constructor(message) {
@@ -31,15 +43,27 @@ async function nodeExists(pool, nodeId) {
   return rows.length > 0;
 }
 
+/** AUD-003: 시작 노드의 language를 조회한다(존재하지 않으면 null). */
+async function getNodeLanguage(pool, nodeId) {
+  const { rows } = await pool.query('SELECT language FROM grammar_nodes WHERE node_id = $1', [nodeId]);
+  return rows.length > 0 ? rows[0].language : null;
+}
+
 /**
  * DOMAIN_LOGIC_BRIEF.md §2.1의 BFS 의사코드를 그대로 구현.
  * direction='prerequisite'면 from_node_id=n을 따라 to_node_id를 수집(선행 탐색, §2.1).
  * direction='dependent'면 반대 방향(§2.2 후행 탐색).
  * maxDepth가 null이면 무제한(순환 검증용, §2.3).
  *
+ * AUD-003: 매 단계마다 target 노드를 grammar_nodes와 JOIN해 시작 노드와 language가
+ * 같은 노드만 SQL 레벨에서 가져온다 — cross-language 노드는 frontier에 들어가지
+ * 않으므로 그 이후로는 traversal 자체가 일어나지 않는다(단순 반환값 필터링이 아니라
+ * 경계에서 순회를 멈추는 방식, GRAMMAR_GRAPH.md §3 defense-in-depth).
+ *
+ * @param {string} startLanguage 시작 노드의 language(호출부에서 미리 조회해 전달)
  * @returns Map<node_id, depth>
  */
-async function prerequisiteSearchInternal(pool, startNodeId, maxDepth, direction = 'prerequisite') {
+async function prerequisiteSearchInternal(pool, startNodeId, maxDepth, direction = 'prerequisite', startLanguage) {
   const visited = new Map();
   let frontier = [startNodeId];
   const column = direction === 'prerequisite' ? 'from_node_id' : 'to_node_id';
@@ -49,9 +73,11 @@ async function prerequisiteSearchInternal(pool, startNodeId, maxDepth, direction
   while (frontier.length > 0 && (maxDepth == null || depth < maxDepth)) {
     depth += 1;
     const { rows } = await pool.query(
-      `SELECT ${targetColumn} AS target FROM grammar_relations
-       WHERE ${column} = ANY($1::text[]) AND relation_type = 'PREREQUISITE'`,
-      [frontier]
+      `SELECT gr.${targetColumn} AS target FROM grammar_relations gr
+       JOIN grammar_nodes gn ON gn.node_id = gr.${targetColumn}
+       WHERE gr.${column} = ANY($1::text[]) AND gr.relation_type = 'PREREQUISITE'
+         AND gn.language = $2`,
+      [frontier, startLanguage]
     );
     const nextFrontier = [];
     for (const row of rows) {
@@ -68,17 +94,19 @@ async function prerequisiteSearchInternal(pool, startNodeId, maxDepth, direction
 
 /**
  * 3.1 find_prerequisites — 선행 탐색.
+ * AUD-003: 시작 노드의 language를 벗어난 노드는 반환하지 않는다(defense-in-depth).
  * @returns {Promise<string[]>} 가까운 순서로 정렬된 선행 노드 ID 목록
  */
 async function findPrerequisites(pool, nodeId, maxDepth) {
-  if (!(await nodeExists(pool, nodeId))) {
+  const startLanguage = await getNodeLanguage(pool, nodeId);
+  if (startLanguage === null) {
     throw new NotFoundError(`존재하지 않는 Grammar Node ID: ${nodeId}`);
   }
   if (!Number.isInteger(maxDepth) || maxDepth < 1) {
     throw new ContractViolationError('max_depth는 1 이상의 정수여야 합니다');
   }
 
-  const visited = await prerequisiteSearchInternal(pool, nodeId, maxDepth, 'prerequisite');
+  const visited = await prerequisiteSearchInternal(pool, nodeId, maxDepth, 'prerequisite', startLanguage);
   return [...visited.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
 }
 
@@ -88,12 +116,14 @@ async function findPrerequisites(pool, nodeId, maxDepth) {
  * (DOMAIN_LOGIC_BRIEF §2.2: "Production에서는 주로 커리큘럼 검증·Language Pack
  * 설계 시 쓰인다" — 런타임 API가 아니라 검증 파이프라인 내부 유틸리티).
  * validate_language_pack 등 내부 검증 로직에서 재사용하기 위해 함수로만 노출한다.
+ * AUD-003: find_prerequisites와 동일한 language boundary defense-in-depth 적용.
  */
 async function dependentSearch(pool, nodeId, maxDepth) {
-  if (!(await nodeExists(pool, nodeId))) {
+  const startLanguage = await getNodeLanguage(pool, nodeId);
+  if (startLanguage === null) {
     throw new NotFoundError(`존재하지 않는 Grammar Node ID: ${nodeId}`);
   }
-  const visited = await prerequisiteSearchInternal(pool, nodeId, maxDepth, 'dependent');
+  const visited = await prerequisiteSearchInternal(pool, nodeId, maxDepth, 'dependent', startLanguage);
   return [...visited.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
 }
 
@@ -110,9 +140,12 @@ const VALID_RELATED_TYPES = ['RELATED', 'CONTRAST', 'ALTERNATIVE'];
  * from_node_id 쪽에서만 검색되고, 'BIDIRECTIONAL'인 관계는 양쪽에서 검색된다.
  * PREREQUISITE의 "항상 UNIDIRECTIONAL" 제약과 동일한 원리를 다른 관계 타입에도
  * 일관되게 적용한 것 — 이 부분도 실제와 다르면 알려달라.
+ *
+ * AUD-003: 시작 노드의 language를 벗어난 관련 노드는 반환하지 않는다(defense-in-depth).
  */
 async function findRelatedNodes(pool, nodeId, relationType) {
-  if (!(await nodeExists(pool, nodeId))) {
+  const startLanguage = await getNodeLanguage(pool, nodeId);
+  if (startLanguage === null) {
     throw new NotFoundError(`존재하지 않는 Grammar Node ID: ${nodeId}`);
   }
   if (relationType !== undefined && !VALID_RELATED_TYPES.includes(relationType)) {
@@ -121,14 +154,18 @@ async function findRelatedNodes(pool, nodeId, relationType) {
   const types = relationType ? [relationType] : VALID_RELATED_TYPES;
 
   const { rows } = await pool.query(
-    `SELECT to_node_id AS related_node_id, relation_type, weight
-       FROM grammar_relations
-      WHERE from_node_id = $1 AND relation_type = ANY($2::relation_type_enum[])
+    `SELECT gr.to_node_id AS related_node_id, gr.relation_type, gr.weight
+       FROM grammar_relations gr
+       JOIN grammar_nodes gn ON gn.node_id = gr.to_node_id
+      WHERE gr.from_node_id = $1 AND gr.relation_type = ANY($2::relation_type_enum[])
+        AND gn.language = $3
      UNION
-     SELECT from_node_id AS related_node_id, relation_type, weight
-       FROM grammar_relations
-      WHERE to_node_id = $1 AND relation_type = ANY($2::relation_type_enum[]) AND direction = 'BIDIRECTIONAL'`,
-    [nodeId, types]
+     SELECT gr.from_node_id AS related_node_id, gr.relation_type, gr.weight
+       FROM grammar_relations gr
+       JOIN grammar_nodes gn ON gn.node_id = gr.from_node_id
+      WHERE gr.to_node_id = $1 AND gr.relation_type = ANY($2::relation_type_enum[]) AND gr.direction = 'BIDIRECTIONAL'
+        AND gn.language = $3`,
+    [nodeId, types, startLanguage]
   );
 
   return rows.map((r) => ({
@@ -143,10 +180,15 @@ async function findRelatedNodes(pool, nodeId, relationType) {
  * (a) cycle_violations: PREREQUISITE 부분 그래프에 순환이 있는지 전수 검사(GRAMMAR_GRAPH §3).
  *     DOMAIN_LOGIC_BRIEF §2.3은 "관계 추가 시점"의 점증적 검사를 정의하지만, 이 API는
  *     이미 적재된 Language Pack 전체를 배포 전 일괄 검증하는 용도(GRAMMAR_GRAPH §3)이므로
- *     모든 PREREQUISITE 엣지에 대해 DFS 기반 전수 순환 탐지를 수행한다.
+ *     모든 PREREQUISITE 엣지에 대해 DFS 기반 전수 순환 탐지를 수행한다. (AUD-003 범위 밖 —
+ *     변경하지 않았다.)
  * (b) concept_consistency_violations: AC-003 복구 메모 — Concept A가 Concept B를
  *     prerequisite로 요구하는데, A/B에 대응하는 Grammar Node들 사이에 PREREQUISITE
- *     관계가 전혀 없으면 위반으로 기록한다.
+ *     관계가 전혀 없으면 위반으로 기록한다. (AUD-003 범위 밖 — 변경하지 않았다.)
+ * (c) language_boundary_violations(AUD-003, 신규): GRAMMAR_SCHEMA.md §6 same-language
+ *     invariant를 위반하는 grammar_relations — PREREQUISITE·RELATED·CONTRAST·ALTERNATIVE
+ *     4종 전부 대상. 이 language의 노드가 from/to 어느 한쪽이라도 걸린 관계를 전부
+ *     조회한 뒤, 양쪽 언어가 다르면 위반으로 기록한다.
  */
 async function validateLanguagePack(pool, language) {
   const { rows: nodes } = await pool.query(
@@ -196,10 +238,35 @@ async function validateLanguagePack(pool, language) {
     }
   }
 
+  // AUD-003: language_boundary_violations — 4개 relation type 전부 대상.
+  const { rows: touchingRelations } = await pool.query(
+    `SELECT gr.relation_id, gr.from_node_id, gr.to_node_id, gr.relation_type,
+            gn_from.language AS from_language, gn_to.language AS to_language
+       FROM grammar_relations gr
+       JOIN grammar_nodes gn_from ON gn_from.node_id = gr.from_node_id
+       JOIN grammar_nodes gn_to ON gn_to.node_id = gr.to_node_id
+      WHERE gn_from.language = $1 OR gn_to.language = $1`,
+    [language]
+  );
+  const languageBoundaryViolations = touchingRelations
+    .filter((r) => r.from_language !== r.to_language)
+    .map((r) => ({
+      relation_id: r.relation_id,
+      from_node_id: r.from_node_id,
+      to_node_id: r.to_node_id,
+      from_language: r.from_language,
+      to_language: r.to_language,
+      relation_type: r.relation_type,
+    }));
+
   return {
-    is_valid: cycleViolations.length === 0 && conceptConsistencyViolations.length === 0,
+    is_valid:
+      cycleViolations.length === 0 &&
+      conceptConsistencyViolations.length === 0 &&
+      languageBoundaryViolations.length === 0,
     cycle_violations: cycleViolations,
     concept_consistency_violations: conceptConsistencyViolations,
+    language_boundary_violations: languageBoundaryViolations,
   };
 }
 
