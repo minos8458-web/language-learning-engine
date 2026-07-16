@@ -2,6 +2,10 @@
 
 # Language Learning Engine (LLE)
 
+## Role of This Document
+
+**Project Position / Roadmap Authority.** Validation figures (PASS/section progress, regression counts) are not duplicated here — see `VALIDATION_STATUS.md`, the sole Validation State Authority.
+
 ## Project Status
 
 -   Current Phase: Phase 2
@@ -13,30 +17,27 @@
 1.  PROJECT_VISION.md
 2.  IMPLEMENTATION_NOTES.md
 3.  VALIDATION_LEVEL3.md
+4.  ARCHITECTURE_CLARIFICATION_BACKLOG.md
 
 ## Current Milestone
 
 Validation Level 3
 
-## Validation Progress
+## Validation State
 
--   ✅ §5 Grammar Gate
--   ✅ §6 White List
--   ✅ §7 Relation Integrity
--   ✅ §8 Review Engine
--   ⬜ §9 Conversation Boundary
--   ⬜ §10 AI Generation
--   ⬜ §11 Logging
--   ⬜ §12 Pass / Fail
--   ⬜ §13 Beta Release Gate
+See `VALIDATION_STATUS.md`.
 
 ## Architecture Status
 
 Architecture Frozen (approved architecture only)
 
-## Current Regression
+## Current Activity
 
-260 / 260 PASS
+-   Code rebuild
+-   Independent Architecture Audit remediation
+    -   AUD-002 (MASTERED/AUTOMATIC Temporal Stability Contract) — ✅ CLOSED
+    -   AUD-003 (Graph cross-language relation traversal) — ✅ CLOSED
+    -   AUD-001 (GitHub main current/historical status reconciliation) — 🟡 Repository Reconciliation in progress
 
 ## Known Deferred
 
@@ -49,7 +50,10 @@ None
 
 ## Next Task
 
-Validation Level 3 §9 Conversation Boundary
+1.  Complete AUD-001 Repository Reconciliation merge
+2.  Continue Independent Architecture Audit remediation with AUD-004
+
+Validation Level 3 §9 Conversation Boundary resumes after Independent Architecture Audit remediation (AUD-001 merge, then AUD-004) is complete. It is not the immediate next task.
 
 ## Rule
 

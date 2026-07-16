@@ -22,25 +22,20 @@ The GitHub main branch is the single source of truth for all documentation and i
 
 ## Last Updated
 
-2026-07-11
+2026-07-16
 
 ---
 
-## Current Project Phase
+## Role of This Document
 
-Phase 2
+This document is the **Session Startup Authority** only. It does not own or duplicate current project position or validation state — see the Authority Pointers below.
 
-## Current Milestone
+## Authority Pointers
 
-Validation Level 3
+- **Project Position / Roadmap**: `PROJECT_MASTER_INDEX.md`
+- **Validation State**: `VALIDATION_STATUS.md` (sole owner of PASS/section progress and regression figures)
 
-## Current Task
-
-Continue Validation Level 3 from §9 Conversation Boundary.
-
-## Next Major Goal
-
-Complete Validation Level 3 and prepare Beta Release.
+This document does not declare current regression totals or current §5–§8 (or any other section) PASS status. Those figures live only in `VALIDATION_STATUS.md`.
 
 ---
 
@@ -51,6 +46,7 @@ Complete Validation Level 3 and prepare Beta Release.
 3. IMPLEMENTATION_NOTES.md
 4. VALIDATION_STATUS.md
 5. VALIDATION_LEVEL3.md
+6. ARCHITECTURE_CLARIFICATION_BACKLOG.md
 
 ---
 
@@ -77,35 +73,7 @@ Complete Validation Level 3 and prepare Beta Release.
 - Ask for approval before changing architecture, schema, validation logic, or project direction.
 - Keep Validation Level 3 principles unchanged unless explicitly approved.
 - If any requirement is ambiguous, stop and ask instead of guessing.
-
----
-
-## Current Status
-
-### Architecture
-
-Frozen
-
-### Regression Test
-
-260 / 260 PASS
-
-### Validation Status
-
-PASS
-
-- §5 Grammar Gate
-- §6 White List
-- §7 Relation Integrity
-- §8 Review Engine
-
-Remaining
-
-- §9 Conversation Boundary
-- §10 AI Generation
-- §11 Logging
-- §12 Pass / Fail
-- §13 Beta Release Gate
+- Treat prior-session memory, local copies, ZIPs, browser root listings, or cached raw content as unreliable. Confirm current state against commit-pinned raw files on GitHub main before acting.
 
 ---
 
@@ -114,12 +82,13 @@ Remaining
 Every new development session must:
 
 1. Read this document first.
-2. Restore the current project status.
-3. Read all required documents.
-4. Summarize the current project state.
-5. Present the implementation plan.
-6. Wait for approval before major architectural changes.
-7. Update PROJECT_MASTER_INDEX.md and VALIDATION_STATUS.md whenever the project state changes.
+2. Read `PROJECT_MASTER_INDEX.md` for current project position.
+3. Read `VALIDATION_STATUS.md` for current validation state.
+4. Read all other required documents.
+5. Summarize the current project state (citing `PROJECT_MASTER_INDEX.md` / `VALIDATION_STATUS.md`, not this document, for position/validation figures).
+6. Present the implementation plan.
+7. Wait for approval before major architectural changes.
+8. Update `PROJECT_MASTER_INDEX.md` and `VALIDATION_STATUS.md` whenever project state changes — do not duplicate their content back into this document.
 
 ---
 
