@@ -19,7 +19,7 @@
 | AC-009 | `request_practice`의 `target_node_id` 선택 규칙 미정 | 🟡 Provisional(LEARNING_PROTOCOL.md 확보 후 재검토 필요) |
 | AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
-| AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — 🟡 Repository Reconciliation **PATCH PREPARED**(HEAD `3b51ec3` 기준 4-file 패치 완성, GitHub main 반영은 범위 밖). 상세는 §AUD-001 참고 |
+| AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
 
 ---
@@ -284,7 +284,7 @@ Learning Flow Engine은 이미 보유한 Content Engine 예외 호출 경로(AC-
 
 ## AUD-001 — GitHub main 문서 간 current/historical 상태 혼동
 
-**상태**: ✅ Architecture/Documentation Decision **CLOSED** / 🟡 Repository Reconciliation **PATCH PREPARED**(2026-07-16, HEAD `3b51ec30369e266ffeb52c9ede8707a849ab519a` 기준)
+**상태**: ✅ Architecture/Documentation Decision **CLOSED** / ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`)
 
 **Source**: `BOOTSTRAP.md`, `PROJECT_MASTER_INDEX.md`, `VALIDATION_STATUS.md`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(GitHub main), Independent Architecture Audit
 
@@ -310,13 +310,13 @@ GitHub main (repository-wide SSOT)
 
 **Governance**: Architecture 변경 아님 — status/documentation reconciliation. `CORE_STANDARD_V1_FREEZE.md` §5 절차 대상 아님.
 
-**패치 문서(로컬 완성, GitHub main 병합 대기 — 정확히 4개 파일)**:
+**병합된 패치 문서(GitHub main commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584` — 정확히 4개 파일)**:
 - `BOOTSTRAP.md`(전면 교체 — 상태 수치 제거, Session Startup Authority만 보유, Project Position/Validation State는 authority pointer로 대체)
-- `PROJECT_MASTER_INDEX.md`(전면 교체 — Validation 상세 수치 제거하고 `VALIDATION_STATUS.md` 참조로 대체, Roadmap Authority만 보유, Current Activity/Next Task에 AUD-002·AUD-003 CLOSED·AUD-001 진행 중·AUD-004 반영)
+- `PROJECT_MASTER_INDEX.md`(전면 교체 — Validation 상세 수치 제거하고 `VALIDATION_STATUS.md` 참조로 대체, Roadmap Authority만 보유, Current Activity/Next Task에 AUD-002·AUD-003·AUD-001 CLOSED 및 AUD-004 반영)
 - `VALIDATION_STATUS.md`(전면 교체 — A. Current GitHub Main/B. Historical Validation Record 분리, §5~13 재검증 안 됨 원칙과 AUD-002/AUD-003 clean-room evidence 별도 기재)
 - `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(본 문서, targeted patch — 상태표 AUD-001 행, §AUD-001 본 섹션, 개정 이력만 변경. AUD-002·AUD-003·§AUD-003·AC-002/AC-003 복구 메모·1차 판정 철회 provenance는 전부 그대로 보존)
 
-**Repository Reconciliation PATCH PREPARED**: 위 4개 파일은 이번 세션(2026-07-16)에서 commit-pinned HEAD `3b51ec3` 원문을 직접 재확보한 뒤 로컬에서 최종 완성됐으나 GitHub main에는 아직 반영되지 않았다 — 실제 push/merge는 이 세션의 권한 밖이며 별도로 진행되어야 한다. MERGED 또는 CLOSED로 선언하지 않는다.
+**Repository Reconciliation CLOSED**: 위 4-file reconciliation patch는 GitHub main에 commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`로 merge되었다. 이 merge로 AUD-001 Repository Reconciliation을 **CLOSED** 처리한다.
 
 ---
 
@@ -380,3 +380,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.8 | 2026-07-13 | AUD-002 canonical merge 완료 기록 — GitHub main 원문(`PROGRESS_SCHEMA.md` §0~12, `MIGRATION_GUIDE.md` §0~3) 대조 결과 병합 대기 파일의 잠정 번호(Entry 006)가 canonical 번호가 아니었음을 확인, `MIGRATION_GUIDE.md` Entry 003으로 재번호. `PROGRESS_SCHEMA.md` v1.0→v1.1(§3/§4/§6/§10/§11/§12), `MIGRATION_GUIDE.md` v1.0→v1.1(§2 Entry 003, §3) canonical 교체본 작성 — 미확인 섹션(§0~2, §5, §7~9, Entry 001·002)은 원문 미보유로 명시적 placeholder 처리, 임의 텍스트로 채우지 않음 |
 | 1.9 | 2026-07-13 | AUD-003(Graph가 cross-language relation을 허용·순회함) **CLOSED**로 기록 — Independent Architecture Audit 발견(GitHub main `src/engines/graphEngine.js` 코드 직접 조회로 확인), Frozen Core Standard Amendment로 최종 처리. **1차 adjudication("Architecture Clarification", 새 필드 없음을 근거)을 재심사 후 철회하고 Tier A Amendment로 재분류한 provenance를 §AUD-003에 보존.** Same-language invariant(4 relation type 전부), 3중 논리 방어(DB enforcement 없음), `validate_language_pack` output 확장(`language_boundary_violations[]`), runtime traversal defense-in-depth 최종 확정. `GRAMMAR_SCHEMA.md` v1.7, `GRAMMAR_GRAPH.md` v1.5, `API_CONTRACT.md` v1.10, `ENGINE_INTERFACE.md` v1.10, `VALIDATION_LEVEL3.md` v1.5, `MIGRATION_GUIDE.md` v1.2(Entry 004), `CORE_STANDARD_V1_FREEZE.md` v1.3 반영. DB schema/SQL migration 없음. AUD-001·AUD-002 기록 및 AC-002/AC-003 복구 메모 전부 보존(삭제·축약 없음) |
 | 1.10 | 2026-07-16 | AUD-001 Repository Reconciliation 상태를 **PATCH PREPARED**로 갱신(이전 PENDING MERGE) — 신규 세션에서 commit-pinned HEAD `3b51ec30369e266ffeb52c9ede8707a849ab519a` 원문(`BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`/`VALIDATION_STATUS.md`/본 문서)을 직접 재확보해 stale local/memory 상태를 배제하고 재작업. 상태표 AUD-001 행 및 §AUD-001 Current Verified State를 `aff97d7`/`e8a97a7` 근거에서 HEAD `3b51ec3` 근거로 교체(migrations 001–011, AUD-002/AUD-003 implementation 및 관련 테스트 아티팩트 present로 갱신), AUD-002/AUD-003 remediation-specific clean-room test 결과(AUD-002: 48/48·58/58·58/58, AUD-003: 58/58·10/10·68/68·68/68 — Claude Development clean-room, GitHub-hosted CI 독립검증 아님)를 §AUD-001에 별도 evidence로 기재. `BOOTSTRAP.md`(Session Startup Authority만 보유, authority pointer로 축소)·`PROJECT_MASTER_INDEX.md`(Validation 상세를 `VALIDATION_STATUS.md` 참조로 대체, Current Activity/Next Task에 AUD-002·AUD-003 CLOSED·AUD-001 진행 중·AUD-004 반영, §9 Conversation Boundary를 즉시 next task로 선언하지 않음)·`VALIDATION_STATUS.md`(A. Current GitHub Main/B. Historical Validation Record 분리, §5~13 미재검증 원칙과 260/260 historical warning 유지) 3개 파일 canonical 교체본을 확정하고 정확히 4개 파일(본 문서 포함) targeted patch로 마감. 아직 GitHub main 미병합 — MERGED/CLOSED 선언 없음. AUD-002·AUD-003·§AUD-003 1차 판정 철회 provenance·AC-002/AC-003 복구 메모 전부 무변경 보존 |
+| 1.11 | 2026-07-16 | AUD-001 Repository Reconciliation 4-file patch가 commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`로 GitHub main에 merge되어 Repository Reconciliation **CLOSED** 처리됨 |
