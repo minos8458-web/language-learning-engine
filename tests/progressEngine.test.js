@@ -5,6 +5,8 @@
 
 const { test, describe, before, beforeEach, after } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { pool } = require('../db/pool');
 const { runMigrations } = require('../db/migrate');
 const progressEngine = require('../src/engines/progressEngine');
@@ -24,6 +26,41 @@ async function createNode(nodeId, language, difficulty, conceptIds = []) {
      VALUES ($1, $2, $3::jsonb, $1, $4)`,
     [nodeId, language, JSON.stringify(conceptIds), difficulty]
   );
+}
+
+async function createAud004Fixture(label, targetCount = 0) {
+  const userId = await createUser(`u-aud004-${label}`);
+  const nodeId = `NODE_AUD004_${label}`;
+  await createNode(nodeId, 'VI', 1);
+  await progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString());
+
+  const targetNodeIds = [];
+  for (let i = 1; i <= targetCount; i++) {
+    const targetNodeId = `NODE_AUD004_${label}_TARGET_${i}`;
+    await createNode(targetNodeId, 'VI', 1);
+    targetNodeIds.push(targetNodeId);
+  }
+  return { userId, nodeId, targetNodeIds };
+}
+
+async function aud004WriteCounts(userId, nodeId) {
+  const { rows } = await pool.query(
+    `SELECT
+       (SELECT count(*) FROM attempt_records WHERE user_id=$1 AND node_id=$2) AS attempts,
+       (SELECT count(*) FROM cascade_jobs WHERE user_id=$1) AS jobs`,
+    [userId, nodeId]
+  );
+  return { attempts: Number(rows[0].attempts), jobs: Number(rows[0].jobs) };
+}
+
+async function aud004ProgressSnapshot(userId, nodeId) {
+  const { rows } = await pool.query(
+    `SELECT state, accuracy, avg_response_time_ms, confidence_inferred,
+            next_review_at, mastered_at, updated_at
+       FROM progress WHERE user_id=$1 AND node_id=$2`,
+    [userId, nodeId]
+  );
+  return rows[0];
 }
 
 describe('Progress Engine (Phase 1-B)', () => {
@@ -102,6 +139,197 @@ describe('Progress Engine (Phase 1-B)', () => {
         () => progressEngine.recordAttempt(pool, userId, 'NODE_DOES_NOT_EXIST', { isCorrect: true }),
         progressEngine.NotFoundError
       );
+    });
+  });
+
+  describe('record_attempt (4.4) — AUD-004 cascade producer remediation', () => {
+    test('정답 + cascadeTargetNodeIds omitted → jobs 0', async () => {
+      const { userId, nodeId } = await createAud004Fixture('CORRECT_OMITTED');
+      await progressEngine.recordAttempt(pool, userId, nodeId, { isCorrect: true, responseTimeMs: 1000 });
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 1, jobs: 0 });
+    });
+
+    test('SELF + [] → jobs 0', async () => {
+      const { userId, nodeId } = await createAud004Fixture('SELF_EMPTY');
+      await progressEngine.recordAttempt(pool, userId, nodeId, {
+        isCorrect: false,
+        errorCategory: 'SELF',
+        cascadeTargetNodeIds: [],
+      });
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 1, jobs: 0 });
+    });
+
+    test('SELF + non-empty → 전체 실패', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('SELF_NONEMPTY', 1);
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'SELF',
+          cascadeTargetNodeIds: targetNodeIds,
+        }),
+        progressEngine.ContractViolationError
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('정답 + non-empty → 전체 실패', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('CORRECT_NONEMPTY', 1);
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: true,
+          cascadeTargetNodeIds: targetNodeIds,
+        }),
+        progressEngine.ContractViolationError
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('TRANSFER + [] → 정상 commit, jobs 0', async () => {
+      const { userId, nodeId } = await createAud004Fixture('TRANSFER_EMPTY');
+      await progressEngine.recordAttempt(pool, userId, nodeId, {
+        isCorrect: false,
+        errorCategory: 'TRANSFER',
+        cascadeTargetNodeIds: [],
+      });
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 1, jobs: 0 });
+    });
+
+    test('TRANSFER + 유효한 고유 ID N개 → PENDING jobs N개', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('TRANSFER_VALID', 3);
+      await progressEngine.recordAttempt(pool, userId, nodeId, {
+        isCorrect: false,
+        errorCategory: 'TRANSFER',
+        cascadeTargetNodeIds: targetNodeIds,
+      });
+      const { rows } = await pool.query(
+        `SELECT target_node_id, status FROM cascade_jobs
+          WHERE user_id=$1 ORDER BY target_node_id`,
+        [userId]
+      );
+      assert.deepEqual(rows.map((row) => row.target_node_id), [...targetNodeIds].sort());
+      assert.ok(rows.every((row) => row.status === 'PENDING'));
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 1, jobs: 3 });
+    });
+
+    test('explicit null → 전체 실패', async () => {
+      const { userId, nodeId } = await createAud004Fixture('NULL');
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: null,
+        }),
+        progressEngine.ContractViolationError
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('배열이 아닌 값 → 전체 실패', async () => {
+      const { userId, nodeId } = await createAud004Fixture('NOT_ARRAY');
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: 'NODE_NOT_AN_ARRAY',
+        }),
+        progressEngine.ContractViolationError
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('빈 문자열 또는 문자열이 아닌 원소 → 전체 실패', async () => {
+      const { userId, nodeId } = await createAud004Fixture('INVALID_ELEMENT');
+      for (const cascadeTargetNodeIds of [[''], ['   '], [123]]) {
+        await assert.rejects(
+          () => progressEngine.recordAttempt(pool, userId, nodeId, {
+            isCorrect: false,
+            errorCategory: 'TRANSFER',
+            cascadeTargetNodeIds,
+          }),
+          progressEngine.ContractViolationError
+        );
+      }
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('중복 ID → 전체 실패', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('DUPLICATE', 1);
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: [targetNodeIds[0], targetNodeIds[0]],
+        }),
+        progressEngine.ContractViolationError
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+    });
+
+    test('존재하지 않는 ID → INVALID_ID, attempt/progress/jobs 전체 rollback', async () => {
+      const { userId, nodeId } = await createAud004Fixture('MISSING_ID');
+      const before = await aud004ProgressSnapshot(userId, nodeId);
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: ['NODE_AUD004_DOES_NOT_EXIST'],
+        }),
+        (err) => err instanceof progressEngine.NotFoundError && err.code === 'INVALID_ID'
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+      assert.deepEqual(await aud004ProgressSnapshot(userId, nodeId), before);
+    });
+
+    test('유효/무효 혼합 목록 → 부분 job 없이 전체 rollback', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('MIXED_IDS', 1);
+      const before = await aud004ProgressSnapshot(userId, nodeId);
+      await assert.rejects(
+        () => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: [targetNodeIds[0], 'NODE_AUD004_MIXED_MISSING'],
+        }),
+        (err) => err instanceof progressEngine.NotFoundError && err.code === 'INVALID_ID'
+      );
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+      assert.deepEqual(await aud004ProgressSnapshot(userId, nodeId), before);
+    });
+
+    test('cascade_jobs 삽입 실패 → attempt/progress/jobs 전체 rollback', async () => {
+      const { userId, nodeId, targetNodeIds } = await createAud004Fixture('JOB_INSERT_FAIL', 1);
+      const before = await aud004ProgressSnapshot(userId, nodeId);
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION aud004_reject_cascade_job() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'AUD-004 forced cascade_jobs insertion failure';
+        END;
+        $$ LANGUAGE plpgsql
+      `);
+      await pool.query(`
+        CREATE TRIGGER aud004_reject_cascade_job_trigger
+        BEFORE INSERT ON cascade_jobs
+        FOR EACH ROW EXECUTE FUNCTION aud004_reject_cascade_job()
+      `);
+      try {
+        await assert.rejects(() => progressEngine.recordAttempt(pool, userId, nodeId, {
+          isCorrect: false,
+          errorCategory: 'TRANSFER',
+          cascadeTargetNodeIds: targetNodeIds,
+        }));
+      } finally {
+        await pool.query('DROP TRIGGER IF EXISTS aud004_reject_cascade_job_trigger ON cascade_jobs');
+        await pool.query('DROP FUNCTION IF EXISTS aud004_reject_cascade_job()');
+      }
+      assert.deepEqual(await aud004WriteCounts(userId, nodeId), { attempts: 0, jobs: 0 });
+      assert.deepEqual(await aud004ProgressSnapshot(userId, nodeId), before);
+    });
+
+    test('Progress Engine은 Graph/Review/Learning Flow Engine을 import하지 않는다', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '..', 'src', 'engines', 'progressEngine.js'),
+        'utf8'
+      );
+      assert.doesNotMatch(source, /require\([^)]*(graphEngine|reviewEngine|learningFlowEngine)[^)]*\)/i);
     });
   });
 

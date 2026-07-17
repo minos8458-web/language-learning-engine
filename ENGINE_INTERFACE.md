@@ -68,14 +68,14 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점 |
+| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다** |
 | **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임) |
 | **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, MIGRATION_GUIDE Entry 005 — 2026-07-07 신설)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
 | **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
 | **6. 의존하면 안 되는 Engine** | 없음(최상위 진입점). 단, **다른 어떤 Engine으로부터도 호출되어서는 안 된다** — 이 Engine은 오직 최초 진입점 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4(Learning Flow Engine, 실수 처리 루프) |
-| **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다 |
+| **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다. **Review 호출의 `max_cascade_depth`를 하드코딩하지 않고 Engine 설정값을 전달한다(현재 기본값 2 유지, AUD-004)** |
 
 ---
 
@@ -98,14 +98,14 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8) |
+| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다** |
 | **2. 하지 않는 일** | Grammar Graph를 순회하지 않는다(Graph Engine의 역할). 어떤 문제를 생성할지 결정하지 않는다. 복습 대상 노드를 스스로 선정하지 않는다(Review Engine이 이 Engine의 조회 결과를 활용해 판단) |
-| **3. 입력 데이터** | 사용자 ID, 노드 ID, 이벤트 유형(명시적 학습/시도 결과/자기보고 Confidence), 원시 AttemptRecord 필드 |
+| **3. 입력 데이터** | 사용자 ID, 노드 ID, 이벤트 유형(명시적 학습/시도 결과/자기보고 Confidence), 원시 AttemptRecord 필드, **Learning Flow Engine이 내부 전달하는 `cascade_target_node_ids?: string[]`(외부 HTTP 입력 아님, AUD-004)** |
 | **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)** |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4.2, §8, LEARNING_THEORY C8/C9, GRAMMAR_SCHEMA §5 |
-| **8. 향후 구현 시 주의사항** | 다른 Engine이 이 Engine을 우회해 Progress 데이터에 직접 쓰기 접근을 하지 못하도록 **접근 제어 자체를 구현 레벨에서 강제**해야 한다. "요청은 받되 쓰기는 스스로 한다"는 원칙이 코드 구조에도 반영되어야 한다 |
+| **8. 향후 구현 시 주의사항** | 다른 Engine이 이 Engine을 우회해 Progress 데이터에 직접 쓰기 접근을 하지 못하도록 **접근 제어 자체를 구현 레벨에서 강제**해야 한다. "요청은 받되 쓰기는 스스로 한다"는 원칙이 코드 구조에도 반영되어야 한다. Cascade 대상 존재성 검증·attempt 삽입·progress 갱신·PENDING job 삽입은 동일 DB client/transaction으로 원자 처리한다. Progress Engine은 이를 위해 Review/Graph/Learning Flow Engine을 호출하거나 import하지 않는다(AUD-004) |
 
 ---
 
@@ -278,3 +278,4 @@ Learning Flow Engine
 | 1.9 | 2026-07-08 | AC-008 Resolved 반영 — Content Engine §8 입력에 `content_id` 단독 조회 모드, Learning Flow Engine §3 호출 가능 하위 Engine에 진단 조회 예외 경로, Generation Engine §6 출력에 `content_id` 추가 |
 | — | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.5에 머물러 있던 것을 위 AC-001/005/008 Resolved 결정 기준으로 일괄 반영. 새로운 설계 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md`. (버전 번호는 AC Backlog가 이미 명명한 1.6~1.9를 그대로 사용) |
 | 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — Graph Engine §4 책임에 Language boundary 검증(배포 전 정적 검증) 추가, 출력 데이터에 `language_boundary_violations` 목록 추가, "향후 구현 시 주의사항"에 선행/후행 탐색·관계 조회 함수의 runtime defense-in-depth(시작 노드 language 밖 노드 미반환) 명시. `GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, `API_CONTRACT.md` §3.3, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |
+| 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — Learning Flow의 Content 진단→Review Cascade→node_id 목록 전달 책임, Progress의 동일 트랜잭션 PENDING outbox producer 책임, leaf/no-engine-call 유지, `max_cascade_depth` 설정값 전달 원칙을 명시 |
