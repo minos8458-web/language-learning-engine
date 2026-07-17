@@ -71,6 +71,12 @@ const AUD002_SPACED_REVIEW = {
   masteredToAutomaticMinSpacedReviews: 2, // §3.2.2: mastered_at 이후 qualifying spaced review
 };
 
+// AC-013(Active-Node Admission Boundary) — `(user_id, language)` 범위의
+// INTRODUCED/STUDYING Grammar Node 신규 admission 제한. Provisional/tunable default.
+const ACTIVE_NODE_LIMIT = {
+  maxConcurrentIntroducedOrStudying: 2,
+};
+
 module.exports = {
   STATE_ORDER,
   STATE_ORDINAL,
@@ -79,4 +85,5 @@ module.exports = {
   CONFIDENCE_EMA,
   REVIEW_INTERVAL_DAYS,
   AUD002_SPACED_REVIEW,
+  ACTIVE_NODE_LIMIT,
 };

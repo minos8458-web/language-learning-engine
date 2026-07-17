@@ -28,6 +28,25 @@ async function createNode(nodeId, language, difficulty, conceptIds = []) {
   );
 }
 
+async function insertProgressState(userId, nodeId, state) {
+  await pool.query(
+    `INSERT INTO progress (user_id, node_id, state, updated_at)
+     VALUES ($1, $2, $3, now())`,
+    [userId, nodeId, state]
+  );
+}
+
+async function progressRowCount(userId, nodeIds = null) {
+  const params = [userId];
+  let where = 'user_id = $1';
+  if (nodeIds) {
+    params.push(nodeIds);
+    where += ' AND node_id = ANY($2::text[])';
+  }
+  const { rows } = await pool.query(`SELECT count(*) AS n FROM progress WHERE ${where}`, params);
+  return Number(rows[0].n);
+}
+
 async function createAud004Fixture(label, targetCount = 0) {
   const userId = await createUser(`u-aud004-${label}`);
   const nodeId = `NODE_AUD004_${label}`;
@@ -106,6 +125,263 @@ describe('Progress Engine (Phase 1-B)', () => {
         () => progressEngine.recordExplicitStudy(pool, userId, 'NODE_DOES_NOT_EXIST', new Date().toISOString()),
         progressEngine.NotFoundError
       );
+    });
+  });
+
+  describe('AC-013 get_active_learning_count (4.8)', () => {
+    test('Progress가 없으면 active_count=0', async () => {
+      const userId = await createUser('u-ac013-count-zero');
+      assert.deepEqual(await progressEngine.getActiveLearningCount(pool, userId, 'VI'), {
+        active_count: 0,
+      });
+    });
+
+    test('INTRODUCED와 STUDYING만 집계하고 PRACTICING/MASTERED/AUTOMATIC은 제외', async () => {
+      const userId = await createUser('u-ac013-count-states');
+      const states = ['INTRODUCED', 'STUDYING', 'PRACTICING', 'MASTERED', 'AUTOMATIC'];
+      for (const state of states) {
+        const nodeId = `NODE_AC013_COUNT_${state}`;
+        await createNode(nodeId, 'VI', 1);
+        await insertProgressState(userId, nodeId, state);
+      }
+      assert.deepEqual(await progressEngine.getActiveLearningCount(pool, userId, 'VI'), {
+        active_count: 2,
+      });
+    });
+
+    test('다른 language의 active node는 제외', async () => {
+      const userId = await createUser('u-ac013-count-language');
+      await createNode('NODE_AC013_COUNT_VI', 'VI', 1);
+      await createNode('NODE_AC013_COUNT_EN', 'EN', 1);
+      await insertProgressState(userId, 'NODE_AC013_COUNT_VI', 'INTRODUCED');
+      await insertProgressState(userId, 'NODE_AC013_COUNT_EN', 'STUDYING');
+      assert.deepEqual(await progressEngine.getActiveLearningCount(pool, userId, 'VI'), {
+        active_count: 1,
+      });
+    });
+
+    test('같은 concept의 서로 다른 node를 각각 집계', async () => {
+      const userId = await createUser('u-ac013-count-concept');
+      await createNode('NODE_AC013_CONCEPT_A', 'VI', 1, ['CONCEPT_AC013_SHARED']);
+      await createNode('NODE_AC013_CONCEPT_B', 'VI', 1, ['CONCEPT_AC013_SHARED']);
+      await insertProgressState(userId, 'NODE_AC013_CONCEPT_A', 'INTRODUCED');
+      await insertProgressState(userId, 'NODE_AC013_CONCEPT_B', 'STUDYING');
+      assert.deepEqual(await progressEngine.getActiveLearningCount(pool, userId, 'VI'), {
+        active_count: 2,
+      });
+    });
+
+    test('존재하지 않는 user_id는 INVALID_ID', async () => {
+      await assert.rejects(
+        () =>
+          progressEngine.getActiveLearningCount(
+            pool,
+            '00000000-0000-4000-8000-000000000013',
+            'VI'
+          ),
+        (err) => err.code === 'INVALID_ID'
+      );
+    });
+
+    test('잘못된 language 형식은 OUT_OF_RANGE_VALUE', async () => {
+      const userId = await createUser('u-ac013-count-bad-language');
+      await assert.rejects(
+        () => progressEngine.getActiveLearningCount(pool, userId, 'vi'),
+        (err) => err.code === 'OUT_OF_RANGE_VALUE'
+      );
+    });
+  });
+
+  describe('AC-013 record_explicit_study Admission Gate', () => {
+    test('active 0에서 신규 explicit study 성공', async () => {
+      const userId = await createUser('u-ac013-admit-zero');
+      await createNode('NODE_AC013_ADMIT_ZERO', 'VI', 1);
+      const result = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        'NODE_AC013_ADMIT_ZERO',
+        new Date().toISOString()
+      );
+      assert.equal(result.state, 'INTRODUCED');
+    });
+
+    test('active 1에서 신규 explicit study 성공', async () => {
+      const userId = await createUser('u-ac013-admit-one');
+      await createNode('NODE_AC013_ADMIT_ONE_A', 'VI', 1);
+      await createNode('NODE_AC013_ADMIT_ONE_B', 'VI', 1);
+      await progressEngine.recordExplicitStudy(pool, userId, 'NODE_AC013_ADMIT_ONE_A', new Date().toISOString());
+      const result = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        'NODE_AC013_ADMIT_ONE_B',
+        new Date().toISOString()
+      );
+      assert.equal(result.state, 'INTRODUCED');
+      assert.equal((await progressEngine.getActiveLearningCount(pool, userId, 'VI')).active_count, 2);
+    });
+
+    test('active 2에서 신규 admission은 CONTRACT_VIOLATION이고 DB 무변경', async () => {
+      const userId = await createUser('u-ac013-admit-limit');
+      const nodeIds = ['NODE_AC013_LIMIT_A', 'NODE_AC013_LIMIT_B', 'NODE_AC013_LIMIT_C'];
+      for (const nodeId of nodeIds) await createNode(nodeId, 'VI', 1);
+      await progressEngine.recordExplicitStudy(pool, userId, nodeIds[0], new Date().toISOString());
+      await progressEngine.recordExplicitStudy(pool, userId, nodeIds[1], new Date().toISOString());
+      const before = await progressRowCount(userId);
+      await assert.rejects(
+        () => progressEngine.recordExplicitStudy(pool, userId, nodeIds[2], new Date().toISOString()),
+        (err) => err.code === 'CONTRACT_VIOLATION'
+      );
+      assert.equal(await progressRowCount(userId), before);
+      assert.equal(await progressRowCount(userId, [nodeIds[2]]), 0);
+    });
+
+    test('active 2 이상에서도 같은 node 재호출은 멱등 반환', async () => {
+      const userId = await createUser('u-ac013-idempotent-limit');
+      await createNode('NODE_AC013_IDEMPOTENT_A', 'VI', 1);
+      await createNode('NODE_AC013_IDEMPOTENT_B', 'VI', 1);
+      await progressEngine.recordExplicitStudy(pool, userId, 'NODE_AC013_IDEMPOTENT_A', new Date().toISOString());
+      await progressEngine.recordExplicitStudy(pool, userId, 'NODE_AC013_IDEMPOTENT_B', new Date().toISOString());
+      const result = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        'NODE_AC013_IDEMPOTENT_A',
+        new Date().toISOString()
+      );
+      assert.deepEqual(result, { state: 'INTRODUCED' });
+      assert.equal(await progressRowCount(userId), 2);
+    });
+
+    test('language A가 limit이어도 language B admission은 성공', async () => {
+      const userId = await createUser('u-ac013-language-isolation');
+      await createNode('NODE_AC013_LANG_VI_A', 'VI', 1);
+      await createNode('NODE_AC013_LANG_VI_B', 'VI', 1);
+      await createNode('NODE_AC013_LANG_EN', 'EN', 1);
+      await progressEngine.recordExplicitStudy(pool, userId, 'NODE_AC013_LANG_VI_A', new Date().toISOString());
+      await progressEngine.recordExplicitStudy(pool, userId, 'NODE_AC013_LANG_VI_B', new Date().toISOString());
+      const result = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        'NODE_AC013_LANG_EN',
+        new Date().toISOString()
+      );
+      assert.equal(result.state, 'INTRODUCED');
+      assert.equal((await progressEngine.getActiveLearningCount(pool, userId, 'EN')).active_count, 1);
+    });
+
+    test('active 1에서 서로 다른 두 node 동시 admission은 정확히 하나만 성공', async () => {
+      const userId = await createUser('u-ac013-concurrent-different');
+      const nodeIds = ['NODE_AC013_CONCURRENT_BASE', 'NODE_AC013_CONCURRENT_A', 'NODE_AC013_CONCURRENT_B'];
+      for (const nodeId of nodeIds) await createNode(nodeId, 'VI', 1);
+      await progressEngine.recordExplicitStudy(pool, userId, nodeIds[0], new Date().toISOString());
+      const settled = await Promise.allSettled(
+        nodeIds.slice(1).map((nodeId) =>
+          progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString())
+        )
+      );
+      assert.equal(settled.filter((r) => r.status === 'fulfilled').length, 1);
+      assert.equal(settled.filter((r) => r.status === 'rejected').length, 1);
+      assert.equal(settled.find((r) => r.status === 'rejected').reason.code, 'CONTRACT_VIOLATION');
+      assert.equal(await progressRowCount(userId), 2);
+    });
+
+    test('같은 node 동시 admission은 행 1건과 멱등 결과를 보장', async () => {
+      const userId = await createUser('u-ac013-concurrent-same');
+      const nodeId = 'NODE_AC013_CONCURRENT_SAME';
+      await createNode(nodeId, 'VI', 1);
+      const settled = await Promise.allSettled([
+        progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString()),
+        progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString()),
+      ]);
+      assert.equal(settled.filter((r) => r.status === 'fulfilled').length, 2);
+      assert.deepEqual(
+        settled.map((r) => r.value),
+        [{ state: 'INTRODUCED' }, { state: 'INTRODUCED' }]
+      );
+      assert.equal(await progressRowCount(userId, [nodeId]), 1);
+    });
+
+    test('실제 INSERT 실패는 전체 rollback하고 원인 제거 후 lock이 해제되어 재시도 성공', async () => {
+      const userId = await createUser('u-ac013-insert-rollback');
+      const nodeId = 'NODE_AC013_FORCED_INSERT_FAILURE';
+      await createNode(nodeId, 'VI', 1);
+      await pool.query('DROP TRIGGER IF EXISTS ac013_reject_progress_insert ON progress');
+      await pool.query('DROP FUNCTION IF EXISTS ac013_reject_progress_insert()');
+      await pool.query(`
+        CREATE FUNCTION ac013_reject_progress_insert() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.node_id = 'NODE_AC013_FORCED_INSERT_FAILURE' THEN
+            RAISE EXCEPTION 'AC013 forced insert failure';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql
+      `);
+      await pool.query(`
+        CREATE TRIGGER ac013_reject_progress_insert
+        BEFORE INSERT ON progress
+        FOR EACH ROW EXECUTE FUNCTION ac013_reject_progress_insert()
+      `);
+      try {
+        await assert.rejects(
+          () => progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString()),
+          /AC013 forced insert failure/
+        );
+        assert.equal(await progressRowCount(userId, [nodeId]), 0);
+      } finally {
+        await pool.query('DROP TRIGGER IF EXISTS ac013_reject_progress_insert ON progress');
+        await pool.query('DROP FUNCTION IF EXISTS ac013_reject_progress_insert()');
+      }
+      const retry = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        nodeId,
+        new Date().toISOString()
+      );
+      assert.equal(retry.state, 'INTRODUCED');
+      assert.equal(await progressRowCount(userId, [nodeId]), 1);
+    });
+
+    test('PRACTICING→STUDYING 퇴행으로 허용된 초과 상태가 되어도 퇴행은 commit', async () => {
+      const userId = await createUser('u-ac013-demotion-over-limit');
+      const activeNodeIds = ['NODE_AC013_DEMOTE_ACTIVE_A', 'NODE_AC013_DEMOTE_ACTIVE_B'];
+      for (const nodeId of activeNodeIds) {
+        await createNode(nodeId, 'VI', 1);
+        await insertProgressState(userId, nodeId, 'INTRODUCED');
+      }
+      const demotingNodeId = 'NODE_AC013_DEMOTE_PRACTICING';
+      await createNode(demotingNodeId, 'VI', 1);
+      await insertProgressState(userId, demotingNodeId, 'PRACTICING');
+      let result;
+      for (let i = 0; i < 5; i++) {
+        result = await progressEngine.recordAttempt(pool, userId, demotingNodeId, {
+          isCorrect: false,
+          responseTimeMs: 1000,
+          errorCategory: 'SELF',
+        });
+      }
+      assert.equal(result.state, 'STUDYING');
+      assert.equal((await progressEngine.getActiveLearningCount(pool, userId, 'VI')).active_count, 3);
+
+      const blockedNodeId = 'NODE_AC013_DEMOTE_BLOCKED';
+      await createNode(blockedNodeId, 'VI', 1);
+      await assert.rejects(
+        () => progressEngine.recordExplicitStudy(pool, userId, blockedNodeId, new Date().toISOString()),
+        (err) => err.code === 'CONTRACT_VIOLATION'
+      );
+
+      await pool.query(
+        `UPDATE progress SET state='PRACTICING'
+          WHERE user_id=$1 AND node_id = ANY($2::text[])`,
+        [userId, activeNodeIds]
+      );
+      assert.equal((await progressEngine.getActiveLearningCount(pool, userId, 'VI')).active_count, 1);
+      const admitted = await progressEngine.recordExplicitStudy(
+        pool,
+        userId,
+        blockedNodeId,
+        new Date().toISOString()
+      );
+      assert.equal(admitted.state, 'INTRODUCED');
     });
   });
 

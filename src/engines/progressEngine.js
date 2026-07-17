@@ -6,7 +6,7 @@
 //
 // 구현하는 API(API_CONTRACT.md §4): get_progress(4.1), get_eligible_nodes(4.2),
 // record_explicit_study(4.3), record_attempt(4.4), record_self_reported_confidence(4.5),
-// get_concept_coverage_depth(4.6), get_due_reviews(4.7).
+// get_concept_coverage_depth(4.6), get_due_reviews(4.7), get_active_learning_count(4.8).
 //
 // ⚠️ 발견된 문서 갭(코드 작성 중 발견, Architecture 재확인 필요 — Phase 1-B 보고에 기재):
 // API_CONTRACT.md §4.4(record_attempt)의 입력 목록에는 content_id가 없다. 하지만
@@ -27,8 +27,15 @@
 // Flow/Generation/Review/Content/AI Generation/Interleaving Engine, API Layer, Worker,
 // Tier D seed)은 건드리지 않았다.
 
-const { STATE_ORDINAL, PROMOTION, DIFFICULTY_BASELINE_MS, CONFIDENCE_EMA, REVIEW_INTERVAL_DAYS, AUD002_SPACED_REVIEW } =
-  require('../config/engineConfig');
+const {
+  STATE_ORDINAL,
+  PROMOTION,
+  DIFFICULTY_BASELINE_MS,
+  CONFIDENCE_EMA,
+  REVIEW_INTERVAL_DAYS,
+  AUD002_SPACED_REVIEW,
+  ACTIVE_NODE_LIMIT,
+} = require('../config/engineConfig');
 
 class NotFoundError extends Error {
   constructor(message) {
@@ -43,6 +50,14 @@ class ContractViolationError extends Error {
     super(message);
     this.name = 'ContractViolationError';
     this.code = 'CONTRACT_VIOLATION';
+  }
+}
+
+class OutOfRangeValueError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'OutOfRangeValueError';
+    this.code = 'OUT_OF_RANGE_VALUE';
   }
 }
 
@@ -135,31 +150,100 @@ async function getEligibleNodes(pool, userId, language) {
 }
 
 // ---------------------------------------------------------------------------
+// 4.8 get_active_learning_count (AC-013, internal read API)
+// ---------------------------------------------------------------------------
+async function getActiveLearningCount(pool, userId, language) {
+  if (typeof language !== 'string' || !/^[A-Z]{2}$/.test(language)) {
+    throw new OutOfRangeValueError(`language는 ISO 639-1 대문자 2글자여야 합니다: ${language}`);
+  }
+
+  const { rows: userRows } = await pool.query('SELECT 1 FROM users WHERE user_id = $1', [userId]);
+  if (userRows.length === 0) {
+    throw new NotFoundError(`존재하지 않는 user_id: ${userId}`);
+  }
+
+  const { rows } = await pool.query(
+    `SELECT count(*) AS active_count
+       FROM progress p
+       JOIN grammar_nodes gn ON gn.node_id = p.node_id
+      WHERE p.user_id = $1
+        AND gn.language = $2
+        AND p.state IN ('INTRODUCED', 'STUDYING')`,
+    [userId, language]
+  );
+
+  return { active_count: Number(rows[0].active_count) };
+}
+
+// ---------------------------------------------------------------------------
 // 4.3 record_explicit_study
 // ---------------------------------------------------------------------------
 async function recordExplicitStudy(pool, userId, nodeId, timestamp) {
-  const { rows: nodeRows } = await pool.query('SELECT 1 FROM grammar_nodes WHERE node_id = $1', [
-    nodeId,
-  ]);
-  if (nodeRows.length === 0) {
-    throw new NotFoundError(`존재하지 않는 Grammar Node ID: ${nodeId}`);
-  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const { rows: existing } = await pool.query(
-    'SELECT state FROM progress WHERE user_id = $1 AND node_id = $2',
-    [userId, nodeId]
-  );
-  if (existing.length > 0) {
-    // §4.3: 이미 INTRODUCED 이상이면 에러가 아니라 현재 상태를 그대로 반환(멱등 처리)
-    return { state: existing[0].state };
-  }
+    const { rows: nodeRows } = await client.query(
+      'SELECT language FROM grammar_nodes WHERE node_id = $1',
+      [nodeId]
+    );
+    if (nodeRows.length === 0) {
+      throw new NotFoundError(`존재하지 않는 Grammar Node ID: ${nodeId}`);
+    }
+    const language = nodeRows[0].language;
 
-  await pool.query(
-    `INSERT INTO progress (user_id, node_id, state, explicit_study_event_at, updated_at)
-     VALUES ($1, $2, 'INTRODUCED', $3, now())`,
-    [userId, nodeId, timestamp]
-  );
-  return { state: 'INTRODUCED' };
+    await client.query(
+      `SELECT pg_advisory_xact_lock(
+         hashtext($1::text),
+         hashtext($2::text)
+       )`,
+      [userId, language]
+    );
+
+    const { rows: userRows } = await client.query('SELECT 1 FROM users WHERE user_id = $1', [userId]);
+    if (userRows.length === 0) {
+      throw new NotFoundError(`존재하지 않는 user_id: ${userId}`);
+    }
+
+    const { rows: existing } = await client.query(
+      'SELECT state FROM progress WHERE user_id = $1 AND node_id = $2',
+      [userId, nodeId]
+    );
+    if (existing.length > 0) {
+      // AC-013: idempotency는 capacity gate보다 우선한다.
+      await client.query('COMMIT');
+      return { state: existing[0].state };
+    }
+
+    const { rows: countRows } = await client.query(
+      `SELECT count(*) AS active_count
+         FROM progress p
+         JOIN grammar_nodes gn ON gn.node_id = p.node_id
+        WHERE p.user_id = $1
+          AND gn.language = $2
+          AND p.state IN ('INTRODUCED', 'STUDYING')`,
+      [userId, language]
+    );
+    const activeCount = Number(countRows[0].active_count);
+    if (activeCount >= ACTIVE_NODE_LIMIT.maxConcurrentIntroducedOrStudying) {
+      throw new ContractViolationError(
+        `active Grammar Node limit 초과: user=${userId}, language=${language}, active_count=${activeCount}`
+      );
+    }
+
+    await client.query(
+      `INSERT INTO progress (user_id, node_id, state, explicit_study_event_at, updated_at)
+       VALUES ($1, $2, 'INTRODUCED', $3, now())`,
+      [userId, nodeId, timestamp]
+    );
+    await client.query('COMMIT');
+    return { state: 'INTRODUCED' };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -689,6 +773,7 @@ async function getDueReviews(pool, userId, language, now, options = {}) {
 module.exports = {
   getProgress,
   getEligibleNodes,
+  getActiveLearningCount,
   recordExplicitStudy,
   recordAttempt,
   recordSelfReportedConfidence,
@@ -696,4 +781,5 @@ module.exports = {
   getDueReviews,
   NotFoundError,
   ContractViolationError,
+  OutOfRangeValueError,
 };
