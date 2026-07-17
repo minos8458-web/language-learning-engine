@@ -875,11 +875,11 @@ describe('Progress Engine (Phase 1-B)', () => {
 
     test('limit이 결과 수를 제한한다', async () => {
       const userId = await createUser('u-4.7-c');
-      const past = new Date(Date.now() - 1000).toISOString();
       for (const n of ['NODE_4_7_C1', 'NODE_4_7_C2', 'NODE_4_7_C3']) {
         await createNode(n, 'VI', 1);
-        await progressEngine.recordExplicitStudy(pool, userId, n, past);
-        await progressEngine.recordAttempt(pool, userId, n, { isCorrect: true, responseTimeMs: 1000 });
+        // AC-013 admission gate와 무관한 get_due_reviews limit 조회 fixture.
+        // PRACTICING은 active count에 포함되지 않으므로 3건을 독립적으로 구성한다.
+        await insertProgressState(userId, n, 'PRACTICING');
       }
       await pool.query(
         `UPDATE progress SET next_review_at = now() - interval '1 hour' WHERE user_id = $1`,
