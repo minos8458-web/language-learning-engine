@@ -101,6 +101,19 @@
 | 구현 선행조건 | §9 검증 전 REVIEW·NEW_GRAMMAR·INTERLEAVING·CONVERSATION·IDLE 전체 `start_session` production 경로 구현 필요. CONVERSATION-only 부분 구현 금지 |
 | 재심사 | 이 필드는 미구현 Conversation boundary 전용 계약이므로 실제 Conversation Engine 도입 전에 유지·변경·폐기 여부를 다시 심사한다 |
 
+### Entry 006
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-18 |
+| 대상 문서 | `DOMAIN_LOGIC_BRIEF.md`(v1.7 → v1.8), `ENGINE_INTERFACE.md`(v1.12 → v1.13), `API_CONTRACT.md`(v1.13 → v1.14), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.15 → v1.16) |
+| 변경 유형 | **ADDITIVE** — AC-013 Tier C Architecture Clarification, Active-Node Admission Boundary |
+| 핵심 변경 | 신규 `record_explicit_study` admission만 `(user_id, language)` active count와 Provisional/tunable 기본 limit 2로 제한. Hard Invariant가 아니며 기존 상태 전이·퇴행·허용된 초과 상태를 변경하지 않음 |
+| API 변경 | Progress 내부 read API `get_active_learning_count` 추가. 내부 Engine API 16→17, 전체 API 21→22, 외부 HTTP API 5개 불변 |
+| 하위 호환성 | 기존 API 입·출력과 외부 `next_action` enum은 불변. 이미 존재하는 Progress에 대한 `record_explicit_study` 멱등 반환은 capacity보다 우선해 기존 계약을 유지 |
+| 서버/DB 영향 | DB migration·schema 변경 없음. 기존 `progress`·`grammar_nodes` 필드의 조회와 transaction-scoped advisory lock만 사용 |
+| 상태 | Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
+
 ---
 
 ## 3. 개정 이력
@@ -111,3 +124,4 @@
 | 1.1 | 2026-07-13 | Entry 003 추가 — AUD-002 Frozen Core Standard Amendment 및 같은 root cause에서 파생된 Review Scheduling Clarification을 canonical migration record로 병합 |
 | 1.2 | 2026-07-13 | Entry 004 추가 — AUD-003 Frozen Core Standard Amendment(Grammar Relation same-language invariant, `validate_language_pack` output 확장, runtime traversal defense-in-depth)를 canonical migration record로 병합. DB schema/SQL migration 없음을 명시 |
 | 1.3 | 2026-07-17 | Entry 005 추가 — AC-012 Conversation Boundary acknowledgement 및 loop prevention을 ADDITIVE canonical migration record로 반영. 기존 호출자 omitted=false 하위 호환, 클라이언트 boundary 확인 후 true 재호출, DB/Progress schema 변경 없음, 실제 Conversation Engine 도입 전 재심사 명시 |
+| 1.4 | 2026-07-18 | Entry 006 추가 — AC-013 Active-Node Admission Boundary를 ADDITIVE canonical migration record로 반영. 내부 API 16→17·전체 API 21→22, 외부 HTTP API 5개 불변, idempotent 하위 호환, DB migration/schema 변경 없음, prerequisite implementation 미착수 명시 |

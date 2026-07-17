@@ -68,8 +68,8 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다. AC-012: `start_session`에서 LEARNING_PROTOCOL의 전체 우선순위 사슬을 평가하고, `conversationBoundaryAcknowledged=true`이면 해당 호출에서 CONVERSATION만 재선택하지 않는다** |
-| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다 |
+| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다. AC-012: `start_session`에서 LEARNING_PROTOCOL의 전체 우선순위 사슬을 평가하고, `conversationBoundaryAcknowledged=true`이면 해당 호출에서 CONVERSATION만 재선택하지 않는다. AC-013: `record_explicit_study` 전 `get_active_learning_count`로 NEW_GRAMMAR 후보를 read-only precheck한다** |
+| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다. Active count를 구하기 위해 `progress`나 `grammar_nodes` 테이블을 직접 조회하지 않는다 |
 | **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 — 2026-07-07 신설; optional `conversationBoundaryAcknowledged`, canonical `MIGRATION_GUIDE.md` Entry 005 / AC-012)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
 | **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
@@ -78,6 +78,8 @@ Learning Flow Engine
 | **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다. **Review 호출의 `max_cascade_depth`를 하드코딩하지 않고 Engine 설정값을 전달한다(현재 기본값 2 유지, AUD-004). AC-012의 PRACTICING+ 최소 기준 기본값 3도 Engine 설정값으로 소비한다. §9 검증 전 REVIEW·NEW_GRAMMAR·INTERLEAVING·CONVERSATION·IDLE 전체 `start_session` 경로를 production 코드로 구현해야 하며, CONVERSATION-only 부분 구현이나 다른 분기의 production mock은 허용하지 않는다** |
 
 **AC-012 경계 책임**: `conversationBoundaryAcknowledged`는 요청 단위 사실이며 Learning Flow Engine이나 다른 Engine의 저장 상태가 아니다. `true`일 때 동일 호출에서 CONVERSATION을 재선택하지 않되, 기존 우선순위의 다른 action은 계속 평가한다. Conversation Engine 자체는 이번 Clarification에서 설계·구현하지 않는다.
+
+**AC-013 admission 책임 분리**: Learning Flow Engine의 `get_active_learning_count(user_id, language)` 호출은 NEW_GRAMMAR 후보 판단을 위한 read-only precheck이다. precheck과 write 사이에 경쟁이 생길 수 있으므로 최종 admission 권한은 Progress Engine의 `recordExplicitStudy`에 있다. capacity 경쟁으로 `CONTRACT_VIOLATION`이 발생하면 최신 판단을 위해 `start_session`을 재호출할 수 있다.
 
 ---
 
@@ -100,14 +102,18 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다** |
+| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다. AC-013: 내부 read API `get_active_learning_count`를 제공하고 `recordExplicitStudy`에서 Active-Node Admission Gate를 최종 원자적으로 강제한다** |
 | **2. 하지 않는 일** | Grammar Graph를 순회하지 않는다(Graph Engine의 역할). 어떤 문제를 생성할지 결정하지 않는다. 복습 대상 노드를 스스로 선정하지 않는다(Review Engine이 이 Engine의 조회 결과를 활용해 판단) |
 | **3. 입력 데이터** | 사용자 ID, 노드 ID, 이벤트 유형(명시적 학습/시도 결과/자기보고 Confidence), 원시 AttemptRecord 필드, **Learning Flow Engine이 내부 전달하는 `cascade_target_node_ids?: string[]`(외부 HTTP 입력 아님, AUD-004)** |
-| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)** |
+| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)**, `(user_id, language)` active Grammar Node 수(`get_active_learning_count`, §4.8) |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4.2, §8, LEARNING_THEORY C8/C9, GRAMMAR_SCHEMA §5 |
 | **8. 향후 구현 시 주의사항** | 다른 Engine이 이 Engine을 우회해 Progress 데이터에 직접 쓰기 접근을 하지 못하도록 **접근 제어 자체를 구현 레벨에서 강제**해야 한다. "요청은 받되 쓰기는 스스로 한다"는 원칙이 코드 구조에도 반영되어야 한다. Cascade 대상 존재성 검증·attempt 삽입·progress 갱신·PENDING job 삽입은 동일 DB client/transaction으로 원자 처리한다. Progress Engine은 이를 위해 Review/Graph/Learning Flow Engine을 호출하거나 import하지 않는다(AUD-004) |
+
+**AC-013 `recordExplicitStudy` 최종 enforcement**: 별도 read API를 호출하지 않고 하나의 `pool.connect()` client와 하나의 transaction을 사용한다. `BEGIN` 후 Grammar Node 존재성과 canonical language를 조회하고, `SELECT pg_advisory_xact_lock(hashtext($1::text), hashtext($2::text))`로 `(user_id, language)` admission을 직렬화한다. 동일 `(user_id, node_id)` Progress가 이미 있으면 capacity와 무관하게 기존 state를 반환하고 `COMMIT`한다. 없으면 동일 client에서 authoritative active count를 조회하고, `active_count >= configured_limit`이면 `CONTRACT_VIOLATION`으로 전체 `ROLLBACK`, 여유가 있으면 `INTRODUCED` Progress를 삽입한 뒤 `COMMIT`한다. 모든 예외는 `ROLLBACK`하고 `finally`에서 client를 release한다.
+
+lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLLBACK` 시 자동 해제된다. session-scoped lock과 try-lock은 사용하지 않고, `recordAttempt`는 이 lock을 획득하지 않는다. hash collision은 correctness 오류가 아니라 불필요한 직렬화만 유발한다. Progress Engine의 **호출 가능한 하위 Engine 없음(리프)** 규칙은 그대로 유지된다.
 
 ---
 
@@ -282,3 +288,4 @@ Learning Flow Engine
 | 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — Graph Engine §4 책임에 Language boundary 검증(배포 전 정적 검증) 추가, 출력 데이터에 `language_boundary_violations` 목록 추가, "향후 구현 시 주의사항"에 선행/후행 탐색·관계 조회 함수의 runtime defense-in-depth(시작 노드 language 밖 노드 미반환) 명시. `GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, `API_CONTRACT.md` §3.3, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |
 | 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — Learning Flow의 Content 진단→Review Cascade→node_id 목록 전달 책임, Progress의 동일 트랜잭션 PENDING outbox producer 책임, leaf/no-engine-call 유지, `max_cascade_depth` 설정값 전달 원칙을 명시 |
 | 1.12 | 2026-07-17 | AC-012 Tier C Architecture Clarification — Learning Flow `start_session` 입력에 `conversationBoundaryAcknowledged` 반영, PRACTICING+ 최소 기준 기본값 3의 설정 소비, true 시 해당 호출의 CONVERSATION 재선택 차단, acknowledgement 비영속·Progress 무변경, 전체 next_action production 경로 선행 구현 및 Conversation Engine 신설 금지를 명시 |
+| 1.13 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Learning Flow의 `get_active_learning_count` read-only precheck과 Progress `recordExplicitStudy`의 최종 admission 권한을 분리. Progress leaf 구조, 동일 client/transaction, transaction-scoped blocking advisory lock, idempotency 우선, authoritative count 및 `CONTRACT_VIOLATION` enforcement를 명시 |

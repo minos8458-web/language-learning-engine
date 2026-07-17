@@ -24,6 +24,8 @@
 | 외부 진입점 | 일반 사용자(클라이언트) | 10장 Learning Flow Engine API |
 | 내부 계약 | Engine ↔ Engine | 3~9장 |
 
+AC-013 반영 후 API는 **외부 Learning Flow API 5개, 내부 Engine API 17개, 전체 22개**다. 신규 `get_active_learning_count`는 내부 Engine API이며 외부 HTTP 진입점을 추가하지 않는다.
+
 ---
 
 ## 2. 공통 규칙
@@ -123,9 +125,11 @@
 | 입력 | `user_id`, `node_id`, `timestamp` |
 | 출력 | 갱신된 `state`(NOT_INTRODUCED→INTRODUCED) |
 | 빈 결과 | 해당 없음(쓰기 API는 성공/실패만 있음) |
-| 에러 | 존재하지 않는 `node_id`. 이미 INTRODUCED 이상인 노드에 대한 재요청은 에러가 아니라 현재 상태를 그대로 반환(멱등 처리) |
+| 에러 | 존재하지 않는 `node_id`. 신규 Progress의 canonical `(user_id, language)` active count가 configured limit 이상이면 `CONTRACT_VIOLATION`. 이미 Progress가 존재하는 `(user_id, node_id)` 재요청은 capacity와 무관하게 에러가 아니라 현재 상태를 그대로 반환(멱등 처리) |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | Learning Flow Engine 이외의 호출 주체 요청을 수락하지 않는다 |
+
+**AC-013 admission 계약**: limit은 Hard Invariant가 아니라 신규 `NOT_INTRODUCED → INTRODUCED` admission에만 적용된다. active는 canonical language가 같고 state가 `INTRODUCED` 또는 `STUDYING`인 Grammar Node이며 기본 configured limit은 2(Provisional/tunable)다. Progress Engine은 별도 read API를 호출하지 않고 동일 DB client/transaction에서 idempotency 확인을 capacity 판정보다 먼저 수행한 뒤 authoritative count로 최종 판정한다. 기존 노드의 합법적 상태 전이·퇴행과 허용된 초과 상태는 오류로 변환하지 않는다.
 
 ### 4.4 record_attempt
 
@@ -186,6 +190,33 @@
 **필드 설명**: `overdue_by`는 `next_review_at`을 얼마나 지났는지를 나타내는 경과 시간이다. `priority`는 정렬을 위한 값이며 정확한 계산식은 HOW 단계(Progress Engine 구현)에서 정의한다 — 이 API는 "정렬된 결과가 나온다"는 계약만 보장하고 정렬 기준 자체를 노출하지 않는다(공통 규칙 알고리즘 비노출 원칙).
 
 **LEARNING_PROTOCOL.md와의 연결**: 이 API는 LEARNING_PROTOCOL §3(Learning State Assessment)이 "진행 중인 Review Queue"를 조회하는 실제 경로이며, `limit`은 §5(Session Budget)가 배정한 Review 몫만큼만 가져오는 데 쓰인다.
+
+### 4.8 get_active_learning_count
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `get_active_learning_count` |
+| JavaScript 구현명 | `getActiveLearningCount` |
+| 호출 주체 | Learning Flow Engine |
+| 입력 | `user_id`, `language` |
+| 출력 | `{active_count: integer}` |
+| 빈 결과 | 올바른 형식이지만 해당 `(user_id, language)` Progress가 없으면 `{active_count: 0}` |
+| 에러 | 존재하지 않는 `user_id` → `INVALID_ID`; 잘못된 `language` 코드 형식 → `OUT_OF_RANGE_VALUE` |
+| 호출 가능한 하위 Engine | 없음(리프) |
+| 금지 사항 | 외부 HTTP API로 노출하지 않는다. 순수 SELECT이며 Progress/Grammar 데이터를 변경하지 않는다. Learning Flow Engine이 직접 `progress`나 `grammar_nodes`를 조회하는 대신 이 계약을 사용한다 |
+
+**Canonical active count**:
+
+```sql
+SELECT count(*) AS active_count
+FROM progress p
+JOIN grammar_nodes gn ON gn.node_id = p.node_id
+WHERE p.user_id = $1
+  AND gn.language = $2
+  AND p.state IN ('INTRODUCED', 'STUDYING')
+```
+
+같은 `concept_id`의 서로 다른 `node_id`는 각각 별도 Grammar Node로 집계한다. 이 read API 결과는 Learning Flow의 NEW_GRAMMAR 후보 precheck일 뿐이며 `record_explicit_study`의 최종 admission 판정을 대체하지 않는다.
 
 ---
 
@@ -418,3 +449,4 @@
 | 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — `record_attempt` 내부 입력에 `cascade_target_node_ids?: string[]` 추가. 외부 HTTP 입력이 아님을 명시하고 omitted/null/type/empty/duplicate/SELF·TRANSFER/INVALID_ID 규칙 및 attempt·progress·cascade_jobs 동일 트랜잭션 원자성을 정의 |
 | 1.12 | 2026-07-17 | AUD-004 독립 코드리뷰 F-03 wording-only clarification — `record_attempt` §4.4의 기존 구현(`trim().length === 0`)과 문서를 동기화해 빈 문자열뿐 아니라 공백 문자만으로 구성된 node ID도 허용하지 않음을 명시. 동작·알고리즘·오류 타입 및 외부 `submit_attempt` 계약 변경 없음 |
 | 1.13 | 2026-07-17 | AC-012 Tier C Architecture Clarification — `start_session`(10.5) optional 입력 `conversation_boundary_acknowledged?: boolean` 추가. omitted/false/true/null/non-boolean 계약, 요청 단위 비영속 acknowledgement, true 시 CONVERSATION만 해당 호출 후보에서 제외하고 서버가 기존 우선순위의 다음 action을 결정하는 규칙을 명시. API 총수 21개와 기존 `next_action` enum은 불변 |
+| 1.14 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Progress 내부 API `get_active_learning_count`(§4.8) 추가, `record_explicit_study`(§4.3)의 capacity `CONTRACT_VIOLATION`·idempotency 우선·최종 admission 계약 명시. 외부 HTTP API 5개 불변, 내부 API 16→17, 전체 API 21→22 |
