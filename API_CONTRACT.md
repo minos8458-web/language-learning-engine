@@ -357,14 +357,22 @@
 |---|---|
 | API 이름 | `start_session` |
 | 호출 주체 | 외부 클라이언트(사용자) |
-| 입력 | `user_id`, `language` |
+| 입력 | `user_id`, `language`, **`conversation_boundary_acknowledged`(선택, boolean — AC-012)** |
 | 출력 | `next_action`(단일 결정값 — `REVIEW`\|`NEW_GRAMMAR`\|`INTERLEAVING`\|`CONVERSATION`\|`IDLE` 중 하나) + 해당 액션 수행에 필요한 데이터(예: `REVIEW`면 `get_due_reviews` 결과, `NEW_GRAMMAR`면 다음 노드 정보) |
 | 빈 결과 | 오늘 더 이상 할 것이 없음 → `next_action = IDLE` |
-| 에러 | `user_id` 미존재, `language` 코드 오류 |
+| 에러 | `user_id` 미존재, `language` 코드 오류, `conversation_boundary_acknowledged`가 explicit `null` 또는 boolean 이외 값인 경우(`CONTRACT_VIOLATION`) |
 | 호출 가능한 하위 Engine | Progress Engine, Review Engine, Generation Engine, Interleaving Engine |
 | 금지 사항 | 클라이언트가 정책을 재판단하지 않도록, 원시 후보 목록이 아니라 `next_action` 단일 결정값만 반환한다(설계 원칙) |
 
-> **MIGRATION_GUIDE.md Entry 005 반영(2026-07-07)**: 기존 4개 외부 API 중 어떤 것도 "지금 어떤 `node_id`를 다뤄야 하는가"를 클라이언트에 알려주지 않아 세션을 시작할 방법 자체가 없었다는 공백을 발견해 신설. API 개수 20개 → 21개.
+**AC-012 Conversation Boundary acknowledgement 계약(2026-07-17)**: canonical 입력명은 `conversation_boundary_acknowledged?: boolean`, JavaScript 구현명은 `conversationBoundaryAcknowledged`다. 이 값은 클라이언트가 Conversation 정책을 판단하거나 CONVERSATION을 숨기기 위한 입력이 아니라, 서버가 반환한 boundary 화면을 해당 호출 전에 정상 표시·확인했다는 요청 단위 사실 보고다.
+
+- omitted와 explicit `false`는 모두 `false`로 처리한다. 세션의 세 진입 조건(`LEARNING_PROTOCOL.md` §9)을 충족하면 기존 우선순위 사슬에 따라 `CONVERSATION`을 반환할 수 있다.
+- explicit `true`이면 **해당 호출에서만** `CONVERSATION`을 후보에서 제외하고, 서버가 `REVIEW → NEW_GRAMMAR → INTERLEAVING → CONVERSATION → IDLE`의 기존 정책 순서를 계속 평가해 다음 유효한 `next_action`을 단일 값으로 결정한다. 일반적으로 `IDLE`일 수 있지만 호출 시점에 다른 action이 유효하면 그 action을 반환한다.
+- explicit `null`과 boolean 이외 값은 `CONTRACT_VIOLATION`이다.
+- acknowledgement는 서버에 저장하지 않고 Progress 또는 DB 상태를 변경하지 않는다. `true`여도 클라이언트가 다음 action을 선택하지 않으며 서버 응답을 그대로 처리한다.
+- 이 필드는 미구현 Conversation boundary 전용 계약이다. 실제 Conversation Engine 도입 전에 유지·변경·폐기 여부를 다시 심사한다.
+
+> **Historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 반영(2026-07-07)**: 기존 4개 외부 API 중 어떤 것도 "지금 어떤 `node_id`를 다뤄야 하는가"를 클라이언트에 알려주지 않아 세션을 시작할 방법 자체가 없었다는 공백을 발견해 신설. API 개수 20개 → 21개. 현재 canonical `MIGRATION_GUIDE.md` Entry 005는 AC-012이며 이 historical draft 번호와 구분한다.
 >
 > ⚠️ **복구 근거 및 불확실성 표시**: 이 절의 필드 정의는 `MIGRATION_GUIDE_ENTRIES_004_005.md`, `PHASE_2_COMPLETION_REPORT.md` §3.1(`next_action` 9개 분기: REVIEW 2경로·NEW_GRAMMAR·제외·동시진행제한·INTERLEAVING 2건·CONVERSATION·IDLE 언급), `BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`(API 5개 전제)를 근거로 **재구성한 것이며, 원본 API_CONTRACT.md v1.3의 정확한 원문(예: 출력 필드의 정확한 명칭, 9개 분기 각각의 정밀한 트리거 조건)은 코드베이스 유실로 확인 불가하다.** 재구현 착수 전 이 절을 검토해 원문과 다르면 수정 지시 바란다.
 
@@ -409,3 +417,4 @@
 | 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — `validate_language_pack`(3.3) 출력에 `language_boundary_violations[]` 추가, `is_valid` 판정을 3개 violation 목록 전부 기준으로 정합화. `find_prerequisites`(3.1)·`find_related_nodes`(3.2) 금지 사항에 시작 노드 language 밖 노드 미반환(defense-in-depth) 명시. `GRAMMAR_SCHEMA.md` §6 same-language invariant, `GRAMMAR_GRAPH.md` §3, `ENGINE_INTERFACE.md`, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |
 | 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — `record_attempt` 내부 입력에 `cascade_target_node_ids?: string[]` 추가. 외부 HTTP 입력이 아님을 명시하고 omitted/null/type/empty/duplicate/SELF·TRANSFER/INVALID_ID 규칙 및 attempt·progress·cascade_jobs 동일 트랜잭션 원자성을 정의 |
 | 1.12 | 2026-07-17 | AUD-004 독립 코드리뷰 F-03 wording-only clarification — `record_attempt` §4.4의 기존 구현(`trim().length === 0`)과 문서를 동기화해 빈 문자열뿐 아니라 공백 문자만으로 구성된 node ID도 허용하지 않음을 명시. 동작·알고리즘·오류 타입 및 외부 `submit_attempt` 계약 변경 없음 |
+| 1.13 | 2026-07-17 | AC-012 Tier C Architecture Clarification — `start_session`(10.5) optional 입력 `conversation_boundary_acknowledged?: boolean` 추가. omitted/false/true/null/non-boolean 계약, 요청 단위 비영속 acknowledgement, true 시 CONVERSATION만 해당 호출 후보에서 제외하고 서버가 기존 우선순위의 다음 action을 결정하는 규칙을 명시. API 총수 21개와 기존 `next_action` enum은 불변 |

@@ -68,14 +68,16 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다** |
-| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임) |
-| **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, MIGRATION_GUIDE Entry 005 — 2026-07-07 신설)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
+| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다. AC-012: `start_session`에서 LEARNING_PROTOCOL의 전체 우선순위 사슬을 평가하고, `conversationBoundaryAcknowledged=true`이면 해당 호출에서 CONVERSATION만 재선택하지 않는다** |
+| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다 |
+| **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 — 2026-07-07 신설; optional `conversationBoundaryAcknowledged`, canonical `MIGRATION_GUIDE.md` Entry 005 / AC-012)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
 | **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
 | **6. 의존하면 안 되는 Engine** | 없음(최상위 진입점). 단, **다른 어떤 Engine으로부터도 호출되어서는 안 된다** — 이 Engine은 오직 최초 진입점 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4(Learning Flow Engine, 실수 처리 루프) |
-| **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다. **Review 호출의 `max_cascade_depth`를 하드코딩하지 않고 Engine 설정값을 전달한다(현재 기본값 2 유지, AUD-004)** |
+| **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다. **Review 호출의 `max_cascade_depth`를 하드코딩하지 않고 Engine 설정값을 전달한다(현재 기본값 2 유지, AUD-004). AC-012의 PRACTICING+ 최소 기준 기본값 3도 Engine 설정값으로 소비한다. §9 검증 전 REVIEW·NEW_GRAMMAR·INTERLEAVING·CONVERSATION·IDLE 전체 `start_session` 경로를 production 코드로 구현해야 하며, CONVERSATION-only 부분 구현이나 다른 분기의 production mock은 허용하지 않는다** |
+
+**AC-012 경계 책임**: `conversationBoundaryAcknowledged`는 요청 단위 사실이며 Learning Flow Engine이나 다른 Engine의 저장 상태가 아니다. `true`일 때 동일 호출에서 CONVERSATION을 재선택하지 않되, 기존 우선순위의 다른 action은 계속 평가한다. Conversation Engine 자체는 이번 Clarification에서 설계·구현하지 않는다.
 
 ---
 
@@ -279,3 +281,4 @@ Learning Flow Engine
 | — | 2026-07-11 | **Contract Reconciliation 패치** — 코드베이스 유실 후 재구현 착수 전, GitHub 본문이 v1.5에 머물러 있던 것을 위 AC-001/005/008 Resolved 결정 기준으로 일괄 반영. 새로운 설계 결정 없음. 근거: `REBUILD_CONTRACT_RECONCILIATION.md`. (버전 번호는 AC Backlog가 이미 명명한 1.6~1.9를 그대로 사용) |
 | 1.10 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — Graph Engine §4 책임에 Language boundary 검증(배포 전 정적 검증) 추가, 출력 데이터에 `language_boundary_violations` 목록 추가, "향후 구현 시 주의사항"에 선행/후행 탐색·관계 조회 함수의 runtime defense-in-depth(시작 노드 language 밖 노드 미반환) 명시. `GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, `API_CONTRACT.md` §3.3, `VALIDATION_LEVEL3.md` §7, `MIGRATION_GUIDE.md` Entry 004와 연동 |
 | 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — Learning Flow의 Content 진단→Review Cascade→node_id 목록 전달 책임, Progress의 동일 트랜잭션 PENDING outbox producer 책임, leaf/no-engine-call 유지, `max_cascade_depth` 설정값 전달 원칙을 명시 |
+| 1.12 | 2026-07-17 | AC-012 Tier C Architecture Clarification — Learning Flow `start_session` 입력에 `conversationBoundaryAcknowledged` 반영, PRACTICING+ 최소 기준 기본값 3의 설정 소비, true 시 해당 호출의 CONVERSATION 재선택 차단, acknowledgement 비영속·Progress 무변경, 전체 next_action production 경로 선행 구현 및 Conversation Engine 신설 금지를 명시 |

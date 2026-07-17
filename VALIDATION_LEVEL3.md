@@ -225,7 +225,22 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | 클라이언트 표시 | `CLIENT_BRIEF.md` §1이 명시한 "범위 밖 표시"가 실제로 노출되는지(기능 없음을 사용자에게 명확히 알리는지, 빈 화면이나 에러로 보이지 않는지) |
 | 세션 흐름 유지 | `CONVERSATION` 진입 후에도 세션이 깨지지 않고 다음 `start_session` 호출로 정상 복귀하는지 |
 
-**PASS 기준**: 위 3개 항목만 통과하면 이 절은 통과로 간주한다. Conversation Engine의 내부 품질(대화 자연스러움 등)은 애초에 검증 대상 자체가 아니므로 Beta Release Gate를 막지 않는다(§13).
+위 기존 세 가지 기준은 그대로 유지한다. AC-012의 무한 반복 차단 계약은 다음 항목을 추가로 검증한다.
+
+| AC-012 순환 차단 검증 | 기대 결과 |
+|---|---|
+| 세 진입 조건 충족 + field omitted | `next_action=CONVERSATION` |
+| 세 진입 조건 충족 + explicit `false` | `next_action=CONVERSATION` |
+| 동일 조건 + explicit `true` | `CONVERSATION`을 재반환하지 않고 기존 우선순위의 다음 유효한 action 반환 |
+| explicit `null` 또는 non-boolean | `CONTRACT_VIOLATION` |
+| boundary 화면 | 오류·빈 화면이 아닌 정상 화면으로 표시 |
+| acknowledge 재호출 | 화면 확인 후 현재 세션 메모리에 true를 기록하고 `start_session(true)` 재호출 |
+| 저장 부작용 | 전체 과정에서 Progress 및 DB 변경 0건 |
+| 수명주기 | 앱 재시작 또는 새 세션에서 acknowledgement를 false로 초기화 가능 |
+
+**구현 선행조건**: §9 실행 전 REVIEW, NEW_GRAMMAR, INTERLEAVING, CONVERSATION, IDLE 전체 `start_session` 결정 경로가 실제 production 코드로 구현되어야 한다. CONVERSATION-only 부분 구현, validation-only 가짜 `start_session`, production 코드의 다른 분기 mock은 금지한다. 테스트 내부 dependency injection과 fixture는 허용한다.
+
+**PASS 기준**: 기존 3개 경계 항목과 AC-012 순환 차단 항목을 모두 통과해야 한다. Conversation Engine의 내부 품질(대화 자연스러움 등)은 계속 검증 대상 밖이며, 이 문서 개정은 §9가 현재 main에서 PASS했거나 테스트가 이미 존재한다는 뜻이 아니다.
 
 ---
 
@@ -268,7 +283,7 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | §6 White List | Rule 기반 양성 탐지율 100%, 음성 탐지(오탐) 0건, LLM 기반 독립성 원칙 확인 |
 | §7 관계 검증 | 54개 관계 전수 `find_related_nodes` 정확 반환, 순환 0건, **Language Boundary 위반 주입 테스트(§7.1) 전부 정확히 탐지·차단** |
 | §8 Review Engine | Cascade 깊이 위반 0건, `get_due_reviews` 우선순위 규칙 일치 |
-| §9 Conversation | 3개 경계 항목만 통과(내부 동작은 판정 대상 아님) |
+| §9 Conversation | 기존 3개 경계 항목 + AC-012 순환 차단 검증 전부 통과(Conversation Engine 내부 동작은 판정 대상 아님) |
 | §10 AI Generation | 표층 변주 중복 0건, 실패 처리 분기 정확 |
 
 **부분 실현 사례의 취급**: JA 시나리오2(`する` 대체)·EN 시나리오4(`go`→`work` 대체)는 "문법 조합은 완전 실현, 어휘만 대체"로 이미 각 언어 문서에 기록되어 있다. Level 3는 이 두 건을 **FAIL로 재판정하지 않는다** — 어휘 대체가 문서화된 판단에 따른 것이므로, "문법 조합 기준" PASS로 취급한다.
@@ -316,3 +331,4 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | 1.3 | 2026-07-13 | Independent Architecture Audit(AUD-002), **Frozen Core Standard Amendment** — §8.1 신설. `DOMAIN_LOGIC_BRIEF.md` §3.2.1·§3.2.2(Spaced Review Evidence)가 실제로 burst 승격을 차단하는지 검증하는 5개 항목 정의(Burst 차단, `is_spaced_review` 계산 시점, `mastered_at` 방향 무관 갱신, 퇴행 후 evidence 격리, AUTOMATIC 2회 조건). "Burst 승격 차단"은 이 Amendment의 존재 이유이므로 예외 없이 PASS해야 함을 명시 |
 | 1.4 | 2026-07-13 | AUD-002 Scheduling/Evidence Clarification 반영 — §8.1에 검증 항목 4개 추가(조기 연습이 due를 미루지 않는지, due 이후 시도가 정확히 qualifying 기록되는지, 비교 기준 스냅샷 오류 방지, `next_review_at IS NULL` 안전 처리). "조기 연습이 due를 미루지 않는지"도 Burst 차단과 동급의 무예외 PASS 기준으로 승격 |
 | 1.5 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — §7.1 신설(Language Boundary 검증). Cross-language `PREREQUISITE`/`RELATED`/`CONTRAST`/`ALTERNATIVE` 4종 위반 주입 탐지, `is_valid` 정합성, runtime traversal(선행/후행 탐색·`find_related_nodes`) foreign-language 미반환, 정상 same-language relation fixture 회귀 없음까지 9개 검증 항목 정의. §12 Pass/Fail 기준과 §13 Beta Release Gate 차단 조건에 반영. AUD-003은 기존 관계 총수나 과거 PASS 상태를 새로 확정하지 않음을 명시(§7.1 하단 주의) — 관계 총수 표기 정합성은 이 Amendment 범위 밖 |
+| 1.6 | 2026-07-17 | AC-012 Tier C Architecture Clarification — §9의 기존 세 경계 PASS 기준을 보존하면서 omitted/false/true/null/non-boolean, 정상 boundary 표시, acknowledge 재호출, Progress/DB 무변경, 새 세션 초기화 순환 차단 검증을 추가. 전체 start_session production 경로 구현을 선행조건으로 명시하고 Conversation Engine 내부 품질은 계속 범위 밖으로 유지. §9 PASS 또는 current-main 테스트 존재를 선언하지 않음 |

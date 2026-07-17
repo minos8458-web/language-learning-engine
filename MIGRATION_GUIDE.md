@@ -87,6 +87,20 @@
 | DB schema / SQL migration | **없음.** `grammar_relations`·`grammar_nodes` 테이블 컬럼 변경이 전혀 없다 — 이번 Amendment는 기존 필드(`from_node_id`, `to_node_id`, `language`)의 조합에 새 invariant를 추가하는 것뿐이며, `validate_language_pack`의 출력 필드 추가와 Graph Engine 함수들의 필터 로직 추가만 필요하다 |
 | Entry 번호 참고 | 이 Entry는 canonical main의 마지막 확정 Entry(003) 다음 순번인 **004**다 |
 
+### Entry 005
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-17 |
+| 대상 문서 | `API_CONTRACT.md`(v1.12 → v1.13), `ENGINE_INTERFACE.md`(v1.11 → v1.12), `CLIENT_BRIEF.md`(v1.0 → v1.1), `DOMAIN_LOGIC_BRIEF.md`(v1.6 → v1.7), `VALIDATION_LEVEL3.md`(v1.5 → v1.6), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.14 → v1.15) |
+| 변경 유형 | **ADDITIVE** — Tier C Architecture Clarification(AC-012) |
+| 핵심 변경 | 외부 `start_session`에 optional `conversation_boundary_acknowledged?: boolean`(JavaScript `conversationBoundaryAcknowledged`) 추가. omitted/false는 기존 동작, true는 해당 호출에서 CONVERSATION 재선택만 차단하고 서버가 기존 우선순위의 다음 유효한 action을 결정 |
+| 하위 호환성 | 기존 호출자는 필드를 생략하므로 `false`와 동일하게 동작한다. 기존 21개 API 수와 `next_action` enum은 변경되지 않는다 |
+| 클라이언트 조치 | Conversation boundary를 실제 처리하는 클라이언트는 정상 boundary 화면 표시 후 현재 세션 메모리에 acknowledgement=true를 기록하고 `start_session`을 재호출해야 한다. 세션 종료·앱 재시작 시 false로 초기화하며 영속 저장하지 않는다 |
+| 서버/DB 영향 | DB migration 없음. Progress schema 변경 없음. 별도 Conversation session 엔터티나 서버 저장 상태를 추가하지 않는다 |
+| 구현 선행조건 | §9 검증 전 REVIEW·NEW_GRAMMAR·INTERLEAVING·CONVERSATION·IDLE 전체 `start_session` production 경로 구현 필요. CONVERSATION-only 부분 구현 금지 |
+| 재심사 | 이 필드는 미구현 Conversation boundary 전용 계약이므로 실제 Conversation Engine 도입 전에 유지·변경·폐기 여부를 다시 심사한다 |
+
 ---
 
 ## 3. 개정 이력
@@ -96,3 +110,4 @@
 | 1.0 | 2026-07-06 | 최초 작성 — Entry 001(Content 구조 변경, BREAKING), Entry 002(`get_due_reviews` 추가, ADDITIVE) 기록 |
 | 1.1 | 2026-07-13 | Entry 003 추가 — AUD-002 Frozen Core Standard Amendment 및 같은 root cause에서 파생된 Review Scheduling Clarification을 canonical migration record로 병합 |
 | 1.2 | 2026-07-13 | Entry 004 추가 — AUD-003 Frozen Core Standard Amendment(Grammar Relation same-language invariant, `validate_language_pack` output 확장, runtime traversal defense-in-depth)를 canonical migration record로 병합. DB schema/SQL migration 없음을 명시 |
+| 1.3 | 2026-07-17 | Entry 005 추가 — AC-012 Conversation Boundary acknowledgement 및 loop prevention을 ADDITIVE canonical migration record로 반영. 기존 호출자 omitted=false 하위 호환, 클라이언트 boundary 확인 후 true 재호출, DB/Progress schema 변경 없음, 실제 Conversation Engine 도입 전 재심사 명시 |

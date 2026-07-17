@@ -18,6 +18,7 @@
 | AC-008 | `submit_attempt`에 SELF/TRANSFER 진단용 content_id 부재 | ✅ Resolved |
 | AC-009 | `request_practice`의 `target_node_id` 선택 규칙 미정 | 🟡 Provisional(LEARNING_PROTOCOL.md 확보 후 재검토 필요) |
 | AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved |
+| AC-012 | §9 Conversation Boundary acknowledgement and loop prevention | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -250,6 +251,51 @@ Learning Flow Engine은 이미 보유한 Content Engine 예외 호출 경로(AC-
 
 ---
 
+## AC-012 — §9 Conversation Boundary acknowledgement and loop prevention
+
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-17). §9는 아직 **PASS 아님**.
+
+**사용자 명시적 승인 provenance(2026-07-17)**: 사용자가 §9 Conversation Boundary의 canonical 진입 조건, acknowledgement 입력 계약, 클라이언트 재호출 흐름, 서버 비영속 원칙, 전체 `start_session` production 경로 선행 구현 조건을 명시적으로 승인했다. Governance는 Tier A Amendment가 아니라 **Tier C Architecture Clarification**이다.
+
+**발견된 무한 반복 원인**: `LEARNING_PROTOCOL.md` §9의 세 조건을 충족해 `start_session`이 `CONVERSATION`을 반환한 뒤, 미구현 boundary 화면을 확인하고 같은 요청을 다시 호출해도 세 조건을 바꾸는 저장 상태가 없다. Session Budget은 §5의 정책으로만 정의되어 있고 `DATA_PERSISTENCE_BRIEF.md`에 저장 필드·엔터티가 없으며, 현재 계약에도 Conversation 몫을 소비했다고 갱신하는 메커니즘이 없다. 따라서 동일 Progress/DB 상태로 재호출하면 CONVERSATION이 반복 선택될 수 있다.
+
+**Canonical Conversation 진입 조건**: `LEARNING_PROTOCOL.md` §9의 기존 세 조건을 그대로 사용한다.
+
+1. 오늘의 Review Queue 처리가 완료됐을 것.
+2. PRACTICING 이상 노드가 최소 기준 개수 이상 존재할 것.
+3. Session Budget에 Conversation 몫이 남아 있을 것.
+
+PRACTICING 이상 최소 기준은 **Provisional/tunable 기본값 3**이다. 조합 생성의 최소 재료인 2개보다 엄격해야 한다는 §9의 자유 회화 추가 여유분 취지를 만족하는 가장 작은 정수라서 3을 채택했다. 이는 Engine 설정값이며 Tier A 상수가 아니다.
+
+**채택 결정 — 단일 boolean 요청 입력**:
+
+- canonical: `conversation_boundary_acknowledged?: boolean`
+- JavaScript: `conversationBoundaryAcknowledged`
+- omitted/explicit false → false. 세 조건을 충족하면 CONVERSATION을 반환할 수 있다.
+- explicit true → 해당 호출에서 CONVERSATION만 재선택하지 않고, 서버가 기존 우선순위 사슬의 다음 유효한 `next_action`을 결정한다. 일반적으로 IDLE일 수 있으나 다른 action이 유효하면 그 action을 반환한다.
+- explicit null 또는 boolean 이외 값 → `CONTRACT_VIOLATION`.
+- acknowledgement는 boundary 표시 완료 사실을 보고하는 요청 단위 입력일 뿐 서버 저장 상태가 아니다. Progress와 DB를 변경하지 않고 별도 Conversation session 엔터티도 만들지 않는다.
+
+**기각 대안**:
+
+1. Session Budget 소비 또는 acknowledgement를 DB/Progress에 저장 — 일시적인 UI boundary 확인을 영속 학습 상태로 승격해 Progress-only state 원칙을 훼손하고 새 엔터티·migration을 유발하므로 기각.
+2. 클라이언트가 CONVERSATION을 임의로 숨김 — 서버가 `next_action`의 SSOT라는 원칙을 깨고 정책을 중복 구현하므로 기각.
+3. acknowledgement=true이면 항상 IDLE 하드코딩 — 호출 시점에 REVIEW 등 더 높은 우선순위 action이 새로 유효할 수 있는데 기존 정책 사슬 평가를 건너뛰므로 기각.
+4. Conversation Engine을 지금 신설 — 이번 범위는 미구현 boundary와 반복 방지뿐이며 Engine 내부 설계는 별도 Architecture 작업이므로 기각.
+
+**클라이언트 흐름**: 최초 호출은 field omitted/false → `CONVERSATION`이면 오류·빈 화면이 아닌 정상 boundary 표시 → 사용자가 확인하면 현재 세션 메모리에 true 기록 → `start_session(true)` 재호출 → 서버가 반환한 action을 그대로 처리한다. 세션 종료·앱 재시작 시 false로 초기화하며 영속 저장하지 않는다.
+
+**구현 및 검증 경계**:
+
+- Conversation Engine 자체는 설계·구현하지 않는다. 이 필드는 미구현 Conversation boundary 전용 계약이며 실제 Conversation Engine 도입 전에 유지·변경·폐기 여부를 재심사한다.
+- §9 검증 전에 REVIEW, NEW_GRAMMAR, INTERLEAVING, CONVERSATION, IDLE 전체 `start_session` 결정 경로를 실제 production 코드로 구현해야 한다. CONVERSATION-only 부분 구현, validation-only 가짜 함수, production 다른 분기 mock은 금지한다. 테스트 내부 dependency injection과 fixture는 허용한다.
+- `LEARNING_PROTOCOL.md` §4의 동시 진행 노드 수 제한 정확한 값은 이번 결정 범위 밖이며 별도 clarification 전까지 임의 숫자를 정하지 않는다. 이 미결정 때문에 AC-009 전체는 여전히 Provisional이고 start_session 전체 통합은 별도 clarification 대기다.
+- `VALIDATION_STATUS.md` stale reconciliation은 별도 트랙이며 이번 patch에서 수정하지 않는다. Current main에 §9 테스트가 존재하거나 §9가 PASS했다는 선언도 하지 않는다.
+
+**보존 원칙**: 기존 서버 SSOT와 Progress-only state 원칙을 유지한다. acknowledgement=true는 같은 호출의 CONVERSATION 후보만 제거하며 `LEARNING_PROTOCOL.md`의 고정 우선순위 자체를 바꾸지 않는다.
+
+---
+
 ## AUD-002 — MASTERED/AUTOMATIC Temporal Stability Contract
 
 **상태**: ✅ **CLOSED**(2026-07-13) — **Frozen Core Standard Amendment**(Independent Architecture Audit 발견, AC-series와 governance 등급이 다름)
@@ -435,3 +481,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.12 | 2026-07-17 | AUD-004 사용자 승인 반영 — Tier C Architecture Clarification 후 Implementation Remediation으로 판정. 상태표와 §AUD-004 신설, `cascade_target_node_ids` 내부 계약·Learning Flow→Review→Progress 책임·동일 트랜잭션 `cascade_jobs` producer·Worker 범위 제외를 기록. 초기 상태는 Architecture Clarification APPROVED / Implementation Remediation IN PROGRESS이며 아직 CLOSED 아님 |
 | 1.13 | 2026-07-17 | AUD-004 독립 코드리뷰 disposition 반영 — implementation commit `0e0aa3e`, PostgreSQL 16.14 / Node.js 20.20.2 GitHub Actions 82/82 PASS(19 suites), APPROVE WITH NON-BLOCKING NOTES 및 BLOCKER/CRITICAL/MAJOR 0건을 evidence로 기록. F-01~F-06 처리 방침을 명시하고 상태를 Implementation Remediation IMPLEMENTED — PENDING MERGE로 전환. GitHub main 병합 전이므로 아직 CLOSED 아님 |
 | 1.14 | 2026-07-17 | AUD-004 post-merge closure — main implementation commit `54bcdab2` 및 review-record/main integration tip `df4eceb` 반영 완료를 확인하고 Architecture Clarification APPROVED / Implementation Remediation CLOSED로 전환. PostgreSQL 16.14 / Node.js 20.20.2, 82/82 PASS(19 suites), workflow commit 제외를 main integration evidence로 기록. F-01~F-06 비차단 후속 후보와 Worker·Learning Flow/Review 통합 범위 제외는 그대로 유지 |
+| 1.15 | 2026-07-17 | AC-012 §9 Conversation Boundary acknowledgement and loop prevention 사용자 승인 반영 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. `conversation_boundary_acknowledged?: boolean`, PRACTICING+ 기본값 3(Provisional/tunable), 비영속 acknowledgement와 기존 우선순위 재평가, 전체 start_session production 경로 선행 구현, Conversation Engine·동시 진행 노드 수·VALIDATION_STATUS reconciliation 범위 제외 및 §9 미PASS를 기록 |

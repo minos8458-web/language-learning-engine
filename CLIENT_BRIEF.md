@@ -40,7 +40,10 @@
       REVIEW        → 복습 카드 화면, review_batch 순서대로 submit_attempt 반복
       NEW_GRAMMAR   → 신규 문법 소개 화면, start_explicit_study 1회
       INTERLEAVING  → 교차 연습 세트 화면, node_sequence 순서대로 submit_attempt 반복
-      CONVERSATION  → 대화 연습 진입(§5, 범위 밖 표시)
+      CONVERSATION  → 정상 Conversation boundary 화면 표시(빈 화면/오류 아님)
+                      → 사용자 확인 시 현재 세션 메모리의 conversationBoundaryAcknowledged=true
+                      → start_session을 true로 재호출
+                      → 서버가 반환한 다음 next_action을 그대로 처리
       IDLE          → "오늘 학습 완료" 화면으로 바로 이동(Reflection 생략, §7 참고)
   → 배치/시퀀스 소진 시 start_session 재호출(다음 next_action 획득)
   → 어느 시점이든 State 승격 감지 시 자기보고 모달 삽입(§3)
@@ -48,6 +51,8 @@
 ```
 
 **배치 소진 후 재호출 원칙**: `review_batch`/`node_sequence`는 그 안에서는 클라이언트가 순서를 그대로 따르되(서버가 이미 정렬), 다 소진하면 반드시 `start_session`을 다시 호출한다 — 배치 처리 중 Progress가 바뀌었으므로(예: 복습 완료로 Queue가 줄어듦) 다음 결정은 항상 최신 상태를 반영해야 한다.
+
+**AC-012 Conversation boundary 흐름**: 최초 `start_session`에서는 `conversation_boundary_acknowledged`를 생략하거나 `false`로 보낸다. `next_action=CONVERSATION`이면 미구현 기능의 정상 boundary 화면을 표시하고, 사용자가 확인한 뒤 현재 세션 메모리에서만 acknowledgement를 `true`로 바꾸어 `start_session`을 재호출한다. 클라이언트는 CONVERSATION을 임의로 숨기거나 진입 정책을 재판단하지 않으며, 재호출 응답의 `next_action`을 그대로 처리한다.
 
 ---
 
@@ -103,6 +108,7 @@
 ## 7. 클라이언트 상태 관리 원칙
 
 - **SSOT는 항상 서버다.** 클라이언트는 현재 세션의 진행 상황(어느 배치의 몇 번째 항목인지 등)만 메모리에 들고 있고, 앱 재시작 시 이 세션 내 진행 상태는 보존하지 않는다 — 재시작하면 `start_session`을 다시 호출해 서버의 최신 판단을 새로 받는다.
+- **Conversation boundary acknowledgement**: `conversationBoundaryAcknowledged`는 현재 세션의 in-memory boolean이다. 기본값은 `false`, boundary 확인 후 `true`이며 세션 종료 또는 앱 재시작 시 `false`로 초기화한다. 영속 저장하지 않는다.
 - **예외**: §5의 오프라인 큐(전송 실패한 시도)만 로컬 영속 저장소에 보존한다. 이것은 "진행 상태"가 아니라 "아직 서버에 전달 못 한 사실"이므로 성격이 다르다.
 - **브라우저/앱 저장소 사용 범위**: 인증 토큰, §5 오프라인 큐, 이 둘만 영속 저장한다. 그 외 모든 화면 데이터는 API 응답을 그대로 렌더링하고 다음 호출 시 폐기한다.
 
@@ -111,13 +117,13 @@
 ## 8. 확인이 필요한 사항
 
 - **Reflection의 "다음 세션 추천 시점"**: `LEARNING_PROTOCOL.md` §15는 "간격 반복 스케줄에 근거한 권장 재접속 시점"을 언급하지만, 이를 반환하는 API가 현재 5개 외부 API 어디에도 없다. `start_session` 응답에 추가할지, Reflection 전용으로 별도 필드를 만들지는 이번 문서에서 확정하지 않는다 — 필요성이 확인되면 `API_CONTRACT.md`의 다음 개정 대상이다.
-- **Conversation 화면**: `LEARNING_PROTOCOL.md` §9가 진입 조건만 정의하고 Conversation Engine 자체는 아직 설계되지 않았다(Tier A 단계부터 이어진 범위 제한). `next_action=CONVERSATION`이 반환되는 경우 클라이언트가 무엇을 보여줄지는 Conversation Engine이 정의된 이후 이 문서의 별도 패치로 다룬다.
+- **Conversation Engine UI**: Conversation Engine 자체와 실제 대화 UI는 여전히 미정의다(Tier A 단계부터 이어진 범위 제한). 다만 미구현 상태에서 `next_action=CONVERSATION`을 정상 boundary 화면으로 표시하고, 사용자 확인 후 acknowledgement=true로 `start_session`을 재호출하는 흐름은 AC-012로 확정됐다.
 
 ---
 
 ## 9. 정합성 확인
 
-`API_LAYER_BRIEF.md`·`DOMAIN_LOGIC_BRIEF.md`·`LEARNING_PROTOCOL.md`와 대조한 결과, §8에 기록한 두 항목(다음 세션 추천 시점 API 부재, Conversation 화면 미정의) 외에 새로운 구조적 불일치는 발견되지 않았다. 두 항목 모두 기존에 이미 알려진 범위 제한(Conversation Engine 미정의)이거나, 이번 문서 범위를 넘는 확장 결정이라 지금 확정하지 않는다.
+`API_LAYER_BRIEF.md`·`DOMAIN_LOGIC_BRIEF.md`·`LEARNING_PROTOCOL.md`와 대조한 결과, §8에 기록한 두 항목(다음 세션 추천 시점 API 부재, Conversation Engine UI 미정의) 외에 새로운 구조적 불일치는 발견되지 않았다. Conversation boundary 화면과 acknowledgement 흐름은 AC-012로 확정됐고, 실제 Conversation Engine UI와 다음 세션 추천 API는 여전히 이번 문서 범위를 넘는 확장 결정이다.
 
 ---
 
@@ -139,3 +145,4 @@
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|
 | 1.0 | 2026-07-07 | 최초 작성 — `LEARNING_PROTOCOL.md` §11 하루 프로토콜을 화면 흐름으로 매핑, `start_session`의 `next_action` 기반 세션 흐름 정의(배치/시퀀스 소진 시 재호출 원칙), 자기보고 Confidence 모달의 구체적 트리거(State 승격 감지, 세션당 최대 1회)와 비강제 원칙, 게스트 시작/계정 전환 클라이언트 흐름, 오프라인 전송 실패 로컬 큐잉 정책(서버 아웃박스와 대칭), Reflection 화면을 기존 데이터 조합으로 구성(신규 저장 없음), 클라이언트 상태 관리 원칙(SSOT는 서버, 예외는 인증 토큰과 오프라인 큐뿐). Production 문서 로드맵(0~5) 완료 선언 |
+| 1.1 | 2026-07-17 | AC-012 Tier C Architecture Clarification — §2에 정상 Conversation boundary 표시→세션 메모리 acknowledgement→`start_session(true)` 재호출 흐름 추가, §7에 비영속 in-memory 상태와 세션 종료/앱 재시작 초기화 규칙 명시, §8의 미정의 범위를 실제 Conversation Engine UI로 한정. 클라이언트의 서버 `next_action` 임의 무시·정책 재판단 금지 유지 |
