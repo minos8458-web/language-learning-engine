@@ -21,6 +21,7 @@
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
+| AUD-004 | Review Cascade producer와 `record_attempt` 원자성 연결 공백(Independent Architecture Audit) | 🟡 Architecture Clarification **APPROVED** / Implementation Remediation **IN PROGRESS** — 상세는 §AUD-004 참고 |
 
 ---
 
@@ -365,6 +366,26 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 
 ---
 
+## AUD-004 — Review Cascade producer와 `record_attempt` 원자성 연결 공백
+
+**상태**: 🟡 Architecture Clarification **APPROVED** / Implementation Remediation **IN PROGRESS**(2026-07-17) — 아직 **CLOSED 아님**
+
+**사용자 승인 provenance(2026-07-17)**: 사용자가 AUD-004 Architecture Adjudication 결과를 명시적으로 승인했다. 판정은 **Tier A Amendment가 아니라 Tier C Architecture Clarification 후 Implementation Remediation**이다. 기존 Tier A 엔터티·필드 구조, Cascade 알고리즘, 임계치 또는 DB schema를 바꾸지 않고, 이미 존재하는 `cascade_jobs` 아웃박스와 Engine 책임 경계를 실행 가능하게 연결하는 누락 계약을 보완한다.
+
+**Problem**: Learning Flow Engine이 Content metadata로 SELF/TRANSFER를 판정하고 Review Engine에서 Cascade 대상 목록을 계산한다는 계약과, Progress Engine이 attempt/progress를 단일 트랜잭션으로 기록한다는 계약이 각각 존재했지만, Review 결과의 node ID 목록을 `record_attempt`에 전달해 같은 트랜잭션에서 `cascade_jobs`를 생성하는 명시적 내부 입력·producer 경로가 없었다. 그 결과 핵심 시도 기록과 아웃박스 producer 사이의 원자성이 구현 계약으로 닫히지 않았다.
+
+**승인 결정**:
+
+1. Progress Engine `record_attempt` 내부 입력에 canonical `cascade_target_node_ids?: string[]` / JavaScript `cascadeTargetNodeIds`를 추가한다. 외부 HTTP 입력이 아니며 Learning Flow Engine만 산출·전달한다.
+2. omitted는 `[]`; explicit `null`, 배열이 아닌 값, 빈 문자열·문자열 아닌 원소, 중복 ID는 `ContractViolationError`. 정답과 SELF는 반드시 `[]`; TRANSFER는 `[]` 또는 고유한 Grammar Node ID 1개 이상을 허용한다. 하나라도 존재하지 않으면 `INVALID_ID`로 전체 실패한다.
+3. Learning Flow Engine은 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade`를 호출한 뒤 결과의 `node_id` 목록만 Progress Engine에 전달한다. `max_cascade_depth`는 하드코딩하지 않고 Engine 설정값을 사용하며 현재 기본값 2는 유지한다.
+4. Progress Engine은 다른 Engine을 호출하지 않는 리프 구조를 유지한다. 동일 DB client와 기존 `recordAttempt` 트랜잭션 안에서 대상 ID 존재성을 확인하고 attempt 삽입, progress 갱신, 대상별 `cascade_jobs(status='PENDING')` 정확히 1건 삽입을 모두 수행한 뒤 COMMIT한다. 하나라도 실패하면 전체 ROLLBACK한다.
+5. Worker/polling/retry-backoff/DONE·FAILED 전이 및 실제 대상 노드 `next_review_at` 갱신은 이번 producer remediation 범위 밖이다. Learning Flow/Review Engine 구현, DB migration, Tier A 문서 변경도 범위 밖이다.
+
+**Governance 판정**: Tier C Architecture Clarification. 새 저장 엔터티·컬럼·Tier A admissible state 변경이 없고, 기존 `cascade_jobs`와 Engine boundary를 연결하는 내부 호출 계약 및 producer 구현 누락을 보완하므로 `CORE_STANDARD_V1_FREEZE.md` §5 Amendment 절차 대상이 아니다.
+
+---
+
 ## 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -381,3 +402,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.9 | 2026-07-13 | AUD-003(Graph가 cross-language relation을 허용·순회함) **CLOSED**로 기록 — Independent Architecture Audit 발견(GitHub main `src/engines/graphEngine.js` 코드 직접 조회로 확인), Frozen Core Standard Amendment로 최종 처리. **1차 adjudication("Architecture Clarification", 새 필드 없음을 근거)을 재심사 후 철회하고 Tier A Amendment로 재분류한 provenance를 §AUD-003에 보존.** Same-language invariant(4 relation type 전부), 3중 논리 방어(DB enforcement 없음), `validate_language_pack` output 확장(`language_boundary_violations[]`), runtime traversal defense-in-depth 최종 확정. `GRAMMAR_SCHEMA.md` v1.7, `GRAMMAR_GRAPH.md` v1.5, `API_CONTRACT.md` v1.10, `ENGINE_INTERFACE.md` v1.10, `VALIDATION_LEVEL3.md` v1.5, `MIGRATION_GUIDE.md` v1.2(Entry 004), `CORE_STANDARD_V1_FREEZE.md` v1.3 반영. DB schema/SQL migration 없음. AUD-001·AUD-002 기록 및 AC-002/AC-003 복구 메모 전부 보존(삭제·축약 없음) |
 | 1.10 | 2026-07-16 | AUD-001 Repository Reconciliation 상태를 **PATCH PREPARED**로 갱신(이전 PENDING MERGE) — 신규 세션에서 commit-pinned HEAD `3b51ec30369e266ffeb52c9ede8707a849ab519a` 원문(`BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`/`VALIDATION_STATUS.md`/본 문서)을 직접 재확보해 stale local/memory 상태를 배제하고 재작업. 상태표 AUD-001 행 및 §AUD-001 Current Verified State를 `aff97d7`/`e8a97a7` 근거에서 HEAD `3b51ec3` 근거로 교체(migrations 001–011, AUD-002/AUD-003 implementation 및 관련 테스트 아티팩트 present로 갱신), AUD-002/AUD-003 remediation-specific clean-room test 결과(AUD-002: 48/48·58/58·58/58, AUD-003: 58/58·10/10·68/68·68/68 — Claude Development clean-room, GitHub-hosted CI 독립검증 아님)를 §AUD-001에 별도 evidence로 기재. `BOOTSTRAP.md`(Session Startup Authority만 보유, authority pointer로 축소)·`PROJECT_MASTER_INDEX.md`(Validation 상세를 `VALIDATION_STATUS.md` 참조로 대체, Current Activity/Next Task에 AUD-002·AUD-003 CLOSED·AUD-001 진행 중·AUD-004 반영, §9 Conversation Boundary를 즉시 next task로 선언하지 않음)·`VALIDATION_STATUS.md`(A. Current GitHub Main/B. Historical Validation Record 분리, §5~13 미재검증 원칙과 260/260 historical warning 유지) 3개 파일 canonical 교체본을 확정하고 정확히 4개 파일(본 문서 포함) targeted patch로 마감. 아직 GitHub main 미병합 — MERGED/CLOSED 선언 없음. AUD-002·AUD-003·§AUD-003 1차 판정 철회 provenance·AC-002/AC-003 복구 메모 전부 무변경 보존 |
 | 1.11 | 2026-07-16 | AUD-001 Repository Reconciliation 4-file patch가 commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`로 GitHub main에 merge되어 Repository Reconciliation **CLOSED** 처리됨 |
+| 1.12 | 2026-07-17 | AUD-004 사용자 승인 반영 — Tier C Architecture Clarification 후 Implementation Remediation으로 판정. 상태표와 §AUD-004 신설, `cascade_target_node_ids` 내부 계약·Learning Flow→Review→Progress 책임·동일 트랜잭션 `cascade_jobs` producer·Worker 범위 제외를 기록. 초기 상태는 Architecture Clarification APPROVED / Implementation Remediation IN PROGRESS이며 아직 CLOSED 아님 |

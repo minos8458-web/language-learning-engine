@@ -46,6 +46,39 @@ class ContractViolationError extends Error {
   }
 }
 
+function validateCascadeTargetNodeIds(input, isCorrect, errorCategory) {
+  const provided = Object.prototype.hasOwnProperty.call(input, 'cascadeTargetNodeIds');
+  const value = provided ? input.cascadeTargetNodeIds : [];
+
+  if (value === null) {
+    throw new ContractViolationError('cascade_target_node_ids는 null일 수 없습니다(omitted는 []로 처리)');
+  }
+  if (!Array.isArray(value)) {
+    throw new ContractViolationError('cascade_target_node_ids는 string[]이어야 합니다');
+  }
+
+  const seen = new Set();
+  for (const targetNodeId of value) {
+    if (typeof targetNodeId !== 'string' || targetNodeId.trim().length === 0) {
+      throw new ContractViolationError(
+        'cascade_target_node_ids의 모든 원소는 비어 있지 않은 문자열이어야 합니다'
+      );
+    }
+    if (seen.has(targetNodeId)) {
+      throw new ContractViolationError(`cascade_target_node_ids에 중복 node_id가 있습니다: ${targetNodeId}`);
+    }
+    seen.add(targetNodeId);
+  }
+
+  if (value.length > 0 && (isCorrect === true || errorCategory !== 'TRANSFER')) {
+    throw new ContractViolationError(
+      '정답 및 SELF 시도에서는 cascade_target_node_ids가 반드시 []여야 합니다'
+    );
+  }
+
+  return value;
+}
+
 // ---------------------------------------------------------------------------
 // 4.1 get_progress
 // ---------------------------------------------------------------------------
@@ -331,6 +364,7 @@ async function recordAttempt(pool, userId, nodeId, input) {
     errorSubcategory = null,
     contentId = null, // 문서 갭 — 파일 상단 주석 참고
   } = input;
+  const cascadeTargetNodeIds = validateCascadeTargetNodeIds(input, isCorrect, errorCategory);
 
   if (isCorrect === true && errorCategory !== null) {
     throw new ContractViolationError(
@@ -341,6 +375,20 @@ async function recordAttempt(pool, userId, nodeId, input) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    if (cascadeTargetNodeIds.length > 0) {
+      const { rows: cascadeTargetRows } = await client.query(
+        'SELECT node_id FROM grammar_nodes WHERE node_id = ANY($1::text[])',
+        [cascadeTargetNodeIds]
+      );
+      const existingTargetNodeIds = new Set(cascadeTargetRows.map((row) => row.node_id));
+      const missingTargetNodeIds = cascadeTargetNodeIds.filter((id) => !existingTargetNodeIds.has(id));
+      if (missingTargetNodeIds.length > 0) {
+        throw new NotFoundError(
+          `존재하지 않는 cascade target Grammar Node ID: ${missingTargetNodeIds.join(', ')}`
+        );
+      }
+    }
 
     const { rows: nodeRows } = await client.query(
       'SELECT difficulty FROM grammar_nodes WHERE node_id = $1',
@@ -498,6 +546,14 @@ async function recordAttempt(pool, userId, nodeId, input) {
        WHERE user_id = $7 AND node_id = $8`,
       [newState, newAccuracy, newAvgResponseTime, newConfidence, newNextReviewAt, newMasteredAt, userId, nodeId]
     );
+
+    for (const targetNodeId of cascadeTargetNodeIds) {
+      await client.query(
+        `INSERT INTO cascade_jobs (user_id, target_node_id, status)
+         VALUES ($1, $2, 'PENDING')`,
+        [userId, targetNodeId]
+      );
+    }
 
     await client.query('COMMIT');
 
