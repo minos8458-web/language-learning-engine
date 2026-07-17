@@ -38,6 +38,7 @@ Architecture Frozen (approved architecture only)
     -   AUD-002 (MASTERED/AUTOMATIC Temporal Stability Contract) — ✅ CLOSED
     -   AUD-003 (Graph cross-language relation traversal) — ✅ CLOSED
     -   AUD-001 (GitHub main current/historical status reconciliation) — ✅ CLOSED
+    -   AUD-004 (Review Cascade producer and `record_attempt` atomicity) — ✅ CLOSED
 
 ## Known Deferred
 
@@ -50,9 +51,9 @@ None
 
 ## Next Task
 
-1.  Continue Independent Architecture Audit remediation with AUD-004
+1.  Resume Validation Level 3 §9 Conversation Boundary
 
-Validation Level 3 §9 Conversation Boundary resumes after Independent Architecture Audit remediation is complete. It is not the immediate next task.
+Independent Architecture Audit remediation is complete. Validation Level 3 §9 Conversation Boundary is now the immediate next task.
 
 ## Rule
 

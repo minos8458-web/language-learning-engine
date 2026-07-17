@@ -21,7 +21,7 @@
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
-| AUD-004 | Review Cascade producer와 `record_attempt` 원자성 연결 공백(Independent Architecture Audit) | 🟡 Architecture Clarification **APPROVED** / Implementation Remediation **IMPLEMENTED — PENDING MERGE** — 상세는 §AUD-004 참고 |
+| AUD-004 | Review Cascade producer와 `record_attempt` 원자성 연결 공백(Independent Architecture Audit) | ✅ Architecture Clarification **APPROVED** / Implementation Remediation **CLOSED** — 상세는 §AUD-004 참고 |
 
 ---
 
@@ -368,7 +368,7 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 
 ## AUD-004 — Review Cascade producer와 `record_attempt` 원자성 연결 공백
 
-**상태**: 🟡 Architecture Clarification **APPROVED** / Implementation Remediation **IMPLEMENTED — PENDING MERGE**(2026-07-17) — 아직 **CLOSED 아님**
+**상태**: ✅ Architecture Clarification **APPROVED** / Implementation Remediation **CLOSED**(2026-07-17)
 
 **사용자 승인 provenance(2026-07-17)**: 사용자가 AUD-004 Architecture Adjudication 결과를 명시적으로 승인했다. 판정은 **Tier A Amendment가 아니라 Tier C Architecture Clarification 후 Implementation Remediation**이다. 기존 Tier A 엔터티·필드 구조, Cascade 알고리즘, 임계치 또는 DB schema를 바꾸지 않고, 이미 존재하는 `cascade_jobs` 아웃박스와 Engine 책임 경계를 실행 가능하게 연결하는 누락 계약을 보완한다.
 
@@ -394,7 +394,14 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 - GitHub Actions: `https://github.com/minos8458-web/language-learning-engine/actions/runs/29577845902`
 - Independent review verdict: **APPROVE WITH NON-BLOCKING NOTES**
 - BLOCKER: 0 / CRITICAL: 0 / MAJOR: 0
-- 아직 GitHub main에는 병합되지 않았으므로 **CLOSED가 아니다**.
+
+**Main integration evidence(2026-07-17)**:
+
+- Main implementation commit: `54bcdab220c247e46b7b44bed03dd4ac25de0f44`
+- Review-record / main integration tip: `df4ecebe54ab7a886b0d72666e3dd5f7bc9a951b`
+- 검증 환경: PostgreSQL 16.14 / Node.js 20.20.2
+- 검증 결과: 82/82 PASS, 19 suites
+- 임시 validation workflow commit `061fdcaffe111d74b88467cd93c92133f83237d6`은 main integration에서 제외됨을 확인했다.
 
 **Independent review 비차단 메모 및 처리 방침**:
 
@@ -405,7 +412,7 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 - **F-05**: 복수 계약 위반 시 validation error 우선순위 전용 테스트는 없다. 검증 순서는 결정적이며 현재 병합 비차단이고, 향후 regression-hardening 후보로 추적한다.
 - **F-06**: Learning Flow/Review/Worker 통합은 명시적 범위 밖이며 별도 단계에서 수행한다.
 
-위 비차단 메모들은 AUD-004 producer 구현의 main 병합이나 closure를 막지 않는다. Worker와 Learning Flow/Review 통합은 AUD-004 producer closure 조건이 아니다. 단, AUD-004는 GitHub main 병합 확인 전까지 **CLOSED로 변경하지 않는다**.
+위 비차단 메모들은 AUD-004 producer 구현의 main 병합이나 closure를 막지 않는다. Worker와 Learning Flow/Review 통합은 AUD-004 producer closure 조건이 아니다. Main 병합이 확인되어 AUD-004 producer remediation을 **CLOSED**로 전환한다.
 
 ---
 
@@ -427,3 +434,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.11 | 2026-07-16 | AUD-001 Repository Reconciliation 4-file patch가 commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`로 GitHub main에 merge되어 Repository Reconciliation **CLOSED** 처리됨 |
 | 1.12 | 2026-07-17 | AUD-004 사용자 승인 반영 — Tier C Architecture Clarification 후 Implementation Remediation으로 판정. 상태표와 §AUD-004 신설, `cascade_target_node_ids` 내부 계약·Learning Flow→Review→Progress 책임·동일 트랜잭션 `cascade_jobs` producer·Worker 범위 제외를 기록. 초기 상태는 Architecture Clarification APPROVED / Implementation Remediation IN PROGRESS이며 아직 CLOSED 아님 |
 | 1.13 | 2026-07-17 | AUD-004 독립 코드리뷰 disposition 반영 — implementation commit `0e0aa3e`, PostgreSQL 16.14 / Node.js 20.20.2 GitHub Actions 82/82 PASS(19 suites), APPROVE WITH NON-BLOCKING NOTES 및 BLOCKER/CRITICAL/MAJOR 0건을 evidence로 기록. F-01~F-06 처리 방침을 명시하고 상태를 Implementation Remediation IMPLEMENTED — PENDING MERGE로 전환. GitHub main 병합 전이므로 아직 CLOSED 아님 |
+| 1.14 | 2026-07-17 | AUD-004 post-merge closure — main implementation commit `54bcdab2` 및 review-record/main integration tip `df4eceb` 반영 완료를 확인하고 Architecture Clarification APPROVED / Implementation Remediation CLOSED로 전환. PostgreSQL 16.14 / Node.js 20.20.2, 82/82 PASS(19 suites), workflow commit 제외를 main integration evidence로 기록. F-01~F-06 비차단 후속 후보와 Worker·Learning Flow/Review 통합 범위 제외는 그대로 유지 |
