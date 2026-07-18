@@ -39,6 +39,9 @@ Architecture Frozen (approved architecture only)
     -   AUD-003 (Graph cross-language relation traversal) — ✅ CLOSED
     -   AUD-001 (GitHub main current/historical status reconciliation) — ✅ CLOSED
     -   AUD-004 (Review Cascade producer and `record_attempt` atomicity) — ✅ CLOSED
+-   Architecture Clarification prerequisite implementation
+    -   AC-013 (Active-Node Admission Boundary, Progress-side prerequisite) — ✅ CLOSED
+    -   AC-012 (§9 Conversation Boundary) — Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED; §9 is not PASS
 
 ## Known Deferred
 
@@ -51,9 +54,9 @@ None
 
 ## Next Task
 
-1.  Resume Validation Level 3 §9 Conversation Boundary
+1.  Resume Validation Level 3 §9 prerequisite implementation
 
-Independent Architecture Audit remediation is complete. Validation Level 3 §9 Conversation Boundary is now the immediate next task.
+AC-013 Progress-side prerequisite is complete. The next step is §9 prerequisite implementation, including the AC-012-approved Conversation Boundary contract, actual Learning Flow `get_active_learning_count` precheck wiring, and integration testing of the race between `start_session` precheck and the final write. Validation Level 3 §9 is not yet PASS. Conversation Engine internal design and implementation remain out of scope, and `VALIDATION_STATUS.md` staleness remains a separate reconciliation track.
 
 ## Rule
 
