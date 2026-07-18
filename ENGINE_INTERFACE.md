@@ -68,8 +68,8 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다. AC-012: `start_session`에서 LEARNING_PROTOCOL의 전체 우선순위 사슬을 평가하고, `conversationBoundaryAcknowledged=true`이면 해당 호출에서 CONVERSATION만 재선택하지 않는다. AC-013: `record_explicit_study` 전 `get_active_learning_count`로 NEW_GRAMMAR 후보를 read-only precheck한다** |
-| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다. Active count를 구하기 위해 `progress`나 `grammar_nodes` 테이블을 직접 조회하지 않는다 |
+| **1. 책임** | 사용자 × 노드 조합의 전체 생애주기(NOT_INTRODUCED→AUTOMATIC) 진행을 조율. 실수 처리 루프 6단계(GRAMMAR_GRAPH §4.2) 전체를 오케스트레이션. 어떤 하위 Engine을 어떤 순서로 호출할지 결정하는 최상위 진입점. **AUD-004: `submit_attempt`에서 Content metadata로 SELF/TRANSFER를 판정하고, TRANSFER이면 Review Engine `get_cascade` 결과의 `node_id` 목록만 추출해 Progress Engine `record_attempt.cascade_target_node_ids`로 전달한다. AC-012: `start_session`에서 LEARNING_PROTOCOL의 전체 우선순위 사슬을 평가하고, `conversationBoundaryAcknowledged=true`이면 해당 호출에서 CONVERSATION만 재선택하지 않는다. AC-013: `record_explicit_study` 전 `get_active_learning_count`로 NEW_GRAMMAR 후보를 read-only precheck한다. AC-014: 다른 Engine의 canonical API 결과만 조합해 NEW_GRAMMAR·INTERLEAVING 후보와 payload를 결정한다** |
+| **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다. `progress`·`grammar_nodes`·`concepts` 테이블을 직접 조회하지 않고 다른 Engine의 canonical API만 호출한다. NEW_GRAMMAR 후보 admission을 직접 강제하지 않는다 |
 | **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 — 2026-07-07 신설; optional `conversationBoundaryAcknowledged`, canonical `MIGRATION_GUIDE.md` Entry 005 / AC-012)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
 | **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
@@ -81,16 +81,39 @@ Learning Flow Engine
 
 **AC-013 admission 책임 분리**: Learning Flow Engine의 `get_active_learning_count(user_id, language)` 호출은 NEW_GRAMMAR 후보 판단을 위한 read-only precheck이다. precheck과 write 사이에 경쟁이 생길 수 있으므로 최종 admission 권한은 Progress Engine의 `recordExplicitStudy`에 있다. capacity 경쟁으로 `CONTRACT_VIOLATION`이 발생하면 최신 판단을 위해 `start_session`을 재호출할 수 있다.
 
+**AC-014 NEW_GRAMMAR 결정 순서**:
+
+1. Graph Engine `list_nodes_by_language`로 language node metadata를 조회한다.
+2. Progress Engine `get_progress_snapshot`으로 같은 language node 전체의 상태를 조회한다.
+3. `NOT_INTRODUCED` 후보만 남긴다.
+4. Graph Engine `find_prerequisites`로 각 후보의 prerequisite를 조회한다.
+5. snapshot에서 prerequisite가 모두 `MASTERED` 또는 `AUTOMATIC`인지 확인한다.
+6. Progress Engine `get_active_learning_count`로 AC-013 capacity를 read-only precheck한다.
+7. admissible 후보를 `difficulty ASC → node_id ASC`로 정렬해 첫 후보를 선택한다.
+8. `{next_action:"NEW_GRAMMAR", node_id}`를 반환한다.
+
+`find_prerequisites` 결과의 목록 길이를 prerequisite depth로 해석하지 않는다. `start_session`은 후보만 제안하고 final admission은 별도 `start_explicit_study` 경로의 Progress Engine이 담당한다.
+
+**AC-014 INTERLEAVING 선택 단계**: `eligible pool → admissible selected set → occurrence multiset → sequence_nodes` 네 단계를 분리한다.
+
+- Eligible pool은 `(user_id, language)`의 `INTRODUCED`/`STUDYING` 전체이며 임의 크기 상한이 없다.
+- Admissible selected set `S`의 크기는 2 또는 3이다. 모든 Category `c`에 대해 `count(c,S) <= floor(|S|/2)`, 즉 `violation(c,S) = max(0, count(c,S) - floor(|S|/2)) = 0`이어야 한다. 다중 Category node는 자신이 속한 모든 Category count에 각각 1회 기여하고 Category가 없는 node는 어떤 count에도 기여하지 않는다.
+- 모든 `C(n,2)+C(n,3)` 조합에서 `(-|S|, -contrast_pair_count(S), -category_diversity(S), sorted_node_id_array(S))`의 lexicographic 최솟값을 선택한다. 따라서 크기 3, CONTRAST 고유 node pair 수, Category 합집합 크기 순으로 우선하고 마지막에는 정렬된 node ID 배열을 element-wise 비교한다.
+- admissible set이 없거나 selected node가 0/1개면 오류나 `CONTRACT_VIOLATION`이 아니라 INTERLEAVING을 건너뛰고 CONVERSATION을 평가한다.
+- `base_repeats=2`, `max_batch_size=6`이다. selected node마다 정확히 2 occurrence를 만들어 2개 선택 시 batch 4, 3개 선택 시 batch 6으로 구성한 뒤 `sequence_nodes`에 전달한다.
+
+**Session Budget mode**: 현재 `SESSION_BUDGET_MODE='UNBOUNDED_UNTIL_INPUT_AVAILABLE'`이며 지원되는 값은 이것 하나뿐이다. NEW_GRAMMAR와 CONVERSATION이 공유하고 INTERLEAVING batch 크기와는 별개다. `REAL_INPUT`은 향후 예약 개념이며 현재 허용값이 아니다.
+
 ---
 
 ## 4. Graph Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행 |
+| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행. AC-014 내부 read API `list_nodes_by_language`와 `get_concept_categories`로 정적 graph/grammar metadata를 제공 |
 | **2. 하지 않는 일** | 사용자 Progress를 조회·저장하지 않는다. 노드 상태에 따른 필터링 판단을 하지 않는다(Practicing 이상 여부는 호출자가 Progress Engine 결과와 조합해 판단). "이 노드를 복습해야 한다"거나 "생성해야 한다" 같은 정책적 판단을 내리지 않는다 — 순수 구조 조회만 한다 |
 | **3. 입력 데이터** | 노드 ID, 탐색 방향(선행/후행), 최대 깊이(max_depth) |
-| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)** |
+| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)**, language별 `{node_id, difficulty, concept_ids}` metadata, `{concept_id: category}` map |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부. Graph Engine은 어떤 상위 Engine도 호출해서는 안 된다 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §2, §3 |
@@ -102,10 +125,10 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다. AC-013: 내부 read API `get_active_learning_count`를 제공하고 `recordExplicitStudy`에서 Active-Node Admission Gate를 최종 원자적으로 강제한다** |
+| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다. AC-013: 내부 read API `get_active_learning_count`를 제공하고 `recordExplicitStudy`에서 Active-Node Admission Gate를 최종 원자적으로 강제한다. AC-014: `get_progress_snapshot`과 `get_practicing_plus_count` read API를 제공한다** |
 | **2. 하지 않는 일** | Grammar Graph를 순회하지 않는다(Graph Engine의 역할). 어떤 문제를 생성할지 결정하지 않는다. 복습 대상 노드를 스스로 선정하지 않는다(Review Engine이 이 Engine의 조회 결과를 활용해 판단) |
 | **3. 입력 데이터** | 사용자 ID, 노드 ID, 이벤트 유형(명시적 학습/시도 결과/자기보고 Confidence), 원시 AttemptRecord 필드, **Learning Flow Engine이 내부 전달하는 `cascade_target_node_ids?: string[]`(외부 HTTP 입력 아님, AUD-004)** |
-| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)**, `(user_id, language)` active Grammar Node 수(`get_active_learning_count`, §4.8) |
+| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)**, `(user_id, language)` active Grammar Node 수(`get_active_learning_count`, §4.8), 입력 node 전체의 state map(`get_progress_snapshot`, §4.9), PRACTICING/MASTERED/AUTOMATIC count(`get_practicing_plus_count`, §4.10) |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4.2, §8, LEARNING_THEORY C8/C9, GRAMMAR_SCHEMA §5 |
@@ -114,6 +137,8 @@ Learning Flow Engine
 **AC-013 `recordExplicitStudy` 최종 enforcement**: 별도 read API를 호출하지 않고 하나의 `pool.connect()` client와 하나의 transaction을 사용한다. `BEGIN` 후 Grammar Node 존재성과 canonical language를 조회하고, `SELECT pg_advisory_xact_lock(hashtext($1::text), hashtext($2::text))`로 `(user_id, language)` admission을 직렬화한다. 동일 `(user_id, node_id)` Progress가 이미 있으면 capacity와 무관하게 기존 state를 반환하고 `COMMIT`한다. 없으면 동일 client에서 authoritative active count를 조회하고, `active_count >= configured_limit`이면 `CONTRACT_VIOLATION`으로 전체 `ROLLBACK`, 여유가 있으면 `INTRODUCED` Progress를 삽입한 뒤 `COMMIT`한다. 모든 예외는 `ROLLBACK`하고 `finally`에서 client를 release한다.
 
 lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLLBACK` 시 자동 해제된다. session-scoped lock과 try-lock은 사용하지 않고, `recordAttempt`는 이 lock을 획득하지 않는다. hash collision은 correctness 오류가 아니라 불필요한 직렬화만 유발한다. Progress Engine의 **호출 가능한 하위 Engine 없음(리프)** 규칙은 그대로 유지된다.
+
+**AC-014 Progress read 책임**: `get_progress_snapshot`은 하나의 read client에서 모든 `grammar_nodes` 존재성과 language 일관성을 검증하고 Progress 행이 없는 유효 node를 `NOT_INTRODUCED`로 채운다. `get_practicing_plus_count`는 요청 language의 `PRACTICING`·`MASTERED`·`AUTOMATIC`만 집계한다. 두 API 모두 다른 Engine을 호출하지 않아 Progress Engine의 leaf 구조를 유지한다.
 
 ---
 
@@ -181,14 +206,14 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 여러 노드를 교차 배치하는 순서 결정(GRAMMAR_GRAPH §7). Review Engine 산출물이나 신규 연습 세트를 입력받아 순서가 부여된 문항 시퀀스를 출력 |
-| **2. 하지 않는 일** | 어떤 노드가 복습·연습 대상인지 스스로 선정하지 않는다(입력으로 받은 목록만 재정렬). 실제 문제 콘텐츠를 만들지 않는다(순서만 정한다). CONTRAST/RELATED 관계를 직접 정의하지 않는다(GRAMMAR_SCHEMA에 이미 정의된 Relation을 조회만 함) |
-| **3. 입력 데이터** | 노드 ID 목록(순서 미정) |
-| **4. 출력 데이터** | 순서가 부여된 노드 ID 시퀀스 |
-| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, CONTRAST/RELATED 관계 조회) |
+| **1. 책임** | Learning Flow Engine이 구성한 occurrence multiset의 구성과 multiplicity를 보존하면서 순서만 결정한다(GRAMMAR_GRAPH §7의 Tier A 원문은 변경하지 않고 AC-014로 정밀 해석) |
+| **2. 하지 않는 일** | 어떤 노드가 복습·연습 대상인지 선정하거나 입력 occurrence를 추가·삭제하지 않는다. 실제 문제 콘텐츠를 만들지 않는다. Category/CONTRAST를 직접 정의하지 않는다 |
+| **3. 입력 데이터** | 중복을 허용하는 node ID occurrence multiset 배열 |
+| **4. 출력 데이터** | 입력과 길이·multiplicity가 정확히 같은 순서화된 node ID 시퀀스 |
+| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, `get_concept_categories` 및 CONTRAST 관계 조회) |
 | **6. 의존하면 안 되는 Engine** | Progress Engine, Generation Engine, AI Generation Engine, Content Engine, Review Engine, Learning Flow Engine |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §7 |
-| **8. 향후 구현 시 주의사항** | 입력 노드 수가 매우 적을 때(예: 2개 미만) 교차 배치 규칙 자체가 무의미해지는 경계 조건을 처리해야 한다 |
+| **8. 향후 구현 시 주의사항** | max batch 6의 고유 multiset 순열 전체를 exhaustive 비교한다. `sequence_nodes`의 lexicographic ordering tuple을 사용하고 내부 점수는 노출하지 않는다. 입력 node가 2개 미만인 경우 Learning Flow가 INTERLEAVING 전에 건너뛴다 |
 
 ---
 
@@ -289,3 +314,4 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 | 1.11 | 2026-07-17 | AUD-004 Tier C Architecture Clarification 승인 반영 — Learning Flow의 Content 진단→Review Cascade→node_id 목록 전달 책임, Progress의 동일 트랜잭션 PENDING outbox producer 책임, leaf/no-engine-call 유지, `max_cascade_depth` 설정값 전달 원칙을 명시 |
 | 1.12 | 2026-07-17 | AC-012 Tier C Architecture Clarification — Learning Flow `start_session` 입력에 `conversationBoundaryAcknowledged` 반영, PRACTICING+ 최소 기준 기본값 3의 설정 소비, true 시 해당 호출의 CONVERSATION 재선택 차단, acknowledgement 비영속·Progress 무변경, 전체 next_action production 경로 선행 구현 및 Conversation Engine 신설 금지를 명시 |
 | 1.13 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Learning Flow의 `get_active_learning_count` read-only precheck과 Progress `recordExplicitStudy`의 최종 admission 권한을 분리. Progress leaf 구조, 동일 client/transaction, transaction-scoped blocking advisory lock, idempotency 우선, authoritative count 및 `CONTRACT_VIOLATION` enforcement를 명시 |
+| 1.14 | 2026-07-19 | AC-014 Tier C Architecture Clarification — Graph `list_nodes_by_language`/`get_concept_categories`, Progress `get_progress_snapshot`/`get_practicing_plus_count` 책임 추가; Learning Flow의 canonical API-only NEW_GRAMMAR 8단계와 INTERLEAVING eligible/admissible/occurrence/sequence 분리, Category hard gate와 selected-set tuple, Session Budget mode를 명시. Interleaving은 max batch 6 occurrence multiset의 순서만 exhaustive 결정하며 Progress leaf와 Graph static metadata 경계를 유지 |

@@ -114,6 +114,20 @@
 | 서버/DB 영향 | DB migration·schema 변경 없음. 기존 `progress`·`grammar_nodes` 필드의 조회와 transaction-scoped advisory lock만 사용 |
 | 상태 | Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 
+### Entry 007
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-19 |
+| 대상 문서 | `API_CONTRACT.md`(v1.14 → v1.15), `ENGINE_INTERFACE.md`(v1.13 → v1.14), `DOMAIN_LOGIC_BRIEF.md`(v1.8 → v1.9), `CLIENT_BRIEF.md`(v1.1 → v1.2), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.19 → v1.20), `MIGRATION_GUIDE.md`(v1.4 → v1.5) |
+| 변경 유형 | **ADDITIVE / CONTRACT CLARIFICATION** — AC-014 Tier C Architecture Clarification, Learning Flow prerequisite clarification |
+| 정확한 API 변화 | 기존 외부 5·내부 17·전체 22. 신규 내부 API 4개(`list_nodes_by_language`, `get_concept_categories`, `get_progress_snapshot`, `get_practicing_plus_count`) 추가. 최종 외부 5·내부 21·전체 26 |
+| 핵심 변경 | Learning Flow의 NEW_GRAMMAR canonical API-only flow와 payload, AC-013 capacity precheck/final admission 분리, INTERLEAVING eligible/admissible/occurrence/sequence 단계, Category hard gate와 deterministic selected-set/sequence tuple을 명시 |
+| 하위 호환성 | 기존 22개 API를 보존한다. 외부 API 5개 및 `next_action` enum은 불변이다. `sequence_nodes`는 기존의 순서 결정 목적을 유지하면서 occurrence multiset 입력, 오류 분류, 길이·multiplicity가 같은 순열 출력 불변식과 deterministic ordering을 정밀화한다 |
+| Tier A adjudication | Frozen `GRAMMAR_GRAPH.md` 원문을 수정하지 않고 AC-014의 실행 가능한 해석과 승인 provenance를 `ARCHITECTURE_CLARIFICATION_BACKLOG.md` §AC-014에 기록했다 |
+| 서버/DB 영향 | DB migration·schema 변경·신규 엔터티 없음. validation workflow 추가 없음 |
+| 상태 | Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**. Validation Level 3 §9는 아직 PASS 아님 |
+
 ---
 
 ## 3. 개정 이력
@@ -125,3 +139,4 @@
 | 1.2 | 2026-07-13 | Entry 004 추가 — AUD-003 Frozen Core Standard Amendment(Grammar Relation same-language invariant, `validate_language_pack` output 확장, runtime traversal defense-in-depth)를 canonical migration record로 병합. DB schema/SQL migration 없음을 명시 |
 | 1.3 | 2026-07-17 | Entry 005 추가 — AC-012 Conversation Boundary acknowledgement 및 loop prevention을 ADDITIVE canonical migration record로 반영. 기존 호출자 omitted=false 하위 호환, 클라이언트 boundary 확인 후 true 재호출, DB/Progress schema 변경 없음, 실제 Conversation Engine 도입 전 재심사 명시 |
 | 1.4 | 2026-07-18 | Entry 006 추가 — AC-013 Active-Node Admission Boundary를 ADDITIVE canonical migration record로 반영. 내부 API 16→17·전체 API 21→22, 외부 HTTP API 5개 불변, idempotent 하위 호환, DB migration/schema 변경 없음, prerequisite implementation 미착수 명시 |
+| 1.5 | 2026-07-19 | Entry 007 추가 — AC-014 Learning Flow prerequisite clarification을 ADDITIVE/CONTRACT CLARIFICATION record로 반영. 기존 외부 5·내부 17·전체 22에서 신규 내부 API 4개를 추가해 최종 외부 5·내부 21·전체 26. 기존 22개 API와 next_action enum 보존, sequence_nodes 목적 유지·multiset/오류/출력 불변식 정밀화, Tier A 원문·DB schema 불변 및 구현 미착수 명시 |

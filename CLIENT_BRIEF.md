@@ -54,6 +54,8 @@
 
 **AC-012 Conversation boundary 흐름**: 최초 `start_session`에서는 `conversation_boundary_acknowledged`를 생략하거나 `false`로 보낸다. `next_action=CONVERSATION`이면 미구현 기능의 정상 boundary 화면을 표시하고, 사용자가 확인한 뒤 현재 세션 메모리에서만 acknowledgement를 `true`로 바꾸어 `start_session`을 재호출한다. 클라이언트는 CONVERSATION을 임의로 숨기거나 진입 정책을 재판단하지 않으며, 재호출 응답의 `next_action`을 그대로 처리한다.
 
+**AC-014 NEW_GRAMMAR capacity-race 재호출 흐름**: `start_session`이 제안한 NEW_GRAMMAR node를 `start_explicit_study`로 admission하는 사이 동시 capacity race가 발생해 `CONTRACT_VIOLATION`에 실패하면, 클라이언트는 같은 `start_session` 호출 안에서 다른 node를 재선택하지 않고 새 `start_session`을 호출해 최신 서버 판단을 받는다. 기존 배치 소진 재호출과 구조적으로 유사하지만 별도의 Tier C client-flow 조항이다. 이를 위해 별도 Conversation/server session state를 만들지 않는다.
+
 ---
 
 ## 3. 자기보고 Confidence UI 트리거
@@ -146,3 +148,4 @@
 |---|---|---|
 | 1.0 | 2026-07-07 | 최초 작성 — `LEARNING_PROTOCOL.md` §11 하루 프로토콜을 화면 흐름으로 매핑, `start_session`의 `next_action` 기반 세션 흐름 정의(배치/시퀀스 소진 시 재호출 원칙), 자기보고 Confidence 모달의 구체적 트리거(State 승격 감지, 세션당 최대 1회)와 비강제 원칙, 게스트 시작/계정 전환 클라이언트 흐름, 오프라인 전송 실패 로컬 큐잉 정책(서버 아웃박스와 대칭), Reflection 화면을 기존 데이터 조합으로 구성(신규 저장 없음), 클라이언트 상태 관리 원칙(SSOT는 서버, 예외는 인증 토큰과 오프라인 큐뿐). Production 문서 로드맵(0~5) 완료 선언 |
 | 1.1 | 2026-07-17 | AC-012 Tier C Architecture Clarification — §2에 정상 Conversation boundary 표시→세션 메모리 acknowledgement→`start_session(true)` 재호출 흐름 추가, §7에 비영속 in-memory 상태와 세션 종료/앱 재시작 초기화 규칙 명시, §8의 미정의 범위를 실제 Conversation Engine UI로 한정. 클라이언트의 서버 `next_action` 임의 무시·정책 재판단 금지 유지 |
+| 1.2 | 2026-07-19 | AC-014 Tier C Architecture Clarification — `start_session`이 제안한 NEW_GRAMMAR node의 admission이 동시 capacity race로 `CONTRACT_VIOLATION`에 실패하면 같은 호출에서 재선택하지 않고 새 `start_session`을 호출하는 별도 client flow를 추가. 배치 소진 재호출과 구분하며 별도 Conversation/server session state는 만들지 않음 |
