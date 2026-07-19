@@ -215,6 +215,81 @@ describe('Graph Engine (Phase 1-B)', () => {
     });
   });
 
+  describe('get_node_language_and_concepts (3.6)', () => {
+    test('rejects omitted and explicit undefined node_ids', async () => {
+      await rejectsWithCode(
+        () => graphEngine.getNodeLanguageAndConcepts(pool),
+        'MISSING_REQUIRED_FIELD'
+      );
+      await rejectsWithCode(
+        () => graphEngine.getNodeLanguageAndConcepts(pool, undefined),
+        'MISSING_REQUIRED_FIELD'
+      );
+    });
+
+    test('rejects null and non-array input', async () => {
+      await rejectsWithCode(
+        () => graphEngine.getNodeLanguageAndConcepts(pool, null),
+        'CONTRACT_VIOLATION'
+      );
+      await rejectsWithCode(
+        () => graphEngine.getNodeLanguageAndConcepts(pool, 'NODE_PAST'),
+        'CONTRACT_VIOLATION'
+      );
+    });
+
+    test('rejects invalid array elements', async () => {
+      for (const nodeIds of [[42], [''], ['   ']]) {
+        await rejectsWithCode(
+          () => graphEngine.getNodeLanguageAndConcepts(pool, nodeIds),
+          'CONTRACT_VIOLATION'
+        );
+      }
+    });
+
+    test('returns an empty map for an empty array', async () => {
+      assert.deepEqual(await graphEngine.getNodeLanguageAndConcepts(pool, []), {});
+    });
+
+    test('returns exactly language and concept_ids for a single node', async () => {
+      assert.deepEqual(await graphEngine.getNodeLanguageAndConcepts(pool, ['NODE_PAST']), {
+        NODE_PAST: { language: 'VI', concept_ids: ['CONCEPT_TENSE'] },
+      });
+    });
+
+    test('returns mixed-language facts without rejecting them', async () => {
+      assert.deepEqual(
+        await graphEngine.getNodeLanguageAndConcepts(pool, [
+          'NODE_AC014_LIST_VI_A',
+          'NODE_AC014_LIST_EN_A',
+        ]),
+        {
+          NODE_AC014_LIST_VI_A: { language: 'VI', concept_ids: ['CONCEPT_AC014_A'] },
+          NODE_AC014_LIST_EN_A: { language: 'EN', concept_ids: ['CONCEPT_AC014_B'] },
+        }
+      );
+    });
+
+    test('normalizes duplicate node IDs to one dynamic key', async () => {
+      const result = await graphEngine.getNodeLanguageAndConcepts(pool, [
+        'NODE_PRESENT',
+        'NODE_PRESENT',
+      ]);
+      assert.deepEqual(Object.keys(result), ['NODE_PRESENT']);
+      assert.deepEqual(result.NODE_PRESENT, {
+        language: 'VI',
+        concept_ids: ['CONCEPT_TENSE'],
+      });
+    });
+
+    test('rejects valid and missing IDs without a partial result', async () => {
+      await rejectsWithCode(
+        () => graphEngine.getNodeLanguageAndConcepts(pool, ['NODE_PAST', 'NODE_AC015_MISSING']),
+        'INVALID_ID'
+      );
+    });
+  });
+
   describe('AC-014 Graph leaf boundary', () => {
     test('does not import another Engine', () => {
       const source = fs.readFileSync(path.join(__dirname, '../src/engines/graphEngine.js'), 'utf8');

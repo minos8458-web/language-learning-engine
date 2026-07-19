@@ -77,6 +77,12 @@ const ACTIVE_NODE_LIMIT = {
   maxConcurrentIntroducedOrStudying: 2,
 };
 
+// AC-015(Interleaving sequence_nodes) — 원본 occurrence multiset의 최대 길이.
+// Provisional/tunable default이며 sequenceNodes는 이 값을 참조해 admission 전에 거부한다.
+const INTERLEAVING_LIMITS = {
+  maxBatchSize: 6,
+};
+
 module.exports = {
   STATE_ORDER,
   STATE_ORDINAL,
@@ -86,4 +92,5 @@ module.exports = {
   REVIEW_INTERVAL_DAYS,
   AUD002_SPACED_REVIEW,
   ACTIVE_NODE_LIMIT,
+  INTERLEAVING_LIMITS,
 };
