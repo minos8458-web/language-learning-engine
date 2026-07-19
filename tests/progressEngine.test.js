@@ -11,6 +11,36 @@ const { pool } = require('../db/pool');
 const { runMigrations } = require('../db/migrate');
 const progressEngine = require('../src/engines/progressEngine');
 
+async function rejectsWithCode(fn, code) {
+  await assert.rejects(fn, (error) => {
+    assert.equal(error.code, code);
+    return true;
+  });
+}
+
+function trackingRealPool() {
+  const state = { connects: 0, queries: 0, releases: 0 };
+  return {
+    state,
+    api: {
+      async connect() {
+        state.connects += 1;
+        const client = await pool.connect();
+        return {
+          query(...args) {
+            state.queries += 1;
+            return client.query(...args);
+          },
+          release() {
+            state.releases += 1;
+            client.release();
+          },
+        };
+      },
+    },
+  };
+}
+
 async function createUser(deviceId) {
   const { rows } = await pool.query(
     `INSERT INTO users (auth_provider, auth_identifier, timezone)
@@ -887,6 +917,192 @@ describe('Progress Engine (Phase 1-B)', () => {
       );
       const due = await progressEngine.getDueReviews(pool, userId, 'VI', new Date().toISOString(), { limit: 2 });
       assert.equal(due.length, 2);
+    });
+  });
+
+  describe('get_progress_snapshot (4.9)', () => {
+    test('rejects omitted and explicit undefined required fields', async () => {
+      const userId = await createUser('u-4.9-required');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, userId), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(pool, userId, undefined),
+        'MISSING_REQUIRED_FIELD'
+      );
+    });
+
+    test('rejects null and scalar wrong types', async () => {
+      const userId = await createUser('u-4.9-types');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, null, []), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, 42, []), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, userId, null), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, userId, 'NODE'), 'CONTRACT_VIOLATION');
+    });
+
+    test('rejects malformed and nonexistent user IDs as INVALID_ID', async () => {
+      await rejectsWithCode(() => progressEngine.getProgressSnapshot(pool, 'not-a-uuid', []), 'INVALID_ID');
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(pool, '00000000-0000-0000-0000-000000000000', []),
+        'INVALID_ID'
+      );
+    });
+
+    test('rejects invalid node_ids elements', async () => {
+      const userId = await createUser('u-4.9-elements');
+      for (const nodeIds of [[42], [''], ['   ']]) {
+        await rejectsWithCode(
+          () => progressEngine.getProgressSnapshot(pool, userId, nodeIds),
+          'CONTRACT_VIOLATION'
+        );
+      }
+    });
+
+    test('returns an empty map only after validating the user', async () => {
+      const userId = await createUser('u-4.9-empty');
+      assert.deepEqual(await progressEngine.getProgressSnapshot(pool, userId, []), {});
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(pool, '00000000-0000-0000-0000-000000000001', []),
+        'INVALID_ID'
+      );
+    });
+
+    test('returns all unique nodes with NOT_INTRODUCED defaults', async () => {
+      const userId = await createUser('u-4.9-map');
+      await createNode('NODE_4_9_MAP_A', 'VI', 1);
+      await createNode('NODE_4_9_MAP_B', 'VI', 1);
+      await insertProgressState(userId, 'NODE_4_9_MAP_A', 'MASTERED');
+      assert.deepEqual(
+        await progressEngine.getProgressSnapshot(pool, userId, [
+          'NODE_4_9_MAP_A',
+          'NODE_4_9_MAP_A',
+          'NODE_4_9_MAP_B',
+        ]),
+        { NODE_4_9_MAP_A: 'MASTERED', NODE_4_9_MAP_B: 'NOT_INTRODUCED' }
+      );
+    });
+
+    test('rejects valid and missing node IDs without a partial result', async () => {
+      const userId = await createUser('u-4.9-missing');
+      await createNode('NODE_4_9_EXISTS', 'VI', 1);
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(pool, userId, ['NODE_4_9_EXISTS', 'NODE_4_9_MISSING']),
+        'INVALID_ID'
+      );
+    });
+
+    test('rejects mixed-language node IDs', async () => {
+      const userId = await createUser('u-4.9-mixed');
+      await createNode('NODE_4_9_VI', 'VI', 1);
+      await createNode('NODE_4_9_EN', 'EN', 1);
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(pool, userId, ['NODE_4_9_VI', 'NODE_4_9_EN']),
+        'CONTRACT_VIOLATION'
+      );
+    });
+
+    test('keeps VI and EN results isolated', async () => {
+      const userId = await createUser('u-4.9-isolation');
+      await createNode('NODE_4_9_ISO_VI', 'VI', 1);
+      await createNode('NODE_4_9_ISO_EN', 'EN', 1);
+      await insertProgressState(userId, 'NODE_4_9_ISO_VI', 'PRACTICING');
+      await insertProgressState(userId, 'NODE_4_9_ISO_EN', 'AUTOMATIC');
+      assert.deepEqual(await progressEngine.getProgressSnapshot(pool, userId, ['NODE_4_9_ISO_VI']), {
+        NODE_4_9_ISO_VI: 'PRACTICING',
+      });
+      assert.deepEqual(await progressEngine.getProgressSnapshot(pool, userId, ['NODE_4_9_ISO_EN']), {
+        NODE_4_9_ISO_EN: 'AUTOMATIC',
+      });
+    });
+
+    test('uses one real read client and releases it on success and error', async () => {
+      const userId = await createUser('u-4.9-client');
+      await createNode('NODE_4_9_CLIENT', 'VI', 1);
+      const success = trackingRealPool();
+      await progressEngine.getProgressSnapshot(success.api, userId, ['NODE_4_9_CLIENT']);
+      assert.deepEqual(success.state, { connects: 1, queries: 3, releases: 1 });
+      const failure = trackingRealPool();
+      await rejectsWithCode(
+        () => progressEngine.getProgressSnapshot(failure.api, userId, ['NODE_4_9_CLIENT_MISSING']),
+        'INVALID_ID'
+      );
+      assert.deepEqual(failure.state, { connects: 1, queries: 2, releases: 1 });
+    });
+  });
+
+  describe('get_practicing_plus_count (4.10)', () => {
+    test('rejects omitted and explicit undefined required fields', async () => {
+      const userId = await createUser('u-4.10-required');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, userId), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(
+        () => progressEngine.getPracticingPlusCount(pool, userId, undefined),
+        'MISSING_REQUIRED_FIELD'
+      );
+    });
+
+    test('rejects null, wrong types, and invalid language formats', async () => {
+      const userId = await createUser('u-4.10-types');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, null, 'VI'), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, 42, 'VI'), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, userId, null), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, userId, 42), 'CONTRACT_VIOLATION');
+      for (const language of ['', '  ', 'vi', 'VIE']) {
+        await rejectsWithCode(
+          () => progressEngine.getPracticingPlusCount(pool, userId, language),
+          'OUT_OF_RANGE_VALUE'
+        );
+      }
+    });
+
+    test('rejects malformed and nonexistent user IDs as INVALID_ID', async () => {
+      await rejectsWithCode(() => progressEngine.getPracticingPlusCount(pool, 'not-a-uuid', 'VI'), 'INVALID_ID');
+      await rejectsWithCode(
+        () => progressEngine.getPracticingPlusCount(pool, '00000000-0000-0000-0000-000000000002', 'VI'),
+        'INVALID_ID'
+      );
+    });
+
+    test('returns numeric zero when no rows match', async () => {
+      const userId = await createUser('u-4.10-zero');
+      assert.deepEqual(await progressEngine.getPracticingPlusCount(pool, userId, 'JA'), { count: 0 });
+    });
+
+    test('counts only PRACTICING, MASTERED, and AUTOMATIC within the language', async () => {
+      const userId = await createUser('u-4.10-count');
+      for (const [suffix, language, state] of [
+        ['VI_INTRODUCED', 'VI', 'INTRODUCED'],
+        ['VI_STUDYING', 'VI', 'STUDYING'],
+        ['VI_PRACTICING', 'VI', 'PRACTICING'],
+        ['VI_MASTERED', 'VI', 'MASTERED'],
+        ['VI_AUTOMATIC', 'VI', 'AUTOMATIC'],
+        ['EN_PRACTICING', 'EN', 'PRACTICING'],
+      ]) {
+        const nodeId = `NODE_4_10_${suffix}`;
+        await createNode(nodeId, language, 1);
+        await insertProgressState(userId, nodeId, state);
+      }
+      const vi = await progressEngine.getPracticingPlusCount(pool, userId, 'VI');
+      const en = await progressEngine.getPracticingPlusCount(pool, userId, 'EN');
+      assert.deepEqual(vi, { count: 3 });
+      assert.deepEqual(en, { count: 1 });
+      assert.equal(typeof vi.count, 'number');
+    });
+
+    test('uses one real read client and releases it on success and error', async () => {
+      const userId = await createUser('u-4.10-client');
+      const success = trackingRealPool();
+      await progressEngine.getPracticingPlusCount(success.api, userId, 'VI');
+      assert.deepEqual(success.state, { connects: 1, queries: 2, releases: 1 });
+      const failure = trackingRealPool();
+      await rejectsWithCode(
+        () => progressEngine.getPracticingPlusCount(
+          failure.api,
+          '00000000-0000-0000-0000-000000000003',
+          'VI'
+        ),
+        'INVALID_ID'
+      );
+      assert.deepEqual(failure.state, { connects: 1, queries: 1, releases: 1 });
     });
   });
 });

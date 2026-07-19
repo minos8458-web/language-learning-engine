@@ -6,7 +6,8 @@
 //
 // 구현하는 API(API_CONTRACT.md §4): get_progress(4.1), get_eligible_nodes(4.2),
 // record_explicit_study(4.3), record_attempt(4.4), record_self_reported_confidence(4.5),
-// get_concept_coverage_depth(4.6), get_due_reviews(4.7), get_active_learning_count(4.8).
+// get_concept_coverage_depth(4.6), get_due_reviews(4.7), get_active_learning_count(4.8),
+// get_progress_snapshot(4.9), get_practicing_plus_count(4.10).
 //
 // ⚠️ 발견된 문서 갭(코드 작성 중 발견, Architecture 재확인 필요 — Phase 1-B 보고에 기재):
 // API_CONTRACT.md §4.4(record_attempt)의 입력 목록에는 content_id가 없다. 하지만
@@ -59,6 +60,57 @@ class OutOfRangeValueError extends Error {
     this.name = 'OutOfRangeValueError';
     this.code = 'OUT_OF_RANGE_VALUE';
   }
+}
+
+class MissingRequiredFieldError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'MissingRequiredFieldError';
+    this.code = 'MISSING_REQUIRED_FIELD';
+  }
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateAc014UserId(userId) {
+  if (userId === undefined) {
+    throw new MissingRequiredFieldError('user_id는 필수입니다');
+  }
+  if (userId === null || typeof userId !== 'string') {
+    throw new ContractViolationError('user_id는 string이어야 합니다');
+  }
+  if (!UUID_PATTERN.test(userId)) {
+    throw new NotFoundError(`유효하지 않은 user_id: ${userId}`);
+  }
+}
+
+function validateAc014Language(language) {
+  if (language === undefined) {
+    throw new MissingRequiredFieldError('language는 필수입니다');
+  }
+  if (language === null || typeof language !== 'string') {
+    throw new ContractViolationError('language는 string이어야 합니다');
+  }
+  if (!/^[A-Z]{2}$/.test(language)) {
+    throw new OutOfRangeValueError(`language는 ISO 639-1 대문자 2글자여야 합니다: ${language}`);
+  }
+}
+
+function validateAc014NodeIds(nodeIds) {
+  if (nodeIds === undefined) {
+    throw new MissingRequiredFieldError('node_ids는 필수입니다');
+  }
+  if (nodeIds === null || !Array.isArray(nodeIds)) {
+    throw new ContractViolationError('node_ids는 string[]이어야 합니다');
+  }
+  for (const nodeId of nodeIds) {
+    if (typeof nodeId !== 'string' || nodeId.trim().length === 0) {
+      throw new ContractViolationError(
+        'node_ids의 모든 원소는 비어 있지 않은 문자열이어야 합니다'
+      );
+    }
+  }
+  return [...new Set(nodeIds)];
 }
 
 function validateCascadeTargetNodeIds(input, isCorrect, errorCategory) {
@@ -173,6 +225,87 @@ async function getActiveLearningCount(pool, userId, language) {
   );
 
   return { active_count: Number(rows[0].active_count) };
+}
+
+// ---------------------------------------------------------------------------
+// 4.9 get_progress_snapshot (AC-014, internal read API)
+// ---------------------------------------------------------------------------
+async function getProgressSnapshot(pool, userId, nodeIds) {
+  validateAc014UserId(userId);
+  const uniqueNodeIds = validateAc014NodeIds(nodeIds);
+
+  const client = await pool.connect();
+  try {
+    const { rows: userRows } = await client.query(
+      'SELECT 1 FROM users WHERE user_id = $1',
+      [userId]
+    );
+    if (userRows.length === 0) {
+      throw new NotFoundError(`존재하지 않는 user_id: ${userId}`);
+    }
+
+    if (uniqueNodeIds.length === 0) return {};
+
+    const { rows: nodeRows } = await client.query(
+      'SELECT node_id, language FROM grammar_nodes WHERE node_id = ANY($1::text[])',
+      [uniqueNodeIds]
+    );
+    if (nodeRows.length !== uniqueNodeIds.length) {
+      const found = new Set(nodeRows.map((row) => row.node_id));
+      const missing = uniqueNodeIds.find((nodeId) => !found.has(nodeId));
+      throw new NotFoundError(`존재하지 않는 node_id: ${missing}`);
+    }
+
+    if (new Set(nodeRows.map((row) => row.language)).size > 1) {
+      throw new ContractViolationError('node_ids는 모두 같은 language여야 합니다');
+    }
+
+    const { rows: progressRows } = await client.query(
+      `SELECT node_id, state
+         FROM progress
+        WHERE user_id = $1 AND node_id = ANY($2::text[])`,
+      [userId, uniqueNodeIds]
+    );
+
+    const result = {};
+    for (const nodeId of uniqueNodeIds) result[nodeId] = 'NOT_INTRODUCED';
+    for (const row of progressRows) result[row.node_id] = row.state;
+    return result;
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4.10 get_practicing_plus_count (AC-014, internal read API)
+// ---------------------------------------------------------------------------
+async function getPracticingPlusCount(pool, userId, language) {
+  validateAc014UserId(userId);
+  validateAc014Language(language);
+
+  const client = await pool.connect();
+  try {
+    const { rows: userRows } = await client.query(
+      'SELECT 1 FROM users WHERE user_id = $1',
+      [userId]
+    );
+    if (userRows.length === 0) {
+      throw new NotFoundError(`존재하지 않는 user_id: ${userId}`);
+    }
+
+    const { rows } = await client.query(
+      `SELECT count(*) AS count
+         FROM progress p
+         JOIN grammar_nodes gn ON gn.node_id = p.node_id
+        WHERE p.user_id = $1
+          AND gn.language = $2
+          AND p.state IN ('PRACTICING', 'MASTERED', 'AUTOMATIC')`,
+      [userId, language]
+    );
+    return { count: Number(rows[0].count) };
+  } finally {
+    client.release();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -774,6 +907,8 @@ module.exports = {
   getProgress,
   getEligibleNodes,
   getActiveLearningCount,
+  getProgressSnapshot,
+  getPracticingPlusCount,
   recordExplicitStudy,
   recordAttempt,
   recordSelfReportedConfidence,
@@ -782,4 +917,5 @@ module.exports = {
   NotFoundError,
   ContractViolationError,
   OutOfRangeValueError,
+  MissingRequiredFieldError,
 };

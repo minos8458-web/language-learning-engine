@@ -8,9 +8,18 @@
 
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { pool } = require('../db/pool');
 const { runMigrations } = require('../db/migrate');
 const graphEngine = require('../src/engines/graphEngine');
+
+async function rejectsWithCode(fn, code) {
+  await assert.rejects(fn, (error) => {
+    assert.equal(error.code, code);
+    return true;
+  });
+}
 
 describe('Graph Engine (Phase 1-B)', () => {
   before(async () => {
@@ -24,7 +33,9 @@ describe('Graph Engine (Phase 1-B)', () => {
       INSERT INTO concepts (concept_id, category, function, difficulty, prerequisite_concept_ids) VALUES
         ('CONCEPT_TENSE', 'CAT', 'FUNC', 2, '["CONCEPT_VERB"]'::jsonb),
         ('CONCEPT_VERB', 'CAT', 'FUNC', 1, '[]'::jsonb),
-        ('CONCEPT_UNLINKED', 'CAT', 'FUNC', 1, '["CONCEPT_VERB"]'::jsonb)
+        ('CONCEPT_UNLINKED', 'CAT', 'FUNC', 1, '["CONCEPT_VERB"]'::jsonb),
+        ('CONCEPT_AC014_A', 'AC014_A', 'FUNC', 1, '[]'::jsonb),
+        ('CONCEPT_AC014_B', 'AC014_B', 'FUNC', 1, '[]'::jsonb)
     `);
 
     // Nodes — 일관된 선행 체인 구성: PAST -> PRESENT -> VERB_BASE
@@ -36,7 +47,10 @@ describe('Graph Engine (Phase 1-B)', () => {
         ('NODE_PAST', 'VI', '["CONCEPT_TENSE"]'::jsonb, 'past', 2),
         ('NODE_PRESENT', 'VI', '["CONCEPT_TENSE"]'::jsonb, 'present', 2),
         ('NODE_VERB_BASE', 'VI', '["CONCEPT_VERB"]'::jsonb, 'verb base', 1),
-        ('NODE_ISOLATED', 'VI', '[]'::jsonb, 'isolated', 1)
+        ('NODE_ISOLATED', 'VI', '[]'::jsonb, 'isolated', 1),
+        ('NODE_AC014_LIST_VI_A', 'VI', '["CONCEPT_AC014_A"]'::jsonb, 'AC014 VI A', 2),
+        ('NODE_AC014_LIST_VI_B', 'VI', '["CONCEPT_AC014_A", "CONCEPT_AC014_B"]'::jsonb, 'AC014 VI B', 1),
+        ('NODE_AC014_LIST_EN_A', 'EN', '["CONCEPT_AC014_B"]'::jsonb, 'AC014 EN A', 3)
     `);
 
     await pool.query(`
@@ -106,6 +120,105 @@ describe('Graph Engine (Phase 1-B)', () => {
         () => graphEngine.findRelatedNodes(pool, 'NODE_PAST', 'INVALID_TYPE'),
         graphEngine.ContractViolationError
       );
+    });
+  });
+
+  describe('list_nodes_by_language (3.4)', () => {
+    test('rejects omitted and explicit undefined language', async () => {
+      await rejectsWithCode(() => graphEngine.listNodesByLanguage(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(
+        () => graphEngine.listNodesByLanguage(pool, undefined),
+        'MISSING_REQUIRED_FIELD'
+      );
+    });
+
+    test('rejects null and scalar wrong types', async () => {
+      await rejectsWithCode(() => graphEngine.listNodesByLanguage(pool, null), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => graphEngine.listNodesByLanguage(pool, 42), 'CONTRACT_VIOLATION');
+    });
+
+    test('rejects invalid language formats', async () => {
+      for (const language of ['', '  ', 'vi', 'VIE']) {
+        await rejectsWithCode(
+          () => graphEngine.listNodesByLanguage(pool, language),
+          'OUT_OF_RANGE_VALUE'
+        );
+      }
+    });
+
+    test('returns language-isolated node metadata', async () => {
+      const viRows = (await graphEngine.listNodesByLanguage(pool, 'VI')).filter((row) =>
+        row.node_id.startsWith('NODE_AC014_LIST_')
+      );
+      assert.deepEqual(viRows, [
+        { node_id: 'NODE_AC014_LIST_VI_A', difficulty: 2, concept_ids: ['CONCEPT_AC014_A'] },
+        {
+          node_id: 'NODE_AC014_LIST_VI_B',
+          difficulty: 1,
+          concept_ids: ['CONCEPT_AC014_A', 'CONCEPT_AC014_B'],
+        },
+      ]);
+      const enIds = (await graphEngine.listNodesByLanguage(pool, 'EN'))
+        .map((row) => row.node_id)
+        .filter((nodeId) => nodeId.startsWith('NODE_AC014_LIST_'));
+      assert.deepEqual(enIds, ['NODE_AC014_LIST_EN_A']);
+    });
+
+    test('returns an empty array for a language without nodes', async () => {
+      assert.deepEqual(await graphEngine.listNodesByLanguage(pool, 'JA'), []);
+    });
+  });
+
+  describe('get_concept_categories (3.5)', () => {
+    test('rejects omitted and explicit undefined concept_ids', async () => {
+      await rejectsWithCode(() => graphEngine.getConceptCategories(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(
+        () => graphEngine.getConceptCategories(pool, undefined),
+        'MISSING_REQUIRED_FIELD'
+      );
+    });
+
+    test('rejects null and non-array input', async () => {
+      await rejectsWithCode(() => graphEngine.getConceptCategories(pool, null), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => graphEngine.getConceptCategories(pool, 'CONCEPT_AC014_A'), 'CONTRACT_VIOLATION');
+    });
+
+    test('rejects invalid array elements', async () => {
+      for (const conceptIds of [[42], [''], ['   ']]) {
+        await rejectsWithCode(
+          () => graphEngine.getConceptCategories(pool, conceptIds),
+          'CONTRACT_VIOLATION'
+        );
+      }
+    });
+
+    test('returns an empty map for an empty array', async () => {
+      assert.deepEqual(await graphEngine.getConceptCategories(pool, []), {});
+    });
+
+    test('returns categories and normalizes duplicate IDs', async () => {
+      assert.deepEqual(
+        await graphEngine.getConceptCategories(pool, [
+          'CONCEPT_AC014_A',
+          'CONCEPT_AC014_A',
+          'CONCEPT_AC014_B',
+        ]),
+        { CONCEPT_AC014_A: 'AC014_A', CONCEPT_AC014_B: 'AC014_B' }
+      );
+    });
+
+    test('rejects valid and missing IDs without a partial result', async () => {
+      await rejectsWithCode(
+        () => graphEngine.getConceptCategories(pool, ['CONCEPT_AC014_A', 'CONCEPT_AC014_MISSING']),
+        'INVALID_ID'
+      );
+    });
+  });
+
+  describe('AC-014 Graph leaf boundary', () => {
+    test('does not import another Engine', () => {
+      const source = fs.readFileSync(path.join(__dirname, '../src/engines/graphEngine.js'), 'utf8');
+      assert.doesNotMatch(source, /require\([^)]*Engine[^)]*\)/);
     });
   });
 
