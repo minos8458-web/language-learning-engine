@@ -110,10 +110,10 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행. AC-014 내부 read API `list_nodes_by_language`와 `get_concept_categories`로 정적 graph/grammar metadata를 제공 |
-| **2. 하지 않는 일** | 사용자 Progress를 조회·저장하지 않는다. 노드 상태에 따른 필터링 판단을 하지 않는다(Practicing 이상 여부는 호출자가 Progress Engine 결과와 조합해 판단). "이 노드를 복습해야 한다"거나 "생성해야 한다" 같은 정책적 판단을 내리지 않는다 — 순수 구조 조회만 한다 |
+| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행. AC-014 내부 read API `list_nodes_by_language`와 `get_concept_categories`로 정적 graph/grammar metadata를 제공. **AC-015 내부 read API `get_node_language_and_concepts`로 Interleaving Engine에 node별 `language`·`concept_ids` 조회 경로를 제공한다(caller: Interleaving Engine만)** |
+| **2. 하지 않는 일** | 사용자 Progress를 조회·저장하지 않는다. 노드 상태에 따른 필터링 판단을 하지 않는다(Practicing 이상 여부는 호출자가 Progress Engine 결과와 조합해 판단). "이 노드를 복습해야 한다"거나 "생성해야 한다" 같은 정책적 판단을 내리지 않는다 — 순수 구조 조회만 한다. **`get_node_language_and_concepts`는 mixed-language를 판정하거나 거부하지 않는다 — 실제 값을 그대로 반환할 뿐이다(AC-015)** |
 | **3. 입력 데이터** | 노드 ID, 탐색 방향(선행/후행), 최대 깊이(max_depth) |
-| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)**, language별 `{node_id, difficulty, concept_ids}` metadata, `{concept_id: category}` map |
+| **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)**, language별 `{node_id, difficulty, concept_ids}` metadata, `{concept_id: category}` map, **입력 node_id마다 `{language, concept_ids}`를 담은 동적 map(AC-015, `get_node_language_and_concepts`)** |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부. Graph Engine은 어떤 상위 Engine도 호출해서는 안 된다 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §2, §3 |
@@ -206,14 +206,14 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | Learning Flow Engine이 구성한 occurrence multiset의 구성과 multiplicity를 보존하면서 순서만 결정한다(GRAMMAR_GRAPH §7의 Tier A 원문은 변경하지 않고 AC-014로 정밀 해석) |
+| **1. 책임** | Learning Flow Engine이 구성한 occurrence multiset의 구성과 multiplicity를 보존하면서 순서만 결정한다(GRAMMAR_GRAPH §7의 Tier A 원문은 변경하지 않고 AC-014로 정밀 해석). **정렬 전, `get_node_language_and_concepts`(AC-015)로 입력 node들의 `language`·`concept_ids`를 확보해 mixed-language 여부를 직접 판정하고, `concept_ids` union을 `get_concept_categories`(3.5)에 전달해 Category를 해석하며, `find_related_nodes`(3.2, CONTRAST)로 대조 관계를 조회한다** |
 | **2. 하지 않는 일** | 어떤 노드가 복습·연습 대상인지 선정하거나 입력 occurrence를 추가·삭제하지 않는다. 실제 문제 콘텐츠를 만들지 않는다. Category/CONTRAST를 직접 정의하지 않는다 |
 | **3. 입력 데이터** | 중복을 허용하는 node ID occurrence multiset 배열 |
 | **4. 출력 데이터** | 입력과 길이·multiplicity가 정확히 같은 순서화된 node ID 시퀀스 |
-| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, `get_concept_categories` 및 CONTRAST 관계 조회) |
+| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, `get_concept_categories`, **`get_node_language_and_concepts`(AC-015)** 및 CONTRAST 관계 조회) |
 | **6. 의존하면 안 되는 Engine** | Progress Engine, Generation Engine, AI Generation Engine, Content Engine, Review Engine, Learning Flow Engine |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §7 |
-| **8. 향후 구현 시 주의사항** | max batch 6의 고유 multiset 순열 전체를 exhaustive 비교한다. `sequence_nodes`의 lexicographic ordering tuple을 사용하고 내부 점수는 노출하지 않는다. 입력 node가 2개 미만인 경우 Learning Flow가 INTERLEAVING 전에 건너뛴다 |
+| **8. 향후 구현 시 주의사항** | max batch 6의 고유 multiset 순열 전체를 exhaustive 비교한다. `sequence_nodes`의 lexicographic ordering tuple을 사용하고 내부 점수는 노출하지 않는다. 입력 node가 2개 미만인 경우 Learning Flow가 INTERLEAVING 전에 건너뛴다. **`sequence_nodes`는 dedupe·permutation 생성 전 원본 occurrence multiset 배열의 전체 길이가 `engineConfig`의 `max_batch_size`를 초과하면 `OUT_OF_RANGE_VALUE`로 거부한다(AC-015, unique node 수가 아니라 원본 길이 기준). mixed-language 판정은 `get_node_language_and_concepts`가 반환한 `language` 값들을 Interleaving이 직접 비교해 수행하며, Graph API 자체는 이를 거부하지 않는다** |
 
 ---
 
@@ -315,3 +315,4 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 | 1.12 | 2026-07-17 | AC-012 Tier C Architecture Clarification — Learning Flow `start_session` 입력에 `conversationBoundaryAcknowledged` 반영, PRACTICING+ 최소 기준 기본값 3의 설정 소비, true 시 해당 호출의 CONVERSATION 재선택 차단, acknowledgement 비영속·Progress 무변경, 전체 next_action production 경로 선행 구현 및 Conversation Engine 신설 금지를 명시 |
 | 1.13 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Learning Flow의 `get_active_learning_count` read-only precheck과 Progress `recordExplicitStudy`의 최종 admission 권한을 분리. Progress leaf 구조, 동일 client/transaction, transaction-scoped blocking advisory lock, idempotency 우선, authoritative count 및 `CONTRACT_VIOLATION` enforcement를 명시 |
 | 1.14 | 2026-07-19 | AC-014 Tier C Architecture Clarification — Graph `list_nodes_by_language`/`get_concept_categories`, Progress `get_progress_snapshot`/`get_practicing_plus_count` 책임 추가; Learning Flow의 canonical API-only NEW_GRAMMAR 8단계와 INTERLEAVING eligible/admissible/occurrence/sequence 분리, Category hard gate와 selected-set tuple, Session Budget mode를 명시. Interleaving은 max batch 6 occurrence multiset의 순서만 exhaustive 결정하며 Progress leaf와 Graph static metadata 경계를 유지 |
+| 1.15 | 2026-07-19 | AC-015 Tier C Architecture Clarification — Graph Engine에 `get_node_language_and_concepts` 책임 추가(Interleaving Engine 전용 caller, mixed-language 미판정). Interleaving §10-5 호출 목록에 반영하고, 정렬 전 language/concept_ids 확보 → Category 해석(`get_concept_categories`) → CONTRAST 조회(`find_related_nodes`) 흐름을 §10-1에 명시. `sequence_nodes`의 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 거부와 mixed-language 판정이 Interleaving 책임임을 §10-8에 재확인. Tier A `GRAMMAR_GRAPH.md` 원문 불변 |

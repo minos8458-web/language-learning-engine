@@ -118,6 +118,22 @@ AC-014 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine 
 
 **AC-014 wording correction**: `concept_ids`는 required string array다(빈 배열 `[]`이 정상값이라는 계약이 필드 생략까지 정당화하지 않는다). omitted/undefined → `MISSING_REQUIRED_FIELD`. explicit null 또는 배열이 아닌 값 → `CONTRACT_VIOLATION`. 배열 원소 중 비문자열·빈 문자열·공백-only → `CONTRACT_VIOLATION`. 중복 `concept_id`는 에러가 아니며 결과 map에서 자연히 단일 key로 정규화된다. 입력 중 하나라도 존재하지 않는 `concept_id`를 포함하면 부분 결과 없이 전체를 `INVALID_ID`로 거부한다.
 
+### 3.6 get_node_language_and_concepts
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `get_node_language_and_concepts` |
+| JavaScript 구현명 | `getNodeLanguageAndConcepts` |
+| 호출 주체 | Interleaving Engine |
+| 입력 | `node_ids: string[]` |
+| 출력 | 동적 map — 입력의 모든 고유하고 유효한 `node_id`를 key로 하여 각각 정확히 한 번씩 포함한다: `{[node_id]: {language, concept_ids}}`(`node_id`는 실제 값으로 치환되는 동적 key이며, 문자 그대로의 고정 key `"node_id"`가 아니다) |
+| 빈 결과 | 빈 입력은 `{}` |
+| 에러 | 존재하지 않는 `node_id` → `INVALID_ID`(부분 결과 없이 전체 거부) |
+| 호출 가능한 하위 Engine | 없음(리프) |
+| 금지 사항 | Progress 상태를 조회하지 않는다. mixed-language를 판정하거나 거부하지 않는다 — 각 node의 실제 `language`를 있는 그대로 반환할 뿐이며, 그 판정은 호출자(Interleaving Engine)의 책임이다. `concepts.category`를 해석하지 않는다(`get_concept_categories`, 3.5로 계속 분리) — `difficulty`나 다른 metadata를 추가로 반환하지 않는다 |
+
+**AC-015 wording**: `node_ids`는 required string array다(AC-014 wording correction과 동일 규칙). omitted/undefined → `MISSING_REQUIRED_FIELD`. explicit null 또는 배열이 아닌 값 → `CONTRACT_VIOLATION`. 배열 원소 중 비문자열·빈 문자열·공백-only → `CONTRACT_VIOLATION`. 중복 `node_id`는 에러가 아니며 결과 map에서 자연히 단일 key로 정규화된다. 입력 중 하나라도 존재하지 않는 `node_id`를 포함하면 부분 결과 없이 전체를 `INVALID_ID`로 거부한다.
+
 ---
 
 ## 4. Progress Engine API
@@ -379,9 +395,11 @@ WHERE p.user_id = $1
 | 입력 | `node_id` occurrence multiset 배열. 중복 `node_id` 허용 |
 | 출력 | 입력과 길이·multiplicity가 정확히 같은 순열. 입력 node 추가·삭제 금지 |
 | 빈 결과 | 빈 배열 입력은 `[]` |
-| 에러 | omitted → `MISSING_REQUIRED_FIELD`; explicit null·non-array·빈 문자열·비문자열 원소·mixed-language → `CONTRACT_VIOLATION`; 미존재 `node_id` → `INVALID_ID` |
+| 에러 | omitted → `MISSING_REQUIRED_FIELD`; explicit null·non-array·빈 문자열·비문자열 원소·mixed-language → `CONTRACT_VIOLATION`; 미존재 `node_id` → `INVALID_ID`; dedupe 및 permutation 생성 전 원본 occurrence multiset 배열의 전체 길이가 `engineConfig`의 `max_batch_size`를 초과 → `OUT_OF_RANGE_VALUE`(AC-015) |
 | 호출 가능한 하위 Engine | Graph Engine(읽기) |
 | 금지 사항 | 정렬 알고리즘의 내부 점수·기준을 응답에 노출하지 않는다 |
+
+**AC-015 batch length 계약**: 이 검증은 중복 제거(dedupe)나 순열 생성보다 먼저 수행하며, unique `node_id` 개수가 아니라 원본 occurrence multiset 배열의 전체 길이를 기준으로 한다 — 동일 `node_id` 7개로만 구성된 입력(`[A,A,A,A,A,A,A]`)도 길이 7로 계산해 거부한다. `max_batch_size` 숫자는 `engineConfig.js`의 Provisional/tunable 값(현재 승인값 6)을 참조하며 함수 내부에 하드코딩하지 않는다.
 
 **AC-014 ordering 계약**: 입력 occurrence multiset의 고유 순열 전체에서 다음 tuple의 lexicographic 최솟값을 선택한다.
 
@@ -536,3 +554,4 @@ WHERE p.user_id = $1
 | 1.14 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Progress 내부 API `get_active_learning_count`(§4.8) 추가, `record_explicit_study`(§4.3)의 capacity `CONTRACT_VIOLATION`·idempotency 우선·최종 admission 계약 명시. 외부 HTTP API 5개 불변, 내부 API 16→17, 전체 API 21→22 |
 | 1.15 | 2026-07-19 | AC-014 Tier C Architecture Clarification — 내부 API `list_nodes_by_language`·`get_concept_categories`·`get_progress_snapshot`·`get_practicing_plus_count` 4개 추가, `sequence_nodes`의 occurrence multiset·오류·순열 불변식과 deterministic ordering tuple 정밀화, `start_session` NEW_GRAMMAR payload 및 후보 제안/최종 admission 분리 명시. 외부 HTTP API 5개 불변, 내부 API 17→21, 전체 API 22→26 |
 | 1.16 | 2026-07-19 | AC-014 wording correction(Narrow Contract Wording Clarification, 새 Architecture 아님) — §3.4/3.5/4.9/4.10 신규 API 4개의 입력 필드가 전부 required임을 명시하고, positional signature에서 omitted/explicit undefined를 `MISSING_REQUIRED_FIELD`, explicit null·wrong-type을 `CONTRACT_VIOLATION`으로, 필드별 형식·존재성 오류(`OUT_OF_RANGE_VALUE`/`INVALID_ID`)를 정밀화. 중복 ID는 lookup map 정규화로 에러 아님, 부분 결과 반환 금지(하나라도 존재하지 않는 ID 포함 시 전체 거부). 신규 error code 없음. API 총수 26·`get_active_learning_count`(AC-013) 기존 validation·Tier A 문서 불변 |
+| 1.17 | 2026-07-19 | AC-015 Tier C Architecture Clarification — 신규 내부 API `get_node_language_and_concepts`(§3.6, Interleaving Engine 전용 caller) 추가, 입력의 모든 고유 유효 node_id를 동적 key로 정확히 한 번씩 포함하는 map 출력과 mixed-language 미판정(Graph는 사실만 반환) 명시. `sequence_nodes`(§9.1)에 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 계약 추가(engineConfig 참조, 하드코딩 금지). 외부 HTTP API 5개 불변, 내부 API 21→22, 전체 API 26→27. 신규 error code 없음, `concepts.category`/`difficulty` 등 다른 metadata 미추가, Tier A 문서 불변 |

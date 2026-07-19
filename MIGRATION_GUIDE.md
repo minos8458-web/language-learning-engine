@@ -130,6 +130,22 @@
 
 ---
 
+### Entry 008
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-19 |
+| 대상 문서 | `API_CONTRACT.md`(v1.16 → v1.17), `ENGINE_INTERFACE.md`(v1.14 → v1.15), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.22 → v1.23), `MIGRATION_GUIDE.md`(v1.5 → v1.6) |
+| 변경 유형 | **ADDITIVE(new internal API) + NARROWING(sequence_nodes input validation)** — AC-015 Tier C Architecture Clarification |
+| 정확한 API 변화 | 기존 외부 5·내부 21·전체 26. 신규 내부 API 1개(`get_node_language_and_concepts`) 추가. 최종 외부 5·내부 22·전체 27 |
+| 핵심 변경 | Interleaving Engine이 `sequence_nodes` 구현에 필요한 node별 `language`·`concept_ids`를 얻을 canonical 경로(Owner: Graph Engine, Caller: Interleaving Engine만) 신설. `sequence_nodes`에 dedupe·permutation 이전 원본 occurrence 배열 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 거부 계약 추가 |
+| 하위 호환성 | 신규 API 자체는 기존 26개 API·외부 API 5개·`next_action` enum을 그대로 보존하는 **순수 ADDITIVE**다. 다만 `sequence_nodes`에 추가된 `max_batch_size` 초과 거부 조건은 계약 표면상 입력 허용 범위를 좁히는 **NARROWING**이다 — 이전에는 이 조건 자체가 §9.1에 명시돼 있지 않았다. **narrowing이지만 breaking이 아닌 근거**: Interleaving Engine과 `sequence_nodes`의 production 구현이 아직 시작되지 않았고(Prerequisite Implementation NOT STARTED, 이번 문서 patch로도 변경되지 않음), canonical Learning Flow caller는 이미 AC-014에서 `max_batch_size` 이하의 occurrence multiset만 구성하도록 승인됐다(occurrence/batch 계약, §AC-014). 따라서 이 narrowing에 영향받는 배포된 runtime caller가 현재 존재하지 않으므로 실제 하위 호환성 손상은 없다 |
+| Tier A adjudication | 없음 — Frozen `GRAMMAR_GRAPH.md` 원문 미수정, 순수 Tier C HOW/API-boundary 추가 |
+| 서버/DB 영향 | DB migration·schema 변경·신규 엔터티 없음. `engineConfig.js`는 이번 문서 patch에서 변경하지 않는다(Interleaving Engine 구현 세션의 몫) |
+| 상태 | Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**. Validation Level 3 §9는 아직 PASS 아님 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -140,3 +156,4 @@
 | 1.3 | 2026-07-17 | Entry 005 추가 — AC-012 Conversation Boundary acknowledgement 및 loop prevention을 ADDITIVE canonical migration record로 반영. 기존 호출자 omitted=false 하위 호환, 클라이언트 boundary 확인 후 true 재호출, DB/Progress schema 변경 없음, 실제 Conversation Engine 도입 전 재심사 명시 |
 | 1.4 | 2026-07-18 | Entry 006 추가 — AC-013 Active-Node Admission Boundary를 ADDITIVE canonical migration record로 반영. 내부 API 16→17·전체 API 21→22, 외부 HTTP API 5개 불변, idempotent 하위 호환, DB migration/schema 변경 없음, prerequisite implementation 미착수 명시 |
 | 1.5 | 2026-07-19 | Entry 007 추가 — AC-014 Learning Flow prerequisite clarification을 ADDITIVE/CONTRACT CLARIFICATION record로 반영. 기존 외부 5·내부 17·전체 22에서 신규 내부 API 4개를 추가해 최종 외부 5·내부 21·전체 26. 기존 22개 API와 next_action enum 보존, sequence_nodes 목적 유지·multiset/오류/출력 불변식 정밀화, Tier A 원문·DB schema 불변 및 구현 미착수 명시 |
+| 1.6 | 2026-07-19 | Entry 008 추가 — AC-015 Interleaving Graph metadata dependency clarification을 ADDITIVE(new internal API) + NARROWING(sequence_nodes input validation) canonical migration record로 반영. 내부 API 21→22·전체 API 26→27, 외부 API 5개 및 next_action enum 불변. sequence_nodes의 max_batch_size 초과 거부(원본 occurrence 길이 기준, dedupe 전)는 narrowing이나 production 구현 미착수·canonical caller가 이미 그 상한 이하로 구성하도록 승인됐다는 근거로 breaking이 아님을 명시. DB migration/schema·engineConfig.js 변경 없음, prerequisite implementation 미착수 명시 |

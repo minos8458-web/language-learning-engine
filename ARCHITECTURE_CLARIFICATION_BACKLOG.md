@@ -21,6 +21,7 @@
 | AC-012 | §9 Conversation Boundary acknowledgement and loop prevention | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AC-013 | Active-Node Admission Boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-014 | Learning Flow prerequisite clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
+| AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -441,6 +442,35 @@ violation(c,S) = max(0, count(c,S) - floor(|S|/2)) = 0
 
 ---
 
+## AC-015 — Interleaving Graph metadata dependency clarification
+
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-19). Validation Level 3 §9는 아직 **PASS 아님**이며 Interleaving Engine 구현은 이번 범위 밖이다. AC-014는 재개방하지 않는다.
+
+**승인 provenance 및 Governance**: 사용자가 AC-015를 Tier C Architecture Clarification으로 명시 승인했다. `GRAMMAR_GRAPH.md`의 Tier A/Frozen 원문은 변경하지 않는다. 직전 독립 리뷰가 `sequence_nodes`의 Category/mixed-language 계산에 실제 canonical 데이터 접근 경로가 없음을 확인해 "Narrow Tier C contract clarification required"로 판정한 gap을 해소한다.
+
+**발견된 문제**: `sequence_nodes`(§9.1) 입력은 node_id occurrence multiset뿐이라 Interleaving Engine이 각 node의 `language`·`concept_ids`를 얻을 canonical API가 없었다. `list_nodes_by_language`는 Learning Flow 전용 caller이고 `sequence_nodes` 입력엔 애초에 language가 없어 caller 확대만으로는 해결 불가능했으며, `get_concept_categories`는 `concept_ids`를 이미 알고 있어야 호출 가능했고, `find_related_nodes` 출력에는 language/concept_ids가 없었다. 이 상태로 구현하면 직접 DB 조회, caller 제한 위반, Category 규칙 미구현, mixed-language 검증 생략, 테스트 전용 metadata 주입 중 하나로 흐를 수밖에 없어 전부 계약 위반으로 판정됐다.
+
+**최종 확정 — 신규 API `get_node_language_and_concepts`**:
+- Canonical 이름: `get_node_language_and_concepts` / JavaScript: `getNodeLanguageAndConcepts`.
+- Owner: Graph Engine. Caller: **Interleaving Engine만**(Learning Flow나 다른 Engine은 입증된 필요가 없어 caller에 포함하지 않는다).
+- 입력: required `node_ids: string[]`. AC-014 wording correction과 동일한 규칙 — omitted/undefined → `MISSING_REQUIRED_FIELD`, explicit null/non-array/잘못된 원소 → `CONTRACT_VIOLATION`, 빈 배열 → 정상 `{}`, 중복 → 정상(결과 map에서 단일 key로 정규화), 미존재 ID가 하나라도 있으면 부분 결과 없이 전체 `INVALID_ID`.
+- 출력: 실제 node_id를 key로 하는 동적 map `{[node_id]: {language, concept_ids}}`다 — 문자 그대로의 고정 key `"node_id"`가 아니라, 입력의 모든 고유하고 유효한 node_id가 결과에 정확히 한 번씩 포함된다.
+- 이 Graph API는 mixed-language를 거부하지 않는다 — 각 node의 실제 `language`를 있는 그대로 반환할 뿐이며, mixed-language를 `CONTRACT_VIOLATION`으로 판정하는 책임은 `sequence_nodes`/Interleaving Engine에 있다(Graph Engine의 "판단하지 않고 순수 구조만 조회" 원칙과 일치).
+- `language`와 `concept_ids`만 반환한다 — `concepts.category` 해석은 기존 `get_concept_categories`(§3.5)로 계속 분리하고, `difficulty`나 다른 metadata를 추가하지 않는다(책임 과확장 방지).
+- 신규 error code는 추가하지 않는다.
+
+**`sequence_nodes` batch length 계약(§9.1 추가)**: dedupe 및 permutation 생성 **이전**, 원본 occurrence multiset 배열의 **전체 길이**(unique node_id 개수가 아님)가 `engineConfig`의 Provisional/tunable `max_batch_size`(승인값 6)를 초과하면 `OUT_OF_RANGE_VALUE`로 거부한다 — 동일 node_id 7개로만 구성된 입력(`[A,A,A,A,A,A,A]`)도 길이 7로 계산해 거부한다. 숫자 6은 `sequence_nodes` 함수 내부에 하드코딩하지 않고 `engineConfig.js`를 참조한다(단, 이번 문서 patch는 `engineConfig.js` 자체를 수정하지 않는다 — Interleaving Engine 구현 세션의 몫이다).
+
+**Data flow**: `sequence_nodes` 입력 validation → occurrence multiset에서 unique node_ids 추출 → `get_node_language_and_concepts` 1회 호출(존재성 전부 검증 포함) → language distinct count 판정(Interleaving 책임) → concept_ids union → `get_concept_categories` 1회 호출 → `find_related_nodes`(CONTRAST) 호출 및 pair 정규화 → unique multiset permutation → lexicographic tuple 계산 → 입력 multiplicity·길이를 보존한 배열 반환.
+
+**API 수 및 구현 경계**: 기존 외부 5·내부 21·전체 26에서 신규 내부 API 1개를 추가해 최종 외부 5(불변)·내부 22·전체 27이다. 기존 26개 API와 외부 `next_action` enum은 보존한다. DB migration·신규 엔터티는 없고, `engineConfig.js`는 이번 clarification에서 변경하지 않으며 실제 prerequisite implementation은 NOT STARTED다.
+
+**기각된 대안**: (1) `list_nodes_by_language` caller를 Interleaving까지 확대 — `sequence_nodes` 입력엔 language가 없어 이 API를 호출할 language 자체를 모른다는 근본 문제가 남아 기각. (2) `get_concept_categories` 입력을 node_ids까지 확대 — language를 여전히 못 얻고 기존 단순한 계약을 훼손해 기각. (3) `sequence_nodes` 입력을 metadata 객체 배열로 변경 — §9.1의 기존 입력 계약을 breaking하고 Interleaving의 "Graph Engine 호출 가능" 권한을 무의미하게 만들어 기각. (4) Learning Flow가 별도 metadata snapshot을 전달 — 존재성 검증 책임 소재가 모호해지고 Interleaving의 기존 Graph 호출 권한과 실질적으로 중복돼 신규 API보다 열등하다고 판단해 기각. (5) Interleaving Engine의 직접 DB 조회 — ENGINE_INTERFACE §11 "리프 Engine은 아무도 호출하지 않는다: Graph Engine" 및 §10-5의 Graph *Engine* 경유 원칙을 정면 위반해 기각.
+
+**보존 범위**: AC-014 기존 본문·상태·provenance는 변경하지 않는다. AUD-001~004 기록을 변경하지 않는다. Tier A `GRAMMAR_GRAPH.md` 원문은 수정하지 않는다. Conversation Engine 내부 설계, Content/Generation 구현, Worker 구현, DB migration, Interleaving Engine 실제 구현은 이번 clarification 범위 밖이다.
+
+---
+
 ## AUD-002 — MASTERED/AUTOMATIC Temporal Stability Contract
 
 **상태**: ✅ **CLOSED**(2026-07-13) — **Frozen Core Standard Amendment**(Independent Architecture Audit 발견, AC-series와 governance 등급이 다름)
@@ -634,3 +664,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.20 | 2026-07-19 | AC-014 Learning Flow prerequisite clarification 사용자 승인 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. Tier A `GRAMMAR_GRAPH.md` 불변 상태에서 Review Cascade와 cascade_jobs 경계, AC-013 active eligible pool, Category hard gate·selected-set tuple·occurrence/batch·sequence_nodes ordering, 신규 내부 API 4개, Session Budget mode, NEW_GRAMMAR payload와 capacity-race client retry를 adjudicate. 외부 API 5 불변·내부 17→21·전체 22→26, DB migration 없음, §9 미PASS 및 Conversation Engine 범위 밖을 기록 |
 | 1.21 | 2026-07-19 | AC-014 wording correction addendum — 신규 API 4개 입력 필드 전부 required 확정, positional signature의 omitted/explicit undefined→MISSING_REQUIRED_FIELD·explicit null/wrong-type→CONTRACT_VIOLATION·필드별 형식(OUT_OF_RANGE_VALUE)·존재성(INVALID_ID) 오류 정밀화, 중복 ID lookup 정규화 및 부분 결과 반환 금지를 additive하게 기록. §AC-014 기존 본문·API 총수 26·상태(RESOLVED/NOT STARTED)·get_active_learning_count(AC-013) validation·Tier A 문서 전부 불변 |
 | 1.22 | 2026-07-19 | AC-014 read API 독립 리뷰 APPROVE 및 main integration 기록 — 원본 implementation `bfb6c42`, main cherry-pick `17de0fb`, BLOCKER/CRITICAL/MAJOR/MINOR 0건. Baseline `29688270347` 97/97 PASS·21 suites, implementation `29688678717` 및 final validation `29688802913` 각각 125/125 PASS·26 suites(PostgreSQL 16.14 / Node.js 20.20.2), 신규 tests 28개를 기록. F-01/F-02는 non-blocking NOTE이며 read API 4개 milestone 승인 후에도 AC-014 전체 prerequisite 상태는 RESOLVED / IN PROGRESS, §9 미PASS로 유지 |
+| 1.23 | 2026-07-19 | AC-015 Interleaving Graph metadata dependency clarification 사용자 승인 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. 신규 내부 API `get_node_language_and_concepts`(Owner: Graph Engine, Caller: Interleaving Engine만, 동적 map 출력, mixed-language 미판정)를 확정하고, `sequence_nodes`의 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 거부(engineConfig 참조, 하드코딩 금지)를 기록. 외부 API 5 불변·내부 21→22·전체 26→27, 신규 error code 없음, DB migration·engineConfig.js 변경 없음, AC-014 본문·상태와 Tier A `GRAMMAR_GRAPH.md` 원문 전부 불변, §9 미PASS를 기록 |
