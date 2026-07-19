@@ -100,6 +100,8 @@ AC-014 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine 
 | 호출 가능한 하위 Engine | 없음(리프) |
 | 금지 사항 | Progress 상태를 조회하지 않는다. 정적 Grammar Node metadata만 반환한다 |
 
+**AC-014 wording correction(입력 계약 정밀화)**: `language`는 required scalar string이다. omitted 또는 explicit undefined(positional 인자에서 구분 불가) → `MISSING_REQUIRED_FIELD`. explicit null 또는 string이 아닌 값 → `CONTRACT_VIOLATION`. string이지만 `/^[A-Z]{2}$/` 형식(빈 문자열·공백-only 포함) 불일치 → `OUT_OF_RANGE_VALUE`. 기존 `get_active_learning_count`(4.8)의 validation 방식은 이 정밀화로 변경되지 않는다.
+
 ### 3.5 get_concept_categories
 
 | 항목 | 내용 |
@@ -113,6 +115,8 @@ AC-014 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine 
 | 에러 | 존재하지 않는 `concept_id` → `INVALID_ID` |
 | 호출 가능한 하위 Engine | 없음(리프) |
 | 금지 사항 | Progress 상태를 조회하거나 정책적 후보 판정을 하지 않는다 |
+
+**AC-014 wording correction**: `concept_ids`는 required string array다(빈 배열 `[]`이 정상값이라는 계약이 필드 생략까지 정당화하지 않는다). omitted/undefined → `MISSING_REQUIRED_FIELD`. explicit null 또는 배열이 아닌 값 → `CONTRACT_VIOLATION`. 배열 원소 중 비문자열·빈 문자열·공백-only → `CONTRACT_VIOLATION`. 중복 `concept_id`는 에러가 아니며 결과 map에서 자연히 단일 key로 정규화된다. 입력 중 하나라도 존재하지 않는 `concept_id`를 포함하면 부분 결과 없이 전체를 `INVALID_ID`로 거부한다.
 
 ---
 
@@ -260,6 +264,8 @@ WHERE p.user_id = $1
 | 호출 가능한 하위 Engine | 없음(리프) |
 | 금지 사항 | 외부 HTTP API로 노출하지 않는다. 같은 read client에서 `grammar_nodes` 존재성과 language 일관성을 검증하며 다른 Engine을 호출하지 않는다 |
 
+**AC-014 wording correction**: `user_id`, `node_ids` 모두 required다. `user_id` omitted/undefined → `MISSING_REQUIRED_FIELD`, explicit null 또는 string이 아닌 값 → `CONTRACT_VIOLATION`, string 형식이지만 유효한 UUID가 아니거나 DB에 존재하지 않으면 `INVALID_ID`(형식 오류와 미존재를 동일 code로 처리하며, 검증 없이 DB에 전달해 PostgreSQL raw cast 오류를 노출하지 않는다). `node_ids` omitted/undefined → `MISSING_REQUIRED_FIELD`, explicit null 또는 배열이 아닌 값 → `CONTRACT_VIOLATION`, 빈 배열 `[]`은 정상(`{}`), 원소 중 비문자열·빈 문자열·공백-only → `CONTRACT_VIOLATION`, 중복 `node_id`는 에러가 아니며 출력 state map에서 단일 key로 정규화, 하나라도 존재하지 않는 `node_id`를 포함하면 부분 결과 없이 전체 `INVALID_ID`, 서로 다른 language의 유효 `node_id` 혼합은 `CONTRACT_VIOLATION`. 모든 검증·조회는 같은 read client에서 수행하며, 유효 node에 progress 행이 없으면 `NOT_INTRODUCED`, 입력의 모든 고유 유효 `node_id`가 출력에 포함된다.
+
 ### 4.10 get_practicing_plus_count
 
 | 항목 | 내용 |
@@ -273,6 +279,8 @@ WHERE p.user_id = $1
 | 에러 | 미존재 `user_id` → `INVALID_ID`; `language` 형식 오류 → `OUT_OF_RANGE_VALUE` |
 | 호출 가능한 하위 Engine | 없음(리프) |
 | 금지 사항 | 외부 HTTP API로 노출하거나 다른 Engine을 호출하지 않는다 |
+
+**AC-014 wording correction**: `user_id`, `language` 모두 required다. 각 필드의 omitted/undefined/null/wrong-type 처리는 §4.9(`user_id`)와 §3.4(`language`)의 동일 규칙을 그대로 따른다.
 
 ---
 
@@ -527,3 +535,4 @@ WHERE p.user_id = $1
 | 1.13 | 2026-07-17 | AC-012 Tier C Architecture Clarification — `start_session`(10.5) optional 입력 `conversation_boundary_acknowledged?: boolean` 추가. omitted/false/true/null/non-boolean 계약, 요청 단위 비영속 acknowledgement, true 시 CONVERSATION만 해당 호출 후보에서 제외하고 서버가 기존 우선순위의 다음 action을 결정하는 규칙을 명시. API 총수 21개와 기존 `next_action` enum은 불변 |
 | 1.14 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Progress 내부 API `get_active_learning_count`(§4.8) 추가, `record_explicit_study`(§4.3)의 capacity `CONTRACT_VIOLATION`·idempotency 우선·최종 admission 계약 명시. 외부 HTTP API 5개 불변, 내부 API 16→17, 전체 API 21→22 |
 | 1.15 | 2026-07-19 | AC-014 Tier C Architecture Clarification — 내부 API `list_nodes_by_language`·`get_concept_categories`·`get_progress_snapshot`·`get_practicing_plus_count` 4개 추가, `sequence_nodes`의 occurrence multiset·오류·순열 불변식과 deterministic ordering tuple 정밀화, `start_session` NEW_GRAMMAR payload 및 후보 제안/최종 admission 분리 명시. 외부 HTTP API 5개 불변, 내부 API 17→21, 전체 API 22→26 |
+| 1.16 | 2026-07-19 | AC-014 wording correction(Narrow Contract Wording Clarification, 새 Architecture 아님) — §3.4/3.5/4.9/4.10 신규 API 4개의 입력 필드가 전부 required임을 명시하고, positional signature에서 omitted/explicit undefined를 `MISSING_REQUIRED_FIELD`, explicit null·wrong-type을 `CONTRACT_VIOLATION`으로, 필드별 형식·존재성 오류(`OUT_OF_RANGE_VALUE`/`INVALID_ID`)를 정밀화. 중복 ID는 lookup map 정규화로 에러 아님, 부분 결과 반환 금지(하나라도 존재하지 않는 ID 포함 시 전체 거부). 신규 error code 없음. API 총수 26·`get_active_learning_count`(AC-013) 기존 validation·Tier A 문서 불변 |
