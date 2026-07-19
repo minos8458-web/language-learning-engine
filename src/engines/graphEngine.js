@@ -8,7 +8,7 @@
 // 판단을 내리지 않는다 — 순수 구조 조회만 한다(§4-2).
 //
 // 구현하는 API(API_CONTRACT.md §3): find_prerequisites(3.1), find_related_nodes(3.2),
-// validate_language_pack(3.3).
+// validate_language_pack(3.3), list_nodes_by_language(3.4), get_concept_categories(3.5).
 //
 // ⚠️ AUD-003 반영(2026-07-13, Frozen Core Standard Amendment — GitHub main HEAD
 // 53c974aff676e8e9437363301e55849694822160의 canonical 문서 기준, clean-room 방식으로
@@ -36,6 +36,94 @@ class ContractViolationError extends Error {
     this.name = 'ContractViolationError';
     this.code = 'CONTRACT_VIOLATION';
   }
+}
+
+class MissingRequiredFieldError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'MissingRequiredFieldError';
+    this.code = 'MISSING_REQUIRED_FIELD';
+  }
+}
+
+class OutOfRangeValueError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'OutOfRangeValueError';
+    this.code = 'OUT_OF_RANGE_VALUE';
+  }
+}
+
+function validateRequiredLanguage(language) {
+  if (language === undefined) {
+    throw new MissingRequiredFieldError('language는 필수입니다');
+  }
+  if (language === null || typeof language !== 'string') {
+    throw new ContractViolationError('language는 string이어야 합니다');
+  }
+  if (!/^[A-Z]{2}$/.test(language)) {
+    throw new OutOfRangeValueError(`language는 ISO 639-1 대문자 2글자여야 합니다: ${language}`);
+  }
+}
+
+function validateRequiredStringArray(value, fieldName) {
+  if (value === undefined) {
+    throw new MissingRequiredFieldError(`${fieldName}는 필수입니다`);
+  }
+  if (value === null || !Array.isArray(value)) {
+    throw new ContractViolationError(`${fieldName}는 string[]이어야 합니다`);
+  }
+  for (const item of value) {
+    if (typeof item !== 'string' || item.trim().length === 0) {
+      throw new ContractViolationError(
+        `${fieldName}의 모든 원소는 비어 있지 않은 문자열이어야 합니다`
+      );
+    }
+  }
+  return [...new Set(value)];
+}
+
+// ---------------------------------------------------------------------------
+// 3.4 list_nodes_by_language (AC-014, internal read API)
+// ---------------------------------------------------------------------------
+async function listNodesByLanguage(pool, language) {
+  validateRequiredLanguage(language);
+
+  const { rows } = await pool.query(
+    `SELECT node_id, difficulty, concept_ids
+       FROM grammar_nodes
+      WHERE language = $1
+      ORDER BY node_id ASC`,
+    [language]
+  );
+
+  return rows.map((row) => ({
+    node_id: row.node_id,
+    difficulty: Number(row.difficulty),
+    concept_ids: row.concept_ids,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// 3.5 get_concept_categories (AC-014, internal read API)
+// ---------------------------------------------------------------------------
+async function getConceptCategories(pool, conceptIds) {
+  const uniqueConceptIds = validateRequiredStringArray(conceptIds, 'concept_ids');
+  if (uniqueConceptIds.length === 0) return {};
+
+  const { rows } = await pool.query(
+    'SELECT concept_id, category FROM concepts WHERE concept_id = ANY($1::text[])',
+    [uniqueConceptIds]
+  );
+  if (rows.length !== uniqueConceptIds.length) {
+    const found = new Set(rows.map((row) => row.concept_id));
+    const missing = uniqueConceptIds.find((conceptId) => !found.has(conceptId));
+    throw new NotFoundError(`존재하지 않는 concept_id: ${missing}`);
+  }
+
+  const result = {};
+  for (const row of rows) result[row.concept_id] = row.category;
+  return result;
 }
 
 async function nodeExists(pool, nodeId) {
@@ -313,6 +401,10 @@ module.exports = {
   dependentSearch,
   findRelatedNodes,
   validateLanguagePack,
+  listNodesByLanguage,
+  getConceptCategories,
   NotFoundError,
   ContractViolationError,
+  MissingRequiredFieldError,
+  OutOfRangeValueError,
 };
