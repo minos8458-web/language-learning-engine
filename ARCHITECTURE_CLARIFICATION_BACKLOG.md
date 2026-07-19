@@ -21,7 +21,7 @@
 | AC-012 | §9 Conversation Boundary acknowledgement and loop prevention | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AC-013 | Active-Node Admission Boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-014 | Learning Flow prerequisite clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
-| AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
+| AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -444,7 +444,7 @@ violation(c,S) = max(0, count(c,S) - floor(|S|/2)) = 0
 
 ## AC-015 — Interleaving Graph metadata dependency clarification
 
-**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-19). Validation Level 3 §9는 아직 **PASS 아님**이며 Interleaving Engine 구현은 이번 범위 밖이다. AC-014는 재개방하지 않는다.
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS**(2026-07-20). Validation Level 3 §9는 아직 **PASS 아님**이며 Learning Flow 통합은 이번 범위 밖이다. AC-014는 재개방하지 않는다.
 
 **승인 provenance 및 Governance**: 사용자가 AC-015를 Tier C Architecture Clarification으로 명시 승인했다. `GRAMMAR_GRAPH.md`의 Tier A/Frozen 원문은 변경하지 않는다. 직전 독립 리뷰가 `sequence_nodes`의 Category/mixed-language 계산에 실제 canonical 데이터 접근 경로가 없음을 확인해 "Narrow Tier C contract clarification required"로 판정한 gap을 해소한다.
 

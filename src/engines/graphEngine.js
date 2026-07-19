@@ -8,7 +8,8 @@
 // 판단을 내리지 않는다 — 순수 구조 조회만 한다(§4-2).
 //
 // 구현하는 API(API_CONTRACT.md §3): find_prerequisites(3.1), find_related_nodes(3.2),
-// validate_language_pack(3.3), list_nodes_by_language(3.4), get_concept_categories(3.5).
+// validate_language_pack(3.3), list_nodes_by_language(3.4), get_concept_categories(3.5),
+// get_node_language_and_concepts(3.6).
 //
 // ⚠️ AUD-003 반영(2026-07-13, Frozen Core Standard Amendment — GitHub main HEAD
 // 53c974aff676e8e9437363301e55849694822160의 canonical 문서 기준, clean-room 방식으로
@@ -123,6 +124,33 @@ async function getConceptCategories(pool, conceptIds) {
 
   const result = {};
   for (const row of rows) result[row.concept_id] = row.category;
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// 3.6 get_node_language_and_concepts (AC-015, internal read API)
+// ---------------------------------------------------------------------------
+async function getNodeLanguageAndConcepts(pool, nodeIds) {
+  const uniqueNodeIds = validateRequiredStringArray(nodeIds, 'node_ids');
+  if (uniqueNodeIds.length === 0) return {};
+
+  const { rows } = await pool.query(
+    'SELECT node_id, language, concept_ids FROM grammar_nodes WHERE node_id = ANY($1::text[])',
+    [uniqueNodeIds]
+  );
+  if (rows.length !== uniqueNodeIds.length) {
+    const found = new Set(rows.map((row) => row.node_id));
+    const missing = uniqueNodeIds.find((nodeId) => !found.has(nodeId));
+    throw new NotFoundError(`존재하지 않는 node_id: ${missing}`);
+  }
+
+  const result = {};
+  for (const row of rows) {
+    result[row.node_id] = {
+      language: row.language,
+      concept_ids: row.concept_ids,
+    };
+  }
   return result;
 }
 
@@ -403,6 +431,7 @@ module.exports = {
   validateLanguagePack,
   listNodesByLanguage,
   getConceptCategories,
+  getNodeLanguageAndConcepts,
   NotFoundError,
   ContractViolationError,
   MissingRequiredFieldError,
