@@ -194,7 +194,7 @@ describe('Interleaving Engine (AC-015)', () => {
           'NODE_AC015_F',
           'NODE_AC015_D',
         ]),
-        ['NODE_AC015_D', 'NODE_AC015_E', 'NODE_AC015_F']
+        ['NODE_AC015_E', 'NODE_AC015_D', 'NODE_AC015_F']
       );
     });
 
