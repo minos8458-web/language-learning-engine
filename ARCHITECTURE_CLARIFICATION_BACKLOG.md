@@ -18,7 +18,7 @@
 | AC-008 | `submit_attempt`에 SELF/TRANSFER 진단용 content_id 부재 | ✅ Resolved |
 | AC-009 | `request_practice`의 `target_node_id` 선택 규칙 미정 | 🟡 Provisional(LEARNING_PROTOCOL.md 확보 후 재검토 필요) |
 | AC-011 | SELF/TRANSFER 진단 키 이름 미정 | ✅ Resolved |
-| AC-012 | §9 Conversation Boundary acknowledgement and loop prevention | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
+| AC-012 | §9 Conversation Boundary acknowledgement and loop prevention | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AC-013 | Active-Node Admission Boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-014 | Learning Flow prerequisite clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
@@ -257,7 +257,7 @@ Learning Flow Engine은 이미 보유한 Content Engine 예외 호출 경로(AC-
 
 ## AC-012 — §9 Conversation Boundary acknowledgement and loop prevention
 
-**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-17). §9는 아직 **PASS 아님**.
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS**(2026-07-21). §9는 아직 **PASS 아님**.
 
 **사용자 명시적 승인 provenance(2026-07-17)**: 사용자가 §9 Conversation Boundary의 canonical 진입 조건, acknowledgement 입력 계약, 클라이언트 재호출 흐름, 서버 비영속 원칙, 전체 `start_session` production 경로 선행 구현 조건을 명시적으로 승인했다. Governance는 Tier A Amendment가 아니라 **Tier C Architecture Clarification**이다.
 
