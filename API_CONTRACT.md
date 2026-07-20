@@ -24,7 +24,7 @@
 | 외부 진입점 | 일반 사용자(클라이언트) | 10장 Learning Flow Engine API |
 | 내부 계약 | Engine ↔ Engine | 3~9장 |
 
-AC-014 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine API 21개(17→21), 전체 26개(22→26)**다. 신규 4개 API는 모두 내부 Engine API이며 외부 HTTP 진입점을 추가하지 않는다.
+AC-015 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine API 22개(21→22), 전체 27개(26→27)**다. AC-016은 신규 API를 추가하지 않으며 외부 HTTP 진입점도 추가하지 않는다.
 
 ---
 
@@ -505,9 +505,79 @@ WHERE p.user_id = $1
 - acknowledgement는 서버에 저장하지 않고 Progress 또는 DB 상태를 변경하지 않는다. `true`여도 클라이언트가 다음 action을 선택하지 않으며 서버 응답을 그대로 처리한다.
 - 이 필드는 미구현 Conversation boundary 전용 계약이다. 실제 Conversation Engine 도입 전에 유지·변경·폐기 여부를 다시 심사한다.
 
+**AC-016 `start_session` exact output payload 계약(2026-07-20)**: Canonical API는 `start_session`, JavaScript 구현명은 `startSession`이며 positional signature는 `startSession(pool, userId, language, conversationBoundaryAcknowledged)`다. `conversationBoundaryAcknowledged`의 omitted 또는 explicit `undefined`는 `false`와 동일하고, `false`는 미확인 상태, `true`는 이번 호출에서 CONVERSATION 재선택 금지를 뜻한다. explicit `null` 또는 non-boolean은 `CONTRACT_VIOLATION`이다.
+
+Branch별 exact payload는 다음과 같다.
+
+**REVIEW**
+
+```json
+{
+  "next_action": "REVIEW",
+  "review_batch": [
+    {
+      "node_id": "...",
+      "state": "...",
+      "next_review_at": "...",
+      "overdue_by": 0,
+      "priority": 0,
+      "reason": "..."
+    }
+  ]
+}
+```
+
+`review_batch`는 `get_due_reviews`(§4.7) 결과를 순서·shape 변형 없이 사용하며 item field는 정확히 `node_id`, `state`, `next_review_at`, `overdue_by`, `priority`, `reason`이다. 길이는 최소 1이다. 빈 배열이면 REVIEW를 반환하지 않고 NEW_GRAMMAR로 fallthrough한다. `getDueReviews`에는 별도 `limit`·`conceptId`·`stateFilter` option을 전달하지 않고 §4.7 기본 계약으로 호출한다. `count`·`score` 등 추가 top-level field는 금지한다.
+
+**NEW_GRAMMAR**
+
+```json
+{
+  "next_action": "NEW_GRAMMAR",
+  "node_id": "..."
+}
+```
+
+기존 AC-014 계약을 그대로 유지한다. 후보가 없으면 INTERLEAVING으로 fallthrough한다.
+
+**INTERLEAVING**
+
+```json
+{
+  "next_action": "INTERLEAVING",
+  "node_sequence": ["NODE_A", "NODE_B", "NODE_A", "NODE_B"]
+}
+```
+
+`node_sequence`는 `sequence_nodes` 결과 배열을 변형 없이 사용해 occurrence multiplicity와 ordering을 보존한다. 승인된 occurrence 정책상 길이는 4 또는 6이다. `selected_node_ids` 등 selected set 별도 병기와 내부 tuple·score·candidate pool 노출은 금지한다. admissible set이 없으면 CONVERSATION으로 fallthrough한다.
+
+**CONVERSATION**
+
+```json
+{
+  "next_action": "CONVERSATION"
+}
+```
+
+Acknowledgement echo, conversation object, prompt 등 추가 field는 없다.
+
+**IDLE**
+
+```json
+{
+  "next_action": "IDLE"
+}
+```
+
+`reason`·`message` 등 추가 field는 없다. IDLE은 error가 아니라 정상 최종 fallback이다.
+
+**공통 exact-key 규칙**: 선택되지 않은 branch의 field는 `null`로 채우지 않고 완전히 생략하며 `undefined` field를 반환하지 않는다. enum 밖 sentinel을 반환하지 않는다. 각 branch는 위에 명시된 top-level key만 반환하고 future additive metadata도 별도 clarification 없이 추가하지 않는다. 하위 API error code는 §11 공통 형식으로 변환 없이 전파하며 신규 error code는 추가하지 않는다.
+
 > **Historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 반영(2026-07-07)**: 기존 4개 외부 API 중 어떤 것도 "지금 어떤 `node_id`를 다뤄야 하는가"를 클라이언트에 알려주지 않아 세션을 시작할 방법 자체가 없었다는 공백을 발견해 신설. API 개수 20개 → 21개. 현재 canonical `MIGRATION_GUIDE.md` Entry 005는 AC-012이며 이 historical draft 번호와 구분한다.
 >
 > ⚠️ **복구 근거 및 불확실성 표시**: 이 절의 필드 정의는 `MIGRATION_GUIDE_ENTRIES_004_005.md`, `PHASE_2_COMPLETION_REPORT.md` §3.1(`next_action` 9개 분기: REVIEW 2경로·NEW_GRAMMAR·제외·동시진행제한·INTERLEAVING 2건·CONVERSATION·IDLE 언급), `BOOTSTRAP.md`/`PROJECT_MASTER_INDEX.md`(API 5개 전제)를 근거로 **재구성한 것이며, 원본 API_CONTRACT.md v1.3의 정확한 원문(예: 출력 필드의 정확한 명칭, 9개 분기 각각의 정밀한 트리거 조건)은 코드베이스 유실로 확인 불가하다.** 재구현 착수 전 이 절을 검토해 원문과 다르면 수정 지시 바란다.
+>
+> **AC-016 복구 범위 disposition(2026-07-20, additive)**: 사용자 승인으로 REVIEW의 `review_batch`, INTERLEAVING의 `node_sequence`, CONVERSATION/IDLE의 `next_action` 단독 payload와 JavaScript 구현명 `startSession`은 확정됐다. 위 역사 경고는 삭제하지 않으며, 이 결정이 유실 가능성이 있는 다른 세부까지 모두 복구했다고 해석하지 않는다.
 
 ---
 
@@ -555,3 +625,4 @@ WHERE p.user_id = $1
 | 1.15 | 2026-07-19 | AC-014 Tier C Architecture Clarification — 내부 API `list_nodes_by_language`·`get_concept_categories`·`get_progress_snapshot`·`get_practicing_plus_count` 4개 추가, `sequence_nodes`의 occurrence multiset·오류·순열 불변식과 deterministic ordering tuple 정밀화, `start_session` NEW_GRAMMAR payload 및 후보 제안/최종 admission 분리 명시. 외부 HTTP API 5개 불변, 내부 API 17→21, 전체 API 22→26 |
 | 1.16 | 2026-07-19 | AC-014 wording correction(Narrow Contract Wording Clarification, 새 Architecture 아님) — §3.4/3.5/4.9/4.10 신규 API 4개의 입력 필드가 전부 required임을 명시하고, positional signature에서 omitted/explicit undefined를 `MISSING_REQUIRED_FIELD`, explicit null·wrong-type을 `CONTRACT_VIOLATION`으로, 필드별 형식·존재성 오류(`OUT_OF_RANGE_VALUE`/`INVALID_ID`)를 정밀화. 중복 ID는 lookup map 정규화로 에러 아님, 부분 결과 반환 금지(하나라도 존재하지 않는 ID 포함 시 전체 거부). 신규 error code 없음. API 총수 26·`get_active_learning_count`(AC-013) 기존 validation·Tier A 문서 불변 |
 | 1.17 | 2026-07-19 | AC-015 Tier C Architecture Clarification — 신규 내부 API `get_node_language_and_concepts`(§3.6, Interleaving Engine 전용 caller) 추가, 입력의 모든 고유 유효 node_id를 동적 key로 정확히 한 번씩 포함하는 map 출력과 mixed-language 미판정(Graph는 사실만 반환) 명시. `sequence_nodes`(§9.1)에 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 계약 추가(engineConfig 참조, 하드코딩 금지). 외부 HTTP API 5개 불변, 내부 API 21→22, 전체 API 26→27. 신규 error code 없음, `concepts.category`/`difficulty` 등 다른 metadata 미추가, Tier A 문서 불변 |
+| 1.18 | 2026-07-20 | AC-016 Tier C Architecture Clarification — `start_session` JavaScript signature와 REVIEW `review_batch`, NEW_GRAMMAR 기존 `{next_action,node_id}`, INTERLEAVING `node_sequence`, CONVERSATION/IDLE `next_action` 단독 exact payload를 확정. Branch별 exact-key·field omission, acknowledgement validation, REVIEW 기본 `getDueReviews` 호출 및 fallthrough 규칙을 명시. 외부 API 5·내부 22·전체 27 불변, 신규 error code·DB/Tier A 영향 없음, 구현 미착수·§9 미PASS |

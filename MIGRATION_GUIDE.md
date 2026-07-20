@@ -146,6 +146,22 @@
 
 ---
 
+### Entry 009
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-20 |
+| 대상 문서 | `API_CONTRACT.md`(v1.17 → v1.18), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.24 → v1.25), `MIGRATION_GUIDE.md`(v1.6 → v1.7) |
+| 변경 유형 | **ADDITIVE / CONTRACT CLARIFICATION** — AC-016 `start_session` exact output payload |
+| 정확한 API 변화 | 없음. 외부 5·내부 22·전체 27 불변. 기존 `next_action` enum과 신규 error code 없음 |
+| 핵심 변경 | `start_session` JavaScript positional signature와 REVIEW `review_batch`, 기존 NEW_GRAMMAR `{next_action,node_id}`, INTERLEAVING `node_sequence`, CONVERSATION/IDLE `next_action` 단독 exact payload 및 branch별 field omission/fallthrough 규칙 확정 |
+| 하위 호환성 | REVIEW `review_batch`와 INTERLEAVING `node_sequence`는 이미 `CLIENT_BRIEF.md`/`VALIDATION_LEVEL3.md`에 보존된 명칭을 `API_CONTRACT.md` SSOT에 반영한 것이다. 기존 NEW_GRAMMAR 계약은 변경하지 않는다 |
+| Tier A adjudication | 없음 — Tier C Architecture Clarification이며 Frozen Tier A 원문 미수정 |
+| 서버/DB 영향 | DB migration·schema 변경·신규 엔터티 없음. Production implementation 미착수 |
+| 상태 | AC-016 Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**. AC-014/AC-015는 IN PROGRESS 유지. Validation Level 3 §9는 아직 PASS 아님 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -157,3 +173,4 @@
 | 1.4 | 2026-07-18 | Entry 006 추가 — AC-013 Active-Node Admission Boundary를 ADDITIVE canonical migration record로 반영. 내부 API 16→17·전체 API 21→22, 외부 HTTP API 5개 불변, idempotent 하위 호환, DB migration/schema 변경 없음, prerequisite implementation 미착수 명시 |
 | 1.5 | 2026-07-19 | Entry 007 추가 — AC-014 Learning Flow prerequisite clarification을 ADDITIVE/CONTRACT CLARIFICATION record로 반영. 기존 외부 5·내부 17·전체 22에서 신규 내부 API 4개를 추가해 최종 외부 5·내부 21·전체 26. 기존 22개 API와 next_action enum 보존, sequence_nodes 목적 유지·multiset/오류/출력 불변식 정밀화, Tier A 원문·DB schema 불변 및 구현 미착수 명시 |
 | 1.6 | 2026-07-19 | Entry 008 추가 — AC-015 Interleaving Graph metadata dependency clarification을 ADDITIVE(new internal API) + NARROWING(sequence_nodes input validation) canonical migration record로 반영. 내부 API 21→22·전체 API 26→27, 외부 API 5개 및 next_action enum 불변. sequence_nodes의 max_batch_size 초과 거부(원본 occurrence 길이 기준, dedupe 전)는 narrowing이나 production 구현 미착수·canonical caller가 이미 그 상한 이하로 구성하도록 승인됐다는 근거로 breaking이 아님을 명시. DB migration/schema·engineConfig.js 변경 없음, prerequisite implementation 미착수 명시 |
+| 1.7 | 2026-07-20 | Entry 009 추가 — AC-016 `start_session` exact payload를 ADDITIVE / CONTRACT CLARIFICATION으로 반영. REVIEW `review_batch`, 기존 NEW_GRAMMAR payload, INTERLEAVING `node_sequence`, CONVERSATION/IDLE 최소 payload와 exact-key·field omission·fallthrough를 확정. 외부 5·내부 22·전체 27 및 DB/Tier A 불변, implementation 미착수·§9 미PASS 명시 |

@@ -22,6 +22,7 @@
 | AC-013 | Active-Node Admission Boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-014 | Learning Flow prerequisite clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
+| AC-016 | `start_session` exact output payload clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -473,6 +474,36 @@ violation(c,S) = max(0, count(c,S) - floor(|S|/2)) = 0
 
 ---
 
+## AC-016 — `start_session` exact output payload clarification
+
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-20). Learning Flow 5-branch implementation은 READY이나 아직 구현되지 않았고 Validation Level 3 §9는 **PASS 아님**이다.
+
+**승인 provenance 및 Governance**: 사용자가 추천 조합(REVIEW `review_batch`, INTERLEAVING `node_sequence`, selected set 별도 병기 없음, CONVERSATION/IDLE `next_action` 단독, JavaScript `startSession(pool, userId, language, conversationBoundaryAcknowledged)`)을 명시 승인했다. Governance는 Tier C Architecture Clarification이며 Tier A 문서와 기존 NEW_GRAMMAR payload를 재개방하지 않는다.
+
+**보존 근거**: `CLIENT_BRIEF.md`와 `VALIDATION_LEVEL3.md`에 REVIEW 소비 필드 `review_batch`와 INTERLEAVING 소비 필드 `node_sequence`가 이미 보존돼 있다. AC-016은 이 명칭을 `API_CONTRACT.md` §10.5 SSOT에 반영하고, 코드베이스 유실로 불명확했던 다른 branch의 exact payload를 승인으로 확정한다.
+
+**Canonical/JavaScript 및 acknowledgement**: Canonical API는 `start_session`, JavaScript 구현명은 `startSession`이고 signature는 `startSession(pool, userId, language, conversationBoundaryAcknowledged)`다. `conversationBoundaryAcknowledged` omitted/explicit `undefined`는 `false`와 동일하고 `false`는 미확인, `true`는 이번 호출에서 CONVERSATION 재선택 금지다. explicit `null` 또는 non-boolean은 `CONTRACT_VIOLATION`이다. Trailing options object 대안은 채택하지 않는다.
+
+**다섯 branch exact payload matrix**:
+
+| Branch | 정확한 top-level payload | Fallthrough/제약 |
+|---|---|---|
+| REVIEW | `{next_action:"REVIEW", review_batch:[{node_id,state,next_review_at,overdue_by,priority,reason}]}` | `review_batch` 최소 1, `get_due_reviews` 결과 순서·shape 유지. 빈 배열이면 NEW_GRAMMAR |
+| NEW_GRAMMAR | `{next_action:"NEW_GRAMMAR", node_id:"..."}` | AC-014 계약 불변. 후보 없음이면 INTERLEAVING |
+| INTERLEAVING | `{next_action:"INTERLEAVING", node_sequence:[...]}` | `sequence_nodes` 결과·multiplicity·ordering 유지, 길이 4 또는 6. admissible set 없음이면 CONVERSATION |
+| CONVERSATION | `{next_action:"CONVERSATION"}` | acknowledgement echo·conversation object·prompt 없음 |
+| IDLE | `{next_action:"IDLE"}` | 정상 최종 fallback, `reason`·`message` 없음 |
+
+REVIEW는 `getDueReviews`에 별도 `limit`·`conceptId`·`stateFilter` option을 전달하지 않고 §4.7 기본 계약으로 호출한다. INTERLEAVING은 `selected_node_ids` 등 selected set을 중복 병기하지 않으며 내부 tuple·score·candidate pool을 노출하지 않는다.
+
+**Exact-key 및 오류 규칙**: 선택되지 않은 branch field는 `null`이 아니라 완전히 생략하고 `undefined` field를 반환하지 않는다. Enum 밖 sentinel과 별도 clarification 없는 future metadata를 금지한다. 하위 API error code는 변환 없이 전파하며 신규 error code는 없다.
+
+**기각 대안**: REVIEW의 `due_reviews`/`review_items`, INTERLEAVING의 `ordered_node_ids`/`node_ids`, selected set 중복 병기, acknowledgement echo, IDLE `reason`/`message`, trailing options object는 canonical 소비 명칭·최소 exact-key 원칙·positional signature와 충돌해 기각했다.
+
+**API 및 영향 범위**: 외부 5·내부 22·전체 27은 불변이다. DB migration/schema와 Tier A 영향은 없다. AC-014/AC-015 상태를 변경하지 않는다. 이 clarification으로 Learning Flow 5-branch 구현은 READY지만 prerequisite implementation은 NOT STARTED이고 §9 PASS를 선언하지 않는다.
+
+---
+
 ## AUD-002 — MASTERED/AUTOMATIC Temporal Stability Contract
 
 **상태**: ✅ **CLOSED**(2026-07-13) — **Frozen Core Standard Amendment**(Independent Architecture Audit 발견, AC-series와 governance 등급이 다름)
@@ -668,3 +699,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.22 | 2026-07-19 | AC-014 read API 독립 리뷰 APPROVE 및 main integration 기록 — 원본 implementation `bfb6c42`, main cherry-pick `17de0fb`, BLOCKER/CRITICAL/MAJOR/MINOR 0건. Baseline `29688270347` 97/97 PASS·21 suites, implementation `29688678717` 및 final validation `29688802913` 각각 125/125 PASS·26 suites(PostgreSQL 16.14 / Node.js 20.20.2), 신규 tests 28개를 기록. F-01/F-02는 non-blocking NOTE이며 read API 4개 milestone 승인 후에도 AC-014 전체 prerequisite 상태는 RESOLVED / IN PROGRESS, §9 미PASS로 유지 |
 | 1.23 | 2026-07-19 | AC-015 Interleaving Graph metadata dependency clarification 사용자 승인 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. 신규 내부 API `get_node_language_and_concepts`(Owner: Graph Engine, Caller: Interleaving Engine만, 동적 map 출력, mixed-language 미판정)를 확정하고, `sequence_nodes`의 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 거부(engineConfig 참조, 하드코딩 금지)를 기록. 외부 API 5 불변·내부 21→22·전체 26→27, 신규 error code 없음, DB migration·engineConfig.js 변경 없음, AC-014 본문·상태와 Tier A `GRAMMAR_GRAPH.md` 원문 전부 불변, §9 미PASS를 기록 |
 | 1.24 | 2026-07-20 | AC-015 independent review APPROVE WITH NON-BLOCKING NOTES 및 main integration 기록 — 원본 implementation `b0e368b`→main `7eb02cd`, 원본 correction `aea971d`→main `46edac1`, 전 심각도 0건. Canonical `E,D,F`가 `D,E,F`보다 shared-category penalty 1이 낮아 test oracle만 정정했음을 확인. Baseline `29704547463` 125/125·26 suites, correction `29704796941` 및 final `29704854809` 150/150·32 suites(PostgreSQL 16.14 / Node.js 20.20.2, 신규 tests 25 / suites 6)를 기록. F-01~F-04는 non-blocking이며 AC-014/AC-015 RESOLVED / IN PROGRESS, Learning Flow 후속, §9 미PASS 상태 유지 |
+| 1.25 | 2026-07-20 | AC-016 `start_session` exact output payload 사용자 승인 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. JavaScript positional signature, REVIEW `review_batch`, 기존 NEW_GRAMMAR `{next_action,node_id}`, INTERLEAVING `node_sequence`, CONVERSATION/IDLE `next_action` 단독 payload와 exact-key·field omission·fallthrough·acknowledgement validation을 확정. `CLIENT_BRIEF.md`/`VALIDATION_LEVEL3.md` 보존 명칭을 API_CONTRACT SSOT에 반영하고 외부 5·내부 22·전체 27, DB/Tier A 불변, AC-014/AC-015 IN PROGRESS, 구현 READY·§9 미PASS를 기록 |
