@@ -22,7 +22,7 @@
 | AC-013 | Active-Node Admission Boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-014 | Learning Flow prerequisite clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
-| AC-016 | `start_session` exact output payload clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
+| AC-016 | `start_session` exact output payload clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -476,7 +476,7 @@ violation(c,S) = max(0, count(c,S) - floor(|S|/2)) = 0
 
 ## AC-016 — `start_session` exact output payload clarification
 
-**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-20). Learning Flow 5-branch implementation은 READY이나 아직 구현되지 않았고 Validation Level 3 §9는 **PASS 아님**이다.
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **IN PROGRESS**(2026-07-20). Learning Flow 5-branch validation branch 구현 및 PostgreSQL 검증을 진행 중이며 Validation Level 3 §9는 **PASS 아님**이다.
 
 **승인 provenance 및 Governance**: 사용자가 추천 조합(REVIEW `review_batch`, INTERLEAVING `node_sequence`, selected set 별도 병기 없음, CONVERSATION/IDLE `next_action` 단독, JavaScript `startSession(pool, userId, language, conversationBoundaryAcknowledged)`)을 명시 승인했다. Governance는 Tier C Architecture Clarification이며 Tier A 문서와 기존 NEW_GRAMMAR payload를 재개방하지 않는다.
 

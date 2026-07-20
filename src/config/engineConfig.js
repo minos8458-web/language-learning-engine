@@ -80,8 +80,19 @@ const ACTIVE_NODE_LIMIT = {
 // AC-015(Interleaving sequence_nodes) — 원본 occurrence multiset의 최대 길이.
 // Provisional/tunable default이며 sequenceNodes는 이 값을 참조해 admission 전에 거부한다.
 const INTERLEAVING_LIMITS = {
+  baseRepeats: 2,
   maxBatchSize: 6,
 };
+
+// AC-014/AC-016: 실제 입력이 공급되기 전까지 NEW_GRAMMAR와 CONVERSATION의
+// session budget을 소진된 것으로 보지 않는 현재 유일한 mode.
+const SESSION_BUDGET_MODES = {
+  UNBOUNDED_UNTIL_INPUT_AVAILABLE: 'UNBOUNDED_UNTIL_INPUT_AVAILABLE',
+};
+const SESSION_BUDGET_MODE = SESSION_BUDGET_MODES.UNBOUNDED_UNTIL_INPUT_AVAILABLE;
+
+// AC-014/AC-016: CONVERSATION 진입에 필요한 PRACTICING 이상 node 수.
+const CONVERSATION_PRACTICING_PLUS_THRESHOLD = 3;
 
 module.exports = {
   STATE_ORDER,
@@ -93,4 +104,7 @@ module.exports = {
   AUD002_SPACED_REVIEW,
   ACTIVE_NODE_LIMIT,
   INTERLEAVING_LIMITS,
+  SESSION_BUDGET_MODES,
+  SESSION_BUDGET_MODE,
+  CONVERSATION_PRACTICING_PLUS_THRESHOLD,
 };
