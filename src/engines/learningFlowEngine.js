@@ -142,7 +142,7 @@ function selectInterleavingSet(eligibleNodeIds, categoriesByNode, contrastPairKe
   return bestSet;
 }
 
-async function chooseNewGrammar(pool, userId, nodes, progressSnapshot) {
+async function chooseNewGrammar(pool, userId, language, nodes, progressSnapshot) {
   const candidates = nodes
     .filter((node) => progressSnapshot[node.node_id] === 'NOT_INTRODUCED')
     .sort(compareNodeCandidates);
@@ -151,7 +151,7 @@ async function chooseNewGrammar(pool, userId, nodes, progressSnapshot) {
   const { active_count: activeCount } = await progressEngine.getActiveLearningCount(
     pool,
     userId,
-    nodes[0].language
+    language
   );
   if (activeCount >= ACTIVE_NODE_LIMIT.maxConcurrentIntroducedOrStudying) return null;
 
@@ -238,7 +238,13 @@ async function startSession(pool, userId, language, conversationBoundaryAcknowle
     nodes.map((node) => node.node_id)
   );
 
-  const newGrammarNodeId = await chooseNewGrammar(pool, userId, nodes, progressSnapshot);
+  const newGrammarNodeId = await chooseNewGrammar(
+    pool,
+    userId,
+    language,
+    nodes,
+    progressSnapshot
+  );
   if (newGrammarNodeId !== null) {
     return { next_action: 'NEW_GRAMMAR', node_id: newGrammarNodeId };
   }
