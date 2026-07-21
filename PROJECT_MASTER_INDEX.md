@@ -4,7 +4,7 @@
 
 ## Role of This Document
 
-**Project Position / Roadmap Authority.** Validation figures (PASS/section progress, regression counts) are not duplicated here — see `VALIDATION_STATUS.md`, the sole Validation State Authority.
+**Project Position / Roadmap Authority.** This index carries only a commit-pinned validation summary for roadmap orientation; `VALIDATION_STATUS.md` remains the sole Validation State Authority and owns the detailed acceptance mapping.
 
 ## Project Status
 
@@ -21,19 +21,18 @@
 
 ## Current Milestone
 
-Validation Level 3
+Validation Level 3 §10 — AI Generation Validation
 
 ## Validation State
 
-See `VALIDATION_STATUS.md`.
+Validation Level 3 §9 is **PASS**. The current verified implementation baseline is `83b3fa56f6c56d34cdb07e26162749bb0744f6f5`; post-merge GitHub Actions run `29874075409` passed 191 tests / 40 suites on PostgreSQL 16.14 / Node.js 20.20.2. See `VALIDATION_STATUS.md` for the authoritative acceptance mapping and full evidence chain.
 
 ## Architecture Status
 
 Architecture Frozen (approved architecture only)
 
-## Current Activity
+## Completed Closure
 
--   Code rebuild
 -   Independent Architecture Audit remediation
     -   AUD-002 (MASTERED/AUTOMATIC Temporal Stability Contract) — ✅ CLOSED
     -   AUD-003 (Graph cross-language relation traversal) — ✅ CLOSED
@@ -41,12 +40,19 @@ Architecture Frozen (approved architecture only)
     -   AUD-004 (Review Cascade producer and `record_attempt` atomicity) — ✅ CLOSED
 -   Architecture Clarification prerequisite implementation
     -   AC-013 (Active-Node Admission Boundary, Progress-side prerequisite) — ✅ CLOSED
-    -   AC-012 (§9 Conversation Boundary) — Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED; §9 is not PASS
+    -   AC-012 (§9 Conversation Boundary) — ✅ Architecture Clarification RESOLVED / Prerequisite Implementation CLOSED
+    -   AC-014 (Learning Flow prerequisite clarification) — ✅ Architecture Clarification RESOLVED / Prerequisite Implementation CLOSED
+    -   AC-015 (Interleaving Graph metadata dependency clarification) — ✅ Architecture Clarification RESOLVED / Prerequisite Implementation CLOSED
+    -   AC-016 (`start_session` exact output payload clarification) — ✅ Architecture Clarification RESOLVED / Prerequisite Implementation CLOSED
+-   Validation Level 3 §9 Conversation Boundary — ✅ PASS
+-   Main contains no temporary PostgreSQL validation workflow. Validation branches are retained as evidence:
+    -   `vl3-section9-client-boundary-validation-20260721` at `3e7edb637f13444a51c2d181e3ac9fb7f6e57ff7`
+    -   `vl3-section9-postmerge-validation-20260722` at `18a028fbf2e88aaea05e66ab450c18127691e8b3`
 
 ## Known Deferred
 
 -   Real LLM Validation
--   Conversation Engine implementation
+-   Conversation Engine implementation and actual UI binding remain outside Validation Level 3 §9 scope
 
 ## Current Blockers
 
@@ -54,9 +60,9 @@ None
 
 ## Next Task
 
-1.  Resume Validation Level 3 §9 prerequisite implementation
+1.  Execute Validation Level 3 §10 AI Generation validation.
 
-AC-013 Progress-side prerequisite is complete. The next step is §9 prerequisite implementation, including the AC-012-approved Conversation Boundary contract, actual Learning Flow `get_active_learning_count` precheck wiring, and integration testing of the race between `start_session` precheck and the final write. Validation Level 3 §9 is not yet PASS. Conversation Engine internal design and implementation remain out of scope, and `VALIDATION_STATUS.md` staleness remains a separate reconciliation track.
+`VALIDATION_LEVEL3.md` §10 is the next incomplete canonical milestone after §9. This closure does not start §10, create a new phase/engine/feature name, or make a Beta Release decision.
 
 ## Rule
 
