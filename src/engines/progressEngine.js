@@ -202,6 +202,50 @@ async function getEligibleNodes(pool, userId, language) {
 }
 
 // ---------------------------------------------------------------------------
+// 4.11 get_recent_attempted_combinations (AC-017, internal read API)
+// ---------------------------------------------------------------------------
+async function getRecentAttemptedCombinations(pool, userId, language) {
+  validateAc014UserId(userId);
+  validateAc014Language(language);
+
+  const client = await pool.connect();
+  try {
+    const { rows: userRows } = await client.query(
+      'SELECT 1 FROM users WHERE user_id = $1',
+      [userId]
+    );
+    if (userRows.length === 0) {
+      throw new NotFoundError(`존재하지 않는 user_id: ${userId}`);
+    }
+
+    const { rows } = await client.query(
+      `SELECT ar.content_id, c.grammar_node_ids, ar.attempted_at
+         FROM attempt_records ar
+         JOIN grammar_nodes gn ON gn.node_id = ar.node_id
+         JOIN content c ON c.content_id = ar.content_id
+        WHERE ar.user_id = $1
+          AND gn.language = $2
+          AND ar.content_id IS NOT NULL
+        ORDER BY ar.attempted_at DESC, ar.attempt_id ASC
+        LIMIT 20`,
+      [userId, language]
+    );
+
+    return rows.map((row) => ({
+      content_id: row.content_id,
+      grammar_node_ids: [...new Set(row.grammar_node_ids)].sort(compareStrings),
+      attempted_at: new Date(row.attempted_at).toISOString(),
+    }));
+  } finally {
+    client.release();
+  }
+}
+
+function compareStrings(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+// ---------------------------------------------------------------------------
 // 4.8 get_active_learning_count (AC-013, internal read API)
 // ---------------------------------------------------------------------------
 async function getActiveLearningCount(pool, userId, language) {
@@ -909,6 +953,7 @@ module.exports = {
   getActiveLearningCount,
   getProgressSnapshot,
   getPracticingPlusCount,
+  getRecentAttemptedCombinations,
   recordExplicitStudy,
   recordAttempt,
   recordSelfReportedConfidence,

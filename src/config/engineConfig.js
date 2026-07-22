@@ -94,6 +94,14 @@ const SESSION_BUDGET_MODE = SESSION_BUDGET_MODES.UNBOUNDED_UNTIL_INPUT_AVAILABLE
 // AC-014/AC-016: CONVERSATION 진입에 필요한 PRACTICING 이상 node 수.
 const CONVERSATION_PRACTICING_PLUS_THRESHOLD = 3;
 
+// AC-017/AC-018: 첫 AI Generation Mock vertical의 provisional/tunable 설정.
+// Provider timeout은 adapter HOW이며 여기서 수치화하지 않는다.
+const AI_GENERATION = {
+  defaultMetaLanguage: 'KO',
+  technicalRetryCount: 1,
+  maxRegenerationAttempts: 2,
+};
+
 module.exports = {
   STATE_ORDER,
   STATE_ORDINAL,
@@ -107,4 +115,5 @@ module.exports = {
   SESSION_BUDGET_MODES,
   SESSION_BUDGET_MODE,
   CONVERSATION_PRACTICING_PLUS_THRESHOLD,
+  AI_GENERATION,
 };
