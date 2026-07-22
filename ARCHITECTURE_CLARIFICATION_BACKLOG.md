@@ -24,6 +24,7 @@
 | AC-015 | Interleaving Graph metadata dependency clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-016 | `start_session` exact output payload clarification | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **CLOSED** |
 | AC-017 | AI Generation candidate·Content persistence exact contract | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
+| AC-018 | AI provider·validator·composition exact boundary | ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED** |
 | AUD-002 | MASTERED/AUTOMATIC Temporal Stability Contract(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-002 참고 |
 | AUD-001 | GitHub main 문서 간 current/historical 상태 혼동(Independent Architecture Audit) | ✅ Architecture/Documentation Decision **CLOSED** — ✅ Repository Reconciliation **CLOSED**(4-file patch merged to GitHub main at commit `a8f8ad87c02f62a8d20e1f378e225d86c59bf584`). 상세는 §AUD-001 참고 |
 | AUD-003 | Graph가 cross-language relation을 허용·순회함(Independent Architecture Audit) | ✅ **CLOSED** — Frozen Core Standard Amendment, 상세는 §AUD-003 참고 |
@@ -588,6 +589,36 @@ Content Engine은 `grammarNodeIds`를 dedupe하고 문자열 사전순 정렬해
 
 ---
 
+## AC-018 — AI provider·validator·composition exact boundary
+
+**상태**: ✅ Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**(2026-07-22).
+
+**승인 provenance 및 Governance**: 사용자가 AC-018 canonical 문서 patch 세션의 최종 결정을 명시 승인했다. 기존 AC-001~017과 AUD 본문은 provenance로 보존하며 이 섹션은 additive Tier C Architecture Clarification이다. Tier A, production 코드·테스트, `engineConfig.js`, DB schema/entity/migration SQL, package 파일, `VALIDATION_LEVEL3.md`를 변경하거나 구현 완료·검증 PASS를 선언하지 않는다.
+
+**F-01 — target Concept 존재성과 node label 경로**: `get_concept_categories` caller를 Learning Flow Engine, Interleaving Engine, AI Generation Engine으로 확장한다. `selectGenerationCandidates`는 `targetConceptId` 지정 시 planning 최초 단계에서 `getConceptCategories(pool,[targetConceptId])`를 단건 호출한다. 이 호출은 존재성만 판정해 미존재 `INVALID_ID`를 전파하고 category 값은 정책에 사용하지 않는다. 미지정이면 호출하지 않는다. 후보 Concept 포함은 `get_node_language_and_concepts`의 `concept_ids`로 판정한다. 첫 planning은 ALTERNATIVE를 확장하지 않으며 stage 5와 함께 후속 검토한다.
+
+Graph Engine에 AI Generation Engine 전용 additive 내부 API `get_node_labels` / `getNodeLabels(pool,nodeIds)`를 추가한다. 입력은 `string[]`, 출력은 exact `{[node_id]:label}`, empty는 `{}`이고 source는 `grammar_nodes.label`이다. omitted/undefined는 `MISSING_REQUIRED_FIELD`; null/non-array와 invalid element는 `CONTRACT_VIOLATION`; duplicate는 query 전 normalize; 한 ID라도 미존재하면 전체 `INVALID_ID`이며 partial result가 없다. 이 API는 Progress·language 정책·다른 metadata를 결합하지 않는 leaf read다.
+
+**F-02 — exact generation·validator 계약**: generation provider exact request는 모든 필드 required·`additionalProperties:false`인 `{language,grammar_nodes:[{node_id,label}],recent_generated_texts,regeneration_feedback}`다. node/label은 planning ID ASC와 canonical label, recent text는 query 순서의 `media_assets[0].asset_ref` 0~5개, 최초 feedback은 `[]`이고 이후 feedback 원소는 non-empty/non-whitespace string이다. Raw output은 AC-017 그대로 exact `{generated_text,answer_key,self_reported_node_ids}`다. raw schema 위반에는 deterministic feedback을 사용하며 self-report mismatch는 hint일 뿐 단독 실패·feedback 사유가 아니다.
+
+COMBINATION validator exact request는 `{language,grammar_nodes:[{node_id,label}],generated_text}`, exact response는 `{is_valid:boolean,violations:string[]}`이고 두 필드 required·`additionalProperties:false`다. violation 원소는 non-empty/non-whitespace이며 valid iff empty, invalid iff 1개 이상이다. 순서는 raw schema → Rule → Rule 통과 시에만 validator다. Rule 실패는 validator를 호출하지 않고 deterministic rule violation을 feedback으로 사용한다. Validator false는 violations를 변경 없이 feedback으로 전달한다. SINGLE_NODE는 Rule까지만 적용하고 AC-017 stage 5 comparative scoring은 2차 milestone로 유지한다.
+
+Raw schema·Rule·validator false는 최초 generation 1회+재생성 최대 2회의 shared pool을 소비한다. Generation technical failure는 동일 request·feedback, validator technical failure는 동일 validator request로 각각 1회 재시도하며 두 retry는 독립이다. Validator technical 재실패는 throw하거나 regeneration을 소비하지 않고 강등한다. Adapter operation은 `generateStructuredContent(request)`와 `validateGeneratedContent(request)`이며 exact raw/validator output을 resolve하고 timeout·vendor error를 민감정보 없는 sanitized technical `Error`로 변환한다. Timeout milliseconds와 vendor SDK는 HOW다.
+
+**F-03 — Generation executor와 PRE_MADE**: canonical `generate_problem` / `generateProblem(pool,userId,language,targetConceptId,targetNodeId)`의 마지막 두 인자만 optional이다. required/optional input validation은 공통 error registry를 사용한다. `targetConceptId` 존재성은 최초 planning에서, `targetNodeId`는 사다리 3 `getContent`에 실제 진입한 경우에만 lazy 검증한다. 1·2단계 성공은 사용하지 않은 target node를 검증하지 않는다. Target node/language의 AC-005 caller-side 책임과 Generation Engine의 Graph 직접 호출 금지는 유지한다.
+
+PRE_MADE cardinality는 0건이면 step 4 정상 empty, 1건이면 반환, 2건 이상이면 invariant violation이다. 다건에서 임의 선택·강등하지 않고 raw PostgreSQL·row·민감정보 없는 일반화된 내부 오류를 log한 뒤 throw한다. PRE_MADE technical retry 1회는 AI 설정과 독립된 contract-fixed 값이다.
+
+**F-04 — factory composition과 fail-closed 경계**: `createAiGenerationEngine({providerAdapter})`는 `{selectGenerationCandidates,generateCombination,generateSingleNode}`를 반환한다. adapter는 non-null object이고 `generateStructuredContent`·`validateGeneratedContent`가 function이어야 하며 아니면 composition 시점 동기 `TypeError`다. `createGenerationEngine({aiGenerationEngine,contentEngine})`는 `{generateProblem}`을 반환한다. AI dependency의 `selectGenerationCandidates`·`generateCombination`·`generateSingleNode`, Content dependency의 `getRecentGeneratedContent`·`saveGeneratedContent`·`getContent`가 모두 function이고 각 dependency가 non-null object여야 한다. 하나라도 빠지면 composition 시점 동기 `TypeError`이며 새 public error code는 없다.
+
+Engine closure는 injected dependency만 사용한다. Graph/Progress direct import, direct SQL, module mutable singleton, setter, test-only branch, implicit default adapter, unconfigured adapter 성공을 금지한다. Production은 두 operation이 sanitized technical `Error`로 reject하는 명시적 unconfigured adapter를 주입해 fail-closed 강등하며 실제 vendor 통합은 2차 implementation milestone이다. 테스트는 동일 boundary에 deterministic fake를 주입한다. Factory·adapter operation은 API 수에 포함하지 않는다.
+
+**Non-blocking notes**: N-01 첫 planning의 ALTERNATIVE 확장은 stage 5와 함께 후속 검토한다. N-02 PRE_MADE 다건 invariant는 위 계약으로 처리한다. N-03 generation/validator/PRE_MADE retry의 독립성을 위와 같이 고정한다. N-04 recent generated Content용 JSONB index 필요성은 구현 전 성능 검토 HOW이며 이번 문서-only patch에서 DB/index를 변경하지 않는다. N-05 `VALIDATION_LEVEL3.md` §12 wording 정리는 후속 문서 NOTE이며 이번 patch에서 해당 파일을 변경하지 않는다.
+
+**Migration/count/status**: `get_node_labels` 하나만 ADDITIVE 내부 Engine API다. Factory·adapter operation은 count 제외다. 외부 5 불변, 내부 26→27, 전체 31→32, error code는 기존 5개다. AC-018은 Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**이며 코드·설정·DB·Tier A 변화가 없다.
+
+---
+
 ## AUD-002 — MASTERED/AUTOMATIC Temporal Stability Contract
 
 **상태**: ✅ **CLOSED**(2026-07-13) — **Frozen Core Standard Amendment**(Independent Architecture Audit 발견, AC-series와 governance 등급이 다름)
@@ -788,3 +819,4 @@ Technical Director / PM review에서 GitHub main의 `CORE_STANDARD_V1_FREEZE.md`
 | 1.27 | 2026-07-22 | VL3 §9 client boundary 독립 리뷰 및 post-merge verification 기록 — verdict **APPROVE WITH NON-BLOCKING NOTES**, BLOCKER/CRITICAL/MAJOR 0건, client main implementation `910835a`, main evidence `83b3fa5`, validation implementation/evidence `c8cff69`/`3e7edb6`, post-merge workflow-only commit `18a028f`와 Actions run `29874075409` 191/191 PASS·40 suites(PostgreSQL 16.14 / Node.js 20.20.2, fail/cancelled/skipped/todo 0)를 additive evidence로 기록. Workflow 제외 tree가 main과 byte-identical이고 main에 temporary workflow가 없음을 확인했으며 F-1~F-7 non-blocking finding을 후속 후보/NOTE로 보존. AC-012/014/015/016 상태와 §9 미PASS 문구는 이 revision에서 변경하지 않음 |
 | 1.28 | 2026-07-22 | VL3 §9 final documentation closure — 기존 requirement 본문과 historical evidence를 보존하고 AC-012/014/015/016 각각에 server implementation/correction/review, client implementation/evidence/review, post-merge run `29874075409`를 연결한 additive closure evidence를 기록. 네 AC의 summary/section 상태를 Architecture Clarification RESOLVED / Prerequisite Implementation CLOSED로 일치시킴. API 총수 외부 5·내부 22·전체 27, 기존 error code, DB/schema/migration, Tier A 문서는 불변 |
 | 1.29 | 2026-07-22 | AC-017 최종 누적 correction 사용자 승인 — Tier C Architecture Clarification RESOLVED / Prerequisite Implementation NOT STARTED. 기존 Pattern A, provider raw, Layer 2/3, Content save/recent, media/answer/difficulty/ID/retry 계약을 보존하면서 candidate planning, Progress recent-attempt read, generation executor narrowing, Graph caller 확대, stage 1~4 배치와 stage 5 이연, AC-008 제한적 supersession을 통합했다. 신규 내부 API 4개, 외부 5·내부 26·전체 31, 공통 error 5개이며 코드·설정·DB·Tier A 불변 |
+| 1.30 | 2026-07-22 | AC-018 Tier C Architecture Clarification 사용자 승인 — target Concept 존재성·`get_node_labels`, exact provider/validator request-response, shared regeneration·독립 retry, lazy target validation·PRE_MADE cardinality, adapter/factory composition TypeError와 fail-closed production 경계를 additive하게 확정. 외부 5·내부 27·전체 32, error 5개, prerequisite implementation NOT STARTED, 코드·테스트·설정·DB·Tier A·VALIDATION_LEVEL3 불변 |

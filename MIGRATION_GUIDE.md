@@ -178,6 +178,22 @@
 
 ---
 
+### Entry 011
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-22 |
+| 대상 문서 | `API_CONTRACT.md`(v1.19 → v1.20), `ENGINE_INTERFACE.md`(v1.16 → v1.17), `AI_INTEGRATION_BRIEF.md`(v1.1 → v1.2), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.29 → v1.30), `MIGRATION_GUIDE.md`(v1.8 → v1.9) |
+| 변경 유형 | **Tier C ADDITIVE + CONTRACT CLARIFICATION** — AC-018 AI provider·validator·composition exact boundary. `get_node_labels` 한 개만 additive 내부 Engine API이고 기존 generation/planning API는 이름·positional signature를 보존한 채 validation·provider boundary를 정밀화 |
+| 정확한 API 변화 | 외부 HTTP API 5개 불변. 내부 Engine API 26→27: Graph Engine `get_node_labels` / `getNodeLabels(pool,nodeIds)` 추가. 전체 API 31→32. Factory와 provider adapter operation은 construction/injection boundary이므로 count에서 제외. 기존 error registry 5개 불변 |
+| 핵심 변경 | target Concept 존재성 단건 경로와 canonical node label map, exact generation/validator request-response, raw→Rule→validator 순서, deterministic feedback·shared regeneration과 generation/validator 독립 technical retry를 확정. `generateProblem` lazy target validation과 PRE_MADE 0/1/다건 cardinality를 기록. AI factory adapter는 `generateStructuredContent`·`validateGeneratedContent`, Generation factory의 AI dependency는 `selectGenerationCandidates`·`generateCombination`·`generateSingleNode`, Content dependency는 `getRecentGeneratedContent`·`saveGeneratedContent`·`getContent` function을 요구하며 non-null object/method 위반은 composition-time `TypeError`다. Fail-closed unconfigured production adapter 경계도 기록 |
+| 하위 호환성 | `get_node_labels`는 순수 additive다. 기존 positional API와 public payload·error code를 유지한다. Composition validation은 production implementation이 아직 없는 prerequisite 경계를 명시하므로 deployed runtime caller의 breaking impact가 없다. 첫 planning은 ALTERNATIVE를 확장하지 않고 stage 5와 함께 후속 검토한다 |
+| Tier A adjudication | 없음 — Frozen Tier A 원문 미수정. Tier C Engine/API/construction boundary clarification |
+| 서버/DB 영향 | 이번 patch는 문서 전용이다. production 코드·테스트·`engineConfig.js`·DB schema/entity/migration SQL·package·`VALIDATION_LEVEL3.md` 변경 없음. JSONB index는 non-blocking 성능 HOW 검토로만 보존하고 실제 vendor 통합은 2차 implementation milestone로 이연 |
+| 상태 | AC-018 Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**. IMPLEMENTED/CLOSED/PASS 선언 없음 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -191,3 +207,4 @@
 | 1.6 | 2026-07-19 | Entry 008 추가 — AC-015 Interleaving Graph metadata dependency clarification을 ADDITIVE(new internal API) + NARROWING(sequence_nodes input validation) canonical migration record로 반영. 내부 API 21→22·전체 API 26→27, 외부 API 5개 및 next_action enum 불변. sequence_nodes의 max_batch_size 초과 거부(원본 occurrence 길이 기준, dedupe 전)는 narrowing이나 production 구현 미착수·canonical caller가 이미 그 상한 이하로 구성하도록 승인됐다는 근거로 breaking이 아님을 명시. DB migration/schema·engineConfig.js 변경 없음, prerequisite implementation 미착수 명시 |
 | 1.7 | 2026-07-20 | Entry 009 추가 — AC-016 `start_session` exact payload를 ADDITIVE / CONTRACT CLARIFICATION으로 반영. REVIEW `review_batch`, 기존 NEW_GRAMMAR payload, INTERLEAVING `node_sequence`, CONVERSATION/IDLE 최소 payload와 exact-key·field omission·fallthrough를 확정. 외부 5·내부 22·전체 27 및 DB/Tier A 불변, implementation 미착수·§9 미PASS 명시 |
 | 1.8 | 2026-07-22 | Entry 010 추가 — AC-017을 Tier C ADDITIVE + CONTRACT REPLACEMENT / NARROWING으로 반영. planning·Content save/recent·Progress recent-attempt 내부 API 4개를 추가해 외부 5·내부 22→26·전체 27→31로 확정하고, generation API 2개의 입력/출력/persistence 책임을 교체·축소했다. Pattern A, exact payload, media/answer/difficulty/ID/retry, stages 1~4와 stage 5 이연, AC-008 제한적 supersession을 기록했다. production 구현/caller가 없어 deployed runtime breaking impact는 없고 DB·코드·설정·Tier A 불변, prerequisite implementation 미착수다 |
+| 1.9 | 2026-07-22 | Entry 011 추가 — AC-018을 Tier C ADDITIVE + CONTRACT CLARIFICATION으로 반영. `get_node_labels` 하나를 추가해 외부 5·내부 27·전체 32로 확정하고, target Concept 존재성, exact provider/validator와 retry·shared regeneration, lazy target validation·PRE_MADE cardinality, adapter/factory composition TypeError와 fail-closed 경계를 기록. 코드·테스트·설정·DB·migration SQL·Tier A·VALIDATION_LEVEL3 불변, prerequisite implementation 미착수 |
