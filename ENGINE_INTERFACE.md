@@ -42,6 +42,8 @@ Learning Flow Engine
 
 **예외 경로**: Learning Flow Engine은 Content Engine도 직접 호출할 수 있다 — 명시적 학습 단계에서 문제 생성과 무관하게 레슨 설명(`EXPLANATION` 콘텐츠)을 보여줘야 하기 때문이다(GRAMMAR_GRAPH §4.4). 다이어그램에는 편의상 Generation Engine 아래에만 표기했지만, Content Engine의 실제 호출 주체는 **Generation Engine(사다리 3단계, `EXAMPLE` 조회)과 Learning Flow Engine(레슨 설명, `EXPLANATION` 조회) 둘 다**이다. 이는 "부모가 자식을 직접 호출"하는 것이지 형제 간 호출이 아니므로 2.2의 규칙을 위반하지 않는다.
 
+**AC-017 Pattern A 저장 경로**: AI 생성 Content는 Generation Engine이 오케스트레이션하고 Content Engine이 유일한 쓰기 경로를 소유한다. AI Generation Engine은 provider 결과를 검증해 Layer 2 candidate만 반환하고 Content Engine을 직접 호출하지 않는다. Generation Engine은 candidate를 받아 Content Engine의 `save_generated_content`를 호출한 뒤, 그 canonical 반환 projection을 재계산 없이 Layer 3 public `content`로 사용한다.
+
 ### 2.2 호출 방향 규칙
 
 - **상위(부모)만 하위(자식)를 호출한다. 자식은 부모를 호출하지 않는다** — 순환 호출 금지.
@@ -57,7 +59,7 @@ Learning Flow Engine
 |---|---|---|
 | Learning Flow Engine | O | O (상태 전이 **요청**도 포함 — 실제 쓰기는 Progress Engine 자신이 수행) |
 | Review Engine | O (선행 탐색) | — (필요한 상태는 입력으로 전달받음) |
-| AI Generation Engine | O (ALTERNATIVE 관계 조회) | O (Practicing 이상 필터) |
+| AI Generation Engine | O (node metadata·Concept membership·ALTERNATIVE 조회 및 선택 결과 검증) | O (Practicing 이상 필터·최근 시도 조합 조회) |
 | Interleaving Engine | O (CONTRAST/RELATED 관계 조회) | — |
 | Generation Engine | — (자식에게 위임, 직접 조회하지 않음) | — (자식에게 위임) |
 | Content Engine | — | — |
@@ -110,7 +112,7 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행. AC-014 내부 read API `list_nodes_by_language`와 `get_concept_categories`로 정적 graph/grammar metadata를 제공. **AC-015 내부 read API `get_node_language_and_concepts`로 Interleaving Engine에 node별 `language`·`concept_ids` 조회 경로를 제공한다(caller: Interleaving Engine만)** |
+| **1. 책임** | Grammar Graph 구조 조회·순회 제공: 선행 탐색/후행 탐색, 순환 검증, Concept-Node 정합성 검증(GRAMMAR_GRAPH §2~3). **Language boundary 검증 — `grammar_relations`의 same-language invariant 위반 탐지(`GRAMMAR_SCHEMA.md` §6, `GRAMMAR_GRAPH.md` §3, AUD-003 2026-07-13 신설)**, 배포 전 정적 검증(`validate_language_pack`)의 일부로 수행. AC-014 내부 read API `list_nodes_by_language`와 `get_concept_categories`로 정적 graph/grammar metadata를 제공. **AC-015 내부 read API `get_node_language_and_concepts`로 Interleaving Engine과 AI Generation Engine에 node별 `language`·`concept_ids` 조회 경로를 제공한다(caller: 이 두 Engine만)** |
 | **2. 하지 않는 일** | 사용자 Progress를 조회·저장하지 않는다. 노드 상태에 따른 필터링 판단을 하지 않는다(Practicing 이상 여부는 호출자가 Progress Engine 결과와 조합해 판단). "이 노드를 복습해야 한다"거나 "생성해야 한다" 같은 정책적 판단을 내리지 않는다 — 순수 구조 조회만 한다. **`get_node_language_and_concepts`는 mixed-language를 판정하거나 거부하지 않는다 — 실제 값을 그대로 반환할 뿐이다(AC-015)** |
 | **3. 입력 데이터** | 노드 ID, 탐색 방향(선행/후행), 최대 깊이(max_depth) |
 | **4. 출력 데이터** | 노드 ID 목록(경로 순서 포함), 순환 검증 결과, Concept-Node 정합성 검증 결과, **`language_boundary_violations` 목록(AUD-003)**, language별 `{node_id, difficulty, concept_ids}` metadata, `{concept_id: category}` map, **입력 node_id마다 `{language, concept_ids}`를 담은 동적 map(AC-015, `get_node_language_and_concepts`)** |
@@ -125,10 +127,10 @@ Learning Flow Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다. AC-013: 내부 read API `get_active_learning_count`를 제공하고 `recordExplicitStudy`에서 Active-Node Admission Gate를 최종 원자적으로 강제한다. AC-014: `get_progress_snapshot`과 `get_practicing_plus_count` read API를 제공한다** |
+| **1. 책임** | 사용자별 진행 상태(State, Accuracy, Confidence, Response Time, AttemptRecord)에 대한 **유일한 쓰기 경로**. Coverage/Depth 계산 제공. 다음 복습 시점 계산(GRAMMAR_GRAPH §8). **AUD-004: `record_attempt`의 동일 트랜잭션에서 전달받은 Cascade 대상별 `cascade_jobs(status='PENDING')` producer 행을 기록한다. AC-013: 내부 read API `get_active_learning_count`를 제공하고 `recordExplicitStudy`에서 Active-Node Admission Gate를 최종 원자적으로 강제한다. AC-014: `get_progress_snapshot`과 `get_practicing_plus_count` read API를 제공한다. AC-017: AI Generation Engine 전용 read API `get_recent_attempted_combinations`로 최근 content-linked attempt 조합을 고정 window 20에서 제공한다** |
 | **2. 하지 않는 일** | Grammar Graph를 순회하지 않는다(Graph Engine의 역할). 어떤 문제를 생성할지 결정하지 않는다. 복습 대상 노드를 스스로 선정하지 않는다(Review Engine이 이 Engine의 조회 결과를 활용해 판단) |
 | **3. 입력 데이터** | 사용자 ID, 노드 ID, 이벤트 유형(명시적 학습/시도 결과/자기보고 Confidence), 원시 AttemptRecord 필드, **Learning Flow Engine이 내부 전달하는 `cascade_target_node_ids?: string[]`(외부 HTTP 입력 아님, AUD-004)** |
-| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)**, `(user_id, language)` active Grammar Node 수(`get_active_learning_count`, §4.8), 입력 node 전체의 state map(`get_progress_snapshot`, §4.9), PRACTICING/MASTERED/AUTOMATIC count(`get_practicing_plus_count`, §4.10) |
+| **4. 출력 데이터** | 현재 State, Accuracy, Confidence(inferred/self-reported/calibration), 다음 복습 시점, Concept별 Coverage/Depth, **복습 기한이 도래한 노드 배치 조회 결과(`get_due_reviews`, API_CONTRACT §4.7)**, `(user_id, language)` active Grammar Node 수(`get_active_learning_count`, §4.8), 입력 node 전체의 state map(`get_progress_snapshot`, §4.9), PRACTICING/MASTERED/AUTOMATIC count(`get_practicing_plus_count`, §4.10), 최근 content-linked attempt의 exact `{content_id, grammar_node_ids, attempted_at}` 배열(`get_recent_attempted_combinations`, §4.11, 최대 20개) |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4.2, §8, LEARNING_THEORY C8/C9, GRAMMAR_SCHEMA §5 |
@@ -140,20 +142,22 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 
 **AC-014 Progress read 책임**: `get_progress_snapshot`은 하나의 read client에서 모든 `grammar_nodes` 존재성과 language 일관성을 검증하고 Progress 행이 없는 유효 node를 `NOT_INTRODUCED`로 채운다. `get_practicing_plus_count`는 요청 language의 `PRACTICING`·`MASTERED`·`AUTOMATIC`만 집계한다. 두 API 모두 다른 Engine을 호출하지 않아 Progress Engine의 leaf 구조를 유지한다.
 
+**AC-017 최근 시도 조합 책임**: `get_recent_attempted_combinations`는 Progress Engine만 SQL을 소유하고 `(user_id, language)`에 대해 `attempt_records ar JOIN grammar_nodes gn ON gn.node_id=ar.node_id JOIN content c ON c.content_id=ar.content_id`를 조회한다. 해당 user, attempt 귀속 node의 요청 language, `ar.content_id IS NOT NULL`만 `ar.attempted_at DESC, ar.attempt_id ASC`, `LIMIT 20`으로 읽고 exact `{content_id,grammar_node_ids,attempted_at}` 배열을 반환한다. window 20은 AC-017이 확정한 Tier C fixed window이며 `attempted_at`은 ISO-8601 string이다. AI Generation Engine은 candidate/history node 배열을 각각 dedupe·사전순 정렬한 뒤 원소 단위 exact equality로 조합을 비교하고 join·직렬화 문자열을 비교 키로 사용하지 않는다.
+
 ---
 
 ## 6. Generation Engine
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 문제/문장 생성의 전체 오케스트레이션. GRAMMAR_GRAPH §6.2의 4단계 난이도 사다리(조합→단일 노드→사전 제작 콘텐츠→콘텐츠 공백 신호) 중 **현재 어느 단계로 진행할지 판단**하고 AI Generation Engine 또는 Content Engine에 위임. 4단계(콘텐츠 공백)에 도달하면 그 사실을 Learning Flow Engine에 보고 |
-| **2. 하지 않는 일** | 실제 AI 문장 생성을 직접 수행하지 않는다(AI Generation Engine에 위임). 사전 제작 콘텐츠를 직접 조회하지 않는다(Content Engine에 위임). Practicing 이상 필터를 직접 계산하지 않는다(AI Generation Engine의 책임). Graph Engine·Progress Engine을 직접 호출하지 않는다 |
+| **1. 책임** | 문제/문장 생성의 전체 오케스트레이션. GRAMMAR_GRAPH §6.2의 4단계 난이도 사다리(조합→단일 노드→사전 제작 콘텐츠→콘텐츠 공백 신호) 중 **현재 어느 단계로 진행할지 판단**하고 AI Generation Engine 또는 Content Engine에 위임. 1~2단계에서는 AI Generation Engine의 `selectGenerationCandidates`로 후보 node ID를 먼저 확정하고, non-null 결과와 정확히 같은 정렬된 ID로 Content Engine의 `get_recent_generated_content`를 호출한다. 그 반환을 변경 없이 해당 생성 API에 전달하고, Layer 2 candidate를 받으면 Content Engine의 `save_generated_content`로 저장한다. 4단계(콘텐츠 공백)에 도달하면 그 사실을 Learning Flow Engine에 보고 |
+| **2. 하지 않는 일** | 실제 AI 문장 생성·candidate 검증을 직접 수행하지 않는다(AI Generation Engine에 위임). 사전 제작 콘텐츠나 최근 생성 Content를 직접 DB 조회하지 않는다(Content Engine에 위임). Practicing 이상 필터나 최근 시도 조합 tie-break를 직접 계산하지 않는다(AI Generation Engine의 planning 책임). Graph Engine·Progress Engine을 직접 호출하지 않으며 difficulty를 얻기 위해 Graph Engine을 우회 호출하지 않는다. 선택된 node ID를 생성 호출 전에 재선택·재필터·재정렬하지 않고, 최근 생성 목록을 보강·축약하지 않으며, 저장 반환 projection의 필드를 다시 계산하지 않는다 |
 | **3. 입력 데이터** | 사용자 ID, 언어, target_concept_id(선택, 1~2단계용), **target_node_id(선택, 3단계 PRE_MADE fallback 전용 — AC-005, 2026-07-08 Resolved. Learning Flow Engine이 결정해 전달, 이 Engine은 3단계에서 Content Engine으로 그대로 릴레이만 함)** |
-| **4. 출력 데이터** | 최종 생성 결과(출처가 AI든 사전 제작이든 동일한 형식으로 정규화), **`content_id`(AC-008, 2026-07-08 Resolved — 반환 전 `content` 테이블에 영속화된 ID)**, 도달한 사다리 단계 번호(로깅용) |
+| **4. 출력 데이터** | exact top-level `{content, content_id, source, ladder_step}`. AI_GENERATED는 Content Engine save projection을 그대로 `content`로 사용하고 `content.content_id === content_id`; PRE_MADE도 canonical Content projection을 사용한다. NO_CONTENT는 `{content:null, content_id:null, source:null, ladder_step:4}` |
 | **5. 호출 가능한 하위 Engine** | AI Generation Engine, Content Engine |
 | **6. 의존하면 안 되는 Engine** | Graph Engine, Progress Engine(직접 호출 금지 — 필요하면 AI Generation Engine에 위임하고 결과만 받는다). Review Engine, Interleaving Engine, Learning Flow Engine |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §6.2 |
-| **8. 향후 구현 시 주의사항** | "지금 몇 단계인가"를 판단하는 정책 로직은 **이 Engine에만** 있어야 한다. AI Generation Engine과 Content Engine은 "시켜서 실행하는" 순수 실행자로 유지해야, 향후 사다리 정책이 바뀌어도 한 곳만 고치면 된다 |
+| **8. 향후 구현 시 주의사항** | "지금 몇 단계인가"와 retry/강등을 판단하는 정책 로직은 **이 Engine에만** 있어야 한다. Provider technical failure는 1회 재시도 후 강등, constraint violation은 총 최대 3회 생성 후 강등, candidate 부족은 즉시 강등한다. 반면 save 실패는 즉시 throw하고 PRE_MADE read technical failure는 1회 재시도 후 throw하며, PRE_MADE 정상 empty만 4단계로 강등한다 |
 
 ---
 
@@ -161,14 +165,14 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 난이도 사다리 **1~2단계만**(조합 생성, 단일 노드 생성) 수행. GRAMMAR_GRAPH §6.1 필터 파이프라인(최우선 필터 포함) 실행 |
-| **2. 하지 않는 일** | 사다리 3~4단계(사전 제작 콘텐츠, 사용자 안내)를 처리하지 않는다 — 실패 시 "실패했다"는 신호만 반환하고, 그 다음 단계 판단은 Generation Engine의 몫이다. 어떤 언어를 생성할지 스스로 정하지 않는다(입력으로 받음). Progress 데이터를 쓰지 않는다(읽기 전용) |
-| **3. 입력 데이터** | 사용자 ID, 언어, target_concept_id(선택), 시도할 사다리 단계(1 또는 2) |
-| **4. 출력 데이터** | 생성된 문제/문장(성공 시) + `content_id`(AC-008, 2026-07-08 Resolved — 반환 전 영속화), 또는 "1~2단계 모두 실패"라는 명확한 실패 신호 |
-| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, ALTERNATIVE 관계 조회), Progress Engine(읽기, Practicing 이상 필터) |
+| **1. 책임** | 난이도 사다리 **1~2단계만** 수행. `selectGenerationCandidates`가 GRAMMAR_GRAPH §6.1의 후보 계획 1~3단계(eligible pool, mode/Concept/ALTERNATIVE 필터, 최근 exact 조합 tie-break)를 실행해 정렬된 node ID 또는 null을 반환한다. `generateCombination`/`generateSingleNode`는 그 preselected ID와 최근 생성 Content를 받아 stage 4 provider prompt를 구성하고 structured output `{generated_text, answer_key, self_reported_node_ids}`를 exact schema로 검증해 Layer 2 exact `{candidate: object\|null}`로 변환 |
+| **2. 하지 않는 일** | 사다리 3~4단계(사전 제작 콘텐츠, 사용자 안내)를 처리하지 않는다 — 실패 시 `{candidate:null}`만 반환하고 다음 단계 판단은 Generation Engine의 몫이다. Content를 저장하거나 `content_id`·difficulty·source·author·meta_language를 생성하지 않는다. `answer_key`를 추론·합성·fixture 주입하지 않는다. 생성 API 안에서 node를 재선택·재필터하거나 `userId`·`targetConceptId`를 받지 않는다. `recentGeneratedContent`는 prompt-only 입력이며 선택·검증·출력 근거로 사용하지 않는다. 어떤 언어를 생성할지 스스로 정하지 않으며 Progress 데이터를 쓰지 않는다 |
+| **3. 입력 데이터** | planning: `pool, userId, language, generationMode, targetConceptId`; generation: `pool, language, grammarNodeIds, recentGeneratedContent`. `grammarNodeIds`는 planning이 반환한 정렬·중복 제거 ID와 exact 동일해야 하고, 최근 Content 배열도 Generation Engine이 Content Engine에서 받은 그대로여야 한다 |
+| **4. 출력 데이터** | planning은 exact `{grammar_node_ids:string[]\|null}`(mode 1은 길이 2, mode 2는 길이 1, 항상 dedupe·사전순 정렬). generation은 exact `{candidate}`. 성공 candidate의 exact keys는 `grammar_node_ids`, 정확히 1개의 TEXT/PRIMARY `media_assets`, QUIZ `answer_key`를 담은 `type_specific_metadata`; 후보 부족·재생성 소진은 `{candidate:null}`. Layer 2에는 `content_id`가 없음 |
+| **5. 호출 가능한 하위 Engine** | Graph Engine(읽기, node language·Concept membership·ALTERNATIVE 관계 조회), Progress Engine(읽기, Practicing 이상 필터·`get_recent_attempted_combinations`) |
 | **6. 의존하면 안 되는 Engine** | Content Engine(형제 — Generation Engine을 거치지 않고 직접 호출 금지), Review Engine, Interleaving Engine, Learning Flow Engine, Generation Engine(자신을 호출한 상위를 역으로 호출 금지) |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §6.1, §6.2(1~2단계) |
-| **8. 향후 구현 시 주의사항** | §6.1 필터 우선순위 순서는 절대 바뀌지 않아야 한다. 품질 스코어링이 학습자 수준 필터보다 먼저 적용되는 코드 경로가 생기지 않도록, 구현 단계에서 이 순서를 강제하는 테스트를 반드시 둘 것 |
+| **8. 향후 구현 시 주의사항** | §6.1 필터 우선순위 순서는 절대 바뀌지 않아야 한다. planning tie-break는 최근 20개 시도에서 동일 조합의 exact-match 횟수가 적은 후보를 우선하고, 동률이면 정렬 배열의 원소별 lexicographic 순서를 사용한다. join·JSON 등 직렬화 문자열을 비교 키로 사용하지 않는다. generation은 `get_node_language_and_concepts`로 모든 node의 존재성·중복 없음·language 일치를 다시 검증하지만 선택을 바꾸지 않는다. `self_reported_node_ids`는 교차확인 힌트일 뿐 재선정·출력 근거가 아니며 Layer 2 이후 노출하지 않는다. `generated_text` 검증 실패 시 질문과 `answer_key`를 함께 폐기한다. GRAMMAR_GRAPH §6.1 stage 5 품질 비교형 스코어링은 복수 실제 생성물을 비교하는 2차 실제 LLM milestone로 유보하며, 첫 Mock 구현은 이를 수행하거나 수행했다고 주장하지 않는다 |
 
 ---
 
@@ -176,14 +180,14 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 
 | 항목 | 내용 |
 |---|---|
-| **1. 책임** | 사전 제작 Content(GRAMMAR_SCHEMA §3) 조회 전용. Content ID 조회, content_type/meta_language/explanation_level 조건에 맞는 항목 선택 |
-| **2. 하지 않는 일** | 콘텐츠를 생성하지 않는다(사전 제작된 것만 조회). 언제 자신이 호출되어야 하는지 스스로 판단하지 않는다(Generation Engine의 지시를 따름). Practicing 이상 같은 학습 수준 필터를 적용하지 않는다 — 사전 제작 콘텐츠는 그런 필터의 대상이 아니다(GRAMMAR_GRAPH §6.2 3단계) |
-| **3. 입력 데이터** | 조건 기반 모드: Grammar Node ID, content_type, meta_language(선택), explanation_level(선택) / **단독 정확 조회 모드(AC-008, 2026-07-08 Resolved): `content_id` 단독** — Learning Flow Engine이 SELF/TRANSFER 진단용 `type_specific_metadata` 조회에 사용(AC-008의 예외 호출 경로, 기존엔 EXPLANATION 조회만 있었음) |
-| **4. 출력 데이터** | 조건에 맞는 Content 레코드, 또는 빈 결과. 단독 조회 시 `type_specific_metadata` 포함 |
+| **1. 책임** | Content를 생성하지 않지만 저장과 조회를 소유한다. 기존 조건/ID 기반 `get_content`, AI 생성 Content의 유일한 write 경로 `save_generated_content`, 최근 AI 생성 이력 read 경로 `get_recent_generated_content`를 제공한다. Save 시 node 존재성·language를 검증하고 node ID를 dedupe/사전순 정렬하며 MAX difficulty, canonical `content_id`, AI 고정 필드를 설정한다 |
+| **2. 하지 않는 일** | 문제·문장·`answer_key`를 생성하거나 provider를 호출하지 않는다. 언제 자신이 호출되어야 하는지나 사다리 강등을 스스로 판단하지 않는다(Generation Engine의 지시를 따름). Practicing 이상 같은 학습 수준 필터를 적용하지 않는다. 다른 Engine을 호출하지 않는다 |
+| **3. 입력 데이터** | 기존 `get_content`의 조건 기반/`content_id` 단독 모드. `save_generated_content`: `grammarNodeIds`, `contentType`, required `mediaAssets`, conditional `typeSpecificMetadata`(`difficulty`·`content_id` 입력 없음). `get_recent_generated_content`: `grammarNodeIds`, `language` |
+| **4. 출력 데이터** | `get_content`: 조건에 맞는 Content 또는 빈 결과. `save_generated_content`: exact `{content_id, grammar_node_ids, content_type, media_assets, difficulty, type_specific_metadata}`. `get_recent_generated_content`: `{content_id, media_assets, created_at}` 목록(최대 5) |
 | **5. 호출 가능한 하위 Engine** | 없음(리프 Engine) |
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_SCHEMA §3, GRAMMAR_GRAPH §6.2(3단계) |
-| **8. 향후 구현 시 주의사항** | 조회 결과가 0건일 때 이를 "오류"가 아니라 **명확한 빈 결과**로 반환해야 한다. 이래야 Generation Engine이 4단계(콘텐츠 공백 신호)로 내려갈 근거를 판단할 수 있다 |
+| **8. 향후 구현 시 주의사항** | `save_generated_content`는 normalized node order, 내부 MAX difficulty, `IDENTIFIER_STANDARD.md` §5 ID와 AI 고정 필드를 한 경계에서 확정하고 UUID/PK 충돌을 내부 재시도하지 않는다. 일반 DB 인프라 실패는 공통 입력 오류로 위장하거나 raw PostgreSQL/SQL/connection 정보를 노출하지 않는다. `get_content`와 `get_recent_generated_content`의 정상 0건은 명확한 빈 결과로 반환한다 |
 
 ---
 
@@ -220,6 +224,7 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 ## 11. 공통 원칙 재확인
 
 - **단일 쓰기 경로**: Progress 데이터는 오직 Progress Engine만 쓴다(5장, GRAMMAR_GRAPH §8).
+- **Content 단일 쓰기 경로(Pattern A)**: AI 생성 Content는 Generation Engine이 오케스트레이션하고 Content Engine의 `save_generated_content`만 저장한다. AI Generation Engine은 저장하지 않는다.
 - **리프 Engine은 아무도 호출하지 않는다**: Graph Engine, Progress Engine, Content Engine.
 - **형제는 형제를 부르지 않는다**: AI Generation Engine ↔ Content Engine은 반드시 Generation Engine을 거친다.
 - **정책과 실행의 분리**: "지금 무엇을 할지" 판단하는 Engine(Learning Flow, Generation)과 "시켜서 실행만 하는" Engine(AI Generation, Content, Graph, Progress)을 구분한다.
@@ -237,11 +242,11 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 | Progress Engine | **Stateful** | 사용자별 진행 상태의 유일한 쓰기 경로이자 소유자. LLE에서 상태를 실제로 "가진" 유일한 Engine이다 |
 | Generation Engine | Stateless | 사다리 몇 단계인지 판단은 매 호출마다 현재 Progress 조회 결과로 새로 계산하며, 이전 호출 결과를 기억하지 않는다 |
 | AI Generation Engine | Stateless | 매 호출이 독립적. 이전 생성 이력을 스스로 기억하지 않는다(표층 변주를 위한 "이전 예문" 정보가 필요하면 호출자가 입력으로 전달한다) |
-| Content Engine | Stateless / Read-only | 정적 콘텐츠 조회만 수행하며 자체적으로 가변 상태를 갖지 않는다 |
+| Content Engine | Stateless / Persistence boundary | Content 저장·조회를 수행하지만 호출 간 in-memory 상태를 보유하지 않는다. 저장 상태의 canonical 경계는 Content Engine API다 |
 | Review Engine | Stateless | 매 호출마다 입력받은 노드·오류 정보로 Cascade를 새로 계산한다 |
 | Interleaving Engine | Stateless | 입력받은 노드 목록을 그때그때 재정렬할 뿐, 세션 간 기억을 유지하지 않는다 |
 
-**원칙**: LLE 전체에서 "진짜 상태"를 갖는 Engine은 Progress Engine 하나뿐이다. 나머지 7개는 모두 Stateless(또는 Orchestrator)이므로 이론적으로 자유롭게 재시작·복제·병렬 실행할 수 있다. 이 비대칭 구조 자체가 5장 "단일 쓰기 경로" 원칙의 근거다.
+**원칙**: LLE에서 사용자 학습 상태를 직접 갖는 Stateful Engine은 Progress Engine 하나뿐이다. Content Engine은 durable Content를 저장하는 persistence boundary지만 호출 간 in-memory 상태나 사용자 학습 상태를 보유하지 않는다. 나머지 Engine도 Stateless(또는 Orchestrator)이므로 이론적으로 자유롭게 재시작·복제·병렬 실행할 수 있다. 이 비대칭 구조 자체가 5장 학습 상태의 "단일 쓰기 경로" 원칙과 AC-017 Content 단일 쓰기 경로를 함께 보존한다.
 
 ---
 
@@ -316,3 +321,4 @@ lock은 transaction-scoped blocking advisory lock만 사용하며 `COMMIT`/`ROLL
 | 1.13 | 2026-07-18 | AC-013 Tier C Architecture Clarification — Learning Flow의 `get_active_learning_count` read-only precheck과 Progress `recordExplicitStudy`의 최종 admission 권한을 분리. Progress leaf 구조, 동일 client/transaction, transaction-scoped blocking advisory lock, idempotency 우선, authoritative count 및 `CONTRACT_VIOLATION` enforcement를 명시 |
 | 1.14 | 2026-07-19 | AC-014 Tier C Architecture Clarification — Graph `list_nodes_by_language`/`get_concept_categories`, Progress `get_progress_snapshot`/`get_practicing_plus_count` 책임 추가; Learning Flow의 canonical API-only NEW_GRAMMAR 8단계와 INTERLEAVING eligible/admissible/occurrence/sequence 분리, Category hard gate와 selected-set tuple, Session Budget mode를 명시. Interleaving은 max batch 6 occurrence multiset의 순서만 exhaustive 결정하며 Progress leaf와 Graph static metadata 경계를 유지 |
 | 1.15 | 2026-07-19 | AC-015 Tier C Architecture Clarification — Graph Engine에 `get_node_language_and_concepts` 책임 추가(Interleaving Engine 전용 caller, mixed-language 미판정). Interleaving §10-5 호출 목록에 반영하고, 정렬 전 language/concept_ids 확보 → Category 해석(`get_concept_categories`) → CONTRAST 조회(`find_related_nodes`) 흐름을 §10-1에 명시. `sequence_nodes`의 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 거부와 mixed-language 판정이 Interleaving 책임임을 §10-8에 재확인. Tier A `GRAMMAR_GRAPH.md` 원문 불변 |
+| 1.16 | 2026-07-22 | AC-017 Tier C Architecture Clarification 누적 correction — Pattern A와 기존 ladder/provider/save 경계를 유지하면서 AI Generation planning `selectGenerationCandidates`, Progress recent-attempt read, generation API의 preselected node/recent Content 입력 계약, Graph caller 확대를 확정. 후보 계획 stages 1~3, prompt stage 4, 품질 비교 stage 5의 2차 실제 LLM milestone 유보를 명시했다. sibling/leaf 원칙과 Tier A는 불변, prerequisite implementation 미착수 |

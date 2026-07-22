@@ -24,7 +24,7 @@
 | 외부 진입점 | 일반 사용자(클라이언트) | 10장 Learning Flow Engine API |
 | 내부 계약 | Engine ↔ Engine | 3~9장 |
 
-AC-015 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine API 22개(21→22), 전체 27개(26→27)**다. AC-016은 신규 API를 추가하지 않으며 외부 HTTP 진입점도 추가하지 않는다.
+AC-017 반영 후 현재 API는 **외부 Learning Flow API 5개(불변), 내부 Engine API 26개(22→26), 전체 31개(27→31)**다. AC-017의 신규 내부 API는 `select_generation_candidates`, `save_generated_content`, `get_recent_generated_content`, `get_recent_attempted_combinations` 네 개이며, 외부 HTTP 진입점은 추가하지 않는다.
 
 ---
 
@@ -124,13 +124,13 @@ AC-015 반영 후 API는 **외부 Learning Flow API 5개(불변), 내부 Engine 
 |---|---|
 | API 이름 | `get_node_language_and_concepts` |
 | JavaScript 구현명 | `getNodeLanguageAndConcepts` |
-| 호출 주체 | Interleaving Engine |
+| 호출 주체 | Interleaving Engine, AI Generation Engine |
 | 입력 | `node_ids: string[]` |
 | 출력 | 동적 map — 입력의 모든 고유하고 유효한 `node_id`를 key로 하여 각각 정확히 한 번씩 포함한다: `{[node_id]: {language, concept_ids}}`(`node_id`는 실제 값으로 치환되는 동적 key이며, 문자 그대로의 고정 key `"node_id"`가 아니다) |
 | 빈 결과 | 빈 입력은 `{}` |
 | 에러 | 존재하지 않는 `node_id` → `INVALID_ID`(부분 결과 없이 전체 거부) |
 | 호출 가능한 하위 Engine | 없음(리프) |
-| 금지 사항 | Progress 상태를 조회하지 않는다. mixed-language를 판정하거나 거부하지 않는다 — 각 node의 실제 `language`를 있는 그대로 반환할 뿐이며, 그 판정은 호출자(Interleaving Engine)의 책임이다. `concepts.category`를 해석하지 않는다(`get_concept_categories`, 3.5로 계속 분리) — `difficulty`나 다른 metadata를 추가로 반환하지 않는다 |
+| 금지 사항 | Progress 상태를 조회하지 않는다. mixed-language를 판정하거나 거부하지 않는다 — 각 node의 실제 `language`를 있는 그대로 반환할 뿐이며, 그 판정은 호출자(Interleaving Engine 또는 AI Generation Engine)의 책임이다. `concepts.category`를 해석하지 않는다(`get_concept_categories`, 3.5로 계속 분리) — `difficulty`나 다른 metadata를 추가로 반환하지 않는다 |
 
 **AC-015 wording**: `node_ids`는 required string array다(AC-014 wording correction과 동일 규칙). omitted/undefined → `MISSING_REQUIRED_FIELD`. explicit null 또는 배열이 아닌 값 → `CONTRACT_VIOLATION`. 배열 원소 중 비문자열·빈 문자열·공백-only → `CONTRACT_VIOLATION`. 중복 `node_id`는 에러가 아니며 결과 map에서 자연히 단일 key로 정규화된다. 입력 중 하나라도 존재하지 않는 `node_id`를 포함하면 부분 결과 없이 전체를 `INVALID_ID`로 거부한다.
 
@@ -298,6 +298,42 @@ WHERE p.user_id = $1
 
 **AC-014 wording correction**: `user_id`, `language` 모두 required다. 각 필드의 omitted/undefined/null/wrong-type 처리는 §4.9(`user_id`)와 §3.4(`language`)의 동일 규칙을 그대로 따른다.
 
+### 4.11 get_recent_attempted_combinations
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `get_recent_attempted_combinations` |
+| JavaScript 구현명 | `getRecentAttemptedCombinations` |
+| 호출 주체 | AI Generation Engine만 |
+| positional signature | `getRecentAttemptedCombinations(pool, userId, language)` |
+| 입력 | required `userId`, `language` |
+| 출력 | exact item `{content_id:string, grammar_node_ids:string[], attempted_at:string}`의 배열. `attempted_at`은 ISO-8601 string |
+| 빈 결과 | 일치하는 content-linked attempt가 없으면 `[]`(정상) |
+| 에러 | 아래 validation과 공통 §11 error registry 적용 |
+| 호출 가능한 하위 Engine | 없음(리프) |
+| 금지 사항 | AI Generation Engine이 동일 SQL을 직접 실행하거나 Content Engine을 직접 호출하는 것. 문자열 join/직렬화 key로 조합을 비교하는 것 |
+
+Validation은 다음과 같다.
+
+- `userId`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string → `CONTRACT_VIOLATION`; 형식 오류 또는 DB 미존재 → `INVALID_ID`.
+- `language`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string → `CONTRACT_VIOLATION`; `/^[A-Z]{2}$/` 불일치 → `OUT_OF_RANGE_VALUE`.
+
+Window 20은 `PROGRESS_SCHEMA.md`의 기존 고정값이 아니라 AC-017이 새로 확정한 Tier C fixed window다. Population과 order는 해당 `userId`, attempt 귀속 node가 입력 `language`, `content_id IS NOT NULL`인 content-linked attempt로 제한하고 `attempted_at DESC`, 동률 `attempt_id ASC`, `LIMIT 20`을 적용한다. 계약상 SQL 구조는 다음과 같으며 Progress Engine 내부에만 위치한다.
+
+```sql
+SELECT ar.content_id, c.grammar_node_ids, ar.attempted_at
+FROM attempt_records ar
+JOIN grammar_nodes gn ON gn.node_id = ar.node_id
+JOIN content c ON c.content_id = ar.content_id
+WHERE ar.user_id = $1
+  AND gn.language = $2
+  AND ar.content_id IS NOT NULL
+ORDER BY ar.attempted_at DESC, ar.attempt_id ASC
+LIMIT 20
+```
+
+Candidate와 history의 `grammar_node_ids`는 각각 dedupe한 뒤 node ID 문자열 사전순으로 정렬한다. 배열 길이가 같고 모든 인덱스의 값이 같을 때만 완전일치이며 문자열 join 또는 직렬화 결과 비교는 금지한다.
+
 ---
 
 ## 5. Generation Engine API
@@ -309,13 +345,71 @@ WHERE p.user_id = $1
 | API 이름 | `generate_problem` |
 | 호출 주체 | Learning Flow Engine |
 | 입력 | `user_id`, `language`, `target_concept_id`(선택, 1~2단계용), `target_node_id`(선택, **3단계 PRE_MADE fallback 전용** — AC-005, 2026-07-08 Resolved) |
-| 출력 | `{content, content_id, source: AI_GENERATED\|PRE_MADE, ladder_step: 1~4}` — **`content_id` 추가(AC-008, 2026-07-08 Resolved)**: AI_GENERATED든 PRE_MADE든 반환 전 `content` 테이블에 영속화된 ID |
-| 빈 결과 | 사다리 1~3단계 모두 실패 → `content = null`, `content_id = null`, `ladder_step = 4`(콘텐츠 공백 신호). 이는 에러가 아니라 정상적으로 판단한 결과가 없다는 빈 결과 |
+| 출력 | 모든 분기에서 exact top-level keys `{content, content_id, source, ladder_step}`. AI_GENERATED 성공은 `source="AI_GENERATED"`, `ladder_step=1\|2`; PRE_MADE 성공은 `source="PRE_MADE"`, `ladder_step=3`; NO_CONTENT는 네 필드를 모두 유지하고 `content=null`, `content_id=null`, `source=null`, `ladder_step=4`로 반환 |
+| 빈 결과 | 후보 부족·재생성 소진 또는 PRE_MADE 정상 empty로 사다리 1~3단계가 결과를 만들지 못함 → `{content:null, content_id:null, source:null, ladder_step:4}`. 이는 에러가 아닌 정상 콘텐츠 공백 신호 |
 | 에러 | `target_concept_id`가 존재하지 않는 Concept ID, `target_node_id`가 존재하지 않는 Grammar Node ID, `language` 코드 오류 |
 | 호출 가능한 하위 Engine | AI Generation Engine, Content Engine |
 | 금지 사항 | 어느 단계에서 왜 실패했는지의 상세 내역(예: "후보 3개 중 2개 필터 탈락")을 응답에 포함하지 않는다 — `ladder_step`과 최종 결과만 반환 |
 
 **AC-005 관련 규칙**: `target_node_id`는 Generation Engine이 계산하지 않는다 — Learning Flow Engine이 이미 보유한 Progress Engine 읽기 권한으로 결정해 전달하며, Generation Engine은 3단계에서 이 값을 Content Engine으로 그대로 릴레이만 한다. 클라이언트는 이 값을 알거나 전달할 필요가 없다(전적으로 서버 내부 결정). 선택 규칙 자체는 `DOMAIN_LOGIC_BRIEF.md` §8.1(AC-009, Provisional) 참고.
+
+**AC-017 Layer 3 exact payload 계약**: 모든 object는 아래에 명시한 key 외 `additionalProperties:false`다. nullable 필드는 생략하지 않고 명시적 `null`로 포함한다. `content`가 존재하면 `content.content_id`와 top-level `content_id`는 정확히 같고, `content`가 `null`이면 top-level `content_id`도 `null`이다.
+
+AI_GENERATED 성공(`ladder_step` 1 또는 2):
+
+```
+{
+  content: {
+    content_id,
+    grammar_node_ids,
+    content_type: "QUIZ",
+    media_assets,
+    difficulty,
+    type_specific_metadata
+  },
+  content_id,
+  source: "AI_GENERATED",
+  ladder_step: 1 또는 2
+}
+```
+
+PRE_MADE 성공(`ladder_step` 3):
+
+```
+{
+  content: {
+    content_id,
+    grammar_node_ids,
+    content_type: "EXAMPLE",
+    media_assets,
+    difficulty,
+    type_specific_metadata: null
+  },
+  content_id,
+  source: "PRE_MADE",
+  ladder_step: 3
+}
+```
+
+NO_CONTENT(`ladder_step` 4):
+
+```
+{
+  content: null,
+  content_id: null,
+  source: null,
+  ladder_step: 4
+}
+```
+
+Generation Engine은 AI 후보를 저장할 때 Content Engine의 `save_generated_content` 반환 projection을 어떤 필드도 다시 계산하지 않고 그대로 `content`로 사용한다. 사다리 retry/강등은 다음과 같다.
+
+1. Provider timeout·network·structured-output parse failure는 같은 provider 호출을 1회 즉시 재시도하고, 재실패하면 throw하지 않고 다음 사다리 단계로 강등한다.
+2. Provider schema/rule/content constraint violation은 최초 생성 1회와 위반 내용을 반영한 재생성 최대 2회(총 최대 3회) 후에도 실패하면 다음 단계로 강등하며, 내부 reason은 public payload에 노출하지 않는다.
+3. 후보 부족은 정상 조건 미충족이므로 재시도·재생성 없이 다음 단계로 강등한다.
+4. `save_generated_content` 실패는 내부 재시도나 사다리 강등 없이 즉시 throw한다.
+5. PRE_MADE `get_content` technical failure는 같은 호출을 1회 즉시 재시도하고 재실패하면 throw한다. `ladder_step=4`로 강등하지 않는다.
+6. PRE_MADE 정상 empty만 에러 없이 `ladder_step=4`로 강등한다.
 
 ---
 
@@ -326,26 +420,86 @@ WHERE p.user_id = $1
 | 항목 | 내용 |
 |---|---|
 | API 이름 | `generate_combination` |
+| JavaScript 구현명 | `generateCombination` |
 | 호출 주체 | Generation Engine |
-| 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | 생성된 문제/문장(둘 이상의 노드 조합) + `content_id`(영속화된 ID, AC-008) 또는 실패 신호 |
-| 빈 결과 | 조합 가능한 후보가 2개 미만이라 생성 불가 → 실패 신호(빈 결과, 에러 아님) |
-| 에러 | `user_id`/`language` 형식 오류 |
-| 호출 가능한 하위 Engine | Graph Engine(읽기), Progress Engine(읽기) |
-| 금지 사항 | 필터 파이프라인의 단계별 통과/탈락 내역을 노출하지 않는다(GRAMMAR_GRAPH §6.1 알고리즘 비공개) |
+| positional signature | `generateCombination(pool, language, grammarNodeIds, recentGeneratedContent)` |
+| 입력 | required `language`, `grammarNodeIds`, `recentGeneratedContent`. `userId`와 `targetConceptId`는 받지 않음 |
+| 출력 | exact `{candidate}`. 성공 시 `candidate={grammar_node_ids, media_assets, type_specific_metadata}`, 정상 실패 시 `candidate=null` |
+| 빈 결과 | Provider 재생성 소진 → `{candidate:null}`(정상 결과, 에러 아님) |
+| 에러 | 아래 `grammarNodeIds`·`recentGeneratedContent` validation 및 `language` 공통 계약 적용 |
+| 호출 가능한 하위 Engine | Graph Engine(`get_node_language_and_concepts`, 존재성/language 검증) |
+| 금지 사항 | node 재선택, GRAMMAR_GRAPH §6.1 1~3단계 재필터링, `recentGeneratedContent`를 Layer 2/public payload에 재노출하는 것 |
 
 ### 6.2 generate_single_node (사다리 2단계)
 
 | 항목 | 내용 |
 |---|---|
 | API 이름 | `generate_single_node` |
+| JavaScript 구현명 | `generateSingleNode` |
 | 호출 주체 | Generation Engine |
-| 입력 | `user_id`, `language`, `target_concept_id`(선택) |
-| 출력 | 생성된 문제/문장(단일 노드) + `content_id`(영속화된 ID, AC-008) 또는 실패 신호 |
-| 빈 결과 | Practicing 이상 노드가 0개 → 실패 신호 |
-| 에러 | `user_id`/`language` 형식 오류 |
-| 호출 가능한 하위 Engine | Graph Engine(읽기), Progress Engine(읽기) |
-| 금지 사항 | 6.1과 동일 |
+| positional signature | `generateSingleNode(pool, language, grammarNodeIds, recentGeneratedContent)` |
+| 입력 | required `language`, `grammarNodeIds`, `recentGeneratedContent`. `userId`와 `targetConceptId`는 받지 않음 |
+| 출력 | exact `{candidate}`. 성공 시 `candidate={grammar_node_ids, media_assets, type_specific_metadata}`, 정상 실패 시 `candidate=null` |
+| 빈 결과 | Provider 재생성 소진 → `{candidate:null}`(정상 결과, 에러 아님) |
+| 에러 | 아래 `grammarNodeIds`·`recentGeneratedContent` validation 및 `language` 공통 계약 적용 |
+| 호출 가능한 하위 Engine | Graph Engine(`get_node_language_and_concepts`, 존재성/language 검증) |
+| 금지 사항 | 6.1과 동일: node 재선택·1~3단계 재필터링·recent content 재노출 금지 |
+
+**AC-017 Layer 2 exact result 계약(§6.1·§6.2 공통)**: top-level에는 `candidate` key 하나만 있으며 `additionalProperties:false`다. 성공 candidate에도 아래 세 key만 있고 `additionalProperties:false`이며, Layer 2에는 `content_id`가 없다.
+
+```
+{
+  candidate: {
+    grammar_node_ids: [...],
+    media_assets: [
+      {
+        media_format: "TEXT",
+        asset_ref: "<generated_text>",
+        role: "PRIMARY"
+      }
+    ],
+    type_specific_metadata: {
+      answer_key: "<answer_key>"
+    }
+  }
+}
+```
+
+`media_assets`는 정확히 1개의 TEXT/PRIMARY item이고 media item도 `additionalProperties:false`다. QUIZ 경로의 `type_specific_metadata`와 non-empty/non-whitespace `answer_key`는 required이며 metadata object도 `additionalProperties:false`다. `grammar_node_ids`는 provider 응답에서 파생하지 않고 `select_generation_candidates`가 확정한 정렬 배열을 그대로 사용한다. 재생성 소진은 exact `{candidate:null}`이며 contract error가 아니다.
+
+`grammarNodeIds` validation은 두 API에 공통 적용한다. Omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-array → `CONTRACT_VIOLATION`; 비문자열·빈 문자열·공백-only 원소 → `CONTRACT_VIOLATION`; `generate_combination`은 길이 정확히 2, `generate_single_node`는 길이 정확히 1이 아니면 `CONTRACT_VIOLATION`; 중복 또는 사전순 비정렬 → `CONTRACT_VIOLATION`; 미존재 node → `INVALID_ID`; node 간 mixed-language 또는 입력 `language`와 실제 node language 불일치 → `CONTRACT_VIOLATION`이다. 존재성/language 검증은 Graph Engine `get_node_language_and_concepts`를 호출하며 node 재선택이나 §6.1 pipeline 1~3단계 재필터링은 하지 않는다.
+
+`recentGeneratedContent`는 required이며 Content Engine `get_recent_generated_content` 반환 배열을 변환 없이 전달한다. Omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-array → `CONTRACT_VIOLATION`; 빈 배열 `[]`은 정상; non-object item 또는 exact 3-key `{content_id, media_assets, created_at}` shape 위반 → `CONTRACT_VIOLATION`이다. Provider prompt 구성에만 사용하며 Layer 2 candidate와 public payload에 재노출하지 않는다. Planning → recent 조회 → generation 사이 `grammar_node_ids`는 정확히 같은 사전순 정렬 배열이어야 한다.
+
+**AC-008 supersession 범위**: “AI_GENERATED 결과는 public 반환 전 Content에 영속화한다”는 원칙은 `generate_problem`에 그대로 유지한다. 다만 `generate_combination`/`generate_single_node`가 직접 저장하고 `content_id`를 반환한다는 암묵적 계약은 AC-017이 supersede한다. 두 API는 저장 전 `{candidate}` 또는 `{candidate:null}`만 반환한다. Generation Engine은 `save_generated_content` 성공 후에만 `generate_problem` 성공 payload를 반환하며 save 실패 시 public 성공 payload가 없다.
+
+### 6.3 select_generation_candidates
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `select_generation_candidates` |
+| JavaScript 구현명 | `selectGenerationCandidates` |
+| 호출 주체 | Generation Engine만 |
+| positional signature | `selectGenerationCandidates(pool, userId, language, generationMode, targetConceptId)` — `targetConceptId`만 optional이며 마지막 위치 |
+| 입력 | required `userId`, `language`, `generationMode`; optional `targetConceptId` |
+| 출력 | 성공 exact `{grammar_node_ids:string[]}`; 정상 후보 없음 exact `{grammar_node_ids:null}`. `COMBINATION`은 정확히 2개, `SINGLE_NODE`는 정확히 1개이며 배열은 중복 없는 node ID 사전순 정렬 |
+| 빈 결과 | 조건에 맞는 후보가 없으면 `{grammar_node_ids:null}`(정상) |
+| 에러 | 아래 exact validation 적용 |
+| 호출 가능한 하위 Engine | Progress Engine(`get_eligible_nodes`, `get_recent_attempted_combinations`), Graph Engine(Concept 포함 여부에 필요한 canonical metadata) |
+| 금지 사항 | 다른 API가 node를 재선택하는 것, 후보 배열을 문자열 join/직렬화 key로 비교하는 것 |
+
+Validation은 다음과 같다.
+
+- `userId`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string → `CONTRACT_VIOLATION`; 형식 오류 또는 DB 미존재 → `INVALID_ID`.
+- `language`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string → `CONTRACT_VIOLATION`; `/^[A-Z]{2}$/` 불일치 → `OUT_OF_RANGE_VALUE`.
+- `generationMode`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string 또는 `COMBINATION`/`SINGLE_NODE` 외 값 → `CONTRACT_VIOLATION`.
+- `targetConceptId`: omitted/explicit `undefined`는 정상 미지정; explicit `null`/non-string/빈 문자열/공백-only → `CONTRACT_VIOLATION`; DB 미존재 → `INVALID_ID`.
+
+Node 선택은 이 API에서만 수행한다. GRAMMAR_GRAPH §6.1 pipeline 1단계는 `get_eligible_nodes` 기반으로 `PRACTICING`/`MASTERED`/`AUTOMATIC`만 허용하고, 2단계는 `targetConceptId`가 있으면 적어도 한 node가 해당 Concept을 포함하는 후보만 허용하며, 3단계는 `get_recent_attempted_combinations` 결과와의 완전일치 등장 횟수가 적은 후보를 우선한다. `generate_combination`과 `generate_single_node`는 결과를 재선택하지 않는다.
+
+후보 tie-break는 (1) 최근 fixed window 내 완전일치 등장 횟수 ASC, (2) 후보별 `sorted_node_id_array`의 element-wise lexicographic 비교 순서다. 문자열 join 또는 직렬화 key 비교는 금지한다. 완전일치는 candidate/history 배열을 각각 dedupe·사전순 정렬한 뒤 길이와 모든 인덱스가 같을 때만 성립한다.
+
+GRAMMAR_GRAPH §6.1 실행 위치는 stages 1~3이 이 planning API, stage 4 표층 변주가 `recentGeneratedContent`를 provider prompt에 포함하는 `generate_combination`/`generate_single_node`, stage 5 비교형 품질 scoring이 별도 2차 실제 LLM milestone이다. 첫 Mock milestone은 stage 5를 수행하거나 충족했다고 주장하지 않으며, 모호한 production scoring placeholder/interface도 만들지 않는다. 실제 비교 계약은 2차 clarification에서 별도로 확정한다.
 
 ---
 
@@ -363,6 +517,53 @@ WHERE p.user_id = $1
 | 에러 | `node_id` 미존재, `content_id` 미존재(단독 조회 모드), `content_type`이 정의되지 않은 값 |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | 콘텐츠가 없을 때 유사한 다른 콘텐츠로 임의 대체해 반환하지 않는다 — 빈 결과는 빈 결과 그대로, 대체 판단은 호출자의 몫 |
+
+### 7.2 save_generated_content
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `save_generated_content` |
+| JavaScript 구현명 | `saveGeneratedContent` |
+| 호출 주체 | Generation Engine만 |
+| positional signature | `saveGeneratedContent(pool, grammarNodeIds, contentType, mediaAssets, typeSpecificMetadata)` |
+| 입력 | required `grammarNodeIds`, `contentType`, `mediaAssets`; conditional `typeSpecificMetadata`. `difficulty`, `content_id`, ID suffix는 입력으로 받지 않음 |
+| 출력 | exact canonical projection `{content_id, grammar_node_ids, content_type, media_assets, difficulty, type_specific_metadata}`; `additionalProperties:false` |
+| 빈 결과 | 없음 |
+| 에러 | 아래 exact validation 및 공통 §11 error registry 적용. UUID/PK 충돌은 `CONTRACT_VIOLATION`; 일반 DB 인프라 실패는 공통 입력 오류로 위장하지 않고 일반화된 예외로 상위에 전파 |
+| 호출 가능한 하위 Engine | 없음(리프) |
+| 금지 사항 | caller가 `difficulty`·`content_id`·suffix를 입력/제안하거나 Generation Engine이 반환 projection의 필드를 재계산하는 것 |
+
+Required/conditional input 계약은 다음과 같다.
+
+- `grammarNodeIds`: 길이 1 이상의 `string[]`.
+- `contentType`: canonical enum.
+- `mediaAssets`: required. omitted/explicit `undefined`는 `MISSING_REQUIRED_FIELD`; explicit `null` 또는 non-array는 `CONTRACT_VIOLATION`.
+- `typeSpecificMetadata`: `contentType === "QUIZ"`이면 required non-null object이며 exact key는 `answer_key` 하나다. `answer_key`는 non-empty/non-whitespace string이고 object는 `additionalProperties:false`다. 다른 content type에서는 optional이며 `null` 또는 생략을 허용한다. Exact output projection에는 `type_specific_metadata` key를 항상 포함하며, non-QUIZ에서 입력을 생략한 경우 값은 `null`이다.
+
+`mediaAssets` exact validation은 배열 길이가 정확히 1이고 item이 exact keys `{media_format, asset_ref, role}`만 갖는 것이다. `media_format`은 정확히 `"TEXT"`, `role`은 정확히 `"PRIMARY"`, `asset_ref`는 non-empty/non-whitespace string이며 item은 `additionalProperties:false`다. 배열 길이 불일치, 다른 format/role, key 누락·추가, 빈·공백 `asset_ref`는 모두 `CONTRACT_VIOLATION`이다.
+
+Content Engine은 `grammarNodeIds`를 dedupe한 뒤 문자열 사전순으로 정렬해 저장·반환한다. 모든 node의 존재성과 같은 language 여부를 같은 조회에서 검증하고 `grammar_nodes.difficulty`의 MAX를 내부 계산한다. 정렬된 첫 node가 `content_id`의 대표 node이며 입력 순서가 달라도 같은 논리적 node set이면 대표 node, difficulty, 저장 배열이 동일하다.
+
+`content_id`는 Content Engine이 `IDENTIFIER_STANDARD.md` §5의 `CONTENT_{language}_{node_slug}_{TYPE_ABBR}_{UUID}`로 생성한다. UUID는 소문자·하이픈 포함 36자 RFC 4122 표준 표현이다. AI 생성 저장 경로는 `source="AI_GENERATED"`, `human_reviewed=false`, `is_canonical=false`, `version=1`, `is_active=true`, `author="LLE_AI_GENERATION_ENGINE"`, `meta_language=engineConfig.AI_GENERATION.defaultMetaLanguage`로 고정한다. 현재 구현 예정 기본값은 `AI_GENERATION.defaultMetaLanguage="KO"`이며 이 문서 patch는 설정 파일을 변경하지 않는다.
+
+### 7.3 get_recent_generated_content
+
+| 항목 | 내용 |
+|---|---|
+| API 이름 | `get_recent_generated_content` |
+| JavaScript 구현명 | `getRecentGeneratedContent` |
+| 호출 주체 | Generation Engine만 |
+| positional signature | `getRecentGeneratedContent(pool, grammarNodeIds, language)` |
+| 입력 | `grammarNodeIds`, `language` |
+| 출력 | exact item `{content_id, media_assets, created_at}`(`additionalProperties:false`)의 배열 |
+| 빈 결과 | 정상 결과가 없으면 `[]`; partial result 없음 |
+| 에러 | 존재하지 않는 node ID → `INVALID_ID`; mixed-language → `CONTRACT_VIOLATION` |
+| 호출 가능한 하위 Engine | 없음(리프) |
+| 금지 사항 | any-match 조회, caller가 source·limit·정렬을 변경하는 것 |
+
+`grammarNodeIds`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-array, 빈 배열, 비문자열·빈 문자열·공백-only 원소 → `CONTRACT_VIOLATION`; duplicate는 조회 전에 dedupe; 하나라도 미존재 node가 있으면 부분 결과 없이 전체 `INVALID_ID`; node 간 mixed-language → `CONTRACT_VIOLATION`. `language`: omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`; explicit `null`/non-string → `CONTRACT_VIOLATION`; 형식 오류 → `OUT_OF_RANGE_VALUE`; node의 실제 language와 입력 `language` 불일치 → `CONTRACT_VIOLATION`.
+
+결과는 요청한 dedupe node set 전체를 포함하는 content(`content.grammar_node_ids ⊇ requested node set`)만 선택하며 any-match가 아니다. Source는 내부에서 `AI_GENERATED`로 고정하고 fixed limit은 5다. `created_at DESC`, 동률이면 `content_id ASC`로 정렬한다.
 
 ---
 
@@ -585,7 +786,7 @@ Acknowledgement echo, conversation object, prompt 등 추가 field는 없다.
 
 - **empty_result 응답 형식**: `{status: "empty", data: null 또는 []}`
 - **error 응답 형식**: `{status: "error", error_code, message}`
-- **공통 error_code**: `INVALID_ID`(존재하지 않는 ID 참조), `MISSING_REQUIRED_FIELD`(필수 필드 누락), `UNAUTHORIZED_CALLER`(허용되지 않은 호출 주체), `OUT_OF_RANGE_VALUE`(값 범위 위반), `CONTRACT_VIOLATION`(그 외 계약 위반 — 예: `is_correct=true`인데 `error_category` 존재)
+- **공통 error_code는 정확히 5개**: `INVALID_ID`(존재하지 않는 ID 참조), `MISSING_REQUIRED_FIELD`(필수 필드 누락), `UNAUTHORIZED_CALLER`(허용되지 않은 호출 주체), `OUT_OF_RANGE_VALUE`(값 범위 위반), `CONTRACT_VIOLATION`(그 외 계약 위반 — 예: `is_correct=true`인데 `error_category` 존재). AC-017은 신규 error code를 추가하지 않는다.
 - **호출 주체 위반**은 항상 `UNAUTHORIZED_CALLER`로 분류한다 — 예: Progress Engine의 쓰기 API를 Learning Flow Engine이 아닌 Engine이 호출한 경우
 
 ---
@@ -626,3 +827,4 @@ Acknowledgement echo, conversation object, prompt 등 추가 field는 없다.
 | 1.16 | 2026-07-19 | AC-014 wording correction(Narrow Contract Wording Clarification, 새 Architecture 아님) — §3.4/3.5/4.9/4.10 신규 API 4개의 입력 필드가 전부 required임을 명시하고, positional signature에서 omitted/explicit undefined를 `MISSING_REQUIRED_FIELD`, explicit null·wrong-type을 `CONTRACT_VIOLATION`으로, 필드별 형식·존재성 오류(`OUT_OF_RANGE_VALUE`/`INVALID_ID`)를 정밀화. 중복 ID는 lookup map 정규화로 에러 아님, 부분 결과 반환 금지(하나라도 존재하지 않는 ID 포함 시 전체 거부). 신규 error code 없음. API 총수 26·`get_active_learning_count`(AC-013) 기존 validation·Tier A 문서 불변 |
 | 1.17 | 2026-07-19 | AC-015 Tier C Architecture Clarification — 신규 내부 API `get_node_language_and_concepts`(§3.6, Interleaving Engine 전용 caller) 추가, 입력의 모든 고유 유효 node_id를 동적 key로 정확히 한 번씩 포함하는 map 출력과 mixed-language 미판정(Graph는 사실만 반환) 명시. `sequence_nodes`(§9.1)에 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 시 `OUT_OF_RANGE_VALUE` 계약 추가(engineConfig 참조, 하드코딩 금지). 외부 HTTP API 5개 불변, 내부 API 21→22, 전체 API 26→27. 신규 error code 없음, `concepts.category`/`difficulty` 등 다른 metadata 미추가, Tier A 문서 불변 |
 | 1.18 | 2026-07-20 | AC-016 Tier C Architecture Clarification — `start_session` JavaScript signature와 REVIEW `review_batch`, NEW_GRAMMAR 기존 `{next_action,node_id}`, INTERLEAVING `node_sequence`, CONVERSATION/IDLE `next_action` 단독 exact payload를 확정. Branch별 exact-key·field omission, acknowledgement validation, REVIEW 기본 `getDueReviews` 호출 및 fallthrough 규칙을 명시. 외부 API 5·내부 22·전체 27 불변, 신규 error code·DB/Tier A 영향 없음, 구현 미착수·§9 미PASS |
+| 1.19 | 2026-07-22 | AC-017 Tier C Architecture Clarification 최종 누적판 — Pattern A와 exact Layer 1/2/3 payload, Content save/recent API, required `mediaAssets`·QUIZ `answer_key`, 내부 MAX difficulty·node/ID 정규화·고정 필드·retry를 보존하고, `select_generation_candidates`·`get_recent_attempted_combinations`를 추가. 후보 planning 1~3단계와 element-wise tie-break, generation executor의 최종 signatures·입력 검증·recent prompt-only 경계, AC-008 제한적 supersession, 비교형 품질 scoring의 2차 실제 LLM 이연을 확정. 외부 API 5 불변, 내부 22→26, 전체 27→31, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |

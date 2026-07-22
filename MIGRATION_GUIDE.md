@@ -162,6 +162,22 @@
 
 ---
 
+### Entry 010
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-22 |
+| 대상 문서 | `API_CONTRACT.md`(v1.18 → v1.19), `ENGINE_INTERFACE.md`(v1.15 → v1.16), `AI_INTEGRATION_BRIEF.md`(v1.0 → v1.1), `ARCHITECTURE_CLARIFICATION_BACKLOG.md`(v1.28 → v1.29), `MIGRATION_GUIDE.md`(v1.7 → v1.8), `VALIDATION_LEVEL3.md`(v1.6 → v1.7) |
+| 변경 유형 | **Tier C ADDITIVE + CONTRACT REPLACEMENT / NARROWING** — AC-017 AI Generation candidate·Content persistence exact contract. 신규 API 네 개는 additive이고 기존 generation API 두 개는 입력·출력·persistence 책임을 교체·축소 |
+| 정확한 API 변화 | 외부 HTTP API 5개 불변. 내부 Engine API 22→26: `select_generation_candidates`, `save_generated_content`, `get_recent_generated_content`, `get_recent_attempted_combinations` 신설. 전체 API 27→31. `generate_combination`, `generate_single_node`는 기존 이름을 유지하지만 계약을 replacement/narrowing |
+| 핵심 변경 | 기존 Pattern A, provider raw 3-field schema, exact Layer 2/3, required `mediaAssets`, QUIZ `answer_key`, 내부 MAX difficulty·node/Content ID 정규화·고정 필드, retry/ladder를 보존한다. 여기에 candidate planning stages 1~3, Progress recent-attempt window 20과 exact-array tie-break, generation의 preselected ID·recent Content prompt stage 4, 비교형 품질 scoring stage 5의 2차 실제 LLM milestone 이연, AC-008 제한적 supersession을 확정 |
+| 하위 호환성 | `generate_combination`·`generate_single_node`는 `userId`·`targetConceptId`를 제거하고 preselected `grammarNodeIds`·`recentGeneratedContent`를 받으며 직접 저장/`content_id` 반환 대신 `{candidate}`만 반환하는 contract replacement/narrowing이다. 다만 production 구현과 canonical caller가 아직 없어 deployed runtime breaking impact는 없다. 기존 error registry 5개, `next_action` enum, `request_practice` 계약은 변경하지 않는다 |
+| Tier A adjudication | 없음 — Frozen Tier A 원문 미수정. Tier C Engine/API boundary clarification |
+| 서버/DB 영향 | DB migration·schema·entity 변경 없음. `engineConfig.js`·코드·테스트도 이번 patch에서 변경하지 않는다. AI_GENERATION config 값은 후속 구현 예정 의미만 문서화 |
+| 상태 | AC-017 Architecture Clarification **RESOLVED** / Prerequisite Implementation **NOT STARTED**. IMPLEMENTED/CLOSED/PASS 선언 없음 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -174,3 +190,4 @@
 | 1.5 | 2026-07-19 | Entry 007 추가 — AC-014 Learning Flow prerequisite clarification을 ADDITIVE/CONTRACT CLARIFICATION record로 반영. 기존 외부 5·내부 17·전체 22에서 신규 내부 API 4개를 추가해 최종 외부 5·내부 21·전체 26. 기존 22개 API와 next_action enum 보존, sequence_nodes 목적 유지·multiset/오류/출력 불변식 정밀화, Tier A 원문·DB schema 불변 및 구현 미착수 명시 |
 | 1.6 | 2026-07-19 | Entry 008 추가 — AC-015 Interleaving Graph metadata dependency clarification을 ADDITIVE(new internal API) + NARROWING(sequence_nodes input validation) canonical migration record로 반영. 내부 API 21→22·전체 API 26→27, 외부 API 5개 및 next_action enum 불변. sequence_nodes의 max_batch_size 초과 거부(원본 occurrence 길이 기준, dedupe 전)는 narrowing이나 production 구현 미착수·canonical caller가 이미 그 상한 이하로 구성하도록 승인됐다는 근거로 breaking이 아님을 명시. DB migration/schema·engineConfig.js 변경 없음, prerequisite implementation 미착수 명시 |
 | 1.7 | 2026-07-20 | Entry 009 추가 — AC-016 `start_session` exact payload를 ADDITIVE / CONTRACT CLARIFICATION으로 반영. REVIEW `review_batch`, 기존 NEW_GRAMMAR payload, INTERLEAVING `node_sequence`, CONVERSATION/IDLE 최소 payload와 exact-key·field omission·fallthrough를 확정. 외부 5·내부 22·전체 27 및 DB/Tier A 불변, implementation 미착수·§9 미PASS 명시 |
+| 1.8 | 2026-07-22 | Entry 010 추가 — AC-017을 Tier C ADDITIVE + CONTRACT REPLACEMENT / NARROWING으로 반영. planning·Content save/recent·Progress recent-attempt 내부 API 4개를 추가해 외부 5·내부 22→26·전체 27→31로 확정하고, generation API 2개의 입력/출력/persistence 책임을 교체·축소했다. Pattern A, exact payload, media/answer/difficulty/ID/retry, stages 1~4와 stage 5 이연, AC-008 제한적 supersession을 기록했다. production 구현/caller가 없어 deployed runtime breaking impact는 없고 DB·코드·설정·Tier A 불변, prerequisite implementation 미착수다 |

@@ -252,6 +252,7 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 - **구조화 출력**: 자유 텍스트 파싱이 아니라 JSON Schema 강제 방식이 실제로 쓰이는지, 파싱 실패 자체가 발생하지 않는지.
 - **`self_reported_node_ids` 비신뢰 원칙**: AI가 자체 보고한 노드 ID를 실제 검증 근거로 쓰지 않고, 항상 §5의 독립적 절차로 재검증하는지.
 - **실패 처리 분기**: 기술적 실패(즉시 1회 재시도)와 제약 위반(위반 사실 명시 후 최대 2회 재생성)이 서로 다른 재시도 횟수로 정확히 분기되는지.
+- 품질 비교형 스코어링(GRAMMAR_GRAPH §6.1 5단계)은 1차 검증 대상이 아니며, 실제 생성 결과 복수 비교가 필요한 2차 실제 LLM milestone 항목이다(§2.4).
 
 ---
 
@@ -285,6 +286,7 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | §8 Review Engine | Cascade 깊이 위반 0건, `get_due_reviews` 우선순위 규칙 일치 |
 | §9 Conversation | 기존 3개 경계 항목 + AC-012 순환 차단 검증 전부 통과(Conversation Engine 내부 동작은 판정 대상 아님) |
 | §10 AI Generation | 표층 변주 중복 0건, 실패 처리 분기 정확 |
+| §10 AI Generation — 1차 Mock 계약 근거 | `AI_INTEGRATION_BRIEF.md` §2.4 및 AC-017 exact contract를 따른다 |
 
 **부분 실현 사례의 취급**: JA 시나리오2(`する` 대체)·EN 시나리오4(`go`→`work` 대체)는 "문법 조합은 완전 실현, 어휘만 대체"로 이미 각 언어 문서에 기록되어 있다. Level 3는 이 두 건을 **FAIL로 재판정하지 않는다** — 어휘 대체가 문서화된 판단에 따른 것이므로, "문법 조합 기준" PASS로 취급한다.
 
@@ -332,3 +334,4 @@ Tier D 제작 과정에서 노드별로 이미 자체 검증한 54개 관계(VI 
 | 1.4 | 2026-07-13 | AUD-002 Scheduling/Evidence Clarification 반영 — §8.1에 검증 항목 4개 추가(조기 연습이 due를 미루지 않는지, due 이후 시도가 정확히 qualifying 기록되는지, 비교 기준 스냅샷 오류 방지, `next_review_at IS NULL` 안전 처리). "조기 연습이 due를 미루지 않는지"도 Burst 차단과 동급의 무예외 PASS 기준으로 승격 |
 | 1.5 | 2026-07-13 | Independent Architecture Audit(AUD-003), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — §7.1 신설(Language Boundary 검증). Cross-language `PREREQUISITE`/`RELATED`/`CONTRAST`/`ALTERNATIVE` 4종 위반 주입 탐지, `is_valid` 정합성, runtime traversal(선행/후행 탐색·`find_related_nodes`) foreign-language 미반환, 정상 same-language relation fixture 회귀 없음까지 9개 검증 항목 정의. §12 Pass/Fail 기준과 §13 Beta Release Gate 차단 조건에 반영. AUD-003은 기존 관계 총수나 과거 PASS 상태를 새로 확정하지 않음을 명시(§7.1 하단 주의) — 관계 총수 표기 정합성은 이 Amendment 범위 밖 |
 | 1.6 | 2026-07-17 | AC-012 Tier C Architecture Clarification — §9의 기존 세 경계 PASS 기준을 보존하면서 omitted/false/true/null/non-boolean, 정상 boundary 표시, acknowledge 재호출, Progress/DB 무변경, 새 세션 초기화 순환 차단 검증을 추가. 전체 start_session production 경로 구현을 선행조건으로 명시하고 Conversation Engine 내부 품질은 계속 범위 밖으로 유지. §9 PASS 또는 current-main 테스트 존재를 선언하지 않음 |
+| 1.7 | 2026-07-22 | AC-017 최종 누적 cross-reference — §12의 기존 §10 AI Generation 1차 Mock 기준을 유지하고, §10 PASS 기준에 품질 비교형 스코어링이 1차 대상이 아니라 복수 실제 생성 결과가 필요한 2차 실제 LLM milestone임을 직접 명시. 기존 §9 PASS 기록·acceptance 문구와 판정 상태 및 §12 표 의미는 변경하지 않음 |
