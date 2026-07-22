@@ -290,6 +290,42 @@ describe('Graph Engine (Phase 1-B)', () => {
     });
   });
 
+  describe('get_node_labels (3.7)', () => {
+    test('applies required string-array validation', async () => {
+      await rejectsWithCode(() => graphEngine.getNodeLabels(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(() => graphEngine.getNodeLabels(pool, undefined), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(() => graphEngine.getNodeLabels(pool, null), 'CONTRACT_VIOLATION');
+      await rejectsWithCode(() => graphEngine.getNodeLabels(pool, 'NODE_PAST'), 'CONTRACT_VIOLATION');
+      for (const nodeIds of [[42], [''], ['   ']]) {
+        await rejectsWithCode(() => graphEngine.getNodeLabels(pool, nodeIds), 'CONTRACT_VIOLATION');
+      }
+    });
+
+    test('returns an empty exact map for an empty array', async () => {
+      assert.deepEqual(await graphEngine.getNodeLabels(pool, []), {});
+    });
+
+    test('returns canonical labels by dynamic node ID key', async () => {
+      assert.deepEqual(
+        await graphEngine.getNodeLabels(pool, ['NODE_PRESENT', 'NODE_PAST']),
+        { NODE_PAST: 'past', NODE_PRESENT: 'present' }
+      );
+    });
+
+    test('normalizes duplicate IDs before querying', async () => {
+      assert.deepEqual(await graphEngine.getNodeLabels(pool, ['NODE_PAST', 'NODE_PAST']), {
+        NODE_PAST: 'past',
+      });
+    });
+
+    test('rejects any missing ID without a partial result', async () => {
+      await rejectsWithCode(
+        () => graphEngine.getNodeLabels(pool, ['NODE_PAST', 'NODE_AC018_MISSING']),
+        'INVALID_ID'
+      );
+    });
+  });
+
   describe('AC-014 Graph leaf boundary', () => {
     test('does not import another Engine', () => {
       const source = fs.readFileSync(path.join(__dirname, '../src/engines/graphEngine.js'), 'utf8');

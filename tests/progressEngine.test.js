@@ -1105,4 +1105,128 @@ describe('Progress Engine (Phase 1-B)', () => {
       assert.deepEqual(failure.state, { connects: 1, queries: 1, releases: 1 });
     });
   });
+
+  describe('get_recent_attempted_combinations (4.11)', () => {
+    test('validates required user and language inputs', async () => {
+      const userId = await createUser('u-4.11-required');
+      await rejectsWithCode(() => progressEngine.getRecentAttemptedCombinations(pool), 'MISSING_REQUIRED_FIELD');
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(pool, userId),
+        'MISSING_REQUIRED_FIELD'
+      );
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(pool, null, 'VI'),
+        'CONTRACT_VIOLATION'
+      );
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(pool, userId, null),
+        'CONTRACT_VIOLATION'
+      );
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(pool, 'not-a-uuid', 'VI'),
+        'INVALID_ID'
+      );
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(pool, userId, 'vi'),
+        'OUT_OF_RANGE_VALUE'
+      );
+    });
+
+    test('rejects a nonexistent user before returning an empty result', async () => {
+      await rejectsWithCode(
+        () => progressEngine.getRecentAttemptedCombinations(
+          pool,
+          '00000000-0000-0000-0000-000000000411',
+          'VI'
+        ),
+        'INVALID_ID'
+      );
+    });
+
+    test('returns [] for a valid user without content-linked attempts', async () => {
+      const userId = await createUser('u-4.11-empty');
+      assert.deepEqual(await progressEngine.getRecentAttemptedCombinations(pool, userId, 'VI'), []);
+    });
+
+    test('returns only requested-language content-linked attempts with normalized exact output', async () => {
+      const userId = await createUser('u-4.11-population');
+      const otherUserId = await createUser('u-4.11-population-other');
+      await createNode('NODE_4_11_VI_A', 'VI', 1);
+      await createNode('NODE_4_11_VI_B', 'VI', 2);
+      await createNode('NODE_4_11_EN', 'EN', 1);
+      for (const owner of [userId, otherUserId]) {
+        await insertProgressState(owner, 'NODE_4_11_VI_A', 'PRACTICING');
+      }
+      await insertProgressState(userId, 'NODE_4_11_EN', 'PRACTICING');
+      await pool.query(
+        `INSERT INTO content
+          (content_id, grammar_node_ids, content_type, media_assets, source, human_reviewed,
+           is_canonical, difficulty, meta_language, version, author, is_active)
+         VALUES
+          ('CONTENT_4_11_VI', '["NODE_4_11_VI_B","NODE_4_11_VI_A","NODE_4_11_VI_A"]'::jsonb,
+           'QUIZ', '[]'::jsonb, 'AI_GENERATED', false, false, 2, 'KO', 1, 'TEST', true),
+          ('CONTENT_4_11_EN', '["NODE_4_11_EN"]'::jsonb,
+           'QUIZ', '[]'::jsonb, 'AI_GENERATED', false, false, 1, 'KO', 1, 'TEST', true)`
+      );
+      await pool.query(
+        `INSERT INTO attempt_records
+          (attempt_id, user_id, node_id, content_id, attempted_at, is_correct)
+         VALUES
+          ('00000000-0000-0000-0000-000000000001', $1, 'NODE_4_11_VI_A', 'CONTENT_4_11_VI',
+           '2026-07-23T00:00:00.000Z', true),
+          ('00000000-0000-0000-0000-000000000002', $1, 'NODE_4_11_VI_A', NULL,
+           '2026-07-23T00:01:00.000Z', true),
+          ('00000000-0000-0000-0000-000000000003', $1, 'NODE_4_11_EN', 'CONTENT_4_11_EN',
+           '2026-07-23T00:02:00.000Z', true),
+          ('00000000-0000-0000-0000-000000000004', $2, 'NODE_4_11_VI_A', 'CONTENT_4_11_VI',
+           '2026-07-23T00:03:00.000Z', true)`,
+        [userId, otherUserId]
+      );
+
+      assert.deepEqual(await progressEngine.getRecentAttemptedCombinations(pool, userId, 'VI'), [
+        {
+          content_id: 'CONTENT_4_11_VI',
+          grammar_node_ids: ['NODE_4_11_VI_A', 'NODE_4_11_VI_B'],
+          attempted_at: '2026-07-23T00:00:00.000Z',
+        },
+      ]);
+    });
+
+    test('orders newest first and applies the fixed window of 20', async () => {
+      const userId = await createUser('u-4.11-window');
+      await createNode('NODE_4_11_WINDOW', 'VI', 1);
+      await insertProgressState(userId, 'NODE_4_11_WINDOW', 'PRACTICING');
+      await pool.query(
+        `INSERT INTO content
+          (content_id, grammar_node_ids, content_type, media_assets, source, human_reviewed,
+           is_canonical, difficulty, meta_language, version, author, is_active)
+         VALUES ('CONTENT_4_11_WINDOW', '["NODE_4_11_WINDOW"]'::jsonb, 'QUIZ', '[]'::jsonb,
+                 'AI_GENERATED', false, false, 1, 'KO', 1, 'TEST', true)`
+      );
+      for (let index = 0; index < 21; index += 1) {
+        await pool.query(
+          `INSERT INTO attempt_records
+            (user_id, node_id, content_id, attempted_at, is_correct)
+           VALUES ($1, 'NODE_4_11_WINDOW', 'CONTENT_4_11_WINDOW', $2, true)`,
+          [userId, new Date(Date.UTC(2026, 6, 23, 1, index)).toISOString()]
+        );
+      }
+      const result = await progressEngine.getRecentAttemptedCombinations(pool, userId, 'VI');
+      assert.equal(result.length, 20);
+      assert.equal(result[0].attempted_at, '2026-07-23T01:20:00.000Z');
+      assert.equal(result[19].attempted_at, '2026-07-23T01:01:00.000Z');
+    });
+
+    test('keeps the 4.11 query read-only and inside the approved three-table boundary', () => {
+      const source = fs.readFileSync(path.join(__dirname, '../src/engines/progressEngine.js'), 'utf8');
+      const start = source.indexOf('async function getRecentAttemptedCombinations');
+      const end = source.indexOf('function compareStrings', start);
+      const implementation = source.slice(start, end);
+      assert.match(implementation, /attempt_records ar/);
+      assert.match(implementation, /JOIN grammar_nodes gn/);
+      assert.match(implementation, /JOIN content c/);
+      assert.match(implementation, /LIMIT 20/);
+      assert.doesNotMatch(implementation, /\b(INSERT|UPDATE|DELETE)\b/i);
+    });
+  });
 });
