@@ -853,7 +853,574 @@ Acknowledgement echo, conversation object, prompt 등 추가 field는 없다.
 
 ---
 
-## 13. 개정 이력
+## 13. Pilot Evidence Instrumentation Component
+### 13.1 Classification
+
+Pilot Evidence Instrumentation Component는 다음으로 분류한다.
+
+```text
+Internal pilot instrumentation and persistence component
+```
+
+이 component는 canonical Engine이 아니다.
+
+다음은 변경하지 않는다.
+
+* Existing canonical Engine 수 8개
+* External Learning Flow API 수 5개
+* Existing internal Engine API 수
+* Existing total Engine API count
+* Parent→child Engine call hierarchy
+* Sibling Engine direct-call 금지
+* Progress single-write path
+* Content single-write path
+
+이 section의 operation category는 Engine API count에 포함하지 않는다.
+
+P0에서 public HTTP API를 추가하지 않는다.
+
+### 13.2 Authorized callers
+
+#### 13.2.1 P0 authorized callers
+
+* Synthetic PostgreSQL validation harness
+* Server-side evidence test orchestration
+
+#### 13.2.2 P1 이후 authorized callers
+
+* Learning Flow Engine orchestration, production action과 empirical evidence를 명시적으로 correlation하는 경우
+* Server-side pilot orchestration/controller
+
+Learning Flow Engine이 recorder를 호출할 수 있다는 것은 recorder가 Learning Flow의 child Engine이라는 의미가 아니다. Recorder는 non-Engine internal component다.
+
+#### 13.2.3 Unauthorized callers
+
+다음 caller는 recorder operation을 직접 호출할 수 없다.
+
+* External client
+* Graph Engine
+* Progress Engine
+* Content Engine
+* Review Engine
+* Generation Engine
+* AI Generation Engine
+* Interleaving Engine
+* Unapproved background worker
+* Database client outside the recorder boundary
+
+Unauthorized caller는 §11의 `UNAUTHORIZED_CALLER`를 반환한다.
+
+### 13.3 Common operation rules
+
+모든 mutating operation은 다음을 만족해야 한다.
+
+* Server-side validation 후에만 persistence transaction을 시작한다.
+* Parent identity와 ownership을 검증한다.
+* Partial reference success를 허용하지 않는다.
+* Transaction failure 시 partial authoritative fact를 남기지 않는다.
+* Progress 또는 production attempt를 직접 쓰지 않는다.
+* Server-issued field를 caller 값으로 덮어쓰지 않는다.
+* Valid empty query와 contract error를 구분한다.
+
+Operation 이름, programming-language signature, HTTP path 및 implementation module은 이 문서에서 확정하지 않는다.
+
+### 13.4 Input authority
+
+Caller가 제공할 수 있는 input category:
+
+* Requested experiment/condition references
+* Assignment type intent
+* Target node/item/content/scenario/family references
+* Session or assignment reference
+* Attempt reference, applicable한 경우
+* Idempotency identity
+* Retry intent
+* Retry parent reference
+* Client monotonic timing facts
+* Response 또는 immutable response reference
+* Observed stimulus modality
+* Observed response modality
+* Learner action category
+* Requested terminalization reason
+
+Caller가 authoritative하게 제공할 수 없는 field:
+
+* Enrollment ID, assignment ID, session ID, attempt ID, series ID 또는 evaluation ID의 신규 발행값
+* Server timestamp
+* Authoritative assignment snapshot
+* Clock-quality classification
+* Technical-validity classification
+* Retry ordinal
+* Lifecycle terminal outcome
+* Node-evaluation linkage
+* Derived metric
+* Progress state
+* Production scheduling result
+
+Caller가 server-issued field를 payload에 포함해도 해당 값은 authoritative override로 수락하지 않는다. Contract가 해당 field를 허용하지 않으면 `CONTRACT_VIOLATION`이다.
+
+### 13.5 Server-issued and server-resolved authority
+
+Server-side evidence boundary가 발행하거나 resolve한다.
+
+* Pseudonymous participant identity
+* Enrollment identity
+* Assignment identity
+* Session identity
+* Attempt identity
+* Attempt-series identity
+* Evaluation identity
+* Server timestamps
+* Assignment version snapshot
+* Enrollment/assignment/session/attempt ownership
+* Idempotency replay result
+* Retry ordinal
+* Clock-quality classification
+* Technical-validity classification
+* Lifecycle outcome
+* Node-evaluation linkage
+* Reschedule/supersede/restart lineage
+* Created timestamp
+
+Assignment snapshot은 server가 authoritative version sources에서 resolve한다.
+
+Client-provided snapshot bundle을 저장하지 않는다.
+
+### 13.6 Validation ownership
+
+#### 13.6.1 Transport or controller boundary
+
+P1 transport가 활성화되면 transport/controller는 다음을 검증한다.
+
+* Authentication
+* Required field presence
+* Basic type and shape
+* Request-size limit
+* Idempotency identity presence where required
+* Monotonic value basic representation
+
+P0에는 public transport가 없으므로 validation harness가 동일 shape 검증을 수행한다.
+
+#### 13.6.2 Evidence component boundary
+
+Recorder는 다음을 검증한다.
+
+* Reference existence
+* Published version existence
+* Enrollment ownership
+* Assignment/session ownership
+* Cross-participant access
+* Lifecycle legality
+* Snapshot resolution
+* Idempotency uniqueness
+* Same-key payload equivalence
+* Retry parent and series validity
+* Timing ordering
+* Terminal-state mutation
+* Lineage cycle
+* Transaction atomicity
+* Partial-reference rejection
+
+#### 13.6.3 Evaluation source
+
+Rubric 또는 evaluation component가 다음을 결정한다.
+
+* Rubric outcome
+* Correctness
+* Scorable/unscorable
+* Evaluation source
+
+Recorder는 evaluation fact를 저장할 수 있지만 rubric policy를 발명하거나 재계산하지 않는다.
+
+### 13.7 Timing contract
+
+Wall-clock authority는 server다.
+
+Client는 attempt-local monotonic offset 또는 duration만 제공한다.
+
+Client wall-clock timestamp는 response latency authority가 아니다.
+
+Minimum timing contract:
+
+* 모든 client monotonic offset은 nonnegative다.
+* Input-enabled offset은 first-valid-activity offset보다 늦을 수 없다.
+* First-valid-activity offset은 submitted offset보다 늦을 수 없다.
+* First-valid-activity가 없으면 null/absent로 유지한다.
+* Absent timing을 zero로 변환하지 않는다.
+* Reported duration과 offset 관계는 instrumentation version의 consistency rule을 따른다.
+* 구체적인 허용 오차나 threshold는 이 contract에서 확정하지 않는다.
+* Invalid timing은 clock/instrumentation quality로 분류한다.
+* Invalid timing은 RT 및 initiation-latency eligibility에서 제외한다.
+* Invalid timing을 learner incorrect로 변환하지 않는다.
+* Server receive/finalize timestamp는 server가 발행한다.
+
+### 13.8 Error semantics
+
+Existing §11 error registry의 다섯 code만 사용한다.
+
+| Semantic condition                                                | Result                                                                                                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Required field omitted                                            | `MISSING_REQUIRED_FIELD`                                                                                                                   |
+| Explicit null where disallowed                                    | `CONTRACT_VIOLATION`                                                                                                                       |
+| Wrong type                                                        | `CONTRACT_VIOLATION`                                                                                                                       |
+| Malformed lifecycle request                                       | `CONTRACT_VIOLATION`                                                                                                                       |
+| Value range or monotonic ordering violation                       | `OUT_OF_RANGE_VALUE` 또는 lifecycle 의미까지 위반하면 `CONTRACT_VIOLATION`                                                                           |
+| Unknown stable ID or version                                      | `INVALID_ID`                                                                                                                               |
+| Ownership mismatch                                                | `CONTRACT_VIOLATION`                                                                                                                       |
+| Unauthorized caller                                               | `UNAUTHORIZED_CALLER`                                                                                                                      |
+| Same idempotency key and same normalized payload                  | Existing result replay; error 아님                                                                                                           |
+| Same idempotency key and different normalized payload             | `CONTRACT_VIOLATION`                                                                                                                       |
+| Terminal row mutation                                             | `CONTRACT_VIOLATION`                                                                                                                       |
+| One or more unknown node/item/version references                  | `INVALID_ID`, 전체 operation reject                                                                                                          |
+| All references exist but belong to another participant/enrollment | `CONTRACT_VIOLATION`, 전체 operation reject                                                                                                  |
+| Valid read query with no result                                   | `empty_result`                                                                                                                             |
+| Transaction or persistence execution failure                      | Success 또는 empty로 반환하지 않는다. Partial write 없이 internal failure로 전파한다. P0는 public transport mapping을 정의하지 않으며 신규 public error code를 추가하지 않는다 |
+
+Partial validity는 허용하지 않는다.
+
+Input list 중 하나라도 invalid면 전체 operation을 거부하고 partial write 또는 partial result를 반환하지 않는다.
+
+### 13.9 Idempotency and retry
+
+#### 13.9.1 Attempt minimum scope
+
+```text
+assignment_id + idempotency_identity
+```
+
+#### 13.9.2 Equivalent replay
+
+Same key와 same normalized payload는 최초 authoritative result를 반환한다.
+
+새 attempt, 새 evaluation, 새 correction 또는 새 completion을 생성하지 않는다.
+
+#### 13.9.3 Conflicting replay
+
+Same key와 different normalized payload는 `CONTRACT_VIOLATION`이다.
+
+최초 result와 raw fact는 변경하지 않는다.
+
+#### 13.9.4 Network retransmission
+
+* 새 attempt 생성 금지
+* Retry ordinal 증가 금지
+* Retry parent 생성 금지
+* Existing result replay
+
+#### 13.9.5 Pedagogical retry
+
+* 새 idempotency identity
+* 새 attempt identity
+* 동일 attempt series
+* 새 retry ordinal
+* Retry parent linkage
+* Same assignment and enrollment
+* Prior attempt immutable
+
+#### 13.9.6 Normalized payload comparison categories
+
+최소 비교 범주:
+
+* operation category
+* assignment/session/attempt references
+* requested stable references
+* retry intent와 parent
+* learner action
+* response 또는 response reference
+* client monotonic timing facts
+* instrumentation version
+* observed modality
+* caller-supplied completion intent
+
+Hash 또는 serialization algorithm은 implementation HOW다.
+
+### 13.10 Internal operation categories
+
+#### 13.10.1 Experiment/condition version registration or fixture loading
+
+| 항목                      | 계약                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Authorized caller       | P0 validation harness, server-side evidence test orchestration                                                                    |
+| Input authority         | Stable experiment/condition references, versioned protocol fixture, provenance reference                                          |
+| Server-issued           | Created timestamp, accepted version-registration result                                                                           |
+| Validation owner        | Evidence component                                                                                                                |
+| Transaction             | 하나의 requested version bundle은 all-or-nothing                                                                                      |
+| Idempotency             | Same ID/version and semantically same definition은 existing result. Same ID/version and different definition은 `CONTRACT_VIOLATION` |
+| Success                 | Immutable version authority available                                                                                             |
+| Normal empty            | 해당 없음                                                                                                                             |
+| Error                   | Missing/type/unknown referenced authority/immutable version conflict                                                              |
+| Retry                   | Same definition으로 replay                                                                                                          |
+| Prohibited side effects | Progress, production attempt, Content mutation                                                                                    |
+
+#### 13.10.2 Pseudonymous participant creation
+
+| 항목                      | 계약                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| Authorized caller       | P0 validation harness, server-side pilot orchestration                                          |
+| Input authority         | Pilot participation creation intent. Direct PII 금지                                              |
+| Server-issued           | Participant identity, created timestamp                                                         |
+| Validation owner        | Evidence component                                                                              |
+| Transaction             | Participant identity와 initial lifecycle fact atomic                                             |
+| Idempotency             | P0 core는 attempt-level key를 participant natural key로 재사용하지 않는다. Automatic blind retry를 전제하지 않는다 |
+| Success                 | Pseudonymous participant reference                                                              |
+| Normal empty            | 해당 없음                                                                                           |
+| Error                   | Direct PII payload 또는 malformed request는 `CONTRACT_VIOLATION`                                   |
+| Retry                   | Operation-level retry mechanism이 구현된 경우에만 동일 request replay                                     |
+| Prohibited side effects | Mapping creation, user account mutation, Progress write                                         |
+
+#### 13.10.3 Enrollment creation
+
+| 항목                      | 계약                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| Authorized caller       | P0 validation harness, server-side pilot orchestration                           |
+| Input authority         | Participant reference, experiment version reference, condition version reference |
+| Server-issued           | Enrollment identity, ownership, created timestamp                                |
+| Validation owner        | Evidence component                                                               |
+| Transaction             | Ownership validation과 enrollment creation atomic                                 |
+| Idempotency             | Duplicate enrollment 생성 방지는 implementation identity contract로 제공. Blind retry 금지 |
+| Success                 | Enrollment reference and resolved version ownership                              |
+| Normal empty            | 해당 없음                                                                            |
+| Error                   | Unknown version `INVALID_ID`; cross-participant conflict `CONTRACT_VIOLATION`    |
+| Retry                   | Explicit operation identity가 있는 경우에만 replay                                      |
+| Prohibited side effects | Progress/user mutation                                                           |
+
+#### 13.10.4 Assignment creation
+
+| 항목                      | 계약                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| Authorized caller       | P0 validation harness, server-side pilot orchestration                                |
+| Input authority         | Enrollment, assignment type intent, selected references, target timepoint intent      |
+| Server-issued           | Assignment ID, authoritative snapshot, lifecycle, created timestamp                   |
+| Validation owner        | Evidence component                                                                    |
+| Transaction             | Assignment + resolved snapshot + initial lifecycle atomic                             |
+| Idempotency             | Retried creation은 implementation-defined operation identity 없이 blind retry하지 않음       |
+| Success                 | Assignment and immutable snapshot                                                     |
+| Normal empty            | 해당 없음                                                                                 |
+| Error                   | Invalid reference, unpublished version, cross-enrollment selection, partial reference |
+| Retry                   | Same creation identity and same normalized intent가 구현된 경우 existing assignment replay  |
+| Prohibited side effects | Existing assignment mutation, Progress, production scheduling                         |
+
+#### 13.10.5 Session start
+
+| 항목                      | 계약                                                                          |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Authorized caller       | P0 harness, server-side pilot orchestration; P1 Learning Flow orchestration |
+| Input authority         | Enrollment reference, optional restart intent는 별도 restart operation 사용      |
+| Server-issued           | Session ID, started server timestamp, ownership                             |
+| Validation owner        | Evidence component                                                          |
+| Transaction             | Session root and started fact atomic                                        |
+| Idempotency             | Blind retry 금지. Operation-level identity가 있으면 existing result replay        |
+| Success                 | Nonterminal session reference                                               |
+| Normal empty            | 해당 없음                                                                       |
+| Error                   | Invalid enrollment, withdrawn enrollment, illegal lifecycle                 |
+| Retry                   | Existing operation identity로만 retry                                         |
+| Prohibited side effects | Progress state, production session policy 변경                                |
+
+#### 13.10.6 Attempt open
+
+| 항목                      | 계약                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| Authorized caller       | P0 harness, server-side pilot orchestration; P1 Learning Flow orchestration                      |
+| Input authority         | Assignment, session, idempotency identity, retry intent와 parent, instrumentation version         |
+| Server-issued           | Attempt ID, attempt-series ID, retry ordinal, started server timestamp, ownership, replay result |
+| Validation owner        | Evidence component                                                                               |
+| Transaction             | Ownership + idempotency registration + attempt root + retry lineage atomic                       |
+| Idempotency             | `assignment_id + idempotency_identity` 필수                                                        |
+| Success                 | New attempt root 또는 existing result replay                                                       |
+| Normal empty            | 해당 없음                                                                                            |
+| Error                   | Same key/different payload, terminal assignment/session, invalid retry parent                    |
+| Retry                   | Network retry는 replay; pedagogical retry는 new key/new attempt                                    |
+| Prohibited side effects | Production attempt insertion, Progress write                                                     |
+
+#### 13.10.7 Attempt finalization
+
+| 항목                      | 계약                                                                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Authorized caller       | P0 harness, server-side pilot orchestration; P1 Learning Flow orchestration                                            |
+| Input authority         | Attempt reference, final response/reference, timing facts, observed modality, learner action, finalization idempotency |
+| Server-issued           | Server timestamps, clock quality, technical validity, evaluation linkage, lifecycle outcome                            |
+| Validation owner        | Evidence component; rubric outcome은 evaluation source                                                                  |
+| Transaction             | Response + timing + correction + synchronous evaluation + attempt terminal + applicable assignment completion atomic   |
+| Idempotency             | Same attempt/finalization key/same payload replay                                                                      |
+| Success                 | Finalized attempt result and applicable assignment completion                                                          |
+| Normal empty            | `NORMAL_EMPTY`는 domain outcome이며 empty_result가 아님                                                                      |
+| Error                   | Invalid timing, conflicting replay, terminal mutation, orphan evaluation                                               |
+| Retry                   | Same finalization identity. 새 attempt 생성 금지                                                                            |
+| Prohibited side effects | Progress, production attempt, next_review_at write                                                                     |
+
+#### 13.10.8 Technical-failure terminalization
+
+| 항목                      | 계약                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| Authorized caller       | P0 harness, server-side pilot orchestration; P1 orchestration                  |
+| Input authority         | Target root references, technical-failure reason/reference, operation identity |
+| Server-issued           | Terminal outcomes and server timestamps                                        |
+| Validation owner        | Evidence component                                                             |
+| Transaction             | Command가 변경하는 attempt/assignment/session terminal facts atomic                 |
+| Idempotency             | Same target, same operation identity, same reason은 replay                      |
+| Success                 | Explicit technical-failure terminal facts                                      |
+| Normal empty            | 해당 없음                                                                          |
+| Error                   | Already terminal with different outcome, cross-ownership                       |
+| Retry                   | Same operation identity only                                                   |
+| Prohibited side effects | Learner incorrect 생성, Progress write                                           |
+
+#### 13.10.9 Assignment reschedule/supersede
+
+| 항목                      | 계약                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| Authorized caller       | P0 harness, server-side pilot orchestration                                     |
+| Input authority         | Existing assignment, reschedule intent, new selection/timepoint references      |
+| Server-issued           | New assignment ID, new snapshot, bidirectional lineage, timestamps              |
+| Validation owner        | Evidence component                                                              |
+| Transaction             | New assignment/snapshot + old superseded state + both lineage directions atomic |
+| Idempotency             | Same reschedule operation identity and same intent는 existing result             |
+| Success                 | New active assignment and superseded prior assignment                           |
+| Normal empty            | 해당 없음                                                                           |
+| Error                   | Terminal incompatibility, cycle, cross-enrollment                               |
+| Retry                   | Same operation identity                                                         |
+| Prohibited side effects | Existing snapshot/due timestamp in-place edit, next_review_at write             |
+
+#### 13.10.10 Session restart
+
+| 항목                      | 계약                                                        |
+| ----------------------- | --------------------------------------------------------- |
+| Authorized caller       | P0 harness, server-side pilot orchestration               |
+| Input authority         | Terminal prior session reference, restart intent          |
+| Server-issued           | New session ID, started timestamp, restarted-from lineage |
+| Validation owner        | Evidence component                                        |
+| Transaction             | Prior-session validation + new session + lineage atomic   |
+| Idempotency             | Same restart identity and intent replay                   |
+| Success                 | New session reference                                     |
+| Normal empty            | 해당 없음                                                     |
+| Error                   | Prior session nonterminal, cross-enrollment, cycle        |
+| Retry                   | Same operation identity                                   |
+| Prohibited side effects | Prior session reopen, Progress write                      |
+
+#### 13.10.11 Raw evidence query for metric rebuild validation
+
+| 항목                      | 계약                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Authorized caller       | P0 validation harness, server-side analysis validation                            |
+| Input authority         | Enrollment/assignment/attempt filters, formula version reference, analysis cutoff |
+| Server-issued           | Query execution timestamp and raw/projection result                               |
+| Validation owner        | Evidence query boundary                                                           |
+| Transaction             | Read-only consistent snapshot                                                     |
+| Idempotency             | Key 불필요. 같은 committed source/cutoff/formula는 equivalent result                    |
+| Success                 | Raw facts 또는 rebuildable metric result                                            |
+| Normal empty            | Valid filter with no facts returns `empty_result` or empty collection             |
+| Error                   | Invalid formula/reference/filter                                                  |
+| Retry                   | Safe read retry                                                                   |
+| Prohibited side effects | Raw fact mutation, materialized authority creation, Progress write                |
+
+### 13.11 Production/evidence dual-write orchestration
+
+P0는 production/evidence dual-write를 요구하지 않는다.
+
+Production-coupled P1 path를 활성화하기 전 다음을 만족해야 한다.
+
+1. Production transaction과 evidence transaction은 분리한다.
+2. Evidence write를 Progress Engine transaction에 삽입하지 않는다.
+3. Orchestration 시작 전에 stable correlation identity를 발행한다.
+4. Internal orchestration result는 production outcome과 evidence outcome을 분리해 보존한다.
+5. 한쪽 failure를 양쪽 success로 반환하지 않는다.
+6. Production success 후 evidence failure가 발생하면 production operation을 재호출하지 않는다.
+7. 위 경우 evidence operation만 같은 evidence idempotency identity로 retry한다.
+8. Evidence success 후 production failure가 발생하면 production technical failure를 evidence raw fact 또는 P1 correlation fact에 보존한다.
+9. 위 경우 Progress success로 표시하지 않는다.
+10. Cross-authority distributed transaction을 요구하지 않는다.
+11. External client response mapping은 P1 `API_LAYER_BRIEF.md`에서 정한다.
+12. Crash-safe correlation/receipt가 P1 activation blocker다.
+
+Current production `record_attempt`은 empirical idempotency identity 또는 durable empirical correlation receipt를 소유하지 않는다.
+
+따라서 crash-safe production-coupled replay는 아직 계약되지 않았다.
+
+이 공백은 P0 empirical-only persistence blocker가 아니다.
+
+### 13.12 Prohibited calls and side effects
+
+다음을 금지한다.
+
+* External client의 recorder direct call
+* External client의 evidence DB direct access
+* Graph Engine direct call
+* Progress Engine direct call
+* Content Engine direct call
+* Review Engine direct call
+* Generation Engine direct call
+* AI Generation Engine direct call
+* Interleaving Engine direct call
+* Recorder가 다른 Engine 호출
+* Recorder가 Progress write
+* Recorder가 production attempt write
+* Recorder가 production scheduling write
+* Recorder가 item-selection policy 결정
+* Recorder가 rubric policy 결정
+* Recorder가 learning-state policy 결정
+* Recorder를 9번째 canonical Engine으로 분류
+* P0 operation을 public HTTP endpoint로 자동 노출
+
+### 13.13 P0/P1 boundary
+
+#### P0 included
+
+* Version authority fixtures
+* Pseudonymous participant
+* Enrollment
+* Assignment + snapshot
+* Session
+* Attempt + retry lineage
+* Node evaluation
+* Correction aggregate
+* Raw evidence query/rebuild
+* PostgreSQL synthetic validation
+
+#### P0 excluded
+
+* Public HTTP API
+* Production dual-write
+* Generic observation persistence
+* Human rating/adjudication
+* Generation/validator runs
+* Learner exposure
+* Raw audio
+* Materialized metric persistence
+* Pseudonymous mapping
+
+#### P1 blockers
+
+* Client/controller transport
+* Crash-safe production/evidence correlation
+* Human-rating persistence
+* Operational privacy decisions
+* Actual item/scenario/family/manifest/rubric references
+* Timing instrumentation implementation
+
+### 13.14 Approval boundary
+
+이 section의 승인은 다음을 허용한다.
+
+* Internal recorder operation implementation planning
+* P0 synthetic harness operation implementation
+* Persistence schema mapping
+* P0 query/rebuild implementation
+* P1 transport contract drafting
+
+이 section의 승인은 다음을 허용하거나 선언하지 않는다.
+
+* Public HTTP endpoint 추가
+* Existing external API 변경
+* Ninth Engine 생성
+* Production dual-write 활성화
+* Progress modification
+* Actual-provider completion
+* Raw audio collection
+* AC-018 closure
+* VL3 §10 PASS
+
+---
+
+## 14. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|

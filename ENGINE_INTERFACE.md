@@ -310,7 +310,248 @@ Raw schema·rule·validator false는 최초 1회+재생성 최대 2회의 shared
 
 ---
 
-## 18. 개정 이력
+## 18. Non-Engine Instrumentation Components
+### 18.1 Recorder status
+
+Pilot Evidence Recorder는 다음으로 분류한다.
+
+```text
+Internal pilot instrumentation and persistence component
+```
+
+Recorder는 Engine이 아니다.
+
+다음은 불변이다.
+
+* LLE canonical Engine 수는 8개다.
+* Learning Flow, Graph, Progress, Generation, AI Generation, Content, Review, Interleaving만 canonical Engine이다.
+* Event Engine과 Audit/Logging Engine은 Reserved 상태를 유지한다.
+* Recorder를 Audit/Logging Engine의 구현으로 간주하지 않는다.
+* Recorder를 9번째 Engine으로 승격하지 않는다.
+
+Recorder가 durable empirical evidence를 보유해도 Grammar learner state를 보유하는 Stateful Engine이 되는 것은 아니다.
+
+Progress Engine은 Grammar learner state의 유일한 Stateful Engine이다.
+
+### 18.2 Responsibility
+
+Recorder의 책임:
+
+* Pilot evidence operation validation
+* Pseudonymous participant·enrollment persistence
+* Assignment와 immutable snapshot persistence
+* Session lifecycle persistence
+* Stable assessment-attempt persistence
+* Idempotency and retry lineage
+* Node-evaluation persistence
+* Correction aggregate persistence
+* Raw evidence query for metric rebuild
+* Transaction atomicity
+* Production non-interference enforcement
+
+Recorder가 하지 않는 일:
+
+* Learning policy 결정
+* Grammar Progress state transition
+* Confidence 계산
+* Review scheduling
+* Production `next_review_at` 계산
+* Review Cascade 계산
+* Item selection
+* Problem generation
+* Content creation
+* Rubric policy 결정
+* Metric을 learner state로 write
+* Modality learner-state authority 생성
+* Provider orchestration
+* Audio processing
+
+### 18.3 Allowed callers
+
+#### P0
+
+* Synthetic PostgreSQL validation harness
+* Server-side evidence test orchestration
+
+#### P1 이후
+
+* Learning Flow Engine orchestration
+* Server-side pilot orchestration/controller
+
+Learning Flow Engine은 recorder operation을 orchestration할 수 있지만 recorder 내부 persistence를 직접 조작하지 않는다.
+
+Server-side pilot controller는 기존 Learning Flow production policy를 우회해 Progress를 변경할 수 없다.
+
+### 18.4 Forbidden callers
+
+다음 Engine은 recorder를 직접 호출할 수 없다.
+
+* Graph Engine
+* Progress Engine
+* Content Engine
+* Review Engine
+* Generation Engine
+* AI Generation Engine
+* Interleaving Engine
+
+External client는 recorder 또는 evidence database를 직접 호출할 수 없다.
+
+Unauthorized direct call은 API contract의 `UNAUTHORIZED_CALLER`다.
+
+### 18.5 Recorder outbound-call prohibition
+
+Recorder는 어떤 canonical Engine도 직접 호출하지 않는다.
+
+Recorder가 authoritative snapshot을 조립할 때 필요한 reference validation은 다음 중 하나를 사용한다.
+
+* Orchestration caller가 승인된 canonical API에서 취득해 전달한 selection reference
+* Recorder가 소유한 version/reference authority
+* Server-side reference resolver component
+
+Reference resolver는 learning policy를 계산하거나 Progress를 쓰지 않는다.
+
+Recorder가 다음을 직접 호출하는 것은 금지한다.
+
+* Progress Engine
+* Graph Engine
+* Content Engine
+* Review Engine
+* Generation Engine
+* AI Generation Engine
+* Interleaving Engine
+* Learning Flow Engine
+
+### 18.6 Progress non-interference
+
+Recorder는 다음을 할 수 없다.
+
+* `progress.state` write
+* Progress confidence write
+* `next_review_at` write
+* Production Review Queue 결정
+* Production `attempt_records` write
+* Progress Engine transaction 참여
+* Progress Engine result를 empirical result로 재정의
+
+Production attempt와 empirical attempt가 같은 learner action에 연결돼도 두 authority는 별도다.
+
+Recorder failure가 Progress success를 rollback하거나 재호출하게 해서는 안 된다.
+
+Progress failure가 empirical attempt를 Progress success로 표시하게 해서는 안 된다.
+
+### 18.7 Review non-interference
+
+Pilot review는 empirical assignment subtype이다.
+
+Recorder는 다음을 하지 않는다.
+
+* Production Review Engine의 due-review 계산 사용을 pilot authority로 간주
+* `next_review_at`을 pilot due timestamp로 사용
+* Production Review Queue write
+* Review Cascade 계산
+* Pilot assignment 결과로 production review schedule 자동 변경
+
+### 18.8 Content non-interference
+
+Recorder는 Content를 생성·수정·비활성화하지 않는다.
+
+Assignment snapshot은 실제 사용한 Content ID/version을 reference할 수 있다.
+
+Recorder는 Content version reference를 evidence snapshot에 보존하지만 canonical Content authority를 소유하지 않는다.
+
+Actual-provider milestone에서 accepted Content exposure를 연결하더라도 Content write path는 기존 Generation→Content Engine 경계를 유지한다.
+
+### 18.9 Orchestration ownership
+
+#### P0 orchestration
+
+Synthetic validation harness 또는 server-side evidence test orchestration이 operation 순서를 소유한다.
+
+P0 orchestration은 production Learning Flow, Progress, Review 또는 Generation을 호출할 필요가 없다.
+
+#### P1 empirical-only orchestration
+
+Server-side pilot orchestration/controller가 다음을 조율할 수 있다.
+
+* Assignment
+* Session
+* Attempt
+* Evaluation
+* Completion
+
+이 controller는 learning policy 또는 Progress state를 직접 계산하지 않는다.
+
+#### P1 production-coupled orchestration
+
+Learning Flow Engine이 production action과 empirical evidence correlation을 조율할 수 있다.
+
+이 경우:
+
+* Production transaction ownership은 기존 Engine에 남는다.
+* Evidence transaction ownership은 recorder에 남는다.
+* Stable correlation identity를 orchestration 시작 전에 고정한다.
+* 한 authority의 transaction을 다른 authority 안에 중첩하지 않는다.
+* Partial failure를 internal orchestration result에서 숨기지 않는다.
+
+### 18.10 Failure return boundary
+
+Recorder는 operation 결과를 caller에게 다음 semantic category로 반환해야 한다.
+
+* Success
+* Existing idempotent replay
+* Normal empty read result
+* Contract error
+* Unauthorized caller
+* Internal transaction failure
+
+Recorder는 internal transaction failure를 success 또는 empty로 변환하지 않는다.
+
+Caller는 recorder failure를 무시하고 combined operation 전체를 성공으로 보고할 수 없다.
+
+Production-coupled path에서 caller는 production outcome과 evidence outcome을 별도로 보존해야 한다.
+
+Public client mapping은 P1 API-layer contract의 책임이다.
+
+### 18.11 Generic observation boundary
+
+Generic observation은 extension point only다.
+
+Recorder P0 responsibility에 generic observation catalog를 포함하지 않는다.
+
+Observation persistence가 승인되기 전 Recorder는 다음을 일반-purpose event로 수집하지 않는다.
+
+* Raw keystroke stream
+* Utterance segment
+* Detailed repair taxonomy
+* Provider audit event
+* Acoustic feature
+* Raw audio
+
+### 18.12 Approval boundary
+
+이 section의 승인은 다음을 허용한다.
+
+* Non-Engine recorder component 구현 계획
+* Recorder persistence/API wiring
+* P0 synthetic validation harness integration
+* Learning Flow와의 P1 orchestration contract 후속 drafting
+
+이 section의 승인은 다음을 허용하거나 선언하지 않는다.
+
+* Ninth canonical Engine
+* Event Engine implementation
+* Audit/Logging Engine implementation
+* Existing Engine responsibility 변경
+* Progress write-path 변경
+* Public API 추가
+* Production dual-write 활성화
+* Actual-provider completion
+* Raw audio collection
+* VL3 §10 PASS
+
+---
+
+## 19. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|

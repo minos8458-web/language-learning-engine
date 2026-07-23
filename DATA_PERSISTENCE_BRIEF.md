@@ -238,7 +238,756 @@ v1.0에서 미확정으로 남겼던 두 항목을 `CONCEPT_SCHEMA.md`·`VOCABUL
 
 ---
 
-## 9. 개정 이력
+## 9. Empirical Evidence Persistence Boundary
+### 9.1 문서 지위와 상위 계약
+
+이 장은 `VI_EMPIRICAL_EVIDENCE_CONTRACT.md`와 `VI_EMPIRICAL_PILOT_SPEC.md`가 정의한 empirical evidence authority를 PostgreSQL persistence boundary로 옮기기 위한 Tier C 계약이다.
+
+이 장은 다음 Tier A 및 production 의미를 변경하지 않는다.
+
+* Grammar Progress는 Grammar learner state의 유일한 SSOT다.
+* Production `progress`는 현재 Grammar state와 production scheduling을 소유한다.
+* Production `attempt_records`는 Progress 갱신에 사용되는 node-level production attempt history다.
+* Production `next_review_at`은 production Review Scheduling의 결과다.
+* Existing Content authority와 Content version 의미는 변경하지 않는다.
+* Existing 8개 Engine 책임과 호출 계층은 변경하지 않는다.
+
+Empirical evidence는 별도 logical authority다. Empirical row가 존재한다는 이유로 Progress state, production attempt 또는 production scheduling이 변경되지 않는다.
+
+### 9.2 Authority separation
+
+다음 persistence authority를 구분한다.
+
+| Authority                      | 소유 의미                                                                  | 다른 authority를 변경할 수 있는가                          |
+| ------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------ |
+| Grammar Progress authority     | 현재 Grammar learner state, confidence, production review schedule       | Evidence가 직접 변경할 수 없음                            |
+| Production attempt authority   | Progress 갱신을 위한 node-level production attempt history                  | Evidence attempt로 재해석 금지                         |
+| Content authority              | Canonical 또는 generated Content와 version                                | Evidence가 Content를 수정하지 않음                       |
+| Empirical evidence authority   | Pilot assignment, session, logical response, evaluation 및 raw evidence | Progress·production attempt·Content를 직접 수정할 수 없음 |
+| Derived projection authority   | 없음. Raw evidence에서 재생성되는 분석 결과                                         | Learner state 또는 raw fact를 변경할 수 없음              |
+| Pseudonymous mapping authority | Participant ID와 재식별 정보의 별도 owner-controlled mapping                    | Evidence raw surface 외부                          |
+
+Empirical evidence는 기존 `attempt_records`의 additive field group으로 구현하지 않는다.
+
+그 이유는 다음과 같다.
+
+1. Production attempt의 grain은 사용자×Grammar Node의 Progress update다.
+2. Empirical attempt의 grain은 enrollment×assignment×logical learner response다.
+3. 하나의 empirical attempt가 여러 target-node evaluation을 가질 수 있다.
+4. Empirical attempt에는 assignment, session, retry, timing, modality 및 item-family lineage가 필요하다.
+5. Production `correction_count`와 empirical correction aggregate는 동일한 의미가 아니다.
+
+### 9.3 Core logical aggregates
+
+P0 persistence surface는 다음 logical aggregate를 가져야 한다.
+
+#### 9.3.1 Experiment and experiment version
+
+Experiment는 research protocol family의 stable identity다.
+
+Experiment version은 assignment, condition, metric 또는 protocol 의미가 달라질 때 발행되는 immutable version이다.
+
+Published experiment version은 수정하지 않는다. 변경은 새 version으로 발행한다.
+
+#### 9.3.2 Condition and condition version
+
+Condition은 practice와 scheduling protocol의 stable identity다.
+
+Condition version은 실제 assignment가 사용한 condition 의미를 고정한다.
+
+Published condition version은 수정하지 않는다.
+
+Engineering baseline, primary efficacy control 및 experimental condition은 condition identity/version으로 구분한다.
+
+#### 9.3.3 Pseudonymous participant
+
+Pseudonymous participant는 direct PII를 포함하지 않는 pilot identity다.
+
+Evidence raw surface에는 다음을 저장하지 않는다.
+
+* 실명
+* 이메일
+* 전화번호
+* 직접 연락 정보
+* provider credential
+* 재식별 secret
+
+Participant ID와 실제 사람을 연결하는 mapping은 이 evidence persistence boundary 외부의 owner-controlled authority다.
+
+물리적으로 별도 datastore를 사용할지, 동일 database 내 별도 schema·role·access boundary를 사용할지는 Privacy/Operations owner decision과 implementation HOW다. Architecture invariant는 authority와 access boundary의 분리다.
+
+#### 9.3.4 Enrollment
+
+Enrollment는 다음 관계를 소유한다.
+
+* pseudonymous participant
+* experiment version
+* condition version
+* enrollment lifecycle
+* created timestamp
+
+Assignment, session 및 attempt는 enrollment ownership을 벗어날 수 없다.
+
+#### 9.3.5 Assignment
+
+Assignment는 `LEARNING`, `REVIEW`, `ASSESSMENT` 중 하나의 type을 가진 authoritative pilot fact다.
+
+Pilot review는 별도 competing review authority가 아니라 `assignment_type = REVIEW`인 assignment subtype이다.
+
+Assignment는 다음을 소유한다.
+
+* enrollment
+* assignment type
+* immutable version snapshot
+* target timepoint
+* anchor reference와 anchor timestamp
+* due timestamp
+* completion reference와 timestamp
+* terminal outcome
+* reschedule/supersede lineage
+* created timestamp
+
+Production `next_review_at`과 `get_due_reviews` 결과는 pilot assignment가 아니다.
+
+#### 9.3.6 Assignment-owned immutable snapshot
+
+Assignment snapshot의 logical owner는 assignment다.
+
+Assignment identity와 snapshot은 같은 transaction에서 생성한다. Assignment가 존재하지만 snapshot이 없거나 snapshot이 일부만 저장된 상태를 허용하지 않는다.
+
+Snapshot은 최소한 다음 resolved references를 보존한다.
+
+* experiment ID와 version
+* condition ID와 version
+* target Grammar Node ID 목록
+* item ID와 version
+* Content ID와 version, applicable한 경우
+* scenario ID
+* item-family ID
+* lexical manifest ID와 version
+* rubric version
+* formula version
+* scheduler/protocol version
+* planned stimulus modality components
+* planned response modality components
+
+Caller는 assignment type intent와 selection reference만 요청할 수 있다.
+
+Caller가 authoritative snapshot bundle을 임의로 구성해 전달할 수 없다.
+
+Server-side assignment boundary가 authoritative version sources를 resolve하고 validation한 뒤 snapshot을 조립한다.
+
+다음은 금지한다.
+
+* Client-provided snapshot을 검증 없이 저장
+* 과거 assignment를 latest version으로 재해석
+* Published assignment snapshot 수정
+* Reschedule 시 기존 assignment snapshot 수정
+* Snapshot 일부만 갱신
+
+Reschedule은 새 assignment identity와 새 snapshot을 발행한다.
+
+Snapshot을 assignment 내부 embedded representation으로 저장할지 one-to-one immutable relation으로 저장할지는 implementation HOW다. 어느 방식을 선택해도 assignment ownership, same-transaction creation, immutability 및 historical reconstruction을 만족해야 한다.
+
+#### 9.3.7 Session
+
+Session은 최소 durable activity boundary다.
+
+Session은 다음을 소유한다.
+
+* session identity
+* enrollment ownership
+* started server timestamp
+* ended server timestamp
+* terminal outcome
+* technical-failure reference
+* restarted-from lineage
+
+Terminal session은 resume하지 않는다.
+
+Restart는 새 session identity를 발행한다.
+
+Nonterminal interruption의 same-session resume는 이 P0 persistence contract가 요구하지 않는다.
+
+Full transition event-sourcing은 요구하지 않는다.
+
+#### 9.3.8 Assessment attempt
+
+Assessment attempt는 하나의 logical learner response를 나타내는 stable root다.
+
+하나의 logical response에는 하나의 authoritative attempt root만 존재한다.
+
+Attempt는 다음을 소유한다.
+
+* assignment ownership
+* session ownership
+* attempt-series identity
+* retry parent와 retry ordinal
+* idempotency identity
+* started server timestamp
+* input-enabled monotonic timing
+* first-valid-activity monotonic timing
+* submitted monotonic timing
+* server-received timestamp
+* reported client monotonic duration
+* clock-quality classification
+* actual stimulus modality
+* actual response modality
+* final-response reference
+* scorable·unscorable·technical-invalid outcome
+* instrumentation version
+* created timestamp
+
+Production `attempt_records`는 이 attempt root가 아니다.
+
+#### 9.3.9 Attempt retry series
+
+Attempt retry series는 pedagogical retry lineage를 묶는 logical identity다.
+
+별도 physical entity로 구현할지는 implementation HOW다.
+
+다음 invariant를 만족해야 한다.
+
+* Series는 하나의 assignment를 벗어나지 않는다.
+* Parent와 child attempt는 같은 enrollment·assignment에 속한다.
+* Retry는 새 attempt identity를 가진다.
+* Retry ordinal은 series 안에서 중복될 수 없다.
+* Retry parent lineage는 cycle을 가질 수 없다.
+* Network retransmission은 retry lineage를 만들지 않는다.
+
+#### 9.3.10 Target-node evaluation
+
+Target-node evaluation은 attempt와 Grammar Node 사이의 authoritative evaluation bridge다.
+
+Evaluation은 다음을 소유한다.
+
+* evaluation identity
+* parent attempt
+* target Grammar Node
+* rubric version
+* rubric outcome
+* binary correctness, applicable한 경우
+* scorable 여부
+* evaluation source
+* created timestamp
+
+Attempt 하나가 여러 target-node evaluation을 가질 수 있다.
+
+Evaluation은 다른 participant, enrollment, assignment 또는 attempt에 연결될 수 없다.
+
+#### 9.3.11 Correction aggregate
+
+Correction aggregate는 attempt-owned empirical raw fact다.
+
+최소 dimension:
+
+* initiator: learner 또는 system
+* feedback phase: pre-feedback 또는 post-feedback
+* outcome: successful, unsuccessful 또는 unknown
+* nonnegative count
+
+Empirical correction aggregate가 pilot analysis authority다.
+
+Production `attempt_records.correction_count`는 compatibility projection이 필요할 때만 별도 formula/version을 통해 계산할 수 있다. 두 값을 동일 authority로 취급하지 않는다.
+
+#### 9.3.12 Generic observation extension point
+
+Generic observation은 extension point only다.
+
+P0 core persistence에는 generic observation storage를 요구하지 않는다.
+
+향후 활성화 시 observation은 최소한 다음을 가져야 한다.
+
+* stable observation identity
+* typed parent reference
+* observation type
+* payload schema version
+* source
+* occurred timing
+* typed payload 또는 payload reference
+* created server timestamp
+
+Unversioned arbitrary JSON payload를 empirical authority로 저장하지 않는다.
+
+Generic observation을 활성화하는 문서 patch 전에는 다음을 P0 core로 구현하지 않는다.
+
+* utterance segment
+* detailed correction event
+* AI audit event
+* acoustic feature
+* arbitrary event catalog
+
+#### 9.3.13 Human rating and adjudication
+
+Human rating과 adjudication은 P0 core에서 제외되지만 persistence extension으로 예약한다.
+
+Original rating은 immutable하다.
+
+각 independent rating은 별도 append-only fact다.
+
+Adjudication은 original rating을 덮어쓰지 않고 별도 fact로 생성한다.
+
+Agreement 계산은 adjudication 전 original rating을 사용한다.
+
+#### 9.3.14 Actual-provider and learner exposure
+
+Generation run, validator run 및 learner exposure는 actual-provider milestone로 연기한다.
+
+External provider call 전체를 database transaction으로 감싸지 않는다.
+
+Accepted Content version과 learner exposure linkage를 활성화할 때는 다음을 하나의 transaction으로 처리한다.
+
+* Accepted Content version 존재성 확인
+* Assignment·session ownership 확인
+* Exposure identity 발행
+* Accepted Content version linkage
+* Assignment 또는 attempt correlation linkage
+
+Provider call, retry 또는 generation 자체는 위 transaction 외부의 단계별 raw fact다.
+
+#### 9.3.15 Audio observation
+
+Audio observation은 audio milestone로 연기한다.
+
+Owner 승인 전 raw audio 기본값은 미수집이다.
+
+P0에는 다음을 저장하지 않는다.
+
+* raw audio
+* VAD
+* pause segment
+* acoustic feature
+* pronunciation score
+* tone score
+* speaking repair taxonomy
+
+### 9.4 Identity and idempotency
+
+#### 9.4.1 Minimum uniqueness scope
+
+Attempt creation의 최소 idempotency uniqueness scope는 다음이다.
+
+```text
+assignment_id + idempotency_identity
+```
+
+#### 9.4.2 Normalized payload equivalence
+
+동일 idempotency key의 payload equivalence는 implementation hash algorithm이 아니라 normalized semantic fields로 판단한다.
+
+최소 비교 범주:
+
+* operation category
+* assignment reference
+* session reference, applicable한 경우
+* attempt reference, finalization인 경우
+* requested item/content/scenario/family references
+* retry intent
+* retry parent reference
+* learner action category
+* response value 또는 immutable response reference
+* client monotonic timing facts
+* instrumentation version
+* observed stimulus modality
+* observed response modality
+* caller-supplied completion intent
+
+다음은 caller payload equivalence 비교에서 제외한다.
+
+* server-issued IDs
+* server timestamps
+* server-resolved snapshot
+* clock-quality classification
+* server-derived evaluation
+* server-derived lifecycle outcome
+* created timestamp
+* materialized metric
+
+Payload canonicalization 또는 digest algorithm은 implementation HOW다.
+
+#### 9.4.3 Replay rules
+
+* Same assignment, same idempotency identity, same normalized payload는 기존 authoritative result를 반환한다.
+* Same assignment, same idempotency identity, different normalized payload는 `CONTRACT_VIOLATION`이다.
+* Network retransmission은 새 attempt를 생성하지 않는다.
+* Network retransmission은 retry ordinal을 증가시키지 않는다.
+* Pedagogical retry는 새 idempotency identity를 사용한다.
+* Pedagogical retry는 새 attempt identity를 사용한다.
+* Pedagogical retry는 같은 attempt series를 유지한다.
+* Pedagogical retry는 새 retry ordinal을 가진다.
+* Pedagogical retry는 retry parent linkage를 가진다.
+* Duplicate와 retry를 하나의 boolean flag로 추정하지 않는다.
+
+#### 9.4.4 Attempt-finalization retry
+
+Attempt finalization이 transport 또는 transaction failure로 재시도되는 경우:
+
+* 같은 attempt identity를 사용한다.
+* 같은 finalization idempotency identity를 사용한다.
+* 같은 normalized finalization payload를 사용한다.
+* 새 pedagogical attempt를 만들지 않는다.
+* Production action을 자동 재실행하지 않는다.
+
+### 9.5 Transaction boundaries
+
+#### 9.5.1 Assignment creation
+
+다음을 하나의 transaction으로 처리한다.
+
+* assignment identity 발행
+* enrollment ownership validation
+* authoritative version resolution
+* immutable snapshot 생성
+* initial assignment lifecycle fact 생성
+
+어느 단계든 실패하면 assignment와 snapshot 모두 존재하지 않아야 한다.
+
+#### 9.5.2 Session start
+
+다음을 하나의 transaction으로 처리한다.
+
+* session identity 발행
+* enrollment ownership validation
+* started server timestamp 기록
+* initial nonterminal lifecycle 생성
+
+Session start는 Progress 또는 production Review Scheduling을 변경하지 않는다.
+
+#### 9.5.3 Attempt open
+
+다음을 하나의 transaction으로 처리한다.
+
+* assignment·session ownership validation
+* assignment lifecycle validation
+* idempotency key registration
+* duplicate replay validation
+* attempt identity 발행
+* attempt-series and retry lineage 생성
+* started server timestamp 기록
+
+Idempotency registration만 존재하고 attempt가 없는 상태 또는 attempt만 존재하고 idempotency registration이 없는 상태를 허용하지 않는다.
+
+#### 9.5.4 Attempt finalization
+
+다음을 하나의 transaction으로 처리한다.
+
+* final response 또는 immutable response reference
+* finalized client monotonic timing facts
+* server-received/finalized timestamps
+* clock-quality and technical-validity classification
+* correction aggregate
+* synchronous target-node evaluations
+* attempt terminal outcome
+* 해당 attempt가 assignment completion 조건을 충족하는 경우 assignment completion reference, timestamp 및 terminal outcome
+
+어느 단계든 실패하면 final response, correction, evaluation, attempt terminalization 및 assignment completion이 부분적으로 남지 않아야 한다.
+
+Attempt finalization은 Progress 또는 production `attempt_records`를 수정하지 않는다.
+
+#### 9.5.5 Technical-failure terminalization
+
+하나의 terminalization command가 attempt, assignment 또는 session 중 둘 이상을 terminalize하면 해당 command가 변경하는 terminal facts를 하나의 transaction으로 처리한다.
+
+Technical failure는 learner incorrect로 변환하지 않는다.
+
+Technical failure는 normal empty 또는 missing으로 변환하지 않는다.
+
+#### 9.5.6 Reschedule and supersede
+
+다음을 하나의 transaction으로 처리한다.
+
+* 기존 assignment eligibility validation
+* 새 assignment identity 발행
+* 새 immutable snapshot 생성
+* 새 assignment의 `rescheduled_from` lineage
+* 기존 assignment의 `superseded_by` lineage
+* 기존 assignment terminal/superseded lifecycle
+* 새 assignment initial lifecycle
+
+기존 assignment의 due timestamp 또는 snapshot을 수정해 reschedule을 표현하지 않는다.
+
+#### 9.5.7 Session restart
+
+다음을 하나의 transaction으로 처리한다.
+
+* Restart target session 존재성·ownership 확인
+* Target session이 terminal인지 확인
+* 새 session identity 발행
+* 새 session의 `restarted_from` lineage
+* 새 started server timestamp 기록
+
+기존 terminal session을 nonterminal로 되돌리지 않는다.
+
+#### 9.5.8 Human rating
+
+각 independent original rating은 별도 append-only transaction으로 생성한다.
+
+한 rater의 rating 실패가 다른 rater의 original rating을 rollback하지 않는다.
+
+#### 9.5.9 Adjudication
+
+Adjudication은 required original ratings가 존재한 뒤 별도 transaction으로 생성한다.
+
+Adjudication은 original rating을 수정하거나 삭제하지 않는다.
+
+#### 9.5.10 Accepted Content exposure linkage
+
+Actual-provider milestone에서 활성화할 때 다음을 하나의 transaction으로 처리한다.
+
+* Accepted Content ID/version 존재성
+* Assignment·session ownership
+* Exposure identity
+* Content-version linkage
+* Generation-run linkage, applicable한 경우
+* Learner exposure timestamp와 outcome
+
+External provider call 자체, provider retry 및 validator call은 이 transaction 안에 넣지 않는다.
+
+### 9.6 Immutability
+
+다음은 immutable하다.
+
+* Published experiment version
+* Published condition version
+* Assignment snapshot
+* Attempt root identity와 ownership
+* Attempt retry parent
+* Original human rating
+* Created raw response reference
+* Terminal outcome
+* Reschedule/restart/retry lineage once committed
+
+Terminal outcome은 write-once다.
+
+다음은 금지한다.
+
+* Raw fact destructive overwrite
+* Published version in-place edit
+* Assignment snapshot patch
+* Terminal row reopen
+* Retry를 기존 attempt 수정으로 표현
+* Reschedule을 기존 assignment 수정으로 표현
+* Restart를 기존 session 재활성화로 표현
+* Original rating을 adjudication result로 덮어쓰기
+
+Correction이 필요한 경우 additive correction provenance를 생성한다.
+
+Correction provenance는 최소한 다음을 식별할 수 있어야 한다.
+
+* Corrected fact reference
+* Correction reason
+* Correction actor/source
+* Correction timestamp
+* Replacement 또는 superseding fact reference
+* Applicable schema/protocol version
+
+Correction provenance가 원본 raw fact를 삭제하거나 silent overwrite하는 권한을 가지지 않는다.
+
+### 9.7 Lineage
+
+#### 9.7.1 Reschedule lineage
+
+* 새 assignment가 prior assignment reference를 소유한다.
+* 기존 assignment가 superseding assignment reference를 소유한다.
+* 양방향 linkage는 같은 transaction에서 생성한다.
+* 두 assignment는 같은 enrollment에 속해야 한다.
+* Assignment lineage cycle을 허용하지 않는다.
+
+#### 9.7.2 Restart lineage
+
+* 새 session이 terminal prior session reference를 소유한다.
+* 두 session은 같은 enrollment에 속해야 한다.
+* Restart target은 terminal이어야 한다.
+* Session lineage cycle을 허용하지 않는다.
+
+#### 9.7.3 Retry lineage
+
+* 새 attempt가 parent attempt reference를 소유한다.
+* Parent와 child는 같은 assignment·session ownership 규칙을 충족해야 한다.
+* Parent와 child는 같은 enrollment에 속해야 한다.
+* Retry ordinal은 series 안에서 유일하다.
+* Attempt lineage cycle을 허용하지 않는다.
+
+### 9.8 Raw fact and derived projection separation
+
+P0는 authoritative raw fact를 저장하고 metric을 query-time에 계산할 수 있다.
+
+P0에서 materialized metric persistence를 요구하지 않는다.
+
+Raw fact에서 다음 metric을 rebuild할 수 있어야 한다.
+
+* retention
+* unseen transfer
+* RT median
+* RT CV
+* initiation latency
+* self-correction
+* completion
+* dropout
+* review debt
+* human agreement
+
+Metric eligibility, numerator 및 denominator authority는 `VI_EMPIRICAL_EVIDENCE_CONTRACT.md`와 referenced formula version이다.
+
+Completion, retention, transfer, latency, correction, dropout 및 review debt는 같은 export surface에서 제공할 수 있지만 각각의 aggregation grain과 eligibility를 분리해야 한다.
+
+Materialized projection을 향후 추가할 경우 최소 metadata:
+
+* formula version
+* analysis cutoff
+* aggregation grain
+* numerator
+* denominator
+* excluded count
+* missing count
+* technical-failure count
+* withdrawn count
+* insufficient status
+* source/rebuild reference
+* generated timestamp
+
+다음 invariant를 유지한다.
+
+1. Materialized metric은 authoritative learner state가 아니다.
+2. Materialized metric은 Progress field가 아니다.
+3. Materialized metric은 raw fact를 수정하지 않는다.
+4. Materialized metric은 formula version 없이 존재할 수 없다.
+5. Materialized metric은 source/rebuild reference 없이 authoritative report로 사용하지 않는다.
+6. Rebuild 결과가 materialized value와 다르면 raw fact와 formula version이 우선한다.
+7. `null`, missing, zero, normal empty 및 technical failure를 하나의 numeric default로 합치지 않는다.
+8. Minimum sample 미달은 zero가 아니라 `insufficient`다.
+
+### 9.9 Production non-interference
+
+Empirical evidence persistence는 다음 production surface를 직접 또는 간접으로 변경하지 않는다.
+
+* `progress.state`
+* Progress confidence fields
+* Production `next_review_at`
+* Production `attempt_records`
+* Production Review Queue
+* Production cascade outbox
+* Production scheduler
+* Current Interleaving behavior
+* Canonical Vocabulary
+* Canonical Content version
+
+Empirical write와 production write가 같은 user action에 연결되더라도 두 authority는 별도 transaction을 유지한다.
+
+Evidence transaction을 Progress Engine의 production transaction 안에 삽입하지 않는다.
+
+Evidence failure를 production success로 표시하지 않는다.
+
+Production failure를 evidence success로 표시하지 않는다.
+
+P0는 production/evidence dual-write를 요구하지 않는다.
+
+### 9.10 Migration boundary
+
+Evidence foundation persistence 도입에는 additive migration이 필요하다.
+
+다음은 필요하지 않다.
+
+* Existing `progress` amendment
+* Existing `attempt_records` amendment
+* Existing production row backfill
+* Production table의 pilot discriminator
+* Production `next_review_at` migration
+* Existing Content row rewrite
+
+Migration 번호, physical table명, column명, SQL type, DDL 및 index는 persistence schema approval 후 결정한다.
+
+Evidence persistence가 비활성인 상태에서 existing production behavior와 regression은 byte-compatible 또는 behavior-compatible하게 유지돼야 한다.
+
+Rollback 시 pilot data를 보존할지 제거할지는 implementation migration contract에서 결정한다. 이 문서는 retention 또는 destructive rollback policy를 선확정하지 않는다.
+
+Evidence migration은 다음 상태를 자동 변경하지 않는다.
+
+* AC-017/AC-018
+* AC-018 `CLOSED`·`IMPLEMENTED`
+* VL3 §10
+* Actual-provider milestone
+
+### 9.11 P0 acceptance requirements
+
+P0는 실제 PostgreSQL 합성 fixture를 사용한다.
+
+P0는 최소한 다음을 검증해야 한다.
+
+* Stable ID uniqueness
+* Assignment/snapshot atomicity
+* Attempt/idempotency atomicity
+* Same-key replay
+* Same-key/different-payload rejection
+* Duplicate와 pedagogical retry 분리
+* Snapshot immutability
+* Finalization atomicity
+* Outcome mutual exclusivity
+* Missing·technical failure·normal empty·null·zero 분리
+* Terminal session restart
+* Reschedule/supersede lineage
+* Lineage cycle rejection
+* Orphan evaluation prevention
+* Cross-participant ownership rejection
+* Content/item/version linkage
+* Item-family lineage
+* Formula-version rebuildability
+* Materialized output non-authority
+* Progress non-interference
+* Production attempt non-interference
+* Production scheduling non-interference
+* Existing regression preservation
+* Transaction rollback
+
+P0 acceptance의 exact matrix는 coordinated contract의 validation appendix를 따른다.
+
+### 9.12 Explicit non-goals
+
+이 장은 다음을 정의하지 않는다.
+
+* Physical table name
+* Physical column name
+* SQL type
+* SQL constraint syntax
+* Migration number
+* Index name
+* ORM model
+* Repository module layout
+* Public HTTP endpoint
+* Ninth canonical Engine
+* Production dual-write implementation
+* Actual-provider audit persistence
+* Raw audio
+* Human-data privacy duration
+* Materialized metric table
+* Full session event-sourcing
+
+### 9.13 Approval boundary
+
+이 장의 승인은 다음 후속 작업만 허용한다.
+
+* Physical evidence schema drafting
+* Additive migration planning
+* Internal recorder persistence implementation planning
+* P0 PostgreSQL synthetic fixture drafting
+* Coordinated API operation implementation planning
+
+이 장의 승인은 다음을 허용하거나 선언하지 않는다.
+
+* Migration implementation
+* Production deployment
+* Human data collection
+* Public API addition
+* Production Progress modification
+* Production attempt modification
+* Actual-provider completion
+* Raw audio collection
+* AC-018 closure
+* VL3 §10 PASS
+
+---
+
+## 10. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|
