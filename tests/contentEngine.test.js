@@ -28,6 +28,8 @@ describe('Content Engine (AC-017)', () => {
       INSERT INTO grammar_nodes (node_id, language, concept_ids, label, surface_forms, difficulty) VALUES
         ('GRAMMAR_VI_ALPHA', 'VI', '[]'::jsonb, 'alpha', '["alpha"]'::jsonb, 1),
         ('GRAMMAR_VI_BETA', 'VI', '[]'::jsonb, 'beta', '["beta"]'::jsonb, 4),
+        ('GRAMMAR_VI_AC018_RECENT_ALPHA', 'VI', '[]'::jsonb, 'ac018 recent alpha', '["ac018 recent alpha"]'::jsonb, 1),
+        ('GRAMMAR_VI_AC018_RECENT_BETA', 'VI', '[]'::jsonb, 'ac018 recent beta', '["ac018 recent beta"]'::jsonb, 4),
         ('GRAMMAR_EN_GAMMA', 'EN', '[]'::jsonb, 'gamma', '["gamma"]'::jsonb, 2)
     `);
     await pool.query(`
@@ -239,7 +241,7 @@ describe('Content Engine (AC-017)', () => {
         saved.push(
           await contentEngine.saveGeneratedContent(
             pool,
-            ['GRAMMAR_VI_ALPHA', 'GRAMMAR_VI_BETA'],
+            ['GRAMMAR_VI_AC018_RECENT_ALPHA', 'GRAMMAR_VI_AC018_RECENT_BETA'],
             'QUIZ',
             quizMedia(`alpha beta recent ${index}`),
             { answer_key: `answer ${index}` }
@@ -248,7 +250,7 @@ describe('Content Engine (AC-017)', () => {
       }
       const anyMatchOnly = await contentEngine.saveGeneratedContent(
         pool,
-        ['GRAMMAR_VI_ALPHA'],
+        ['GRAMMAR_VI_AC018_RECENT_ALPHA'],
         'QUIZ',
         quizMedia('alpha only'),
         { answer_key: 'alpha' }
@@ -266,7 +268,11 @@ describe('Content Engine (AC-017)', () => {
 
       const result = await contentEngine.getRecentGeneratedContent(
         pool,
-        ['GRAMMAR_VI_BETA', 'GRAMMAR_VI_ALPHA', 'GRAMMAR_VI_ALPHA'],
+        [
+          'GRAMMAR_VI_AC018_RECENT_BETA',
+          'GRAMMAR_VI_AC018_RECENT_ALPHA',
+          'GRAMMAR_VI_AC018_RECENT_ALPHA',
+        ],
         'VI'
       );
       assert.equal(result.length, 5);
