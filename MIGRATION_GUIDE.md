@@ -194,6 +194,36 @@
 
 ---
 
+### Entry 012
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-24 |
+| 대상 문서 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md`(신규 Proposed), `DATA_PERSISTENCE_BRIEF.md`(v1.10 → v1.11), `MIGRATION_GUIDE.md`(v1.9 → v1.10) |
+| 변경 유형 | **Tier C ADDITIVE PHYSICAL SCHEMA CONTRACT** — Evidence Foundation P0의 별도 PostgreSQL persistence surface |
+| Authority 경계 | Empirical evidence는 Grammar Progress·production attempt·production scheduling과 별도 logical authority다. 기존 `progress`, `attempt_records`, `next_review_at`의 field·type·constraint·meaning은 변경하지 않는다 |
+| 신규 physical scope | `evidence_` prefix의 experiment/version, condition/version, reference/version, pseudonymous participant, enrollment, assignment, immutable snapshot, target-node relation, session, attempt series, attempt root, attempt finalization, target-node evaluation 및 correction aggregate object를 additive하게 도입한다 |
+| Assignment snapshot | Dedicated one-to-one immutable snapshot table + normalized target-node child relation + scalar query-critical reference + bounded modality JSONB의 bounded-hybrid representation을 사용한다. Assignment·snapshot·target-node rows는 같은 transaction에서 생성한다 |
+| Idempotency | Attempt open의 minimum uniqueness는 `assignment_id + idempotency_identity`다. Attempt row 자체가 open registration이며 별도 registration table은 만들지 않는다. Finalization은 attempt당 한 row와 distinct finalization idempotency identity를 사용한다 |
+| Candidate migration file | `db/migrations/012_create_evidence_foundation.sql`. 단, implementation preflight에서 current `origin/main`의 최고 migration 순번이 `011`임을 확인한 경우에만 사용한다. 순번·naming 불일치 시 중단하고 상태를 보고한다 |
+| Migration execution | Existing `db/migrate.js`와 `schema_migrations` ledger를 사용한다. 모든 P0 evidence object·constraint·index를 하나의 migration file에 포함해 runner의 one-file/one-transaction boundary로 partial schema deployment를 방지한다 |
+| Existing schema impact | Existing `progress` amendment 없음. Existing `attempt_records` amendment 없음. Production `next_review_at` amendment 없음. Existing Content/Grammar row rewrite 없음. Production table pilot discriminator 없음 |
+| Backfill | 없음. Existing production row를 evidence row로 변환하지 않는다 |
+| Recorder default | Migration 적용 후에도 recorder는 disabled/unwired 상태가 기본이다. P0 public HTTP API와 production dual-write는 활성화하지 않는다 |
+| Required validation | 실제 PostgreSQL 합성 fixture로 identity/version, assignment/snapshot atomicity, session lifecycle, attempt idempotency, retry, finalization, terminalization, lineage, evaluation/correction, metric rebuild, rollback 및 production non-interference를 검증한다 |
+| Existing regression | Evidence schema가 설치되고 recorder가 disabled인 PostgreSQL에서 기존 production regression 전체가 그대로 통과해야 한다 |
+| Production non-interference | PostgreSQL catalog와 row digest를 migration·P0 lifecycle 전후 비교해 `progress`, `attempt_records`, `next_review_at` 및 existing production behavior가 불변임을 증명한다 |
+| Rollout | Baseline migrations → Evidence migration → catalog validation → recorder disabled deployment → existing regression → P0 fixture 순서를 따른다. Migration보다 recorder를 먼저 활성화하거나 partial schema 상태로 배포하는 것을 금지한다 |
+| Code rollback | Automatic down migration을 전제하지 않는다. Code rollback은 recorder를 disable/remove하되 evidence schema와 evidence data를 보존한다 |
+| Destructive removal | Evidence object 또는 data 제거는 별도 사용자 승인, data-preservation/privacy decision 및 검증을 거친 새로운 forward migration으로만 수행한다 |
+| 하위 호환성 | **ADDITIVE.** Existing public API, Engine count, production caller, Progress transaction 및 production data shape는 불변이다 |
+| Tier A adjudication | 없음. Frozen Tier A 원문 미수정 |
+| 상태 영향 | 이 Entry와 physical-schema documentation은 AC-017/AC-018 상태를 변경하지 않는다. AC-018 `CLOSED`·`IMPLEMENTED`, VL3 §10 PASS, actual-provider 완료를 선언하지 않는다 |
+| 관련 패치 문서 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md` |
+| 구현 상태 | Documentation contract only. Migration SQL·source code·tests·PostgreSQL execution 미착수 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -208,3 +238,4 @@
 | 1.7 | 2026-07-20 | Entry 009 추가 — AC-016 `start_session` exact payload를 ADDITIVE / CONTRACT CLARIFICATION으로 반영. REVIEW `review_batch`, 기존 NEW_GRAMMAR payload, INTERLEAVING `node_sequence`, CONVERSATION/IDLE 최소 payload와 exact-key·field omission·fallthrough를 확정. 외부 5·내부 22·전체 27 및 DB/Tier A 불변, implementation 미착수·§9 미PASS 명시 |
 | 1.8 | 2026-07-22 | Entry 010 추가 — AC-017을 Tier C ADDITIVE + CONTRACT REPLACEMENT / NARROWING으로 반영. planning·Content save/recent·Progress recent-attempt 내부 API 4개를 추가해 외부 5·내부 22→26·전체 27→31로 확정하고, generation API 2개의 입력/출력/persistence 책임을 교체·축소했다. Pattern A, exact payload, media/answer/difficulty/ID/retry, stages 1~4와 stage 5 이연, AC-008 제한적 supersession을 기록했다. production 구현/caller가 없어 deployed runtime breaking impact는 없고 DB·코드·설정·Tier A 불변, prerequisite implementation 미착수다 |
 | 1.9 | 2026-07-22 | Entry 011 추가 — AC-018을 Tier C ADDITIVE + CONTRACT CLARIFICATION으로 반영. `get_node_labels` 하나를 추가해 외부 5·내부 27·전체 32로 확정하고, target Concept 존재성, exact provider/validator와 retry·shared regeneration, lazy target validation·PRE_MADE cardinality, adapter/factory composition TypeError와 fail-closed 경계를 기록. 코드·테스트·설정·DB·migration SQL·Tier A·VALIDATION_LEVEL3 불변, prerequisite implementation 미착수 |
+| 1.10 | 2026-07-24 | Entry 012 추가 — Evidence Foundation P0 physical schema를 Tier C additive contract로 기록. `evidence_` object만 신규 도입하고 기존 `progress`·`attempt_records`·`next_review_at` amendment와 production backfill은 하지 않는다. Candidate migration `012_create_evidence_foundation.sql`은 current migration sequence 재확인 조건부이며, recorder disabled default, 실제 PostgreSQL synthetic fixture, existing regression, data-preserving code rollback 및 별도 승인 없는 destructive removal 금지를 명시 |

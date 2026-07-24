@@ -962,6 +962,14 @@ P0 acceptance의 exact matrix는 coordinated contract의 validation appendix를 
 * Materialized metric table
 * Full session event-sourcing
 
+**Physical schema authority pointer**
+
+이 장은 empirical evidence의 logical persistence authority와 aggregate·transaction·non-interference 경계를 계속 소유한다.
+
+Evidence Foundation P0의 physical table name, column, SQL type, named constraint, index, migration, rollout·rollback 및 PostgreSQL fixture authority는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md`가 소유한다.
+
+두 문서는 같은 physical schema를 중복 정의하지 않는다. Physical schema 문서는 이 장의 logical authority를 구현하며, 기존 `progress`, `attempt_records`, `next_review_at` 및 production Content의 의미를 변경할 수 없다.
+
 ### 9.13 Approval boundary
 
 이 장의 승인은 다음 후속 작업만 허용한다.
@@ -1002,3 +1010,4 @@ P0 acceptance의 exact matrix는 coordinated contract의 validation appendix를 
 | 1.8 | 2026-07-08 | AC-004 재상정(기존 non-blocking → blocking 재분류, `CONTENT_PRODUCTION_STANDARD.md` §4.1 체크리스트·`VALIDATION_FRAMEWORK.md` Level 0 자동검증이 이 컬럼 없이는 불가능함을 근거로 승인) — `get_content`(`API_CONTRACT.md` §7.1)가 이미 `explanation_level`을 필터 조건으로 정의해뒀지만 `content` 테이블에 저장 위치가 없었던 것을 확인. §2의 기존 컬럼/JSONB 판단 기준("조건절에 자주 쓰이고 타입이 고정적이면 컬럼")을 그대로 적용해 전용 컬럼으로 추가 — 새 원칙이 아니라 기존 원칙의 누락 보완. 정확한 허용값 전체 목록은 `CONTENT_SCHEMA.md`(이 세션에 없는 문서) 확인 전까지 TEXT로 유연하게 둠. `type_specific_metadata` 설명의 "§6 참고" 오기를 "§2 참고"로 정정 |
 | 1.9 | 2026-07-13 | Independent Architecture Audit(AUD-002), **Frozen Core Standard Amendment**(`CORE_STANDARD_V1_FREEZE.md` §5 절차 완료, 사용자 명시적 승인) — `progress.mastered_at`(TIMESTAMPTZ, nullable)·`attempt_records.is_spaced_review`(BOOLEAN) 두 필드 신규 채택. `PROGRESS_SCHEMA.md`(Tier A) §3·§4가 새로 정의한 State Model·AttemptRecord 필드를 물리 컬럼으로 반영 — 이전 AC들과 달리 이번엔 Tier A 자신의 구조 확장이 선행됐다(`PROGRESS_SCHEMA_AMENDMENT_ENTRY.md` 참고, 이 세션에 원본 파일이 없어 병합 대기 문서로 별도 작성). `DOMAIN_LOGIC_BRIEF.md` §3.2.1·§3.2.2와 연동 |
 | 1.10 | 2026-07-13 | Wording-only 정정(알고리즘·결정 변경 없음) — `is_spaced_review` 설명이 AUD-002 Scheduling Clarification(§6.1 조건부 갱신 규칙, `DOMAIN_LOGIC_BRIEF.md` v1.4) 반영 후에도 "매 시도마다 덮어써지는 단일 현재값"이라는 이전 표현을 그대로 남기고 있어 불일치했던 것을 정정 |
+| 1.11 | 2026-07-24 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md` physical-authority pointer 추가 — §9의 empirical evidence logical authority·aggregate·transaction·production non-interference 계약은 유지하고, P0 physical table·constraint·index·migration·fixture 세부 authority를 신규 Tier C physical-schema 문서로 분리. 기존 production schema와 Tier A 의미 변경 없음 |
