@@ -410,6 +410,14 @@ Recorder가 authoritative snapshot을 조립할 때 필요한 reference validati
 
 Reference resolver는 learning policy를 계산하거나 Progress를 쓰지 않는다.
 
+### 18.5.1 Trusted-writer database boundary
+
+Evidence Recorder와 repository만 Evidence Foundation object의 승인된 writer다. Recorder boundary 밖의 database client와 ordinary direct SQL은 지원 writer가 아니다.
+
+Database는 local integrity와 simple FK를 담당한다. Recorder transaction은 exact reference kind/version과 cross-row ownership semantic integrity를 검증한다. 실패 시 commit 전에 전체 operation을 거부한다.
+
+현재 repository milestone은 assignment creation과 attempt open에 한정한다. Deferred finalization, full retry lifecycle과 recorder orchestration 구현을 승인하지 않는다.
+
 Recorder가 다음을 직접 호출하는 것은 금지한다.
 
 * Progress Engine
@@ -509,6 +517,12 @@ Recorder는 internal transaction failure를 success 또는 empty로 변환하지
 Caller는 recorder failure를 무시하고 combined operation 전체를 성공으로 보고할 수 없다.
 
 Production-coupled path에서 caller는 production outcome과 evidence outcome을 별도로 보존해야 한다.
+
+### 18.10.1 Production/test separation
+
+Production caller는 repository failure hook, callback, option 또는 failure-injection flag를 제공할 수 없다.
+
+Production repository와 instrumentation index는 test-only control을 export하지 않는다. Rollback test는 production caller path에서 접근할 수 없는 별도 test-only mechanism을 사용한다.
 
 Public client mapping은 P1 API-layer contract의 책임이다.
 
