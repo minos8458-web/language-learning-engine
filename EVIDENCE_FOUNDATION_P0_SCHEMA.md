@@ -181,6 +181,26 @@ P0 migration은 다음 production object를 수정하지 않는다.
 
 Evidence object는 `grammar_nodes`와 `content`를 read/reference authority로 참조할 수 있다. Evidence object가 production object를 수정할 수는 없다.
 
+### 4.8 Physical-integrity threat model
+
+P0는 trusted-writer/application-transaction model을 사용한다.
+
+Evidence Recorder와 repository만 승인된 evidence writer다. Repository를 우회하는 ordinary direct SQL은 지원 write path가 아니다.
+
+Database는 row-local CHECK, PK, unique, simple FK, direct parent existence와 no-self-reference를 담당한다.
+
+Application transaction은 다음 semantic integrity를 담당한다.
+
+* Snapshot 8개 reference의 exact kind + ID + version
+* Completion attempt의 same-assignment ownership
+* Assignment/session의 same-enrollment ownership
+* Retry parent의 same-assignment·same-series ownership
+* Longer lineage cycle prevention
+
+P0는 이를 위해 discriminator column, duplicated ownership column, typed authority table, trigger 또는 추가 composite cross-row FK를 도입하지 않는다. Semantic validation 실패 시 전체 transaction을 rollback한다.
+
+현재 repository milestone은 assignment creation과 attempt open만 구현한다. Finalization, full retry eligibility/cycle enforcement와 recorder orchestration은 후속 milestone이다.
+
 ## 5. Physical entities
 
 ## 5.1 `evidence_experiments`
@@ -508,7 +528,20 @@ Named constraints:
 * `evidence_assignment_snapshots_stimulus_modalities_array`
 * `evidence_assignment_snapshots_response_modalities_array`
 
-Reference-kind validity는 application validation이 수행한다.
+Reference-kind validity는 assignment-creation transaction이 검증한다.
+
+각 snapshot field는 다음 고정 kind로 `evidence_reference_versions`의 exact ID/version을 조회한다.
+
+* `ITEM`
+* `SCENARIO`
+* `ITEM_FAMILY`
+* `LEXICAL_MANIFEST`
+* `RUBRIC`
+* `FORMULA`
+* `SCHEDULER_PROTOCOL`
+* `INSTRUMENTATION_PROTOCOL`
+
+다른 kind에 동일한 ID/version이 존재해도 대체할 수 없다. Snapshot은 기존 scalar ID/version pair를 유지하며 discriminator column과 composite reference FK를 추가하지 않는다.
 
 Content ID가 있을 때 assignment creation은 현재 Content version이 requested version과 일치하는지 검증한다. P0는 과거 Content body archive를 새로 만들지 않는다.
 
@@ -1215,6 +1248,10 @@ Integration tests는 각 transaction의 중간 단계에서 failure를 유발할
 * Controlled test-only failure hook
 
 Production runtime에 test-only failure route를 노출하지 않는다.
+
+Production repository operation은 caller-provided hook, callback, option 또는 failure-injection flag를 받을 수 없다. `openAttempt(pool, input, options)`와 `options.afterSeriesCreated` 형태는 금지한다.
+
+Rollback test는 production repository와 instrumentation index에서 export되지 않고 production caller가 활성화할 수 없는 test-only mechanism을 사용한다. Exact mechanism은 implementation HOW다.
 
 ## 10. Raw response and timing
 

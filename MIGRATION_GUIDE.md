@@ -224,6 +224,23 @@
 
 ---
 
+### Entry 013
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-29 |
+| 대상 문서 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `API_CONTRACT.md`, `ENGINE_INTERFACE.md`, `MIGRATION_GUIDE.md` |
+| 변경 유형 | **Tier C PHYSICAL-INTEGRITY CLARIFICATION + IMPLEMENTATION CORRECTION** |
+| Canonical model | Trusted writer. Evidence Recorder/repository가 유일한 approved evidence writer이며 ordinary direct SQL은 지원 write path가 아님 |
+| DB 책임 | Existing PK, FK, unique, named CHECK, no-self-reference와 row-local integrity 유지 |
+| Application 책임 | Eight-reference exact kind+ID+version, completion-attempt ownership, assignment/session enrollment ownership, retry-parent ownership과 longer-cycle prevention |
+| Physical impact | Existing 16-object contract 유지. 신규 table, discriminator column, composite ownership FK 또는 production schema 변경 없음 |
+| Current correction | Assignment reference validation, attempt-open ownership validation과 production caller-supplied test hook 제거 |
+| Deferred | Finalization completion ownership, full retry eligibility/cycle enforcement, session terminalization, reschedule/restart와 recorder orchestration |
+| 상태 영향 | AC-017/AC-018 `RESOLVED / IN PROGRESS` 유지. AC-018 `CLOSED`·`IMPLEMENTED`, VL3 §10 PASS와 actual-provider 완료를 선언하지 않음 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |

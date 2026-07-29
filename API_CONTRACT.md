@@ -1032,6 +1032,18 @@ Rubric 또는 evaluation component가 다음을 결정한다.
 
 Recorder는 evaluation fact를 저장할 수 있지만 rubric policy를 발명하거나 재계산하지 않는다.
 
+#### 13.6.4 Physical-integrity responsibility
+
+Evidence Component는 trusted-writer/application-transaction model을 사용한다.
+
+Database는 local shape, direct existence, simple FK와 uniqueness를 담당한다. Evidence Component는 snapshot 8-reference exact-kind resolution, completion-attempt ownership, assignment/session enrollment ownership, retry-parent ownership과 longer-cycle prevention을 relevant transaction 안에서 검증한다.
+
+Partial validity와 partial write는 허용하지 않는다. Repository-bypass direct SQL은 authorized caller path가 아니다.
+
+Production repository operation은 caller-controlled test hook을 받을 수 없다.
+
+현재 repository milestone은 assignment creation과 attempt open만 구현한다. Attempt finalization과 full retry lifecycle은 deferred다.
+
 ### 13.7 Timing contract
 
 Wall-clock authority는 server다.
