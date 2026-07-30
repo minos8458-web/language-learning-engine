@@ -1348,6 +1348,8 @@ Correction item:
 }
 ```
 
+The supplied instrumentation protocol ID and version must equal the assignment snapshot values; a mismatch is `CONTRACT_VIOLATION`.
+
 Caller cannot supply:
 
 - assignment/session/series ownership,
@@ -1788,3 +1790,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.19 | 2026-07-22 | AC-017 Tier C Architecture Clarification 최종 누적판 — Pattern A와 exact Layer 1/2/3 payload, Content save/recent API, required `mediaAssets`·QUIZ `answer_key`, 내부 MAX difficulty·node/ID 정규화·고정 필드·retry를 보존하고, `select_generation_candidates`·`get_recent_attempted_combinations`를 추가. 후보 planning 1~3단계와 element-wise tie-break, generation executor의 최종 signatures·입력 검증·recent prompt-only 경계, AC-008 제한적 supersession, 비교형 품질 scoring의 2차 실제 LLM 이연을 확정. 외부 API 5 불변, 내부 22→26, 전체 27→31, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |
 | 1.20 | 2026-07-22 | AC-018 Tier C Architecture Clarification — `get_node_labels`를 추가하고 target Concept 존재성 경로, exact generation/validator payload와 retry·shared regeneration, PRE_MADE cardinality, lazy 입력 검증, provider adapter·factory composition validation 및 fail-closed production 경계를 확정. 외부 API 5 불변, 내부 26→27, 전체 31→32, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |
 | 1.21 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — existing §13.10.7을 future full-finalization category contract로 보존하고 §13.10.7.1을 current precedence contract로 추가. `finalizeAttempt(pool, input)`, exact protocol/rubric definitions, response/timing/outcome, RULE evaluation, correction coverage, replay/concurrency 및 existing five-code mapping을 확정하며 assignment completion·session lifecycle·recorder·Learning Flow/Public integration은 deferred로 유지 |
+| 1.22 | 2026-07-30 | Evidence P0 finalization writer correction — supplied instrumentation protocol ID/version이 assignment snapshot values와 반드시 일치하고 mismatch는 `CONTRACT_VIOLATION`임을 명시. Existing API count, five-code registry, database schema 및 status boundary는 불변 |

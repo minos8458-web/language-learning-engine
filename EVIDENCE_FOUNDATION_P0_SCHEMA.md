@@ -1192,6 +1192,8 @@ Rollback:
 
 ### 9.4.1 Current bounded error-classification finalization writer
 
+> Reconciliation: §9.4 is the future complete finalization boundary. For the current bounded writer, §9.4.1 through §9.4.12 take precedence for transaction contents, success and deferred scope.
+
 The current bounded writer milestone implements exactly one production repository operation:
 
 ```text
@@ -1295,6 +1297,8 @@ Each correction aggregate has exactly:
 ```
 
 Caller input does not include rubric ID/version, evaluation source, scorable, clock quality, attempt outcome, server timestamps or evaluation ID.
+
+`instrumentationProtocolId` and `instrumentationProtocolVersion` must equal the assignment snapshot `instrumentation_protocol_id` and `instrumentation_protocol_version` of the attempt's assignment. A mismatch is `CONTRACT_VIOLATION` and no finalization aggregate is written.
 
 ### 9.4.3 Instrumentation protocol definition
 
@@ -1508,6 +1512,8 @@ For non-binary rubrics, `is_correct` is null for every evaluation.
 
 Kind-specific rubric-definition validation occurs in `finalizeAttempt`. `registerReferenceVersion` remains generic.
 
+`rubric_id` and `rubric_version` are resolved from the assignment snapshot and are never caller-supplied.
+
 ### 9.4.5 Server timestamps
 
 `server_received_at` is generated explicitly by the application server after top-level shape validation and before the transaction begins.
@@ -1561,7 +1567,7 @@ Attempt outcome precedence:
 3. Otherwise, at least one scorable evaluation yields `SCORABLE`.
 4. Otherwise the outcome is `UNSCORABLE`.
 
-`MODALITY_INPUT_FAILURE` is not combined with `NORMAL_EMPTY`. An absent response caused by a technical transport/device failure remains part of the deferred technical-failure terminalization contract.
+A uniform `MODALITY_INPUT_FAILURE` set requires `responseKind = NORMAL_EMPTY` and yields `TECHNICAL_INVALID`. In that case precedence rule 1 applies and rule 2 does not. Assignment-level and session-level terminalization for the same technical failure remains part of the deferred technical-failure terminalization contract.
 
 ### 9.4.8 Response bounds
 
@@ -3228,3 +3234,4 @@ Approval does not permit or declare:
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|
 | 1.0 | 2026-07-30 | 최초 개정 이력 기록 — 기존 Evidence Foundation P0 physical schema와 trusted-writer baseline을 보존하면서 current bounded `finalizeAttempt(pool, input)` writer의 exact protocol/rubric definition, finalization·evaluation·correction transaction, timestamp·clock-quality·attempt-outcome derivation, normalization, PostgreSQL error mapping 및 current/deferred scope를 추가. Existing migration 012와 16-table contract, production non-interference 및 상태 경계는 불변 |
+| 1.1 | 2026-07-30 | Independent review correction — finalization instrumentation protocol의 assignment snapshot 일치, uniform `MODALITY_INPUT_FAILURE`의 `NORMAL_EMPTY` representation과 outcome precedence, §9.4.1–§9.4.12의 current bounded precedence 및 snapshot-derived rubric ID/version을 명시. Database migration·error code·schema object·status 변경 없음 |
