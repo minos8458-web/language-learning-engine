@@ -1190,6 +1190,504 @@ Rollback:
 * Correction row 없음.
 * Assignment completion 없음.
 
+### 9.4.1 Current bounded error-classification finalization writer
+
+The current bounded writer milestone implements exactly one production repository operation:
+
+```text
+finalizeAttempt(pool, input)
+```
+
+The operation uses object input and atomically inserts:
+
+- one immutable `evidence_attempt_finalizations` row,
+- exactly one `evidence_target_node_evaluations` row for every assignment-snapshot target node,
+- the complete `evidence_correction_aggregates` set required by the pinned instrumentation protocol.
+
+Partial success is prohibited.
+
+This writer does not update:
+
+- `evidence_assignments.completion_attempt_id`,
+- `evidence_assignments.completed_at`,
+- `evidence_assignments.terminal_outcome`,
+- session terminal fields,
+- restart lineage,
+- reschedule/supersede lineage.
+
+Assignment completion, session lifecycle, restart, reschedule and multi-root technical-failure terminalization remain deferred writer contracts.
+
+The current writer accepts only `evaluation_source = RULE`. `HUMAN` and `AI_ASSISTED` remain reserved physical values and are not accepted by this operation.
+
+A separate recorder-orchestration module is not required. The Evidence Repository owns validation, locking, idempotency, inserts and rollback for this transaction.
+
+### 9.4.2 Exact finalization input
+
+The exact signature is:
+
+```javascript
+async function finalizeAttempt(pool, input)
+```
+
+Allowed top-level input keys:
+
+```text
+attemptId
+finalizationIdempotencyIdentity
+instrumentationProtocolId
+instrumentationProtocolVersion
+responseKind
+responseText
+responseJson
+responseRef
+inputEnabledOffsetMs
+firstValidActivityOffsetMs
+submittedOffsetMs
+reportedClientMonotonicDurationMs
+actualStimulusModalities
+actualResponseModalities
+evaluations
+correctionAggregates
+```
+
+Unknown keys are prohibited. Explicit `undefined` is prohibited.
+
+Unconditionally required fields:
+
+```text
+attemptId
+finalizationIdempotencyIdentity
+instrumentationProtocolId
+instrumentationProtocolVersion
+responseKind
+actualStimulusModalities
+actualResponseModalities
+evaluations
+correctionAggregates
+```
+
+Response fields are conditional:
+
+- `TEXT`: `responseText` required; JSON/reference fields omitted.
+- `JSON`: `responseJson` required; text/reference fields omitted.
+- `REFERENCE`: `responseRef` required; text/JSON fields omitted.
+- `NORMAL_EMPTY`: all response payload fields omitted.
+
+Each evaluation has exactly:
+
+```text
+{
+  nodeId,
+  rubricOutcome,
+  isCorrect
+}
+```
+
+Each correction aggregate has exactly:
+
+```text
+{
+  initiator,
+  feedbackPhase,
+  correctionOutcome,
+  count
+}
+```
+
+Caller input does not include rubric ID/version, evaluation source, scorable, clock quality, attempt outcome, server timestamps or evaluation ID.
+
+### 9.4.3 Instrumentation protocol definition
+
+The pinned `INSTRUMENTATION_PROTOCOL` definition is a closed object with exactly these required top-level keys:
+
+```text
+definitionType
+definitionVersion
+timingPolicy
+correctionCoverageMode
+responseBounds
+modalityPolicy
+```
+
+Exact constants:
+
+```text
+definitionType = EVIDENCE_INSTRUMENTATION_PROTOCOL
+definitionVersion = 1
+```
+
+`timingPolicy` has exactly:
+
+```text
+collectionProfile
+durationConsistencyToleranceMs
+durationMismatchBehavior
+```
+
+Allowed collection profiles:
+
+```text
+FULL
+RESPONSE_ONLY
+NONE
+```
+
+Timing presence:
+
+| Field | FULL | RESPONSE_ONLY | NONE |
+|---|---|---|---|
+| inputEnabledOffsetMs | required | required | prohibited |
+| firstValidActivityOffsetMs | required | optional | prohibited |
+| submittedOffsetMs | required | required | prohibited |
+| reportedClientMonotonicDurationMs | required | optional | prohibited |
+
+Every supplied timing value is a nonnegative safe integer.
+
+Timing-order inversion is always `OUT_OF_RANGE_VALUE` and is never persisted as an invalid-quality fact.
+
+Duration consistency:
+
+```text
+expectedDurationMs = submittedOffsetMs - inputEnabledOffsetMs
+durationDeltaMs = abs(reportedClientMonotonicDurationMs - expectedDurationMs)
+```
+
+Allowed `durationMismatchBehavior`:
+
+- `REJECT`: a delta above tolerance is `OUT_OF_RANGE_VALUE`.
+- `MARK_INVALID`: the fact is stored with `clock_quality = INVALID`.
+
+For profile `NONE`, tolerance is exactly zero and mismatch behavior is `REJECT`.
+
+Allowed `correctionCoverageMode`:
+
+- `COMPLETE_BUCKET_SET`
+- `NOT_COLLECTED`
+
+`responseBounds` has exactly:
+
+```text
+textMaxUtf8Bytes
+referenceMaxUtf8Bytes
+jsonMaxUtf8Bytes
+```
+
+All are required positive integers.
+
+Absolute hard ceilings:
+
+```text
+textMaxUtf8Bytes <= 65536
+referenceMaxUtf8Bytes <= 2048
+jsonMaxUtf8Bytes <= 65536
+```
+
+`modalityPolicy` has exactly:
+
+```text
+allowedStimulusModalities
+allowedResponseModalities
+stimulusCoverage
+responseCoverage
+```
+
+Allowed coverage rules:
+
+- `EXACT_PLANNED`
+- `NONEMPTY_SUBSET_OF_PLANNED`
+
+Allowed modality values remain the existing physical modality enums. Actual arrays must be nonempty, unique, allowed by the protocol and related to the planned assignment arrays according to the selected coverage rule.
+
+Unknown keys are prohibited at every fixed-schema level.
+
+This milestone does not change `registerReferenceVersion`. Kind-specific instrumentation-definition validation occurs when `finalizeAttempt` consumes the pinned definition. An invalid definition is `CONTRACT_VIOLATION` and leaves no finalization aggregate.
+
+### 9.4.4 Rubric definition and error classification
+
+The pinned `RUBRIC` definition is a closed object with exactly:
+
+```text
+definitionType
+definitionVersion
+scoreMode
+classificationVocabulary
+linguisticCategoryVocabulary
+attributionRelationVocabulary
+rubricRuleIds
+attributionAuthority
+```
+
+Exact constants:
+
+```text
+definitionType = EVIDENCE_ERROR_CLASSIFICATION_RUBRIC
+definitionVersion = 1
+```
+
+Allowed `scoreMode`:
+
+- `BINARY`
+- `NON_BINARY`
+
+The exact classification vocabulary is:
+
+```text
+NO_ERROR
+LINGUISTIC_ERROR
+TASK_INSTRUCTION_MISUNDERSTANDING
+MODALITY_INPUT_FAILURE
+NO_EVALUABLE_RESPONSE
+UNCLASSIFIED
+```
+
+The exact linguistic-category vocabulary is:
+
+```text
+FORM
+WORD_ORDER
+LEXICAL_CHOICE
+OTHER
+```
+
+The exact attribution-relation vocabulary is:
+
+```text
+TARGET
+PREREQUISITE
+CONTRAST
+UNRESOLVED
+```
+
+The three vocabulary arrays must contain exactly those values in that order.
+
+`rubricRuleIds` is a nonempty duplicate-free list of trimmed stable IDs. Every evaluation outcome must use one listed ID.
+
+`attributionAuthority` has exactly:
+
+```text
+{
+  byTargetNode: {
+    "<targetNodeId>": {
+      prerequisiteNodeIds: [],
+      contrastNodeIds: []
+    }
+  }
+}
+```
+
+For `PREREQUISITE` and `CONTRAST`, the attributed node must exist in `grammar_nodes` and occur in the corresponding list for the evaluated target node. No Graph Engine call is made. The pinned rubric definition is the attribution allowlist authority.
+
+Every `rubricOutcome` has exactly:
+
+```text
+classification
+linguisticCategory
+attributionRelation
+attributedNodeId
+rubricRuleId
+```
+
+All keys are required; non-applicable values are explicit null.
+
+Consistency:
+
+- `NO_ERROR`: scorable, linguistic/attribution fields null.
+- `LINGUISTIC_ERROR`: scorable, linguistic category and attribution relation required.
+- Other classifications: unscorable, `is_correct` null, linguistic/attribution fields null.
+- `TARGET`: attributed node equals evaluation node.
+- `PREREQUISITE` or `CONTRAST`: attributed node exists and is rubric-authorized.
+- `UNRESOLVED`: attributed node null.
+
+For binary rubrics:
+
+- `NO_ERROR` requires `is_correct=true`.
+- `LINGUISTIC_ERROR` requires `is_correct=false`.
+- Unscorable outcomes require `is_correct=null`.
+
+For non-binary rubrics, `is_correct` is null for every evaluation.
+
+Kind-specific rubric-definition validation occurs in `finalizeAttempt`. `registerReferenceVersion` remains generic.
+
+### 9.4.5 Server timestamps
+
+`server_received_at` is generated explicitly by the application server after top-level shape validation and before the transaction begins.
+
+`finalized_at` is generated explicitly after all validation and locks, immediately before finalization insert.
+
+Required relation:
+
+```text
+finalized_at >= server_received_at
+```
+
+They need not be equal.
+
+The repository supplies both values explicitly rather than relying on independent DB defaults.
+
+Equivalent replay returns the original stored timestamps. A failed transaction stores neither timestamp.
+
+Both timestamps are excluded from the idempotency digest and are forbidden caller fields.
+
+### 9.4.6 Clock-quality derivation
+
+Structural timing errors are rejected before persistence:
+
+- negative or unsafe integer → `OUT_OF_RANGE_VALUE`
+- ordering inversion → `OUT_OF_RANGE_VALUE`
+- required timing omitted → `MISSING_REQUIRED_FIELD`
+- prohibited timing supplied → `CONTRACT_VIOLATION`
+
+Quality derivation:
+
+- profile `NONE` with all timing absent → `UNKNOWN`
+- profile `FULL`, all facts valid and duration consistent → `VALID`
+- profile `RESPONSE_ONLY`, both optional facts present and consistent → `VALID`
+- profile `RESPONSE_ONLY`, either optional fact absent → `DEGRADED`
+- duration mismatch accepted under `MARK_INVALID` → `INVALID`
+
+`clock_quality = INVALID` excludes timing metrics but does not automatically change correctness or attempt outcome.
+
+### 9.4.7 Attempt-outcome derivation
+
+Per-evaluation scorable status:
+
+- `NO_ERROR`, `LINGUISTIC_ERROR` → scorable
+- all other classifications → unscorable
+
+Attempt outcome precedence:
+
+1. If any evaluation is `MODALITY_INPUT_FAILURE`, all evaluations must have that classification. A mixed set is `CONTRACT_VIOLATION`. A uniform set yields `TECHNICAL_INVALID`.
+2. `NORMAL_EMPTY` requires all evaluations to be `NO_EVALUABLE_RESPONSE` and yields `UNSCORABLE`.
+3. Otherwise, at least one scorable evaluation yields `SCORABLE`.
+4. Otherwise the outcome is `UNSCORABLE`.
+
+`MODALITY_INPUT_FAILURE` is not combined with `NORMAL_EMPTY`. An absent response caused by a technical transport/device failure remains part of the deferred technical-failure terminalization contract.
+
+### 9.4.8 Response bounds
+
+`TEXT`:
+
+- nonempty and not whitespace-only;
+- stored without trimming;
+- UTF-8 bytes measured with the original string;
+- repository-enforced effective bound from the pinned protocol;
+- absolute maximum 65536 bytes.
+
+`REFERENCE`:
+
+- trimmed before digest and storage;
+- empty after trim prohibited;
+- UTF-8 byte maximum from the protocol;
+- absolute maximum 2048 bytes.
+
+`JSON`:
+
+- top-level plain object or array only;
+- JSON-compatible nested values only;
+- undefined, Date, BigInt, function, symbol, class instance and non-finite number prohibited;
+- stored JSONB byte size measured by `octet_length(($1::jsonb)::text)`;
+- effective maximum from protocol;
+- absolute maximum 65536 bytes.
+
+Every rubric outcome has a maximum stored JSONB text size of 16384 bytes.
+
+Bound excess is `OUT_OF_RANGE_VALUE`.
+
+### 9.4.9 Finalization-specific normalization
+
+Finalization uses a separate canonicalization path and does not change attempt-open normalization.
+
+Top-level server-issued fields are rejected.
+
+Nested keys in `responseJson` and `rubricOutcome` are preserved even when their names resemble server-issued fields.
+
+Explicit undefined and Date values are rejected rather than omitted or converted.
+
+Plain-object keys are sorted lexicographically. Learner JSON array order is preserved.
+
+Canonical order:
+
+- modalities by their existing enum order,
+- evaluations by assignment snapshot ordinal,
+- correction aggregates by initiator, feedback phase and correction outcome.
+
+Digest fields:
+
+```text
+operationCategory
+attemptId
+instrumentationProtocolId
+instrumentationProtocolVersion
+responseKind
+response payload
+all four timing facts or null
+actual modality arrays
+canonical evaluations
+canonical correction aggregates
+```
+
+The digest excludes the finalization identity and all server-derived fields.
+
+### 9.4.10 Finalization concurrency and PostgreSQL errors
+
+Lock order:
+
+```text
+assignment → session → attempt
+```
+
+Existing equivalent finalization replay is evaluated before rejecting a later terminal parent lifecycle.
+
+Constraint-specific handling:
+
+- `evidence_attempt_finalizations_pk`: reload and replay/conflict comparison.
+- `evidence_target_node_evaluations_attempt_node_unique`: `CONTRACT_VIOLATION`.
+- `evidence_correction_aggregates_pk`: `CONTRACT_VIOLATION`.
+- other 23505 within this operation: `CONTRACT_VIOLATION`.
+- 23503: `INVALID_ID`.
+- 23514, 23502, 22P02: `CONTRACT_VIOLATION`.
+- repository payload bound failure: `OUT_OF_RANGE_VALUE`.
+
+Unexpected persistence failures are internal transaction failures. They are rolled back and are not converted to success, replay or empty result.
+
+### 9.4.11 Runtime authorization
+
+`finalizeAttempt(pool, input)` does not accept caller identity or perform runtime caller authorization.
+
+Authorized use is controlled through static composition and call-graph boundaries.
+
+The operation-specific error surface therefore does not produce `UNAUTHORIZED_CALLER`.
+
+No caller token, hidden option, global mutable state or production test hook is added.
+
+### 9.4.12 Current/deferred boundary
+
+Current implementation scope:
+
+- finalization row,
+- RULE evaluations for all snapshot target nodes,
+- correction aggregates,
+- finalization idempotency,
+- timing and response validation,
+- error classification,
+- transaction rollback.
+
+Deferred:
+
+- assignment completion,
+- completion-attempt ownership write,
+- session terminalization,
+- restart,
+- reschedule,
+- technical-failure multi-root terminalization,
+- full retry eligibility/cycle traversal,
+- recorder orchestration,
+- Learning Flow/public integration,
+- production dual-write,
+- human/AI evaluation,
+- actual provider,
+- audio.
+
 ## 9.5 Technical-failure terminalization
 
 한 command가 attempt, assignment 및 session 중 둘 이상을 terminalize하면 해당 terminal facts를 한 transaction에서 처리한다.
@@ -2724,3 +3222,9 @@ Approval does not permit or declare:
 * VL3 §10 PASS
 
 ---
+
+## 23. 개정 이력
+
+| 버전 | 날짜 | 변경 내용 |
+|---|---|---|
+| 1.0 | 2026-07-30 | 최초 개정 이력 기록 — 기존 Evidence Foundation P0 physical schema와 trusted-writer baseline을 보존하면서 current bounded `finalizeAttempt(pool, input)` writer의 exact protocol/rubric definition, finalization·evaluation·correction transaction, timestamp·clock-quality·attempt-outcome derivation, normalization, PostgreSQL error mapping 및 current/deferred scope를 추가. Existing migration 012와 16-table contract, production non-interference 및 상태 경계는 불변 |

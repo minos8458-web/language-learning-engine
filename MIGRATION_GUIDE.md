@@ -241,6 +241,34 @@
 
 ---
 
+### Entry 014
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-30 |
+| 대상 문서 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `API_CONTRACT.md`, `ENGINE_INTERFACE.md`, `MIGRATION_GUIDE.md` |
+| 변경 유형 | **Tier C ADDITIVE WRITER-CONTRACT CLARIFICATION — NO DATABASE MIGRATION** |
+| 목적 | Evidence Foundation P0 순서의 첫 측정 항목인 오류 분류를 위해 attempt finalization, target-node evaluation, correction aggregate의 bounded repository writer contract를 확정 |
+| Operation | `finalizeAttempt(pool, input)` 단일 object-input repository operation |
+| Transaction | Finalization + assignment snapshot 전체 target-node RULE evaluations + protocol-required correction aggregates를 한 transaction에서 기록. Partial success 금지 |
+| Instrumentation authority | Pinned `INSTRUMENTATION_PROTOCOL` definition이 timing profile, duration mismatch behavior, correction coverage, response bounds 및 modality coverage를 소유 |
+| Rubric authority | Pinned `RUBRIC` definition이 binary/non-binary mode, VI error classification vocabulary, linguistic category, attribution relation, rubric rule IDs와 attribution allowlist를 소유 |
+| Error taxonomy | `NO_ERROR`, `LINGUISTIC_ERROR`, `TASK_INSTRUCTION_MISUNDERSTANDING`, `MODALITY_INPUT_FAILURE`, `NO_EVALUABLE_RESPONSE`, `UNCLASSIFIED`; pronunciation/audio category는 deferred |
+| Registration compatibility | Existing `registerReferenceVersion` behavior는 변경하지 않음. Kind-specific definition validation은 `finalizeAttempt` consumption 시 수행 |
+| Timing | Server timestamps explicit insert. Structural timing/order violation reject. Protocol `MARK_INVALID` duration mismatch만 `clockQuality=INVALID`로 저장 가능 |
+| Outcome | Evaluation 전체 집합에서 server가 `SCORABLE`, `UNSCORABLE`, `TECHNICAL_INVALID`를 deterministic하게 도출 |
+| Idempotency | Attempt당 one finalization. Same identity+digest replay, same identity+different digest 및 different identity terminal mutation은 `CONTRACT_VIOLATION` |
+| Normalization | Finalization-specific digest path가 nested learner/rubric keys를 보존. Existing attempt-open normalization은 변경하지 않음 |
+| PostgreSQL errors | Finalization PK 23505는 replay arbitration. Evaluation/correction 23505는 `CONTRACT_VIOLATION`; FK는 `INVALID_ID`; CHECK는 `CONTRACT_VIOLATION` |
+| Current scope | Finalization row, RULE evaluations, correction aggregates, timing/response validation, error classification, rollback 및 production non-interference |
+| Deferred | Assignment completion, session lifecycle, restart/reschedule, technical-failure terminalization, full retry lifecycle, recorder orchestration, Learning Flow/Public integration, human/AI evaluation |
+| Migration impact | Existing `012_create_evidence_foundation.sql`로 충분. `013` migration 생성 금지. 신규 table/column/index/trigger/enum 없음. Existing 16 evidence tables 유지 |
+| Production impact | `progress`, `attempt_records`, `next_review_at`, existing public API, canonical 8 Engine 및 production transaction 불변 |
+| 구현 허용 파일 | `src/instrumentation/evidenceRepository.js`, `src/instrumentation/evidenceValidation.js`, `src/instrumentation/evidenceNormalization.js`, `tests/evidenceFoundationRepository.test.js` |
+| 상태 영향 | AC-017/AC-018 `RESOLVED / IN PROGRESS` 유지. AC-018 `CLOSED`·`IMPLEMENTED`, VL3 §10 전체 PASS, actual-provider 완료 및 Evidence Foundation 전체 완료를 선언하지 않음 |
+
+---
+
 ## 3. 개정 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -256,3 +284,5 @@
 | 1.8 | 2026-07-22 | Entry 010 추가 — AC-017을 Tier C ADDITIVE + CONTRACT REPLACEMENT / NARROWING으로 반영. planning·Content save/recent·Progress recent-attempt 내부 API 4개를 추가해 외부 5·내부 22→26·전체 27→31로 확정하고, generation API 2개의 입력/출력/persistence 책임을 교체·축소했다. Pattern A, exact payload, media/answer/difficulty/ID/retry, stages 1~4와 stage 5 이연, AC-008 제한적 supersession을 기록했다. production 구현/caller가 없어 deployed runtime breaking impact는 없고 DB·코드·설정·Tier A 불변, prerequisite implementation 미착수다 |
 | 1.9 | 2026-07-22 | Entry 011 추가 — AC-018을 Tier C ADDITIVE + CONTRACT CLARIFICATION으로 반영. `get_node_labels` 하나를 추가해 외부 5·내부 27·전체 32로 확정하고, target Concept 존재성, exact provider/validator와 retry·shared regeneration, lazy target validation·PRE_MADE cardinality, adapter/factory composition TypeError와 fail-closed 경계를 기록. 코드·테스트·설정·DB·migration SQL·Tier A·VALIDATION_LEVEL3 불변, prerequisite implementation 미착수 |
 | 1.10 | 2026-07-24 | Entry 012 추가 — Evidence Foundation P0 physical schema를 Tier C additive contract로 기록. `evidence_` object만 신규 도입하고 기존 `progress`·`attempt_records`·`next_review_at` amendment와 production backfill은 하지 않는다. Candidate migration `012_create_evidence_foundation.sql`은 current migration sequence 재확인 조건부이며, recorder disabled default, 실제 PostgreSQL synthetic fixture, existing regression, data-preserving code rollback 및 별도 승인 없는 destructive removal 금지를 명시 |
+| 1.11 | 2026-07-29 | 누락된 Entry 013 revision-history reconciliation — trusted-writer/application-transaction physical-integrity clarification, Pattern D, existing 16-object contract, production caller-supplied test-hook 금지 및 current/deferred 구현 범위를 기존 Entry 013 본문 변경 없이 이력에 연결 |
+| 1.12 | 2026-07-30 | Entry 014 추가 — Evidence Foundation P0 bounded error-classification finalization writer의 exact instrumentation/rubric schema, response/timing/outcome derivation, finalization-specific normalization, idempotency/concurrency와 PostgreSQL error mapping을 기록. Existing migration 012와 16-table contract를 유지하고 migration 013·assignment/session lifecycle·recorder·Learning Flow/Public integration은 금지·deferred로 보존 |
