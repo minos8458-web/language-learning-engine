@@ -1260,6 +1260,335 @@ Hash 또는 serialization algorithm은 implementation HOW다.
 | Retry                   | Same finalization identity. 새 attempt 생성 금지                                                                            |
 | Prohibited side effects | Progress, production attempt, next_review_at write                                                                     |
 
+#### 13.10.7.1 Current bounded `finalizeAttempt` repository contract
+
+> Reconciliation: §13.10.7 is the future full-finalization category contract. For the current bounded writer slice, this §13.10.7.1 contract takes precedence for authorized caller, transaction contents, success result and deferred scope. In particular, current success does not include assignment completion.
+
+The current bounded milestone implements the internal repository operation:
+
+```javascript
+finalizeAttempt(pool, input)
+```
+
+This is not a public HTTP API and is not counted as an Engine API.
+
+Authorized use is controlled by static composition. The operation does not accept caller identity and therefore does not produce operation-specific `UNAUTHORIZED_CALLER`.
+
+Current authorized call sites:
+
+- P0 PostgreSQL validation harness
+- server-side evidence test orchestration
+
+Learning Flow, public controller, public route and external client use are prohibited.
+
+##### Exact input
+
+Allowed top-level keys:
+
+```text
+attemptId
+finalizationIdempotencyIdentity
+instrumentationProtocolId
+instrumentationProtocolVersion
+responseKind
+responseText
+responseJson
+responseRef
+inputEnabledOffsetMs
+firstValidActivityOffsetMs
+submittedOffsetMs
+reportedClientMonotonicDurationMs
+actualStimulusModalities
+actualResponseModalities
+evaluations
+correctionAggregates
+```
+
+Unknown keys and explicit undefined values are `CONTRACT_VIOLATION`.
+
+Unconditionally required:
+
+```text
+attemptId
+finalizationIdempotencyIdentity
+instrumentationProtocolId
+instrumentationProtocolVersion
+responseKind
+actualStimulusModalities
+actualResponseModalities
+evaluations
+correctionAggregates
+```
+
+Conditional response representation:
+
+- `TEXT`: `responseText` only
+- `JSON`: `responseJson` only
+- `REFERENCE`: `responseRef` only
+- `NORMAL_EMPTY`: no response payload field
+
+Evaluation item:
+
+```text
+{
+  nodeId,
+  rubricOutcome,
+  isCorrect
+}
+```
+
+Correction item:
+
+```text
+{
+  initiator,
+  feedbackPhase,
+  correctionOutcome,
+  count
+}
+```
+
+Caller cannot supply:
+
+- assignment/session/series ownership,
+- rubric ID/version,
+- evaluation source,
+- scorable,
+- clock quality,
+- attempt outcome,
+- server timestamps,
+- evaluation ID,
+- replay result,
+- digest metadata.
+
+##### Exact output
+
+```text
+{
+  replayed,
+  attemptId,
+  assignmentId,
+  sessionId,
+  finalizationIdempotencyIdentity,
+  serverReceivedAt,
+  finalizedAt,
+  clockQuality,
+  responseKind,
+  attemptOutcome,
+  instrumentationProtocolId,
+  instrumentationProtocolVersion,
+  rubricId,
+  rubricVersion,
+  evaluationCount,
+  correctionBucketCount
+}
+```
+
+Equivalent replay returns the original fields and timestamps and changes only `replayed` to true.
+
+##### Transaction
+
+One transaction atomically writes:
+
+- finalization,
+- one RULE evaluation per assignment snapshot target node,
+- the protocol-required correction aggregate set.
+
+Partial success is prohibited.
+
+The transaction does not update assignment completion or session lifecycle.
+
+##### Instrumentation definition
+
+The exact pinned `INSTRUMENTATION_PROTOCOL` definition keys are:
+
+```text
+definitionType
+definitionVersion
+timingPolicy
+correctionCoverageMode
+responseBounds
+modalityPolicy
+```
+
+Exact constants:
+
+```text
+definitionType = EVIDENCE_INSTRUMENTATION_PROTOCOL
+definitionVersion = 1
+```
+
+Timing profiles:
+
+- `FULL`
+- `RESPONSE_ONLY`
+- `NONE`
+
+Duration mismatch behaviors:
+
+- `REJECT`
+- `MARK_INVALID`
+
+Correction coverage:
+
+- `COMPLETE_BUCKET_SET`
+- `NOT_COLLECTED`
+
+Modality coverage:
+
+- `EXACT_PLANNED`
+- `NONEMPTY_SUBSET_OF_PLANNED`
+
+The complete field and cross-field rules are part of this operation contract. An invalid pinned definition is `CONTRACT_VIOLATION`.
+
+`registerReferenceVersion` remains generic. Kind-specific definition validation occurs when this operation consumes the pinned version.
+
+##### Rubric definition
+
+The exact pinned `RUBRIC` definition keys are:
+
+```text
+definitionType
+definitionVersion
+scoreMode
+classificationVocabulary
+linguisticCategoryVocabulary
+attributionRelationVocabulary
+rubricRuleIds
+attributionAuthority
+```
+
+Exact constants:
+
+```text
+definitionType = EVIDENCE_ERROR_CLASSIFICATION_RUBRIC
+definitionVersion = 1
+```
+
+Score modes:
+
+- `BINARY`
+- `NON_BINARY`
+
+Classification vocabulary:
+
+- `NO_ERROR`
+- `LINGUISTIC_ERROR`
+- `TASK_INSTRUCTION_MISUNDERSTANDING`
+- `MODALITY_INPUT_FAILURE`
+- `NO_EVALUABLE_RESPONSE`
+- `UNCLASSIFIED`
+
+Linguistic categories:
+
+- `FORM`
+- `WORD_ORDER`
+- `LEXICAL_CHOICE`
+- `OTHER`
+
+Attribution relations:
+
+- `TARGET`
+- `PREREQUISITE`
+- `CONTRAST`
+- `UNRESOLVED`
+
+Every evaluation outcome has exactly:
+
+```text
+classification
+linguisticCategory
+attributionRelation
+attributedNodeId
+rubricRuleId
+```
+
+Attribution authorization is read from the pinned rubric definition and node existence is checked through read-only `grammar_nodes` access. No Graph Engine call is made.
+
+##### Timing and clock quality
+
+Timing-order inversion is always `OUT_OF_RANGE_VALUE`.
+
+`clockQuality`:
+
+- `NONE` profile → `UNKNOWN`
+- complete valid FULL data → `VALID`
+- complete valid RESPONSE_ONLY data → `VALID`
+- RESPONSE_ONLY with optional timing absent → `DEGRADED`
+- accepted duration mismatch under `MARK_INVALID` → `INVALID`
+
+`clockQuality=INVALID` affects timing eligibility only. It does not automatically change correctness or attempt outcome.
+
+##### Attempt outcome
+
+- Uniform `MODALITY_INPUT_FAILURE` set → `TECHNICAL_INVALID`
+- Mixed modality-failure and other classifications → `CONTRACT_VIOLATION`
+- `NORMAL_EMPTY` with all `NO_EVALUABLE_RESPONSE` → `UNSCORABLE`
+- At least one scorable evaluation and no modality failure → `SCORABLE`
+- Otherwise → `UNSCORABLE`
+
+##### Idempotency
+
+Authority grain:
+
+```text
+attemptId
+```
+
+Semantic identity:
+
+```text
+attemptId + finalizationIdempotencyIdentity
+```
+
+Rules:
+
+- no finalization → create
+- same identity + same digest → replay
+- same identity + different digest → `CONTRACT_VIOLATION`
+- different identity after finalization → terminal-mutation `CONTRACT_VIOLATION`
+
+The finalization identity is compared separately and is not included in the payload digest.
+
+##### Error mapping
+
+| Condition | Result |
+|---|---|
+| Required field omitted | `MISSING_REQUIRED_FIELD` |
+| Unknown ID/version | `INVALID_ID` |
+| Wrong type, unknown key, lifecycle, rubric, ownership or replay conflict | `CONTRACT_VIOLATION` |
+| Negative timing/count or payload bound excess | `OUT_OF_RANGE_VALUE` |
+| Existing equivalent finalization | replay, not error |
+| Finalization PK race | reload then replay/conflict |
+| Evaluation/correction duplicate constraint | `CONTRACT_VIOLATION` |
+| FK violation | `INVALID_ID` |
+| CHECK/not-null/cast violation | `CONTRACT_VIOLATION` |
+| Unexpected persistence failure | internal transaction failure |
+
+The operation does not emit `UNAUTHORIZED_CALLER` because authorization is static composition rather than an input-verified runtime contract.
+
+##### Current/deferred boundary
+
+Current:
+
+- finalization
+- RULE evaluations
+- correction aggregates
+- idempotency
+- timing
+- error classification
+
+Deferred:
+
+- assignment completion
+- session lifecycle
+- restart/reschedule
+- full retry lifecycle
+- recorder orchestration
+- Learning Flow/public integration
+- production dual-write
+- human/AI evaluation
+
 #### 13.10.8 Technical-failure terminalization
 
 | 항목                      | 계약                                                                             |
@@ -1458,3 +1787,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.18 | 2026-07-20 | AC-016 Tier C Architecture Clarification — `start_session` JavaScript signature와 REVIEW `review_batch`, NEW_GRAMMAR 기존 `{next_action,node_id}`, INTERLEAVING `node_sequence`, CONVERSATION/IDLE `next_action` 단독 exact payload를 확정. Branch별 exact-key·field omission, acknowledgement validation, REVIEW 기본 `getDueReviews` 호출 및 fallthrough 규칙을 명시. 외부 API 5·내부 22·전체 27 불변, 신규 error code·DB/Tier A 영향 없음, 구현 미착수·§9 미PASS |
 | 1.19 | 2026-07-22 | AC-017 Tier C Architecture Clarification 최종 누적판 — Pattern A와 exact Layer 1/2/3 payload, Content save/recent API, required `mediaAssets`·QUIZ `answer_key`, 내부 MAX difficulty·node/ID 정규화·고정 필드·retry를 보존하고, `select_generation_candidates`·`get_recent_attempted_combinations`를 추가. 후보 planning 1~3단계와 element-wise tie-break, generation executor의 최종 signatures·입력 검증·recent prompt-only 경계, AC-008 제한적 supersession, 비교형 품질 scoring의 2차 실제 LLM 이연을 확정. 외부 API 5 불변, 내부 22→26, 전체 27→31, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |
 | 1.20 | 2026-07-22 | AC-018 Tier C Architecture Clarification — `get_node_labels`를 추가하고 target Concept 존재성 경로, exact generation/validator payload와 retry·shared regeneration, PRE_MADE cardinality, lazy 입력 검증, provider adapter·factory composition validation 및 fail-closed production 경계를 확정. 외부 API 5 불변, 내부 26→27, 전체 31→32, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |
+| 1.21 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — existing §13.10.7을 future full-finalization category contract로 보존하고 §13.10.7.1을 current precedence contract로 추가. `finalizeAttempt(pool, input)`, exact protocol/rubric definitions, response/timing/outcome, RULE evaluation, correction coverage, replay/concurrency 및 existing five-code mapping을 확정하며 assignment completion·session lifecycle·recorder·Learning Flow/Public integration은 deferred로 유지 |

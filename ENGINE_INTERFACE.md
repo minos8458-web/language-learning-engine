@@ -526,6 +526,88 @@ Production repository와 instrumentation index는 test-only control을 export하
 
 Public client mapping은 P1 API-layer contract의 책임이다.
 
+### 18.10.2 Bounded error-classification finalization writer
+
+The current bounded Evidence Foundation milestone adds one Evidence Repository operation:
+
+```text
+finalizeAttempt(pool, input)
+```
+
+It remains a non-Engine internal persistence operation.
+
+A separate `evidenceRecorder.js` component is not required by this milestone.
+
+The Evidence Repository owns:
+
+- input validation,
+- pinned protocol/rubric loading,
+- exact target-node validation,
+- static RULE evaluation persistence,
+- correction-set validation,
+- finalization idempotency,
+- assignment/session/attempt locking,
+- finalization/evaluation/correction transaction atomicity,
+- rollback,
+- constraint-specific error mapping.
+
+The repository does not own:
+
+- learning policy,
+- rubric-rule computation,
+- Graph traversal,
+- Progress state,
+- Review scheduling,
+- assignment completion,
+- session lifecycle,
+- restart/reschedule,
+- production dual-write,
+- public transport,
+- actual-provider orchestration,
+- human evaluation,
+- audio processing.
+
+Runtime caller authorization is not added to the operation signature.
+
+Authorized use is enforced through static composition and call-graph boundaries:
+
+- P0 PostgreSQL validation harness
+- server-side evidence test orchestration
+
+The following remain forbidden:
+
+- Learning Flow invocation
+- public/controller invocation
+- external-client invocation
+- canonical Engine invocation
+- direct evidence DB write outside the repository
+- caller token or hidden authorization option
+- caller-supplied failure hook
+- production test-control export
+
+`src/instrumentation/index.js` continues to export the repository module. It does not export `finalizeAttempt` as a public top-level operation and does not export a recorder.
+
+The finalization transaction writes exactly:
+
+- one finalization,
+- one RULE evaluation for each assignment snapshot target node,
+- the complete correction set required by the pinned instrumentation protocol.
+
+It does not write:
+
+- `progress`,
+- `attempt_records`,
+- `next_review_at`,
+- assignment completion,
+- session terminal state,
+- restart/reschedule lineage.
+
+Any failure rolls back all finalization, evaluation and correction facts.
+
+A successful existing finalization may be replayed after parent lifecycle advancement. A new initial finalization requires active enrollment and nonterminal assignment/session.
+
+This milestone does not change the canonical Engine count of eight.
+
 ### 18.11 Generic observation boundary
 
 Generic observation은 extension point only다.
@@ -588,3 +670,4 @@ Observation persistence가 승인되기 전 Recorder는 다음을 일반-purpose
 | 1.15 | 2026-07-19 | AC-015 Tier C Architecture Clarification — Graph Engine에 `get_node_language_and_concepts` 책임 추가(Interleaving Engine 전용 caller, mixed-language 미판정). Interleaving §10-5 호출 목록에 반영하고, 정렬 전 language/concept_ids 확보 → Category 해석(`get_concept_categories`) → CONTRAST 조회(`find_related_nodes`) 흐름을 §10-1에 명시. `sequence_nodes`의 dedupe·permutation 이전 원본 occurrence 길이 기준 `max_batch_size` 초과 거부와 mixed-language 판정이 Interleaving 책임임을 §10-8에 재확인. Tier A `GRAMMAR_GRAPH.md` 원문 불변 |
 | 1.16 | 2026-07-22 | AC-017 Tier C Architecture Clarification 누적 correction — Pattern A와 기존 ladder/provider/save 경계를 유지하면서 AI Generation planning `selectGenerationCandidates`, Progress recent-attempt read, generation API의 preselected node/recent Content 입력 계약, Graph caller 확대를 확정. 후보 계획 stages 1~3, prompt stage 4, 품질 비교 stage 5의 2차 실제 LLM milestone 유보를 명시했다. sibling/leaf 원칙과 Tier A는 불변, prerequisite implementation 미착수 |
 | 1.17 | 2026-07-22 | AC-018 Tier C Architecture Clarification — Concept 존재성·canonical node label 경로, exact provider/validator boundary와 shared regeneration, PRE_MADE cardinality·lazy validation, Generation/AI Generation factory composition validation과 fail-closed production adapter 책임을 확정. 외부 API 5·내부 27·전체 32, 기존 positional API·leaf/sibling 원칙·Tier A는 불변, prerequisite implementation 미착수 |
+| 1.18 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — non-Engine Evidence Repository의 `finalizeAttempt(pool, input)` 단일 writer, static caller boundary, RULE-only evaluation, finalization·evaluation·correction atomic transaction 및 production/test separation을 확정. 별도 `evidenceRecorder.js`, assignment/session lifecycle, Learning Flow/Public integration 및 production dual-write는 도입하지 않음 |
