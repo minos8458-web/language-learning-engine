@@ -2,10 +2,23 @@
 
 const { randomUUID } = require('node:crypto');
 const {
+  ATTRIBUTION_RELATION_VOCABULARY,
+  CLASSIFICATION_VOCABULARY,
+  CORRECTION_INITIATORS,
+  CORRECTION_OUTCOMES,
   ContractViolationError,
+  FEEDBACK_PHASES,
+  LINGUISTIC_CATEGORY_VOCABULARY,
+  MissingRequiredFieldError,
   NotFoundError,
   OutOfRangeValueError,
+  RESPONSE_KINDS,
+  RESPONSE_MODALITIES,
+  STIMULUS_MODALITIES,
   assertAllowedKeys,
+  assertExactKeys,
+  hasOwn,
+  isPlainObject,
   rejectDirectPiiKeys,
   rejectServerIssuedFieldOverrides,
   requireField,
@@ -14,11 +27,14 @@ const {
   validateConditionClass,
   validateDefinition,
   validateInputObject,
+  validateInstrumentationProtocolDefinition,
+  validateNonnegativeSafeInteger,
   validateOptionalString,
   validatePartialReference,
   validatePositiveVersion,
   validateReferenceKind,
   validateResponseModalities,
+  validateRubricDefinition,
   validateStableId,
   validateStimulusModalities,
   validateTargetNodeIds,
@@ -27,8 +43,11 @@ const {
 } = require('./evidenceValidation');
 const {
   buildAttemptOpenDigestInput,
+  buildFinalizationDigestInput,
   buildSnapshotDigestInput,
+  digestFinalizationPayload,
   digestSemanticPayload,
+  normalizeFinalizationValue,
 } = require('./evidenceNormalization');
 
 const VERSION_SERVER_FIELDS = [
@@ -934,6 +953,927 @@ async function openAttempt(pool, input) {
   }
 }
 
+const FINALIZATION_INPUT_KEYS = Object.freeze([
+  'attemptId',
+  'finalizationIdempotencyIdentity',
+  'instrumentationProtocolId',
+  'instrumentationProtocolVersion',
+  'responseKind',
+  'responseText',
+  'responseJson',
+  'responseRef',
+  'inputEnabledOffsetMs',
+  'firstValidActivityOffsetMs',
+  'submittedOffsetMs',
+  'reportedClientMonotonicDurationMs',
+  'actualStimulusModalities',
+  'actualResponseModalities',
+  'evaluations',
+  'correctionAggregates',
+]);
+const REQUIRED_FINALIZATION_INPUT_KEYS = Object.freeze([
+  'attemptId',
+  'finalizationIdempotencyIdentity',
+  'instrumentationProtocolId',
+  'instrumentationProtocolVersion',
+  'responseKind',
+  'actualStimulusModalities',
+  'actualResponseModalities',
+  'evaluations',
+  'correctionAggregates',
+]);
+const TIMING_FIELD_NAMES = Object.freeze([
+  'inputEnabledOffsetMs',
+  'firstValidActivityOffsetMs',
+  'submittedOffsetMs',
+  'reportedClientMonotonicDurationMs',
+]);
+
+function validateFinalizationTopLevelShape(input) {
+  validateInputObject(input);
+  assertAllowedKeys(input, FINALIZATION_INPUT_KEYS);
+  for (const key of Object.keys(input)) {
+    if (input[key] === undefined) {
+      throw new ContractViolationError(`${key} must not be undefined`);
+    }
+  }
+  for (const key of REQUIRED_FINALIZATION_INPUT_KEYS) {
+    if (!hasOwn(input, key)) {
+      throw new MissingRequiredFieldError(`${key} is required`);
+    }
+  }
+}
+
+function normalizeFinalizationBaseInput(input) {
+  const responseKind = input.responseKind;
+  if (typeof responseKind !== 'string' || !RESPONSE_KINDS.includes(responseKind)) {
+    throw new ContractViolationError('responseKind is invalid');
+  }
+  if (!Array.isArray(input.evaluations)) {
+    throw new ContractViolationError('evaluations must be an array');
+  }
+  if (!Array.isArray(input.correctionAggregates)) {
+    throw new ContractViolationError('correctionAggregates must be an array');
+  }
+
+  return {
+    attemptId: validateUuid(input.attemptId, 'attemptId'),
+    finalizationIdempotencyIdentity: validateStableId(
+      input.finalizationIdempotencyIdentity,
+      'finalizationIdempotencyIdentity'
+    ),
+    instrumentationProtocolId: validateStableId(
+      input.instrumentationProtocolId,
+      'instrumentationProtocolId'
+    ),
+    instrumentationProtocolVersion: validatePositiveVersion(
+      input.instrumentationProtocolVersion,
+      'instrumentationProtocolVersion'
+    ),
+    responseKind,
+    actualStimulusModalities: input.actualStimulusModalities,
+    actualResponseModalities: input.actualResponseModalities,
+    evaluations: input.evaluations,
+    correctionAggregates: input.correctionAggregates,
+  };
+}
+
+function canonicalizeModalities(value, fieldName, allowedValues, protocolAllowed) {
+  const normalized = fieldName === 'actualStimulusModalities'
+    ? validateStimulusModalities(value, fieldName)
+    : validateResponseModalities(value, fieldName);
+  if (normalized.some((item, index) => value[index] !== item)) {
+    throw new ContractViolationError(`${fieldName} values must use exact modality names`);
+  }
+  const protocolAllowedSet = new Set(protocolAllowed);
+  if (normalized.some((item) => !protocolAllowedSet.has(item))) {
+    throw new ContractViolationError(`${fieldName} contains a protocol-disallowed modality`);
+  }
+  return [...normalized].sort(
+    (left, right) => allowedValues.indexOf(left) - allowedValues.indexOf(right)
+  );
+}
+
+function enforceModalityCoverage(actual, planned, coverage, fieldName) {
+  const plannedSet = new Set(planned);
+  if (coverage === 'EXACT_PLANNED') {
+    if (actual.length !== plannedSet.size || actual.some((item) => !plannedSet.has(item))) {
+      throw new ContractViolationError(`${fieldName} must equal the planned modality set`);
+    }
+    return;
+  }
+  if (actual.some((item) => !plannedSet.has(item))) {
+    throw new ContractViolationError(`${fieldName} must be a nonempty subset of planned modalities`);
+  }
+}
+
+function normalizeResponse(input, responseKind, responseBounds) {
+  const payloadFields = ['responseText', 'responseJson', 'responseRef'];
+  const requiredField = {
+    TEXT: 'responseText',
+    JSON: 'responseJson',
+    REFERENCE: 'responseRef',
+  }[responseKind];
+
+  for (const field of payloadFields) {
+    if (field !== requiredField && hasOwn(input, field)) {
+      throw new ContractViolationError(`${field} is prohibited for responseKind ${responseKind}`);
+    }
+  }
+  if (requiredField && !hasOwn(input, requiredField)) {
+    throw new MissingRequiredFieldError(`${requiredField} is required`);
+  }
+
+  const normalized = {
+    responseText: null,
+    responseJson: null,
+    responseRef: null,
+  };
+  if (responseKind === 'TEXT') {
+    if (
+      typeof input.responseText !== 'string'
+      || input.responseText.length === 0
+      || input.responseText.trim().length === 0
+    ) {
+      throw new ContractViolationError('responseText must be a non-whitespace string');
+    }
+    if (Buffer.byteLength(input.responseText, 'utf8') > responseBounds.textMaxUtf8Bytes) {
+      throw new OutOfRangeValueError('responseText exceeds the protocol byte bound');
+    }
+    normalized.responseText = input.responseText;
+  } else if (responseKind === 'REFERENCE') {
+    if (typeof input.responseRef !== 'string') {
+      throw new ContractViolationError('responseRef must be a string');
+    }
+    const responseRef = input.responseRef.trim();
+    if (responseRef.length === 0) {
+      throw new ContractViolationError('responseRef must be nonempty after trimming');
+    }
+    if (Buffer.byteLength(responseRef, 'utf8') > responseBounds.referenceMaxUtf8Bytes) {
+      throw new OutOfRangeValueError('responseRef exceeds the protocol byte bound');
+    }
+    normalized.responseRef = responseRef;
+  } else if (responseKind === 'JSON') {
+    if (!Array.isArray(input.responseJson) && !isPlainObject(input.responseJson)) {
+      throw new ContractViolationError('responseJson must be a plain object or array');
+    }
+    normalized.responseJson = normalizeFinalizationValue(input.responseJson, '$.responseJson');
+  }
+  return normalized;
+}
+
+function normalizeTiming(input, timingPolicy) {
+  const profile = timingPolicy.collectionProfile;
+  const required = profile === 'FULL'
+    ? new Set(TIMING_FIELD_NAMES)
+    : profile === 'RESPONSE_ONLY'
+      ? new Set(['inputEnabledOffsetMs', 'submittedOffsetMs'])
+      : new Set();
+  const prohibited = profile === 'NONE' ? new Set(TIMING_FIELD_NAMES) : new Set();
+  const timing = {};
+
+  for (const field of TIMING_FIELD_NAMES) {
+    const present = hasOwn(input, field);
+    if (required.has(field) && !present) {
+      throw new MissingRequiredFieldError(`${field} is required for timing profile ${profile}`);
+    }
+    if (prohibited.has(field) && present) {
+      throw new ContractViolationError(`${field} is prohibited for timing profile ${profile}`);
+    }
+    timing[field] = present
+      ? validateNonnegativeSafeInteger(input[field], field)
+      : null;
+  }
+
+  if (
+    timing.inputEnabledOffsetMs !== null
+    && timing.firstValidActivityOffsetMs !== null
+    && timing.inputEnabledOffsetMs > timing.firstValidActivityOffsetMs
+  ) {
+    throw new OutOfRangeValueError('timing offsets are inverted');
+  }
+  if (
+    timing.firstValidActivityOffsetMs !== null
+    && timing.submittedOffsetMs !== null
+    && timing.firstValidActivityOffsetMs > timing.submittedOffsetMs
+  ) {
+    throw new OutOfRangeValueError('timing offsets are inverted');
+  }
+  if (
+    timing.inputEnabledOffsetMs !== null
+    && timing.submittedOffsetMs !== null
+    && timing.inputEnabledOffsetMs > timing.submittedOffsetMs
+  ) {
+    throw new OutOfRangeValueError('timing offsets are inverted');
+  }
+
+  let mismatch = false;
+  if (timing.reportedClientMonotonicDurationMs !== null) {
+    const expected = timing.submittedOffsetMs - timing.inputEnabledOffsetMs;
+    const delta = Math.abs(timing.reportedClientMonotonicDurationMs - expected);
+    mismatch = delta > timingPolicy.durationConsistencyToleranceMs;
+    if (mismatch && timingPolicy.durationMismatchBehavior === 'REJECT') {
+      throw new OutOfRangeValueError('reported client duration exceeds the protocol tolerance');
+    }
+  }
+
+  let clockQuality;
+  if (mismatch) {
+    clockQuality = 'INVALID';
+  } else if (profile === 'NONE') {
+    clockQuality = 'UNKNOWN';
+  } else if (profile === 'RESPONSE_ONLY' && (
+    timing.firstValidActivityOffsetMs === null
+    || timing.reportedClientMonotonicDurationMs === null
+  )) {
+    clockQuality = 'DEGRADED';
+  } else {
+    clockQuality = 'VALID';
+  }
+  return { ...timing, clockQuality };
+}
+
+function normalizeCorrectionAggregates(value, coverageMode) {
+  if (!Array.isArray(value)) {
+    throw new ContractViolationError('correctionAggregates must be an array');
+  }
+  if (coverageMode === 'NOT_COLLECTED') {
+    if (value.length !== 0) {
+      throw new ContractViolationError('correctionAggregates must be empty when not collected');
+    }
+    return [];
+  }
+
+  const expectedKeys = [];
+  for (const initiator of CORRECTION_INITIATORS) {
+    for (const feedbackPhase of FEEDBACK_PHASES) {
+      for (const correctionOutcome of CORRECTION_OUTCOMES) {
+        expectedKeys.push(`${initiator}\u0000${feedbackPhase}\u0000${correctionOutcome}`);
+      }
+    }
+  }
+  if (value.length !== expectedKeys.length) {
+    throw new ContractViolationError('correctionAggregates must contain all 12 buckets');
+  }
+
+  const seen = new Set();
+  const normalized = value.map((item, index) => {
+    assertExactKeys(
+      item,
+      ['initiator', 'feedbackPhase', 'correctionOutcome', 'count'],
+      `correctionAggregates[${index}]`
+    );
+    if (
+      !CORRECTION_INITIATORS.includes(item.initiator)
+      || !FEEDBACK_PHASES.includes(item.feedbackPhase)
+      || !CORRECTION_OUTCOMES.includes(item.correctionOutcome)
+    ) {
+      throw new ContractViolationError('correction aggregate contains an invalid dimension');
+    }
+    const key = `${item.initiator}\u0000${item.feedbackPhase}\u0000${item.correctionOutcome}`;
+    if (seen.has(key)) {
+      throw new ContractViolationError('correctionAggregates contains a duplicate bucket');
+    }
+    seen.add(key);
+    return {
+      initiator: item.initiator,
+      feedbackPhase: item.feedbackPhase,
+      correctionOutcome: item.correctionOutcome,
+      count: validateNonnegativeSafeInteger(
+        item.count,
+        `correctionAggregates[${index}].count`,
+        { postgresInteger: true }
+      ),
+    };
+  });
+  if (expectedKeys.some((key) => !seen.has(key))) {
+    throw new ContractViolationError('correctionAggregates coverage is incomplete');
+  }
+  return normalized.sort((left, right) => (
+    CORRECTION_INITIATORS.indexOf(left.initiator)
+      - CORRECTION_INITIATORS.indexOf(right.initiator)
+    || FEEDBACK_PHASES.indexOf(left.feedbackPhase)
+      - FEEDBACK_PHASES.indexOf(right.feedbackPhase)
+    || CORRECTION_OUTCOMES.indexOf(left.correctionOutcome)
+      - CORRECTION_OUTCOMES.indexOf(right.correctionOutcome)
+  ));
+}
+
+async function normalizeEvaluations(client, value, snapshotNodes, rubric) {
+  if (!Array.isArray(value)) {
+    throw new ContractViolationError('evaluations must be an array');
+  }
+  const targetById = new Map(snapshotNodes.map((row) => [row.node_id, row]));
+  const seen = new Set();
+  const attributedNodeIds = new Set();
+  const normalizedById = new Map();
+
+  for (let index = 0; index < value.length; index += 1) {
+    const item = value[index];
+    assertExactKeys(item, ['nodeId', 'rubricOutcome', 'isCorrect'], `evaluations[${index}]`);
+    const nodeId = validateStableId(item.nodeId, `evaluations[${index}].nodeId`);
+    if (!targetById.has(nodeId)) {
+      throw new ContractViolationError(`evaluation node is not in the assignment snapshot: ${nodeId}`);
+    }
+    if (seen.has(nodeId)) {
+      throw new ContractViolationError(`duplicate evaluation node: ${nodeId}`);
+    }
+    seen.add(nodeId);
+
+    const outcome = item.rubricOutcome;
+    assertExactKeys(outcome, [
+      'classification',
+      'linguisticCategory',
+      'attributionRelation',
+      'attributedNodeId',
+      'rubricRuleId',
+    ], `evaluations[${index}].rubricOutcome`);
+    if (!CLASSIFICATION_VOCABULARY.includes(outcome.classification)) {
+      throw new ContractViolationError('rubricOutcome classification is invalid');
+    }
+    const rubricRuleId = validateStableId(
+      outcome.rubricRuleId,
+      `evaluations[${index}].rubricOutcome.rubricRuleId`
+    );
+    if (!rubric.rubricRuleIds.includes(rubricRuleId)) {
+      throw new ContractViolationError('rubricOutcome rubricRuleId is not rubric-authorized');
+    }
+    if (item.isCorrect !== null && typeof item.isCorrect !== 'boolean') {
+      throw new ContractViolationError('isCorrect must be boolean or null');
+    }
+
+    const scorable = outcome.classification === 'NO_ERROR'
+      || outcome.classification === 'LINGUISTIC_ERROR';
+    let attributedNodeId = outcome.attributedNodeId;
+    if (outcome.classification === 'NO_ERROR') {
+      if (
+        outcome.linguisticCategory !== null
+        || outcome.attributionRelation !== null
+        || attributedNodeId !== null
+      ) {
+        throw new ContractViolationError('NO_ERROR has non-applicable rubric fields');
+      }
+    } else if (outcome.classification === 'LINGUISTIC_ERROR') {
+      if (
+        !LINGUISTIC_CATEGORY_VOCABULARY.includes(outcome.linguisticCategory)
+        || !ATTRIBUTION_RELATION_VOCABULARY.includes(outcome.attributionRelation)
+      ) {
+        throw new ContractViolationError('LINGUISTIC_ERROR rubric fields are invalid');
+      }
+      if (outcome.attributionRelation === 'TARGET') {
+        if (attributedNodeId !== nodeId) {
+          throw new ContractViolationError('TARGET attribution must identify the evaluation node');
+        }
+      } else if (
+        outcome.attributionRelation === 'PREREQUISITE'
+        || outcome.attributionRelation === 'CONTRAST'
+      ) {
+        attributedNodeId = validateStableId(
+          attributedNodeId,
+          `evaluations[${index}].rubricOutcome.attributedNodeId`
+        );
+        attributedNodeIds.add(attributedNodeId);
+      } else if (attributedNodeId !== null) {
+        throw new ContractViolationError('UNRESOLVED attribution requires null attributedNodeId');
+      }
+    } else if (
+      outcome.linguisticCategory !== null
+      || outcome.attributionRelation !== null
+      || attributedNodeId !== null
+    ) {
+      throw new ContractViolationError('unscorable classifications have non-applicable fields');
+    }
+
+    if (rubric.scoreMode === 'BINARY') {
+      const expectedCorrect = outcome.classification === 'NO_ERROR'
+        ? true
+        : outcome.classification === 'LINGUISTIC_ERROR'
+          ? false
+          : null;
+      if (item.isCorrect !== expectedCorrect) {
+        throw new ContractViolationError('isCorrect is inconsistent with the binary rubric');
+      }
+    } else if (item.isCorrect !== null) {
+      throw new ContractViolationError('NON_BINARY rubrics require null isCorrect');
+    }
+
+    const normalizedOutcome = normalizeFinalizationValue({
+      classification: outcome.classification,
+      linguisticCategory: outcome.linguisticCategory,
+      attributionRelation: outcome.attributionRelation,
+      attributedNodeId,
+      rubricRuleId,
+    }, `evaluations[${index}].rubricOutcome`);
+    normalizedById.set(nodeId, {
+      nodeId,
+      rubricOutcome: normalizedOutcome,
+      isCorrect: item.isCorrect,
+      scorable,
+    });
+  }
+
+  if (seen.size !== snapshotNodes.length || snapshotNodes.some((row) => !seen.has(row.node_id))) {
+    throw new ContractViolationError('evaluations must cover every snapshot target node exactly once');
+  }
+
+  if (attributedNodeIds.size > 0) {
+    const requestedIds = [...attributedNodeIds];
+    const { rows } = await client.query(
+      'SELECT node_id FROM grammar_nodes WHERE node_id = ANY($1::text[])',
+      [requestedIds]
+    );
+    const existingIds = new Set(rows.map((row) => row.node_id));
+    const missing = requestedIds.find((nodeId) => !existingIds.has(nodeId));
+    if (missing) {
+      throw new NotFoundError(`Unknown attributedNodeId: ${missing}`);
+    }
+  }
+
+  for (const evaluation of normalizedById.values()) {
+    const relation = evaluation.rubricOutcome.attributionRelation;
+    if (relation !== 'PREREQUISITE' && relation !== 'CONTRAST') continue;
+    const authority = rubric.attributionAuthority.byTargetNode[evaluation.nodeId];
+    const allowedIds = relation === 'PREREQUISITE'
+      ? authority.prerequisiteNodeIds
+      : authority.contrastNodeIds;
+    if (!allowedIds.includes(evaluation.rubricOutcome.attributedNodeId)) {
+      throw new ContractViolationError(`${relation} attribution is not rubric-authorized`);
+    }
+  }
+
+  return snapshotNodes.map((row) => normalizedById.get(row.node_id));
+}
+
+function deriveAttemptOutcome(responseKind, evaluations) {
+  const classifications = evaluations.map(
+    (evaluation) => evaluation.rubricOutcome.classification
+  );
+  const modalityFailureCount = classifications.filter(
+    (classification) => classification === 'MODALITY_INPUT_FAILURE'
+  ).length;
+  if (modalityFailureCount > 0) {
+    if (modalityFailureCount !== evaluations.length) {
+      throw new ContractViolationError('MODALITY_INPUT_FAILURE must be uniform');
+    }
+    if (responseKind !== 'NORMAL_EMPTY') {
+      throw new ContractViolationError('MODALITY_INPUT_FAILURE requires NORMAL_EMPTY');
+    }
+    return 'TECHNICAL_INVALID';
+  }
+  if (responseKind === 'NORMAL_EMPTY') {
+    if (classifications.some((classification) => classification !== 'NO_EVALUABLE_RESPONSE')) {
+      throw new ContractViolationError('NORMAL_EMPTY requires NO_EVALUABLE_RESPONSE evaluations');
+    }
+    return 'UNSCORABLE';
+  }
+  return evaluations.some((evaluation) => evaluation.scorable)
+    ? 'SCORABLE'
+    : 'UNSCORABLE';
+}
+
+async function loadFinalizationByAttempt(queryable, attemptId) {
+  const { rows } = await queryable.query(
+    'SELECT * FROM evidence_attempt_finalizations WHERE attempt_id = $1',
+    [attemptId]
+  );
+  return rows[0] || null;
+}
+
+function replayFinalizationOrConflict(row, identity, digest) {
+  if (!row) {
+    throw new ContractViolationError('finalization conflict could not be reloaded');
+  }
+  if (row.finalization_idempotency_identity !== identity) {
+    throw new ContractViolationError('attempt already has a different finalization identity');
+  }
+  if (
+    row.finalization_payload_digest !== digest.digest
+    || row.digest_algorithm !== digest.digestAlgorithm
+    || row.normalization_version !== digest.normalizationVersion
+  ) {
+    throw new ContractViolationError(
+      'finalization identity was already used with a different normalized payload'
+    );
+  }
+  return { ...row.replay_result, replayed: true };
+}
+
+function mapFinalizationDatabaseError(error) {
+  if (error && typeof error.code === 'string' && [
+    'INVALID_ID',
+    'MISSING_REQUIRED_FIELD',
+    'OUT_OF_RANGE_VALUE',
+    'CONTRACT_VIOLATION',
+  ].includes(error.code)) {
+    return error;
+  }
+  if (error?.code === '23503') {
+    return new NotFoundError('finalizeAttempt: referenced row does not exist');
+  }
+  if (
+    error?.code === '23505'
+    || error?.code === '23514'
+    || error?.code === '23502'
+    || error?.code === '22P02'
+  ) {
+    return new ContractViolationError('finalizeAttempt: database contract rejected the request');
+  }
+  if (error?.code === '22001' || error?.code === '22003') {
+    return new OutOfRangeValueError('finalizeAttempt: value exceeds the repository bound');
+  }
+  return error;
+}
+
+async function finalizeAttempt(pool, input) {
+  validateFinalizationTopLevelShape(input);
+  const serverReceivedAt = new Date().toISOString();
+  const normalizedBase = normalizeFinalizationBaseInput(input);
+  if (!pool || typeof pool.connect !== 'function') {
+    throw new ContractViolationError('pool.connect is required');
+  }
+
+  const client = await pool.connect();
+  let digest;
+  try {
+    await client.query('BEGIN');
+
+    const { rows: relationRows } = await client.query(
+      `SELECT assignment_id, session_id
+         FROM evidence_attempts
+        WHERE attempt_id = $1`,
+      [normalizedBase.attemptId]
+    );
+    const relation = relationRows[0];
+    if (!relation) {
+      throw new NotFoundError(`Unknown attemptId: ${normalizedBase.attemptId}`);
+    }
+
+    const { rows: assignmentRows } = await client.query(
+      `SELECT
+         a.assignment_id,
+         a.enrollment_id,
+         a.terminal_outcome AS assignment_terminal_outcome,
+         a.superseded_by,
+         e.status AS enrollment_status,
+         snap.rubric_id,
+         snap.rubric_version,
+         snap.instrumentation_protocol_id,
+         snap.instrumentation_protocol_version,
+         snap.planned_stimulus_modalities,
+         snap.planned_response_modalities
+       FROM evidence_assignments a
+       JOIN evidence_enrollments e ON e.enrollment_id = a.enrollment_id
+       LEFT JOIN evidence_assignment_snapshots snap ON snap.assignment_id = a.assignment_id
+      WHERE a.assignment_id = $1
+      FOR UPDATE OF a`,
+      [relation.assignment_id]
+    );
+    const assignment = assignmentRows[0];
+    if (!assignment) {
+      throw new NotFoundError(`Unknown assignmentId: ${relation.assignment_id}`);
+    }
+
+    const { rows: sessionRows } = await client.query(
+      `SELECT session_id, enrollment_id, ended_at, terminal_outcome
+         FROM evidence_sessions
+        WHERE session_id = $1
+        FOR UPDATE`,
+      [relation.session_id]
+    );
+    const session = sessionRows[0];
+    if (!session) {
+      throw new NotFoundError(`Unknown sessionId: ${relation.session_id}`);
+    }
+
+    const { rows: attemptRows } = await client.query(
+      `SELECT attempt_id, assignment_id, session_id
+         FROM evidence_attempts
+        WHERE attempt_id = $1
+        FOR UPDATE`,
+      [normalizedBase.attemptId]
+    );
+    const attempt = attemptRows[0];
+    if (!attempt) {
+      throw new NotFoundError(`Unknown attemptId: ${normalizedBase.attemptId}`);
+    }
+    if (
+      attempt.assignment_id !== assignment.assignment_id
+      || attempt.session_id !== session.session_id
+    ) {
+      throw new ContractViolationError('attempt assignment/session relationship is invalid');
+    }
+    if (assignment.enrollment_id !== session.enrollment_id) {
+      throw new ContractViolationError('assignment and session must share enrollment ownership');
+    }
+    if (
+      assignment.rubric_id === null
+      || assignment.rubric_version === null
+      || assignment.instrumentation_protocol_id === null
+      || assignment.instrumentation_protocol_version === null
+    ) {
+      throw new ContractViolationError('assignment snapshot is missing');
+    }
+
+    const { rows: snapshotNodes } = await client.query(
+      `SELECT node_id, ordinal
+         FROM evidence_assignment_snapshot_nodes
+        WHERE assignment_id = $1
+        ORDER BY ordinal ASC`,
+      [assignment.assignment_id]
+    );
+    if (
+      snapshotNodes.length === 0
+      || snapshotNodes.some((row, index) => Number(row.ordinal) !== index)
+    ) {
+      throw new ContractViolationError('assignment snapshot target-node set is incomplete');
+    }
+
+    if (
+      assignment.instrumentation_protocol_id
+        !== normalizedBase.instrumentationProtocolId
+      || Number(assignment.instrumentation_protocol_version)
+        !== normalizedBase.instrumentationProtocolVersion
+    ) {
+      throw new ContractViolationError(
+        'finalization instrumentation protocol must match the assignment snapshot'
+      );
+    }
+
+    const { rows: protocolRows } = await client.query(
+      `SELECT definition
+         FROM evidence_reference_versions
+        WHERE reference_kind = 'INSTRUMENTATION_PROTOCOL'
+          AND reference_id = $1
+          AND version = $2`,
+      [
+        assignment.instrumentation_protocol_id,
+        assignment.instrumentation_protocol_version,
+      ]
+    );
+    if (protocolRows.length === 0) {
+      throw new NotFoundError('Unknown assignment instrumentation protocol version');
+    }
+    const protocol = validateInstrumentationProtocolDefinition(protocolRows[0].definition);
+
+    const { rows: rubricRows } = await client.query(
+      `SELECT definition
+         FROM evidence_reference_versions
+        WHERE reference_kind = 'RUBRIC'
+          AND reference_id = $1
+          AND version = $2`,
+      [assignment.rubric_id, assignment.rubric_version]
+    );
+    if (rubricRows.length === 0) {
+      throw new NotFoundError('Unknown assignment rubric version');
+    }
+    const rubric = validateRubricDefinition(
+      rubricRows[0].definition,
+      snapshotNodes.map((row) => row.node_id)
+    );
+
+    const actualStimulusModalities = canonicalizeModalities(
+      normalizedBase.actualStimulusModalities,
+      'actualStimulusModalities',
+      STIMULUS_MODALITIES,
+      protocol.modalityPolicy.allowedStimulusModalities
+    );
+    const actualResponseModalities = canonicalizeModalities(
+      normalizedBase.actualResponseModalities,
+      'actualResponseModalities',
+      RESPONSE_MODALITIES,
+      protocol.modalityPolicy.allowedResponseModalities
+    );
+    enforceModalityCoverage(
+      actualStimulusModalities,
+      assignment.planned_stimulus_modalities,
+      protocol.modalityPolicy.stimulusCoverage,
+      'actualStimulusModalities'
+    );
+    enforceModalityCoverage(
+      actualResponseModalities,
+      assignment.planned_response_modalities,
+      protocol.modalityPolicy.responseCoverage,
+      'actualResponseModalities'
+    );
+
+    const response = normalizeResponse(input, normalizedBase.responseKind, protocol.responseBounds);
+    if (response.responseJson !== null) {
+      const { rows: sizeRows } = await client.query(
+        'SELECT octet_length(($1::jsonb)::text) AS byte_count',
+        [JSON.stringify(response.responseJson)]
+      );
+      if (Number(sizeRows[0].byte_count) > protocol.responseBounds.jsonMaxUtf8Bytes) {
+        throw new OutOfRangeValueError('responseJson exceeds the protocol byte bound');
+      }
+    }
+    const timing = normalizeTiming(input, protocol.timingPolicy);
+    const evaluations = await normalizeEvaluations(
+      client,
+      normalizedBase.evaluations,
+      snapshotNodes,
+      rubric
+    );
+    const { rows: rubricSizeRows } = await client.query(
+      `SELECT COALESCE(bool_and(octet_length(value::text) <= 16384), true) AS within_bound
+         FROM jsonb_array_elements($1::jsonb)`,
+      [JSON.stringify(evaluations.map((evaluation) => evaluation.rubricOutcome))]
+    );
+    if (!rubricSizeRows[0].within_bound) {
+      throw new OutOfRangeValueError('rubricOutcome exceeds the repository byte bound');
+    }
+    const correctionAggregates = normalizeCorrectionAggregates(
+      normalizedBase.correctionAggregates,
+      protocol.correctionCoverageMode
+    );
+    const attemptOutcome = deriveAttemptOutcome(normalizedBase.responseKind, evaluations);
+
+    const normalizedForDigest = {
+      ...normalizedBase,
+      ...response,
+      ...timing,
+      actualStimulusModalities,
+      actualResponseModalities,
+      evaluations: evaluations.map(({ nodeId, rubricOutcome, isCorrect }) => ({
+        nodeId,
+        rubricOutcome,
+        isCorrect,
+      })),
+      correctionAggregates,
+    };
+    digest = digestFinalizationPayload(buildFinalizationDigestInput(normalizedForDigest));
+
+    const existing = await loadFinalizationByAttempt(client, normalizedBase.attemptId);
+    if (existing) {
+      const replay = replayFinalizationOrConflict(
+        existing,
+        normalizedBase.finalizationIdempotencyIdentity,
+        digest
+      );
+      await client.query('COMMIT');
+      return replay;
+    }
+
+    if (
+      assignment.enrollment_status !== 'ACTIVE'
+      || assignment.assignment_terminal_outcome !== null
+      || assignment.superseded_by !== null
+      || session.ended_at !== null
+      || session.terminal_outcome !== null
+    ) {
+      throw new ContractViolationError(
+        'initial finalization requires active enrollment, assignment, and session'
+      );
+    }
+
+    const receivedMs = new Date(serverReceivedAt).getTime();
+    const finalizedAt = new Date(Math.max(Date.now(), receivedMs)).toISOString();
+    const replayResult = {
+      replayed: false,
+      attemptId: normalizedBase.attemptId,
+      assignmentId: assignment.assignment_id,
+      sessionId: session.session_id,
+      finalizationIdempotencyIdentity:
+        normalizedBase.finalizationIdempotencyIdentity,
+      serverReceivedAt,
+      finalizedAt,
+      clockQuality: timing.clockQuality,
+      responseKind: normalizedBase.responseKind,
+      attemptOutcome,
+      instrumentationProtocolId: assignment.instrumentation_protocol_id,
+      instrumentationProtocolVersion: Number(
+        assignment.instrumentation_protocol_version
+      ),
+      rubricId: assignment.rubric_id,
+      rubricVersion: Number(assignment.rubric_version),
+      evaluationCount: evaluations.length,
+      correctionBucketCount: correctionAggregates.length,
+    };
+
+    await client.query(
+      `INSERT INTO evidence_attempt_finalizations (
+         attempt_id,
+         finalization_idempotency_identity,
+         finalization_payload_digest,
+         digest_algorithm,
+         normalization_version,
+         server_received_at,
+         finalized_at,
+         clock_quality,
+         response_kind,
+         attempt_outcome,
+         instrumentation_protocol_id,
+         instrumentation_protocol_version,
+         actual_stimulus_modalities,
+         actual_response_modalities,
+         input_enabled_offset_ms,
+         first_valid_activity_offset_ms,
+         submitted_offset_ms,
+         reported_client_monotonic_duration_ms,
+         response_text,
+         response_json,
+         response_ref,
+         replay_result
+       )
+       VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+         $13::jsonb, $14::jsonb, $15, $16, $17, $18, $19, $20::jsonb, $21, $22::jsonb
+       )`,
+      [
+        normalizedBase.attemptId,
+        normalizedBase.finalizationIdempotencyIdentity,
+        digest.digest,
+        digest.digestAlgorithm,
+        digest.normalizationVersion,
+        serverReceivedAt,
+        finalizedAt,
+        timing.clockQuality,
+        normalizedBase.responseKind,
+        attemptOutcome,
+        assignment.instrumentation_protocol_id,
+        Number(assignment.instrumentation_protocol_version),
+        JSON.stringify(actualStimulusModalities),
+        JSON.stringify(actualResponseModalities),
+        timing.inputEnabledOffsetMs,
+        timing.firstValidActivityOffsetMs,
+        timing.submittedOffsetMs,
+        timing.reportedClientMonotonicDurationMs,
+        response.responseText,
+        response.responseJson === null ? null : JSON.stringify(response.responseJson),
+        response.responseRef,
+        JSON.stringify(replayResult),
+      ]
+    );
+
+    for (const evaluation of evaluations) {
+      await client.query(
+        `INSERT INTO evidence_target_node_evaluations (
+           evaluation_id,
+           attempt_id,
+           node_id,
+           rubric_id,
+           rubric_version,
+           rubric_outcome,
+           scorable,
+           is_correct,
+           evaluation_source
+         )
+         VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, 'RULE')`,
+        [
+          randomUUID(),
+          normalizedBase.attemptId,
+          evaluation.nodeId,
+          assignment.rubric_id,
+          Number(assignment.rubric_version),
+          JSON.stringify(evaluation.rubricOutcome),
+          evaluation.scorable,
+          evaluation.isCorrect,
+        ]
+      );
+    }
+
+    for (const aggregate of correctionAggregates) {
+      await client.query(
+        `INSERT INTO evidence_correction_aggregates (
+           attempt_id, initiator, feedback_phase, correction_outcome, count
+         )
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          normalizedBase.attemptId,
+          aggregate.initiator,
+          aggregate.feedbackPhase,
+          aggregate.correctionOutcome,
+          aggregate.count,
+        ]
+      );
+    }
+
+    await client.query('COMMIT');
+    return replayResult;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // Preserve the original failure.
+    }
+
+    if (
+      error?.code === '23505'
+      && error.constraint === 'evidence_attempt_finalizations_pk'
+      && digest
+    ) {
+      const existing = await loadFinalizationByAttempt(pool, normalizedBase.attemptId);
+      return replayFinalizationOrConflict(
+        existing,
+        normalizedBase.finalizationIdempotencyIdentity,
+        digest
+      );
+    }
+    throw mapFinalizationDatabaseError(error);
+  } finally {
+    client.release();
+  }
+}
+
 async function getExperimentVersion(pool, experimentId, version) {
   const id = validateStableId(experimentId, 'experimentId');
   const normalizedVersion = validatePositiveVersion(version, 'version');
@@ -1025,6 +1965,7 @@ module.exports = {
   createAssignment,
   createEnrollment,
   createParticipant,
+  finalizeAttempt,
   getAssignmentAggregate,
   getAttemptById,
   getAttemptByIdempotency,
