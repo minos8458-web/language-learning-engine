@@ -267,6 +267,19 @@
 | 구현 허용 파일 | `src/instrumentation/evidenceRepository.js`, `src/instrumentation/evidenceValidation.js`, `src/instrumentation/evidenceNormalization.js`, `tests/evidenceFoundationRepository.test.js` |
 | 상태 영향 | AC-017/AC-018 `RESOLVED / IN PROGRESS` 유지. AC-018 `CLOSED`·`IMPLEMENTED`, VL3 §10 전체 PASS, actual-provider 완료 및 Evidence Foundation 전체 완료를 선언하지 않음 |
 
+### Entry 015
+
+| 필드 | 내용 |
+|---|---|
+| 일자 | 2026-07-30 |
+| 대상 문서 | `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `API_CONTRACT.md`, `MIGRATION_GUIDE.md` |
+| 변경 유형 | **Tier C WORDING CORRECTION — NO DATABASE MIGRATION** |
+| Correction | Finalization instrumentation protocol ID/version의 assignment snapshot 일치를 강제하고, uniform `MODALITY_INPUT_FAILURE`가 `responseKind = NORMAL_EMPTY`와 `TECHNICAL_INVALID`를 사용하도록 precedence를 해소한다. §9.4.1–§9.4.12가 current bounded scope에서 §9.4보다 우선하며 rubric ID/version은 assignment snapshot에서 resolve한다 |
+| Prior entry | Entry 014 본문과 기존 current/deferred 범위는 변경하지 않음 |
+| Physical impact | 신규 CHECK·FK·table·column·index·trigger·enum 없음. Existing migration 012와 16 evidence tables로 충분하며 migration 013 생성 금지 |
+| Scope impact | Source·test·`ENGINE_INTERFACE.md`·`VALIDATION_LEVEL3.md`·backlog 변경 없음. Assignment/session lifecycle, recorder, Learning Flow/Public integration 및 actual provider는 deferred |
+| 상태 영향 | AC-017/AC-018 `RESOLVED / IN PROGRESS` 유지. AC-018 `CLOSED`·`IMPLEMENTED`, VL3 §10 전체 PASS, actual-provider 완료 및 Evidence Foundation 전체 완료를 선언하지 않음 |
+
 ---
 
 ## 3. 개정 이력
@@ -286,3 +299,4 @@
 | 1.10 | 2026-07-24 | Entry 012 추가 — Evidence Foundation P0 physical schema를 Tier C additive contract로 기록. `evidence_` object만 신규 도입하고 기존 `progress`·`attempt_records`·`next_review_at` amendment와 production backfill은 하지 않는다. Candidate migration `012_create_evidence_foundation.sql`은 current migration sequence 재확인 조건부이며, recorder disabled default, 실제 PostgreSQL synthetic fixture, existing regression, data-preserving code rollback 및 별도 승인 없는 destructive removal 금지를 명시 |
 | 1.11 | 2026-07-29 | 누락된 Entry 013 revision-history reconciliation — trusted-writer/application-transaction physical-integrity clarification, Pattern D, existing 16-object contract, production caller-supplied test-hook 금지 및 current/deferred 구현 범위를 기존 Entry 013 본문 변경 없이 이력에 연결 |
 | 1.12 | 2026-07-30 | Entry 014 추가 — Evidence Foundation P0 bounded error-classification finalization writer의 exact instrumentation/rubric schema, response/timing/outcome derivation, finalization-specific normalization, idempotency/concurrency와 PostgreSQL error mapping을 기록. Existing migration 012와 16-table contract를 유지하고 migration 013·assignment/session lifecycle·recorder·Learning Flow/Public integration은 금지·deferred로 보존 |
+| 1.13 | 2026-07-30 | Entry 015 추가 — independent review의 M-1/M-2 및 권고 L-1/L-2를 별도 wording correction으로 반영. Assignment snapshot protocol equality, `MODALITY_INPUT_FAILURE` response/outcome precedence, current bounded section precedence와 snapshot-derived rubric authority를 명시하며 NO DATABASE MIGRATION, migration 012 및 16-table contract를 유지 |
