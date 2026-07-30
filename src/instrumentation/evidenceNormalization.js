@@ -7,6 +7,7 @@ const {
 } = require('./evidenceValidation');
 
 const NORMALIZATION_VERSION = 'evidence-semantic-v1';
+const FINALIZATION_NORMALIZATION_VERSION = 'evidence-finalization-v1';
 const DIGEST_ALGORITHM = 'sha256';
 
 const SERVER_ISSUED_FIELD_NAMES = new Set([
@@ -113,6 +114,87 @@ function digestSemanticPayload(value, options = {}) {
   };
 }
 
+function normalizeFinalizationValue(value, path = '$', ancestors = new WeakSet()) {
+  if (value === undefined) {
+    throw new ContractViolationError(`${path} must not be undefined`);
+  }
+  if (value === null) return null;
+
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new ContractViolationError(`${path} must be a finite number`);
+    }
+    return Object.is(value, -0) ? 0 : value;
+  }
+
+  if (value instanceof Date) {
+    throw new ContractViolationError(`${path} must not be a Date`);
+  }
+
+  if (Array.isArray(value)) {
+    if (ancestors.has(value)) {
+      throw new ContractViolationError(`${path} must not contain a cycle`);
+    }
+    ancestors.add(value);
+    const normalized = [];
+    try {
+      for (let index = 0; index < value.length; index += 1) {
+        if (!Object.prototype.hasOwnProperty.call(value, index)) {
+          throw new ContractViolationError(`${path}[${index}] must not be undefined`);
+        }
+        normalized.push(normalizeFinalizationValue(
+          value[index],
+          `${path}[${index}]`,
+          ancestors
+        ));
+      }
+    } finally {
+      ancestors.delete(value);
+    }
+    return normalized;
+  }
+
+  if (isPlainObject(value)) {
+    if (ancestors.has(value)) {
+      throw new ContractViolationError(`${path} must not contain a cycle`);
+    }
+    ancestors.add(value);
+    const normalized = Object.create(null);
+    try {
+      for (const key of Object.keys(value).sort(compareStrings)) {
+        normalized[key] = normalizeFinalizationValue(
+          value[key],
+          `${path}.${key}`,
+          ancestors
+        );
+      }
+    } finally {
+      ancestors.delete(value);
+    }
+    return normalized;
+  }
+
+  throw new ContractViolationError(
+    `${path} must contain only JSON-compatible scalars, arrays, and plain objects`
+  );
+}
+
+function digestFinalizationPayload(value) {
+  const normalizedValue = normalizeFinalizationValue(value);
+  const serialized = serializeNormalized(normalizedValue);
+  return {
+    normalizedValue,
+    serialized,
+    digest: digestSerialized(serialized),
+    digestAlgorithm: DIGEST_ALGORITHM,
+    normalizationVersion: FINALIZATION_NORMALIZATION_VERSION,
+  };
+}
+
 function buildAttemptOpenDigestInput(input) {
   return {
     operationCategory: 'ATTEMPT_OPEN',
@@ -135,13 +217,39 @@ function buildSnapshotDigestInput(snapshot, targetNodeIds) {
   };
 }
 
+function buildFinalizationDigestInput(input) {
+  return {
+    operationCategory: 'ATTEMPT_FINALIZATION',
+    attemptId: input.attemptId,
+    instrumentationProtocolId: input.instrumentationProtocolId,
+    instrumentationProtocolVersion: input.instrumentationProtocolVersion,
+    responseKind: input.responseKind,
+    responseText: input.responseText ?? null,
+    responseJson: input.responseJson ?? null,
+    responseRef: input.responseRef ?? null,
+    inputEnabledOffsetMs: input.inputEnabledOffsetMs ?? null,
+    firstValidActivityOffsetMs: input.firstValidActivityOffsetMs ?? null,
+    submittedOffsetMs: input.submittedOffsetMs ?? null,
+    reportedClientMonotonicDurationMs:
+      input.reportedClientMonotonicDurationMs ?? null,
+    actualStimulusModalities: input.actualStimulusModalities,
+    actualResponseModalities: input.actualResponseModalities,
+    evaluations: input.evaluations,
+    correctionAggregates: input.correctionAggregates,
+  };
+}
+
 module.exports = {
   DIGEST_ALGORITHM,
+  FINALIZATION_NORMALIZATION_VERSION,
   NORMALIZATION_VERSION,
   SERVER_ISSUED_FIELD_NAMES,
   buildAttemptOpenDigestInput,
+  buildFinalizationDigestInput,
   buildSnapshotDigestInput,
+  digestFinalizationPayload,
   digestSemanticPayload,
+  normalizeFinalizationValue,
   normalizeSemanticValue,
   serializeNormalized,
 };
