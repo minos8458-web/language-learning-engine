@@ -465,6 +465,52 @@ function createAttemptInsertFailurePool(basePool) {
   };
 }
 
+// Test-file-only wrapper: hides the result of exactly one matching query
+// (returns { rows: [] }) inside the transaction client, while the pool's
+// top-level .query() keeps delegating to the real, unmodified basePool.
+// This lets a test force a specific in-transaction lookup to come back
+// empty without touching production code or disabling any DB constraint.
+function createHiddenResultPool(basePool, matches) {
+  let hidden = false;
+  return {
+    async connect() {
+      const client = await basePool.connect();
+      return {
+        async query(...args) {
+          const sql = typeof args[0] === 'string' ? args[0] : args[0]?.text;
+          if (!hidden && matches(String(sql))) {
+            hidden = true;
+            return { rows: [] };
+          }
+          return client.query(...args);
+        },
+        release() {
+          client.release();
+        },
+      };
+    },
+    query: basePool.query.bind(basePool),
+  };
+}
+
+function matchesFinalizationLookup(sql) {
+  return sql.trim() === 'SELECT * FROM evidence_attempt_finalizations WHERE attempt_id = $1';
+}
+
+function matchesSnapshotNodesLookup(sql) {
+  return /FROM\s+evidence_assignment_snapshot_nodes\b/i.test(sql);
+}
+
+function matchesInstrumentationProtocolLookup(sql) {
+  return /SELECT\s+definition\s+FROM\s+evidence_reference_versions\s+WHERE\s+reference_kind\s*=\s*'INSTRUMENTATION_PROTOCOL'/i
+    .test(sql);
+}
+
+function matchesRubricLookup(sql) {
+  return /SELECT\s+definition\s+FROM\s+evidence_reference_versions\s+WHERE\s+reference_kind\s*=\s*'RUBRIC'/i
+    .test(sql);
+}
+
 describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
   before(async () => {
     await resetAndMigrate();
@@ -1902,6 +1948,128 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       () => repository.finalizeAttempt(pool, missing),
       'MISSING_REQUIRED_FIELD'
     );
+  });
+
+  test('a small valid jsonMaxUtf8Bytes bound rejects a JSON response using real PostgreSQL JSONB text length', async () => {
+    const fixture = await createConfiguredAttempt({
+      protocolId: 'INSTRUMENTATION_JSON_BOUND_REJECT',
+      protocolDefinition: instrumentationDefinition({ jsonMaxUtf8Bytes: 8 }),
+    });
+    const input = finalizationInputFor(fixture, {
+      responseKind: 'JSON',
+      responseJson: { a: 12 },
+    });
+    delete input.responseText;
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(pool, input),
+      'OUT_OF_RANGE_VALUE'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('rubricOutcome exceeding 16384 bytes of real PostgreSQL JSONB text is rejected', async () => {
+    const bigRubricRuleId = `RULE_${'X'.repeat(16600)}`;
+    const bigRubric = rubricDefinition();
+    bigRubric.rubricRuleIds = [...bigRubric.rubricRuleIds, bigRubricRuleId];
+    const fixture = await createConfiguredAttempt({
+      rubricId: 'RUBRIC_OUTCOME_BOUND_REJECT',
+      rubricDefinition: bigRubric,
+    });
+    const input = finalizationInputFor(fixture, {
+      evaluations: fixture.targetNodeIds.map((nodeId) => evaluation(nodeId, 'NO_ERROR', {
+        rubricRuleId: bigRubricRuleId,
+      })),
+    });
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(pool, input),
+      'OUT_OF_RANGE_VALUE'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('a genuine finalization PK race reloads the committed row and replays it', async () => {
+    const fixture = await createConfiguredAttempt();
+    const input = finalizationInputFor(fixture);
+    const original = await repository.finalizeAttempt(pool, input);
+    assert.equal(original.replayed, false);
+
+    const beforePool = {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount,
+    };
+    const racePool = createHiddenResultPool(pool, matchesFinalizationLookup);
+    const raceInput = finalizationInputFor(fixture, {
+      evaluations: [...input.evaluations].reverse(),
+      correctionAggregates: [...input.correctionAggregates].reverse(),
+    });
+    const replay = await repository.finalizeAttempt(racePool, raceInput);
+
+    assert.equal(replay.replayed, true);
+    assert.equal(replay.serverReceivedAt, original.serverReceivedAt);
+    assert.equal(replay.finalizedAt, original.finalizedAt);
+    assert.deepEqual({ ...replay, replayed: false }, { ...original, replayed: false });
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [1, 2, 12]);
+    assert.equal(pool.waitingCount, 0);
+    assert.equal(pool.totalCount - pool.idleCount, beforePool.total - beforePool.idle);
+  });
+
+  test('NORMAL_EMPTY with only UNCLASSIFIED evaluations is rejected by the NORMAL_EMPTY coverage rule', async () => {
+    const fixture = await createConfiguredAttempt();
+    const input = finalizationInputFor(fixture, {
+      responseKind: 'NORMAL_EMPTY',
+      evaluations: fixture.targetNodeIds.map((nodeId) => evaluation(nodeId, 'UNCLASSIFIED')),
+    });
+    delete input.responseText;
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(pool, input),
+      'CONTRACT_VIOLATION'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('a syntactically valid but unknown attemptId is rejected as INVALID_ID', async () => {
+    const unknownAttemptId = '00000000-0000-4000-8000-000000000999';
+    const fixture = {
+      attempt: { attemptId: unknownAttemptId },
+      protocolId: REFERENCES.instrumentationProtocolId,
+      targetNodeIds: ['NODE_EVIDENCE_A', 'NODE_EVIDENCE_B'],
+    };
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(pool, finalizationInputFor(fixture)),
+      'INVALID_ID'
+    );
+    assert.deepEqual(await readFinalizationCounts(unknownAttemptId), [0, 0, 0]);
+  });
+
+  test('a missing assignment snapshot target-node set is rejected as CONTRACT_VIOLATION', async () => {
+    const fixture = await createConfiguredAttempt();
+    const hiddenSnapshotPool = createHiddenResultPool(pool, matchesSnapshotNodesLookup);
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(hiddenSnapshotPool, finalizationInputFor(fixture)),
+      'CONTRACT_VIOLATION'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('an unknown pinned instrumentation protocol version is rejected as INVALID_ID', async () => {
+    const fixture = await createConfiguredAttempt();
+    const hiddenProtocolPool = createHiddenResultPool(pool, matchesInstrumentationProtocolLookup);
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(hiddenProtocolPool, finalizationInputFor(fixture)),
+      'INVALID_ID'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('an unknown pinned rubric version is rejected as INVALID_ID', async () => {
+    const fixture = await createConfiguredAttempt();
+    const hiddenRubricPool = createHiddenResultPool(pool, matchesRubricLookup);
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(hiddenRubricPool, finalizationInputFor(fixture)),
+      'INVALID_ID'
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
   });
 
   test('test-controlled DB boundary failure rolls back a newly created series', async () => {
