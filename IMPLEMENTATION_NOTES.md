@@ -1,5 +1,9 @@
 # IMPLEMENTATION_NOTES.md — LLE MVP v0.1
 
+> **Historical Implementation Snapshot**
+>
+> This file records MVP v0.1/v0.2 historical implementation. `index.html`, `js/*`, `data/*` describe the implementation at that time. This file is not the current implementation ledger. Current implementation state is owned by `PROJECT_STATUS.md`.
+
 기준 문서: `IMPLEMENTATION_BRIEF_v0.1.md`. 상위 5개 Architecture 문서(PROJECT_VISION / LEARNING_THEORY / CONCEPT_SCHEMA / GRAMMAR_SCHEMA / GRAMMAR_GRAPH)와 충돌 시 상위 문서가 우선.
 
 > 표준 변경의 사유·영향 범위·체크리스트는 `MIGRATION_GUIDE.md`(Architecture 소유)가 기준 문서다. 이 문서는 실제 수정 파일과 테스트 결과만 기록한다.

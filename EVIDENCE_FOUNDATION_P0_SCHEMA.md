@@ -199,7 +199,14 @@ Application transaction은 다음 semantic integrity를 담당한다.
 
 P0는 이를 위해 discriminator column, duplicated ownership column, typed authority table, trigger 또는 추가 composite cross-row FK를 도입하지 않는다. Semantic validation 실패 시 전체 transaction을 rollback한다.
 
-현재 repository milestone은 assignment creation과 attempt open만 구현한다. Finalization, full retry eligibility/cycle enforcement와 recorder orchestration은 후속 milestone이다.
+The initial repository milestone implemented assignment creation and
+attempt open. The current bounded finalization writer is governed by
+§9.4.1–§9.4.12 and has been implemented and runtime-validated as a
+bounded Evidence Foundation operation.
+
+Assignment completion, full retry lifecycle, session lifecycle,
+recorder orchestration and production integration remain deferred.
+This does not declare Evidence Foundation overall complete.
 
 ## 5. Physical entities
 
@@ -3235,3 +3242,4 @@ Approval does not permit or declare:
 |---|---|---|
 | 1.0 | 2026-07-30 | 최초 개정 이력 기록 — 기존 Evidence Foundation P0 physical schema와 trusted-writer baseline을 보존하면서 current bounded `finalizeAttempt(pool, input)` writer의 exact protocol/rubric definition, finalization·evaluation·correction transaction, timestamp·clock-quality·attempt-outcome derivation, normalization, PostgreSQL error mapping 및 current/deferred scope를 추가. Existing migration 012와 16-table contract, production non-interference 및 상태 경계는 불변 |
 | 1.1 | 2026-07-30 | Independent review correction — finalization instrumentation protocol의 assignment snapshot 일치, uniform `MODALITY_INPUT_FAILURE`의 `NORMAL_EMPTY` representation과 outcome precedence, §9.4.1–§9.4.12의 current bounded precedence 및 snapshot-derived rubric ID/version을 명시. Database migration·error code·schema object·status 변경 없음 |
+| 1.2 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §4.8 stale current-state sentence updated: the current bounded finalization writer(§9.4.1–§9.4.12)가 implemented and runtime-validated as a bounded Evidence Foundation operation임을 기록하고, assignment completion·full retry lifecycle·session lifecycle·recorder orchestration·production integration이 deferred임을 명시. Evidence Foundation overall complete는 선언하지 않음. Pattern D, trusted-writer normative contract, migration, schema, behavior 변경 없음 |
