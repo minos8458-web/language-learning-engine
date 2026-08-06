@@ -293,6 +293,23 @@ P1→P2 진입 전 확인:
 - Raw audio 무승인 수집
 - Metric 재계산 불가
 
+## 19.1 Cost and operational integrity stops
+
+1. Cost ceiling exceeded — 사전 승인된 pilot-wide, per-session 또는 per-participant operating cost ceiling 중 하나를 초과. 각 ceiling 금액은 OWNER-DECISION이며 이 patch는 발명하지 않는다.
+2. Cost attribution unavailable — participant, session 또는 provider-operation 단위로 발생 비용을 귀속하거나 재계산할 수 없음.
+3. Infrastructure outage — persistence, participant identity, timing, exposure linkage 또는 audit completeness 보장 중 하나 이상이 protocol-compliant하게 유지되지 않는 장애. (§19의 "participant identity/version linkage 불가"는 탐지된 linkage 실패 fact를 다루고, 본 항목은 그 보장을 위협하는 infrastructure-level outage를 다룬다 — 서로 다른 trigger다.)
+4. Repeated operational failure — 동일 operational failure가 owner-approved retry/recovery policy 적용 후에도 반복. Retry 횟수와 recovery time window는 OWNER-DECISION이며 이 patch에서 확정하지 않는다.
+5. Capacity or quota exhaustion — database, provider, worker, storage 또는 operational quota 문제로 protocol-compliant session을 완료할 수 없음.
+6. Recovery integrity failure — 복구 이후에도 §19에 정의된 위험 범주(duplicate logical attempt, condition contamination, missing/technical-failure ambiguity, metric non-recomputability) 중 하나 이상이 남아 있는지를 판정하는 resume-integrity gate. 하나라도 미해소면 재개하지 않는다.
+
+공통 안전 조치: 위 조건은 efficacy FAIL이 아니라 instrumentation/operations integrity stop이다. 발생 시:
+
+- 영향받은 participant/session 범위를 동결한다.
+- 신규 assignment 및 신규 session 시작을 중단한다.
+- raw evidence를 보존한다(수정·삭제하지 않는다).
+- owner에게 escalate한다.
+- 원인과 영향 범위가 해소되어 owner가 재개를 승인하기 전에는 재개하지 않는다.
+
 ## 20. Approval boundary
 
 이 문서 승인은 specific pilot operation을 허용하지만 Tier A, production Progress, production scheduler 또는 Interleaving 변경을 허용하지 않는다.
