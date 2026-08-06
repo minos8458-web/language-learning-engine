@@ -416,7 +416,13 @@ Evidence Recorder와 repository만 Evidence Foundation object의 승인된 write
 
 Database는 local integrity와 simple FK를 담당한다. Recorder transaction은 exact reference kind/version과 cross-row ownership semantic integrity를 검증한다. 실패 시 commit 전에 전체 operation을 거부한다.
 
-현재 repository milestone은 assignment creation과 attempt open에 한정한다. Deferred finalization, full retry lifecycle과 recorder orchestration 구현을 승인하지 않는다.
+The initial repository milestone was limited to assignment creation
+and attempt open. The current bounded `finalizeAttempt` repository
+operation is implemented under §18.10.2.
+
+A separate recorder, full retry lifecycle, assignment/session
+lifecycle, Learning Flow/Public integration and production dual-write
+remain deferred.
 
 Recorder가 다음을 직접 호출하는 것은 금지한다.
 
@@ -671,3 +677,4 @@ Observation persistence가 승인되기 전 Recorder는 다음을 일반-purpose
 | 1.16 | 2026-07-22 | AC-017 Tier C Architecture Clarification 누적 correction — Pattern A와 기존 ladder/provider/save 경계를 유지하면서 AI Generation planning `selectGenerationCandidates`, Progress recent-attempt read, generation API의 preselected node/recent Content 입력 계약, Graph caller 확대를 확정. 후보 계획 stages 1~3, prompt stage 4, 품질 비교 stage 5의 2차 실제 LLM milestone 유보를 명시했다. sibling/leaf 원칙과 Tier A는 불변, prerequisite implementation 미착수 |
 | 1.17 | 2026-07-22 | AC-018 Tier C Architecture Clarification — Concept 존재성·canonical node label 경로, exact provider/validator boundary와 shared regeneration, PRE_MADE cardinality·lazy validation, Generation/AI Generation factory composition validation과 fail-closed production adapter 책임을 확정. 외부 API 5·내부 27·전체 32, 기존 positional API·leaf/sibling 원칙·Tier A는 불변, prerequisite implementation 미착수 |
 | 1.18 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — non-Engine Evidence Repository의 `finalizeAttempt(pool, input)` 단일 writer, static caller boundary, RULE-only evaluation, finalization·evaluation·correction atomic transaction 및 production/test separation을 확정. 별도 `evidenceRecorder.js`, assignment/session lifecycle, Learning Flow/Public integration 및 production dual-write는 도입하지 않음 |
+| 1.19 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §18.5.1 stale current-state sentence updated: current bounded `finalizeAttempt` repository operation(§18.10.2)이 구현됨을 기록하고, 별도 recorder·full retry lifecycle·assignment/session lifecycle·Learning Flow/Public integration·production dual-write가 deferred임을 명시. Engine, API, schema, behavior 변경 없음 |

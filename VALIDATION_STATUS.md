@@ -6,11 +6,87 @@ This document is the **sole owner** of Validation State for the project. `BOOTST
 
 ---
 
-## A. Current GitHub Main — Current Verified State
+## A. Current Validation Ledger
+
+This ledger distinguishes the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
+
+- **Ledger snapshot baseline**: `1719749ff90bbdb326cdd12399475206b7088ca4`
+- **GitHub main ref**: `GitHub refs/heads/main` (authority for current repository HEAD; no hard-coded SHA in this document replaces it)
+- **Last runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+- **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
+- **Current review-record commit**: `1719749ff90bbdb326cdd12399475206b7088ca4` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.37)
+
+### A.1 Validation Level State
+
+- **Validation Level 3 §9 Conversation Boundary: PASS.** The full evidence chain and acceptance-criteria reconciliation supporting this PASS are preserved unchanged in §B.1 (historical detail; not superseded).
+- **Validation Level 3 §10 overall: NOT DECLARED.**
+
+Code/artifact presence is a separate claim from validation PASS. The two are not conflated.
+
+### A.2 Evidence Foundation Bounded Runtime Evidence
+
+**Last runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+
+**Environment**:
+
+- Windows PowerShell 5.1
+- PostgreSQL 17.10
+- Node.js 24.18.0
+- npm 11.16.0
+
+**Evidence database**:
+
+- evidence tables: 16
+- highest migration: 012
+- migration 013: absent
+
+**Focused test result**:
+
+- tests 64, suites 1, pass 64, fail 0, cancelled 0, skipped 0, todo 0
+
+**Full test result**:
+
+- tests 324, suites 52, pass 324, fail 0, cancelled 0, skipped 0, todo 0
+
+This is the bounded Evidence Foundation P0 finalization writer runtime-validation record. It does not declare Evidence Foundation overall complete.
+
+### A.3 Independent Review Evidence
+
+- **Reviewed commit**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
+- **Verdict**: APPROVE WITH NON-BLOCKING NOTES
+- **Severity**: BLOCKER 0 / HIGH 0 / MEDIUM 0 / LOW 1 / NOTE 3
+- **Preserved finding**: F-L01 — non-blocking
+
+### A.4 GitHub-Hosted Evidence
+
+- Combined commit status: absent
+- Current HEAD workflow run: absent
+- Permanent `.github/workflows`: absent
+
+This absence reflects that main does not retain a permanent CI workflow. It is separate from, and does not diminish, the Windows-local runtime validation recorded in §A.2. Absence of GitHub Actions evidence is not classified as a runtime failure.
+
+### A.5 Explicit Non-Declarations
+
+- AC-017 CLOSED
+- AC-017 IMPLEMENTED
+- AC-018 CLOSED
+- AC-018 IMPLEMENTED
+- Validation Level 3 §10 overall PASS
+- actual-provider milestone complete
+- Evidence Foundation overall complete
+- VI pilot efficacy verified
+- Beta Release ready
+- user app complete
+
+---
+
+## B. Historical Validation Records
+
+### B.1 §9 Conversation Boundary — Full Evidence Chain
+
+The following is the full §9 Conversation Boundary evidence chain and acceptance-criteria reconciliation, preserved unchanged. It is the factual support for the current §A.1 "§9 PASS" status and is not superseded.
 
 **Reference commit / verified implementation baseline**: `83b3fa56f6c56d34cdb07e26162749bb0744f6f5`
-
-### A.1 Current Validation Level 3 State
 
 **Validation Level 3 §9 Conversation Boundary: PASS** (2026-07-22).
 
@@ -18,7 +94,7 @@ The verified implementation baseline contains the production Learning Flow five-
 
 Code/artifact presence is a separate claim from validation PASS. The two are not conflated.
 
-### A.2 §9 Evidence Chain
+#### B.1.1 §9 Evidence Chain
 
 -   Server main implementation: `fff9d93e3822c187e9e8fd68bd75e810880f6954`
 -   Server main correction: `33a36dea2f2e9b342e97c473bd0fce8056d67fac`
@@ -32,7 +108,7 @@ Code/artifact presence is a separate claim from validation PASS. The two are not
 -   GitHub Actions run `29874075409`: 191/191 PASS, 40 suites, fail/cancelled/skipped/todo 0, PostgreSQL 16.14 / Node.js 20.20.2
 -   The post-merge branch tree excluding `.github/workflows/postgresql-tests.yml` is byte-identical to verified implementation main `83b3fa56f6c56d34cdb07e26162749bb0744f6f5`; main does not contain the temporary workflow.
 
-### A.3 §9 Acceptance Criteria Reconciliation
+#### B.1.2 §9 Acceptance Criteria Reconciliation
 
 | Canonical criterion | PASS evidence |
 |---|---|
@@ -49,47 +125,41 @@ Code/artifact presence is a separate claim from validation PASS. The two are not
 
 Conversation Engine 내부 설계·대화 품질과 실제 UI binding은 `VALIDATION_LEVEL3.md` §2.2 및 §9에 따라 이 PASS 판정 범위 밖이다. Production controller의 `SCREEN_KIND`/state model 경계까지만 검증 대상으로 인정한다.
 
-### A.4 Historical Record Reconciliation
-
-Section B remains an immutable prior-session record. Its “§9 In Progress” and 260/260 figures are historical only and do not override the current §9 PASS evidence above.
-
----
-
-## B. Historical Validation Record — Prior-session Codebase
+### B.2 Historical Validation Record — Prior-session Codebase
 
 ⚠️ **Warning**:
 
 This result belongs to a prior-session codebase and is not evidence that the current GitHub main has passed the same validation scope.
 
-These results are preserved for historical continuity only and must not be cited as current-main validation evidence.
+These results are preserved for historical continuity only and must not be cited as current-main validation evidence. Its "§9 In Progress" and 260/260 figures are historical only and do not override the current §9 PASS evidence in §B.1.
 
-### B.1 Overall Progress (historical)
+#### B.2.1 Overall Progress (historical)
 
 Completed: 4 / 9 sections
 
-### B.2 PASS (historical)
+#### B.2.2 PASS (historical)
 
 -   §5 Grammar Gate
 -   §6 White List
 -   §7 Relation Integrity
 -   §8 Review Engine
 
-### B.3 In Progress (historical)
+#### B.2.3 In Progress (historical)
 
 -   §9 Conversation Boundary
 
-### B.4 Deferred (historical)
+#### B.2.4 Deferred (historical)
 
 -   Real LLM Validation
 
-### B.5 Out of Scope (historical)
+#### B.2.5 Out of Scope (historical)
 
 -   Conversation UI Rendering
 
-### B.6 Blocked (historical)
+#### B.2.6 Blocked (historical)
 
 None
 
-### B.7 Regression (historical)
+#### B.2.7 Regression (historical)
 
 260 / 260 PASS

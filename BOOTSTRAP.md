@@ -34,19 +34,20 @@ This document is the **Session Startup Authority** only. It does not own or dupl
 
 - **Project Position / Roadmap**: `PROJECT_MASTER_INDEX.md`
 - **Validation State**: `VALIDATION_STATUS.md` (sole owner of PASS/section progress and regression figures)
+- **Implementation State / Product Readiness**: `PROJECT_STATUS.md`
 
-This document does not declare current regression totals or current §5–§8 (or any other section) PASS status. Those figures live only in `VALIDATION_STATUS.md`.
+This document does not declare current regression totals or current §5–§8 (or any other section) PASS status. Those figures live only in `VALIDATION_STATUS.md`. This document also does not declare current implementation state or product readiness — those live only in `PROJECT_STATUS.md`.
 
 ---
 
 ## Required Documents (Read in Order)
 
 1. PROJECT_MASTER_INDEX.md
-2. PROJECT_VISION.md
-3. IMPLEMENTATION_NOTES.md
-4. VALIDATION_STATUS.md
-5. VALIDATION_LEVEL3.md
-6. ARCHITECTURE_CLARIFICATION_BACKLOG.md
+2. VALIDATION_STATUS.md
+3. PROJECT_STATUS.md
+4. PROJECT_VISION.md, VALIDATION_LEVEL3.md (required canonical Architecture documents)
+5. ARCHITECTURE_CLARIFICATION_BACKLOG.md
+6. IMPLEMENTATION_NOTES.md — historical reference only
 
 ---
 
@@ -182,11 +183,19 @@ Every new development session must:
 1. Read this document first.
 2. Read `PROJECT_MASTER_INDEX.md` for current project position.
 3. Read `VALIDATION_STATUS.md` for current validation state.
-4. Read all other required documents.
-5. Summarize the current project state (citing `PROJECT_MASTER_INDEX.md` / `VALIDATION_STATUS.md`, not this document, for position/validation figures).
-6. Present the implementation plan.
-7. Wait for approval before major architectural changes.
-8. Update `PROJECT_MASTER_INDEX.md` and `VALIDATION_STATUS.md` whenever project state changes — do not duplicate their content back into this document.
+4. Read `PROJECT_STATUS.md` for current implementation state and product readiness.
+5. Read all other required documents.
+6. Summarize the current project state (citing `PROJECT_MASTER_INDEX.md` / `VALIDATION_STATUS.md` / `PROJECT_STATUS.md`, not this document, for position/validation/implementation figures).
+7. Present the implementation plan.
+8. Wait for approval before major architectural changes.
+9. Update `PROJECT_MASTER_INDEX.md`, `VALIDATION_STATUS.md`, and `PROJECT_STATUS.md` whenever project state changes — do not duplicate their content back into this document.
+
+Current authority boundaries:
+
+- Current HEAD is read from GitHub refs/heads/main.
+- Current implementation state is read from PROJECT_STATUS.md.
+- Detailed validation figures are cited only from VALIDATION_STATUS.md.
+- IMPLEMENTATION_NOTES.md is historical and not a current implementation authority.
 
 ---
 

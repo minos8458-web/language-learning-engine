@@ -4,6 +4,27 @@
 
 ---
 
+## Current Orientation
+
+This README is orientation-only. It does not own current SHA, test totals, PASS figures, or active milestone status — see the Authority Map below.
+
+## Authority Map
+
+- Startup → `BOOTSTRAP.md`
+- Roadmap → `PROJECT_MASTER_INDEX.md`
+- Validation → `VALIDATION_STATUS.md`
+- Implementation/Product Readiness → `PROJECT_STATUS.md`
+- Architecture Clarification → `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+
+## Current Direction
+
+- Measurement foundation first.
+- VI pilot is the next candidate.
+- Actual provider is a separate milestone.
+- No Beta or user-app readiness claim.
+
+---
+
 ## 프로젝트 소개
 
 LLE는 언어 독립적인 **문법 자동화 학습 엔진**이다. 게이미피케이션 앱(Duolingo류)이 아니라, 문법을 서로 연결된 그래프로 다뤄 "이미 배운 문법만으로 새로운 문장·문제·회화를 생성"하는 엔진을 만드는 것이 목표다.
@@ -100,7 +121,9 @@ PROJECT_VISION → LEARNING_THEORY
 
 ---
 
-## 다음 단계
+## 다음 단계 (Historical)
+
+> 아래 목록은 이전 세션 기준 제안이며 historical 참고용이다. 현재 방향은 위 `## Current Direction`을 따른다.
 
 1. Tier D 콘텐츠 실제 제작 착수
 2. Tier C를 MVP 브리프에서 실제 프로덕션 구현 지시서로 확장

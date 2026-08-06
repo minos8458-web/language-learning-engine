@@ -1042,7 +1042,13 @@ Partial validity와 partial write는 허용하지 않는다. Repository-bypass d
 
 Production repository operation은 caller-controlled test hook을 받을 수 없다.
 
-현재 repository milestone은 assignment creation과 attempt open만 구현한다. Attempt finalization과 full retry lifecycle은 deferred다.
+The initial repository milestone implemented assignment creation and
+attempt open. The current bounded finalization writer is defined by
+§13.10.7.1 and is implemented as an internal repository operation.
+
+Assignment completion, full retry lifecycle, recorder orchestration,
+Learning Flow/Public integration and production dual-write remain
+deferred.
 
 ### 13.7 Timing contract
 
@@ -1791,3 +1797,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.20 | 2026-07-22 | AC-018 Tier C Architecture Clarification — `get_node_labels`를 추가하고 target Concept 존재성 경로, exact generation/validator payload와 retry·shared regeneration, PRE_MADE cardinality, lazy 입력 검증, provider adapter·factory composition validation 및 fail-closed production 경계를 확정. 외부 API 5 불변, 내부 26→27, 전체 31→32, 공통 error code 5개·DB/Tier A 불변, prerequisite implementation 미착수 |
 | 1.21 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — existing §13.10.7을 future full-finalization category contract로 보존하고 §13.10.7.1을 current precedence contract로 추가. `finalizeAttempt(pool, input)`, exact protocol/rubric definitions, response/timing/outcome, RULE evaluation, correction coverage, replay/concurrency 및 existing five-code mapping을 확정하며 assignment completion·session lifecycle·recorder·Learning Flow/Public integration은 deferred로 유지 |
 | 1.22 | 2026-07-30 | Evidence P0 finalization writer correction — supplied instrumentation protocol ID/version이 assignment snapshot values와 반드시 일치하고 mismatch는 `CONTRACT_VIOLATION`임을 명시. Existing API count, five-code registry, database schema 및 status boundary는 불변 |
+| 1.23 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §13.6.4 stale current-state sentence updated: current bounded finalization writer(§13.10.7.1)가 internal repository operation으로 구현됨을 기록하고, assignment completion·full retry lifecycle·recorder orchestration·Learning Flow/Public integration·production dual-write가 deferred임을 명시. API count, schema, behavior 변경 없음 |

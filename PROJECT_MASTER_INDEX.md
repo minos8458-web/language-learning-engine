@@ -4,13 +4,7 @@
 
 ## Role of This Document
 
-**Project Position / Roadmap Authority.** This index carries only a commit-pinned validation summary for roadmap orientation; `VALIDATION_STATUS.md` remains the sole Validation State Authority and owns the detailed acceptance mapping.
-
-## Project Status
-
--   Current Phase: Phase 2
--   Current Version: MVP v0.2
--   Current Branch: `main`
+**Project Position / Roadmap Authority.** This index carries only a commit-pinned validation summary for roadmap orientation; `VALIDATION_STATUS.md` remains the sole Validation State Authority and owns the detailed acceptance mapping. `PROJECT_STATUS.md` remains the sole Current Implementation State and Product Readiness Authority.
 
 ## Source of Truth
 
@@ -19,19 +13,70 @@
 3.  VALIDATION_LEVEL3.md
 4.  ARCHITECTURE_CLARIFICATION_BACKLOG.md
 
-## Current Milestone
+## Ledger Snapshot Identity
 
-Validation Level 3 §10 — AI Generation Validation
+This document is pinned to the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-## Validation State
+- **Ledger snapshot baseline**: `1719749ff90bbdb326cdd12399475206b7088ca4` — the commit this reconciliation ledger was written against.
+- **Current GitHub Main**: `GitHub refs/heads/main` is the authority for current repository HEAD. No hard-coded SHA in this document replaces that ref.
+- **Immediate runtime implementation parent**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e` — last runtime-validated implementation. Detailed environment and figures are owned by `VALIDATION_STATUS.md`.
+- **Production finalization implementation**: `674bd9fb46bd1d799293c0e73984672b57c8a98c` — the commit that implemented the Evidence Foundation P0 bounded finalization writer.
+- **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f` — the reviewed test-hardening commit (APPROVE WITH NON-BLOCKING NOTES; see `VALIDATION_STATUS.md` §A.3).
+- **Current documentation review record**: `1719749ff90bbdb326cdd12399475206b7088ca4` — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.37.
+
+## Current Project Position
+
+-   Current Phase: Phase 2
+-   Current Version: MVP v0.2
+-   Current Branch: `main`
+-   Evidence Foundation P0 bounded finalization writer and test hardening completed as bounded milestones.
+-   Evidence Foundation overall remains incomplete.
+-   VI empirical pilot has not started.
+
+## Last Completed Bounded Milestone
+
+Evidence Foundation P0 bounded finalization writer (`674bd9fb46bd1d799293c0e73984672b57c8a98c`) and its independent test-hardening review (`30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`, verdict APPROVE WITH NON-BLOCKING NOTES, preserved finding F-L01 non-blocking) are complete as bounded operations. This does not declare Evidence Foundation overall complete. See `VALIDATION_STATUS.md` §A for the full evidence chain.
+
+## Current Active Milestone
+
+**Current Status Ledger Reconciliation** — classification: documentation-only governance milestone.
+
+This milestone reconciles the current-status authority model across `BOOTSTRAP.md`, `PROJECT_MASTER_INDEX.md`, `VALIDATION_STATUS.md`, `IMPLEMENTATION_NOTES.md`, `PROJECT_STATUS.md`, `README.md`, and the status-boundary sentences in `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `API_CONTRACT.md`, and `ENGINE_INTERFACE.md`. It does not implement, close, or validate any Architecture, API, Schema, or Validation Rule.
+
+## Next Product Milestone Candidate
+
+**VI Empirical Pilot P1 Readiness**
+
+Activation: not started; Control Tower gate required. This is a candidate only and is not an active milestone.
+
+## Explicit Non-Declarations
+
+This document does not declare:
+
+- AC-017 CLOSED
+- AC-017 IMPLEMENTED
+- AC-018 CLOSED
+- AC-018 IMPLEMENTED
+- Validation Level 3 §10 overall PASS
+- actual-provider milestone complete
+- Evidence Foundation overall complete
+- VI pilot efficacy verified
+- Beta Release ready
+- user app complete
+
+## Historical Roadmap Snapshot — §9 Closure
+
+The following subsections preserve the prior-session §9 closure snapshot of this index unchanged, moved here under their original numbers/content so their facts are not lost. Current project position, milestone, and non-declaration status live in the sections above.
+
+### Historical Validation State (at §9 closure)
 
 Validation Level 3 §9 is **PASS**. The current verified implementation baseline is `83b3fa56f6c56d34cdb07e26162749bb0744f6f5`; post-merge GitHub Actions run `29874075409` passed 191 tests / 40 suites on PostgreSQL 16.14 / Node.js 20.20.2. See `VALIDATION_STATUS.md` for the authoritative acceptance mapping and full evidence chain.
 
-## Architecture Status
+### Historical Architecture Status (at §9 closure)
 
 Architecture Frozen (approved architecture only)
 
-## Completed Closure
+### Historical Completed Closure (at §9 closure)
 
 -   Independent Architecture Audit remediation
     -   AUD-002 (MASTERED/AUTOMATIC Temporal Stability Contract) — ✅ CLOSED
@@ -49,16 +94,20 @@ Architecture Frozen (approved architecture only)
     -   `vl3-section9-client-boundary-validation-20260721` at `3e7edb637f13444a51c2d181e3ac9fb7f6e57ff7`
     -   `vl3-section9-postmerge-validation-20260722` at `18a028fbf2e88aaea05e66ab450c18127691e8b3`
 
-## Known Deferred
+### Historical Known Deferred (at §9 closure)
 
 -   Real LLM Validation
 -   Conversation Engine implementation and actual UI binding remain outside Validation Level 3 §9 scope
 
-## Current Blockers
+### Historical Current Blockers (at §9 closure)
 
 None
 
-## Next Task
+### Historical Current Milestone (at §9 closure)
+
+Validation Level 3 §10 — AI Generation Validation
+
+### Historical Next Task (at §9 closure)
 
 1.  Execute Validation Level 3 §10 AI Generation validation.
 
