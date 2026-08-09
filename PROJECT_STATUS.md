@@ -11,7 +11,7 @@ Git ref, runtime-validated implementation, independent review target, and review
 - **GitHub main ref**: `GitHub refs/heads/main` is the authority for current repository HEAD.
 - **Runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
 - **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Review-record commit**: `1719749ff90bbdb326cdd12399475206b7088ca4` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.37)
+- **Review-record commit**: `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.41 — B-5/B-4 governance documentation independent review and main integration record)
 
 Detailed runtime figures (environment, test totals, migration/table counts) are owned only by `VALIDATION_STATUS.md` §A.2.
 
@@ -31,6 +31,7 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - Actual provider: incomplete
 - Evidence Foundation overall: incomplete
 - VI pilot: not started
+- VI Empirical Pilot P1 governance prerequisites B-4 (cost/operational stop conditions) and B-5 (approval-provenance scope) are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`); implementation/data prerequisites B-1 (assignment/session lifecycle writer), B-2 (VI pilot content manifest), and B-3 (human-data/privacy owner decision) remain unresolved and P1 remains not started.
 - Client/user app: incomplete
 - Beta readiness: not ready
 
@@ -61,6 +62,8 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - VI pilot efficacy verified
 - Beta Release ready
 - user app complete
+- VI Empirical Pilot P1 activated
+- human-data collection approved
 
 ## 6. Historical Snapshot — 2026-07-06
 

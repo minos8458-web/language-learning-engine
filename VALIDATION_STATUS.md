@@ -14,7 +14,7 @@ This ledger distinguishes the following identities. Git ref, runtime-validated i
 - **GitHub main ref**: `GitHub refs/heads/main` (authority for current repository HEAD; no hard-coded SHA in this document replaces it)
 - **Last runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
 - **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Current review-record commit**: `1719749ff90bbdb326cdd12399475206b7088ca4` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.37)
+- **Current review-record commit**: `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.41)
 
 ### A.1 Validation Level State
 
@@ -77,6 +77,16 @@ This absence reflects that main does not retain a permanent CI workflow. It is s
 - VI pilot efficacy verified
 - Beta Release ready
 - user app complete
+- VI Empirical Pilot P1 activated
+- human-data collection approved
+
+### A.6 B-5/B-4 Governance Documentation Review (no new runtime evidence)
+
+- **Candidate commits**: `d75b518c01724059b45f6adc1a93b602c86a69c4` (B-5), `542c6b5004bbffed570aefcb1a3a858655206bb7` (B-4)
+- **Main integration**: `37eb97a295df10bfd4d48ab06e13be20c85c3beb`, `4305eb4a3ccf294f9f35efb4a3ef1574e9c8e143`
+- **Review-record candidate/main**: `ca31ff6486a22780aa7aedf44c3c00b8aefb26b2` / `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`
+- **Verdict**: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM/LOW 0, NOTE 2 (G-N01, G-N02); ELIGIBLE
+- This is a documentation-only governance review, distinct from the §A.3 entry for `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`. It adds, changes, or supersedes no runtime test evidence. `Last runtime-validated implementation` remains `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`, and §A.2's focused (64/64) and full (324/324) test results are unchanged.
 
 ---
 
