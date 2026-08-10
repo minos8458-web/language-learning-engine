@@ -331,6 +331,41 @@ async function createSession(enrollmentId) {
   return rows[0];
 }
 
+// Test-file-only fixture: the repository intentionally exposes no enrollment
+// status transition (that authority is out of B-1a scope), so a non-ACTIVE
+// enrollment fixture is built with direct SQL, mirroring the terminal-session
+// fixture pattern used elsewhere in this file.
+async function createEnrollmentWithStatus(status) {
+  const otherParticipant = await repository.createParticipant(pool, {});
+  const created = await repository.createEnrollment(pool, {
+    participantId: otherParticipant.participant_id,
+    experimentId: 'EXP_EVIDENCE_P0',
+    experimentVersion: 1,
+    conditionId: 'COND_EVIDENCE_P0',
+    conditionVersion: 1,
+  });
+  if (status === 'WITHDRAWN') {
+    await pool.query(
+      `UPDATE evidence_enrollments
+          SET status = 'WITHDRAWN', withdrawn_at = now()
+        WHERE enrollment_id = $1`,
+      [created.enrollment_id]
+    );
+  } else if (status === 'COMPLETED') {
+    await pool.query(
+      `UPDATE evidence_enrollments
+          SET status = 'COMPLETED', completed_at = now()
+        WHERE enrollment_id = $1`,
+      [created.enrollment_id]
+    );
+  }
+  const { rows } = await pool.query(
+    'SELECT * FROM evidence_enrollments WHERE enrollment_id = $1',
+    [created.enrollment_id]
+  );
+  return rows[0];
+}
+
 async function createConfiguredAttempt(options = {}) {
   fixtureOrdinal += 1;
   const suffix = `${fixtureOrdinal}`;
@@ -509,6 +544,54 @@ function matchesInstrumentationProtocolLookup(sql) {
 function matchesRubricLookup(sql) {
   return /SELECT\s+definition\s+FROM\s+evidence_reference_versions\s+WHERE\s+reference_kind\s*=\s*'RUBRIC'/i
     .test(sql);
+}
+
+// Test-file-only wrapper generalizing createAttemptInsertFailurePool: throws
+// a deterministic error the first time a query on the transaction client
+// matches the given pattern, forcing withTransaction's existing ROLLBACK
+// path. The pool's top-level .query() is left untouched.
+function createQueryFailurePool(basePool, matcher, message) {
+  return {
+    async connect() {
+      const client = await basePool.connect();
+      return {
+        async query(...args) {
+          const sql = typeof args[0] === 'string' ? args[0] : args[0]?.text;
+          if (matcher.test(String(sql))) {
+            throw new Error(message);
+          }
+          return client.query(...args);
+        },
+        release() {
+          client.release();
+        },
+      };
+    },
+    query: basePool.query.bind(basePool),
+  };
+}
+
+// Test-file-only static helper: extracts one top-level function's exact
+// source text via brace counting, so boundary assertions can be scoped to a
+// specific function instead of the whole file.
+function extractFunctionSource(source, functionName) {
+  const marker = `async function ${functionName}(`;
+  const start = source.indexOf(marker);
+  assert.ok(start !== -1, `${functionName} not found in source`);
+  const braceStart = source.indexOf('{', start);
+  let depth = 0;
+  let end = braceStart;
+  for (let i = braceStart; i < source.length; i += 1) {
+    if (source[i] === '{') depth += 1;
+    else if (source[i] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  return source.slice(start, end + 1);
 }
 
 describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
@@ -2165,6 +2248,279 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.doesNotMatch(repositorySource, /\bINSERT\s+INTO\s+attempt_records\b/i);
     assert.doesNotMatch(repositorySource, /\bUPDATE\s+attempt_records\b/i);
     assert.doesNotMatch(repositorySource, /\bUPDATE\s+evidence_assignments\b/i);
-    assert.doesNotMatch(repositorySource, /\bUPDATE\s+evidence_sessions\b/i);
+
+    // Attempt lifecycle (openAttempt/finalizeAttempt) must never flip session
+    // terminal state directly -- only the dedicated B-1a session-lifecycle
+    // writer (terminalizeSession) may update evidence_sessions.
+    const openAttemptSource = extractFunctionSource(repositorySource, 'openAttempt');
+    const finalizeAttemptSource = extractFunctionSource(repositorySource, 'finalizeAttempt');
+    assert.doesNotMatch(openAttemptSource, /\bUPDATE\s+evidence_sessions\b/i);
+    assert.doesNotMatch(finalizeAttemptSource, /\bUPDATE\s+evidence_sessions\b/i);
+  });
+
+  test('startSession requires an ACTIVE enrollment and creates nonterminal, non-idempotent sessions', async () => {
+    const before = await countRows('evidence_sessions');
+    const first = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+    const second = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+
+    assert.notEqual(first.session_id, second.session_id);
+    for (const row of [first, second]) {
+      assert.equal(row.enrollment_id, enrollment.enrollment_id);
+      assert.equal(row.ended_at, null);
+      assert.equal(row.terminal_outcome, null);
+      assert.equal(row.technical_failure_ref, null);
+      assert.equal(row.restarted_from, null);
+      assert.ok(row.started_at);
+    }
+    assert.equal(await countRows('evidence_sessions'), before + 2);
+  });
+
+  test('startSession rejects a non-ACTIVE enrollment without creating a row', async () => {
+    const withdrawn = await createEnrollmentWithStatus('WITHDRAWN');
+    const before = await countRows('evidence_sessions');
+    await rejectsWithCode(
+      () => repository.startSession(pool, { enrollmentId: withdrawn.enrollment_id }),
+      'CONTRACT_VIOLATION'
+    );
+    assert.equal(await countRows('evidence_sessions'), before);
+  });
+
+  test('terminalizeSession writes terminal fields exactly once and rejects a terminal repeat', async () => {
+    const session = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+    const terminalized = await repository.terminalizeSession(pool, {
+      sessionId: session.session_id,
+      terminalOutcome: 'COMPLETED',
+    });
+    assert.equal(terminalized.session_id, session.session_id);
+    assert.equal(terminalized.terminal_outcome, 'COMPLETED');
+    assert.ok(terminalized.ended_at);
+    assert.equal(terminalized.technical_failure_ref, null);
+
+    await rejectsWithCode(
+      () => repository.terminalizeSession(pool, {
+        sessionId: session.session_id,
+        terminalOutcome: 'ABANDONED',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+
+    const { rows } = await pool.query(
+      'SELECT ended_at, terminal_outcome FROM evidence_sessions WHERE session_id = $1',
+      [session.session_id]
+    );
+    assert.equal(rows[0].terminal_outcome, 'COMPLETED');
+    assert.deepEqual(rows[0].ended_at, terminalized.ended_at);
+  });
+
+  test('restartSession requires a terminal prior session, links restarted_from, and inherits enrollment', async () => {
+    const priorNonterminal = await repository.startSession(pool, {
+      enrollmentId: enrollment.enrollment_id,
+    });
+    await rejectsWithCode(
+      () => repository.restartSession(pool, { priorSessionId: priorNonterminal.session_id }),
+      'CONTRACT_VIOLATION'
+    );
+
+    const priorTerminal = await repository.terminalizeSession(pool, {
+      sessionId: priorNonterminal.session_id,
+      terminalOutcome: 'TIMED_OUT',
+    });
+
+    const before = await countRows('evidence_sessions');
+    const restarted = await repository.restartSession(pool, {
+      priorSessionId: priorTerminal.session_id,
+    });
+
+    assert.equal(await countRows('evidence_sessions'), before + 1);
+    assert.notEqual(restarted.session_id, priorTerminal.session_id);
+    assert.equal(restarted.restarted_from, priorTerminal.session_id);
+    assert.equal(restarted.enrollment_id, priorTerminal.enrollment_id);
+    assert.equal(restarted.ended_at, null);
+    assert.equal(restarted.terminal_outcome, null);
+    assert.equal(restarted.technical_failure_ref, null);
+
+    const { rows } = await pool.query(
+      `SELECT ended_at, terminal_outcome, technical_failure_ref, restarted_from
+         FROM evidence_sessions WHERE session_id = $1`,
+      [priorTerminal.session_id]
+    );
+    assert.deepEqual(rows[0].ended_at, priorTerminal.ended_at);
+    assert.equal(rows[0].terminal_outcome, priorTerminal.terminal_outcome);
+    assert.equal(rows[0].technical_failure_ref, priorTerminal.technical_failure_ref);
+    assert.equal(rows[0].restarted_from, null);
+  });
+
+  test('technicalFailureRef is optional, valid for any terminal outcome, and rejects blank values', async () => {
+    const withRef = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+    const terminalizedWithRef = await repository.terminalizeSession(pool, {
+      sessionId: withRef.session_id,
+      terminalOutcome: 'TECHNICAL_FAILURE',
+      technicalFailureRef: 'ref-technical-failure-1',
+    });
+    assert.equal(terminalizedWithRef.technical_failure_ref, 'ref-technical-failure-1');
+
+    const withoutRefOnTechnical = await repository.startSession(pool, {
+      enrollmentId: enrollment.enrollment_id,
+    });
+    const terminalizedWithoutRef = await repository.terminalizeSession(pool, {
+      sessionId: withoutRefOnTechnical.session_id,
+      terminalOutcome: 'TECHNICAL_FAILURE',
+    });
+    assert.equal(terminalizedWithoutRef.technical_failure_ref, null);
+
+    const withRefOnOtherOutcome = await repository.startSession(pool, {
+      enrollmentId: enrollment.enrollment_id,
+    });
+    const terminalizedOtherOutcome = await repository.terminalizeSession(pool, {
+      sessionId: withRefOnOtherOutcome.session_id,
+      terminalOutcome: 'ABANDONED',
+      technicalFailureRef: 'ref-abandoned-with-note',
+    });
+    assert.equal(terminalizedOtherOutcome.technical_failure_ref, 'ref-abandoned-with-note');
+
+    const blankSession = await repository.startSession(pool, {
+      enrollmentId: enrollment.enrollment_id,
+    });
+    await rejectsWithCode(
+      () => repository.terminalizeSession(pool, {
+        sessionId: blankSession.session_id,
+        terminalOutcome: 'WITHDRAWN',
+        technicalFailureRef: '   ',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+    const { rows } = await pool.query(
+      'SELECT ended_at, terminal_outcome FROM evidence_sessions WHERE session_id = $1',
+      [blankSession.session_id]
+    );
+    assert.equal(rows[0].ended_at, null);
+    assert.equal(rows[0].terminal_outcome, null);
+  });
+
+  test('startSession transaction rollback leaves no new session row', async () => {
+    const before = await countRows('evidence_sessions');
+    const failingPool = createQueryFailurePool(
+      pool,
+      /INSERT\s+INTO\s+evidence_sessions\b/i,
+      'test-controlled session insert failure'
+    );
+    await assert.rejects(
+      () => repository.startSession(failingPool, { enrollmentId: enrollment.enrollment_id }),
+      /test-controlled session insert failure/
+    );
+    assert.equal(await countRows('evidence_sessions'), before);
+  });
+
+  test('terminalizeSession transaction rollback restores the prior nonterminal state', async () => {
+    const session = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+    const failingPool = createQueryFailurePool(
+      pool,
+      /UPDATE\s+evidence_sessions\b/i,
+      'test-controlled session update failure'
+    );
+    await assert.rejects(
+      () => repository.terminalizeSession(failingPool, {
+        sessionId: session.session_id,
+        terminalOutcome: 'COMPLETED',
+      }),
+      /test-controlled session update failure/
+    );
+    const { rows } = await pool.query(
+      'SELECT ended_at, terminal_outcome FROM evidence_sessions WHERE session_id = $1',
+      [session.session_id]
+    );
+    assert.equal(rows[0].ended_at, null);
+    assert.equal(rows[0].terminal_outcome, null);
+  });
+
+  test('restartSession transaction rollback leaves the prior session and no new row', async () => {
+    const priorSetup = await repository.startSession(pool, { enrollmentId: enrollment.enrollment_id });
+    const prior = await repository.terminalizeSession(pool, {
+      sessionId: priorSetup.session_id,
+      terminalOutcome: 'WITHDRAWN',
+    });
+    const before = await countRows('evidence_sessions');
+    const failingPool = createQueryFailurePool(
+      pool,
+      /INSERT\s+INTO\s+evidence_sessions\b/i,
+      'test-controlled session restart insert failure'
+    );
+    await assert.rejects(
+      () => repository.restartSession(failingPool, { priorSessionId: prior.session_id }),
+      /test-controlled session restart insert failure/
+    );
+    assert.equal(await countRows('evidence_sessions'), before);
+    const { rows } = await pool.query(
+      'SELECT terminal_outcome, restarted_from FROM evidence_sessions WHERE session_id = $1',
+      [prior.session_id]
+    );
+    assert.equal(rows[0].terminal_outcome, 'WITHDRAWN');
+    assert.equal(rows[0].restarted_from, null);
+  });
+
+  test('session lifecycle operations leave Progress, attempt_records, and assignment-completion fields untouched', async () => {
+    const beforeState = await readProductionState();
+    const { rows: beforeAssignmentRow } = await pool.query(
+      `SELECT completed_at, completion_attempt_id, terminal_outcome
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [baseAssignment.assignment.assignment_id]
+    );
+
+    const lifecycleSession = await repository.startSession(pool, {
+      enrollmentId: enrollment.enrollment_id,
+    });
+    const lifecycleTerminal = await repository.terminalizeSession(pool, {
+      sessionId: lifecycleSession.session_id,
+      terminalOutcome: 'COMPLETED',
+    });
+    await repository.restartSession(pool, { priorSessionId: lifecycleTerminal.session_id });
+
+    assert.deepEqual(await readProductionState(), beforeState);
+    const { rows: afterAssignmentRow } = await pool.query(
+      `SELECT completed_at, completion_attempt_id, terminal_outcome
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [baseAssignment.assignment.assignment_id]
+    );
+    assert.deepEqual(afterAssignmentRow, beforeAssignmentRow);
+  });
+
+  test('session lifecycle writer exports no test hooks and never references evidence_assignments', async () => {
+    assert.equal(repository.startSession.length, 2);
+    assert.equal(repository.terminalizeSession.length, 2);
+    assert.equal(repository.restartSession.length, 2);
+
+    const repositorySource = fs.readFileSync(
+      path.resolve(__dirname, '../src/instrumentation/evidenceRepository.js'),
+      'utf8'
+    );
+    assert.match(repositorySource, /async function startSession\(pool, input\)/);
+    assert.match(repositorySource, /async function terminalizeSession\(pool, input\)/);
+    assert.match(repositorySource, /async function restartSession\(pool, input\)/);
+    assert.doesNotMatch(
+      repositorySource,
+      /(startSession|terminalizeSession|restartSession)\(pool,\s*input,\s*options/
+    );
+    assert.doesNotMatch(repositorySource, /afterSeriesCreated|failureInjection|testHook/i);
+
+    for (const name of ['startSession', 'terminalizeSession', 'restartSession']) {
+      const functionSource = extractFunctionSource(repositorySource, name);
+      assert.doesNotMatch(functionSource, /evidence_assignments/i);
+    }
+
+    for (const key of Object.keys(repository)) {
+      assert.doesNotMatch(key, /hook|factory|debug|failure/i);
+    }
+
+    const before = await countRows('evidence_sessions');
+    await rejectsWithCode(
+      () => repository.startSession(pool, {
+        enrollmentId: enrollment.enrollment_id,
+        failureInjection: 'after-insert',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+    assert.equal(await countRows('evidence_sessions'), before);
   });
 });
