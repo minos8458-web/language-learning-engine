@@ -1961,6 +1961,160 @@ async function getAttemptByIdempotency(pool, assignmentId, idempotencyIdentity) 
   return loadAttemptByKey(pool, normalizedAssignmentId, identity);
 }
 
+const SESSION_TERMINAL_OUTCOMES = Object.freeze([
+  'COMPLETED',
+  'ABANDONED',
+  'TIMED_OUT',
+  'TECHNICAL_FAILURE',
+  'WITHDRAWN',
+]);
+
+function validateSessionTerminalOutcome(value) {
+  const normalized = validateStableId(value, 'terminalOutcome');
+  if (!SESSION_TERMINAL_OUTCOMES.includes(normalized)) {
+    throw new ContractViolationError(`Unsupported terminalOutcome: ${normalized}`);
+  }
+  return normalized;
+}
+
+async function startSession(pool, input) {
+  validateInputObject(input);
+  rejectServerIssuedFieldOverrides(input, [
+    'sessionId',
+    'startedAt',
+    'endedAt',
+    'terminalOutcome',
+    'technicalFailureRef',
+    'restartedFrom',
+    'createdAt',
+  ]);
+  assertAllowedKeys(input, ['enrollmentId']);
+
+  const enrollmentId = validateUuid(requireField(input, 'enrollmentId'), 'enrollmentId');
+
+  try {
+    return await withTransaction(pool, async (client) => {
+      const { rows: enrollmentRows } = await client.query(
+        'SELECT status FROM evidence_enrollments WHERE enrollment_id = $1',
+        [enrollmentId]
+      );
+      const enrollment = enrollmentRows[0];
+      if (!enrollment) {
+        throw new NotFoundError(`Unknown enrollmentId: ${enrollmentId}`);
+      }
+      if (enrollment.status !== 'ACTIVE') {
+        throw new ContractViolationError('session start requires an ACTIVE enrollment');
+      }
+
+      const { rows } = await client.query(
+        `INSERT INTO evidence_sessions (enrollment_id)
+         VALUES ($1)
+         RETURNING *`,
+        [enrollmentId]
+      );
+      return rows[0];
+    });
+  } catch (error) {
+    throw mapDatabaseError(error, 'startSession');
+  }
+}
+
+async function terminalizeSession(pool, input) {
+  validateInputObject(input);
+  rejectServerIssuedFieldOverrides(input, [
+    'startedAt',
+    'endedAt',
+    'restartedFrom',
+    'createdAt',
+  ]);
+  assertAllowedKeys(input, ['sessionId', 'terminalOutcome', 'technicalFailureRef']);
+
+  const sessionId = validateUuid(requireField(input, 'sessionId'), 'sessionId');
+  const terminalOutcome = validateSessionTerminalOutcome(requireField(input, 'terminalOutcome'));
+  const technicalFailureRef = validateOptionalString(
+    input.technicalFailureRef,
+    'technicalFailureRef'
+  );
+
+  try {
+    return await withTransaction(pool, async (client) => {
+      const { rows: sessionRows } = await client.query(
+        `SELECT ended_at, terminal_outcome
+           FROM evidence_sessions
+          WHERE session_id = $1
+          FOR UPDATE`,
+        [sessionId]
+      );
+      const session = sessionRows[0];
+      if (!session) {
+        throw new NotFoundError(`Unknown sessionId: ${sessionId}`);
+      }
+      if (session.ended_at !== null || session.terminal_outcome !== null) {
+        throw new ContractViolationError('session is already terminal');
+      }
+
+      const { rows } = await client.query(
+        `UPDATE evidence_sessions
+            SET ended_at = now(),
+                terminal_outcome = $2,
+                technical_failure_ref = $3
+          WHERE session_id = $1
+          RETURNING *`,
+        [sessionId, terminalOutcome, technicalFailureRef]
+      );
+      return rows[0];
+    });
+  } catch (error) {
+    throw mapDatabaseError(error, 'terminalizeSession');
+  }
+}
+
+async function restartSession(pool, input) {
+  validateInputObject(input);
+  rejectServerIssuedFieldOverrides(input, [
+    'sessionId',
+    'enrollmentId',
+    'startedAt',
+    'endedAt',
+    'terminalOutcome',
+    'technicalFailureRef',
+    'restartedFrom',
+    'createdAt',
+  ]);
+  assertAllowedKeys(input, ['priorSessionId']);
+
+  const priorSessionId = validateUuid(requireField(input, 'priorSessionId'), 'priorSessionId');
+
+  try {
+    return await withTransaction(pool, async (client) => {
+      const { rows: priorRows } = await client.query(
+        `SELECT enrollment_id, ended_at, terminal_outcome
+           FROM evidence_sessions
+          WHERE session_id = $1
+          FOR UPDATE`,
+        [priorSessionId]
+      );
+      const prior = priorRows[0];
+      if (!prior) {
+        throw new NotFoundError(`Unknown priorSessionId: ${priorSessionId}`);
+      }
+      if (prior.ended_at === null || prior.terminal_outcome === null) {
+        throw new ContractViolationError('session restart requires a terminal prior session');
+      }
+
+      const { rows } = await client.query(
+        `INSERT INTO evidence_sessions (enrollment_id, restarted_from)
+         VALUES ($1, $2)
+         RETURNING *`,
+        [prior.enrollment_id, priorSessionId]
+      );
+      return rows[0];
+    });
+  } catch (error) {
+    throw mapDatabaseError(error, 'restartSession');
+  }
+}
+
 module.exports = {
   createAssignment,
   createEnrollment,
@@ -1978,5 +2132,8 @@ module.exports = {
   registerConditionVersion,
   registerExperimentVersion,
   registerReferenceVersion,
+  restartSession,
+  startSession,
+  terminalizeSession,
   withTransaction,
 };
