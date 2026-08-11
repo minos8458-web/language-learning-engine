@@ -1186,7 +1186,7 @@ Atomic set:
 * Attempt terminal outcome
 * Applicable assignment completion
 
-`Applicable assignment completion`은 owner-approved B-1b predicate(2026-08-11)로 operationalize된다: server-derived `attemptOutcome === SCORABLE`인 successful INITIAL, non-replay finalization에서만 적용되며, 적용 시 `evidence_assignments.terminal_outcome = COMPLETED`, `completion_attempt_id = finalizing attempt_id`, `completed_at = finalized_at`을 같은 transaction에서 write-once로 기록한다. `attemptOutcome !== SCORABLE`이면 no-op이다. 다른 assignment terminal outcome(`MISSING`/`TECHNICAL_FAILURE`/`WITHDRAWN`/`UNSCORABLE`/`NORMAL_EMPTY`)의 assignment-level terminalization은 B-1b 범위 밖이다(§9.4.12).
+`Applicable assignment completion`은 owner-approved B-1b predicate(2026-08-11)로 operationalize된다(§9.4는 future complete finalization boundary이며, 이 predicate의 current-vs-target implementation 상태 authority는 §9.4.1·§9.4.12다): server-derived `attemptOutcome === SCORABLE`인 successful INITIAL, non-replay finalization에서만 적용되며, 적용 시 `evidence_assignments.terminal_outcome = COMPLETED`, `completion_attempt_id = finalizing attempt_id`, `completed_at = finalized_at`을 같은 transaction에서 write-once로 기록한다. `attemptOutcome !== SCORABLE`이면 no-op이다. 다른 assignment terminal outcome(`MISSING`/`TECHNICAL_FAILURE`/`WITHDRAWN`/`UNSCORABLE`/`NORMAL_EMPTY`)의 assignment-level terminalization은 B-1b 범위 밖이다(§9.4.12).
 
 Concurrency:
 
@@ -1219,15 +1219,17 @@ The operation uses object input and atomically inserts:
 
 Partial success is prohibited.
 
-Owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): when this finalization is a successful INITIAL, non-replay finalization and the server-derived `attemptOutcome === SCORABLE`, the same transaction additionally write-once updates:
+Current runtime behavior: this writer does not update `evidence_assignments.completion_attempt_id`, `evidence_assignments.completed_at`, or `evidence_assignments.terminal_outcome` for any finalization outcome. Assignment lifecycle is entirely untouched by the code as currently implemented.
+
+B-1b target bounded writer contract — **CONTRACT DEFINED, IMPLEMENTATION PENDING** (owner-approved 2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): when this finalization is a successful INITIAL, non-replay finalization and the server-derived `attemptOutcome === SCORABLE`, the same transaction must additionally write-once update:
 
 - `evidence_assignments.completion_attempt_id = finalizing attempt_id`,
 - `evidence_assignments.completed_at = finalized_at`,
 - `evidence_assignments.terminal_outcome = COMPLETED`.
 
-When `attemptOutcome !== SCORABLE`, or the finalization is an equivalent replay, this writer does not update any of the three fields above.
+When `attemptOutcome !== SCORABLE`, or the finalization is an equivalent replay, the target contract requires this writer to leave the three fields above unchanged. This paragraph is a contract definition for a pending implementation increment; current runtime code does not yet perform this SCORABLE-conditional write.
 
-This writer never updates:
+This writer never updates, in either current or target scope:
 
 - session terminal fields,
 - restart lineage,
@@ -1684,7 +1686,9 @@ No caller token, hidden option, global mutable state or production test hook is 
 
 ### 9.4.12 Current/deferred boundary
 
-Current implementation scope:
+**A. Current implemented baseline**
+
+Actually shipped in current `main` runtime:
 
 - finalization row,
 - RULE evaluations for all snapshot target nodes,
@@ -1692,10 +1696,27 @@ Current implementation scope:
 - finalization idempotency,
 - timing and response validation,
 - error classification,
-- transaction rollback,
-- owner-approved B-1b predicate: SCORABLE-conditional assignment `COMPLETED` write, i.e. `terminal_outcome = COMPLETED` / `completion_attempt_id` / `completed_at = finalized_at`, applied only when the finalization is a successful INITIAL non-replay finalization and server-derived `attemptOutcome === SCORABLE` (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1).
+- transaction rollback.
 
-Deferred:
+Current runtime does not write any assignment-lifecycle field. `evidence_assignments.completion_attempt_id`, `completed_at`, `terminal_outcome` are untouched by every finalization outcome as currently implemented.
+
+**B. B-1b contract-defined next increment — implementation pending**
+
+**CONTRACT DEFINED. IMPLEMENTATION PENDING.** Not yet present in current runtime code.
+
+Owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): a successful INITIAL, non-replay finalization whose server-derived `attemptOutcome === SCORABLE` must, in the same transaction, write-once update:
+
+- `evidence_assignments.terminal_outcome = COMPLETED`,
+- `evidence_assignments.completion_attempt_id = finalizing attempt_id`,
+- `evidence_assignments.completed_at = finalized_at`.
+
+`attemptOutcome !== SCORABLE` (or an equivalent replay) requires no assignment-lifecycle mutation under this target contract.
+
+This section defines the target contract for a future implementation increment only. It does not assert that current code performs this write, that current output already returns the corresponding fields, or that any test currently passes against this contract.
+
+**C. Deferred beyond B-1b**
+
+Remains out of scope for both the current baseline and the B-1b target contract:
 
 - assignment-level `MISSING` terminalization,
 - assignment-level `TECHNICAL_FAILURE` terminalization,
@@ -1714,8 +1735,6 @@ Deferred:
 - human/AI evaluation,
 - actual provider,
 - audio.
-
-이 문서 patch는 위 B-1b predicate의 contract definition일 뿐이며, 현재 코드가 이를 구현했다고 기록하지 않는다.
 
 ## 9.5 Technical-failure terminalization
 

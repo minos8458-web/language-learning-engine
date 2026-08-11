@@ -1268,13 +1268,17 @@ Hash 또는 serialization algorithm은 implementation HOW다.
 
 #### 13.10.7.1 Current bounded `finalizeAttempt` repository contract
 
-> Reconciliation: §13.10.7 is the future full-finalization category contract. For the current bounded writer slice, this §13.10.7.1 contract takes precedence for authorized caller, transaction contents, success result and deferred scope. In particular, current bounded success follows the owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): a successful INITIAL, non-replay finalization whose server-derived `attemptOutcome === SCORABLE` includes assignment `COMPLETED`; a successful non-SCORABLE finalization leaves assignment lifecycle unchanged; all other assignment-level terminalization (`MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY`) remains deferred/out of scope for this writer.
+> Reconciliation: §13.10.7 is the future full-finalization category contract. For the current bounded writer slice, this §13.10.7.1 contract takes precedence for authorized caller, transaction contents, success result and deferred scope. This §13.10.7.1 itself now separates two states: (1) the bounded writer as **currently implemented** in `main` runtime, and (2) the owner-approved B-1b target increment (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1), which is **CONTRACT DEFINED — IMPLEMENTATION PENDING** and not yet present in runtime code. Each subsection below is labeled with its state.
+
+##### Current runtime operation
 
 The current bounded milestone implements the internal repository operation:
 
 ```javascript
 finalizeAttempt(pool, input)
 ```
+
+As currently implemented, this operation never mutates `evidence_assignments` — it performs no assignment-completion write and its runtime return value does not include any assignment-completion field, for any finalization outcome including `SCORABLE`.
 
 This is not a public HTTP API and is not counted as an Engine API.
 
@@ -1288,6 +1292,8 @@ Current authorized call sites:
 Learning Flow, public controller, public route and external client use are prohibited.
 
 ##### Exact input
+
+Identical for both the current runtime operation and the B-1b target contract — the B-1b increment adds no input field and no caller-supplied completion intent. There is no completion-intent field today, and none is planned.
 
 Allowed top-level keys:
 
@@ -1369,7 +1375,7 @@ Caller cannot supply:
 - replay result,
 - digest metadata.
 
-##### Exact output
+##### Exact output — current runtime
 
 ```text
 {
@@ -1388,32 +1394,48 @@ Caller cannot supply:
   rubricId,
   rubricVersion,
   evaluationCount,
-  correctionBucketCount,
+  correctionBucketCount
+}
+```
+
+This is the exact output currently returned by `main` runtime code. Equivalent replay returns the original authoritative fields and timestamps exactly as first recorded, and changes only `replayed` to true.
+
+##### Exact output — B-1b target contract (CONTRACT DEFINED, IMPLEMENTATION PENDING)
+
+The owner-approved B-1b increment (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1) additively requires three output-only fields once implemented:
+
+```text
+{
+  ...(all current-runtime fields above, unchanged),
   assignmentTerminalOutcome,
   assignmentCompletedAt,
   assignmentCompletionAttemptId
 }
 ```
 
-`assignmentTerminalOutcome`, `assignmentCompletedAt`, `assignmentCompletionAttemptId` are output-only fields reflecting the owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1); no corresponding input field exists or may be added.
+These three fields are **not yet returned by current runtime code**. No corresponding input field exists or may be added — they are server-derived and output-only.
+
+Target semantics once implemented:
 
 - SCORABLE qualifying INITIAL finalization: `assignmentTerminalOutcome = COMPLETED`, `assignmentCompletedAt = finalizedAt`, `assignmentCompletionAttemptId = attemptId`.
 - Successful non-SCORABLE finalization: all three fields are `null`.
+- Equivalent replay: returns the three assignment-completion fields exactly as first recorded; replay never re-derives or rewrites assignment completion.
 
-Equivalent replay returns the original authoritative fields, timestamps and the three assignment-completion fields above exactly as first recorded, and changes only `replayed` to true. Replay never re-derives or rewrites assignment completion.
+This subsection defines a target contract for a pending implementation increment. It does not assert that current tests exercise or pass against these three fields.
 
 ##### Transaction
 
-One transaction atomically writes:
+Current runtime: one transaction atomically writes:
 
 - finalization,
 - one RULE evaluation per assignment snapshot target node,
-- the protocol-required correction aggregate set,
-- conditional assignment `COMPLETED` update, applied only when this is a successful INITIAL, non-replay finalization and server-derived `attemptOutcome === SCORABLE` (owner-approved B-1b predicate, 2026-08-11).
+- the protocol-required correction aggregate set.
 
-Partial success is prohibited.
+Partial success is prohibited. The current transaction does not update assignment lifecycle or session lifecycle, for any outcome.
 
-The transaction does not update session lifecycle. It does not update assignment lifecycle for any outcome other than the SCORABLE-conditional `COMPLETED` write above; `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY` assignment-level terminalization remain deferred/out of scope for this writer.
+B-1b target contract (CONTRACT DEFINED, IMPLEMENTATION PENDING): the same transaction must additionally include a conditional assignment `COMPLETED` update, applied only when this is a successful INITIAL, non-replay finalization and server-derived `attemptOutcome === SCORABLE` (owner-approved B-1b predicate, 2026-08-11). This target write is not yet present in current runtime code.
+
+Neither the current transaction nor the B-1b target increment updates session lifecycle. Neither updates assignment lifecycle for any outcome other than the target SCORABLE-conditional `COMPLETED` write above; `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY` assignment-level terminalization remain deferred/out of scope for this writer, in both current and target states.
 
 ##### Instrumentation definition
 

@@ -224,7 +224,7 @@ assignment_version_snapshot
 
 #### 7.2.1 B-1b bounded completion predicate (owner-approved 2026-08-11)
 
-B-1b는 `COMPLETED`에 한정된 narrow-scope predicate만 정의한다. `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY`의 assignment-level terminalization은 이 조항에서 정의하거나 구현하지 않으며, 해당 outcome이 발생해도 assignment lifecycle은 nonterminal로 유지된다.
+B-1b는 `COMPLETED`에 한정된 narrow-scope predicate만 정의한다. `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY` — 이 다섯 개 assignment-level terminal outcome은 이 조항에서 정의하거나 기록(write)하지 않는다. Non-SCORABLE `finalizeAttempt` fact 자체는 B-1b로 하여금 이 다섯 outcome 중 어느 것도 기록하게 만들지 않는다. 최초에 nonterminal이던 assignment에 대한 successful non-SCORABLE `finalizeAttempt`의 경우, B-1b는 `terminal_outcome`, `completion_attempt_id`, `completed_at`을 변경하지 않고 그대로 둔다. 이 다섯 outcome의 별도 canonical terminalization semantics(§7.2)는 계속 deferred 상태이며 이 조항에서 재정의하지 않는다.
 
 Successful INITIAL, non-replay `finalizeAttempt`에서 기존 lifecycle/ownership/version/instrumentation/rubric guard가 모두 통과하고, server-derived
 
@@ -247,6 +247,8 @@ completed_at = finalized_at
 이 predicate는 caller-supplied completion intent가 아니라 server-derived attempt outcome을 authority fact로 사용한다. Caller-supplied completion intent semantic category의 reserved/미실현 상태는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §7.3에서 clarify한다.
 
 이 조항은 §7.2의 다른 terminal outcome semantics를 변경하지 않는다. Exact writer mechanics(transaction, locking, deferred boundary)의 authority는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §9.4·§9.4.1·§9.4.12와 `API_CONTRACT.md` §13.10.7·§13.10.7.1이다.
+
+이 조항은 CONTRACT DEFINED / IMPLEMENTATION PENDING 상태다. 현재 main runtime 코드는 이 predicate를 아직 구현하지 않았다.
 
 ### 7.3 Timepoint anchor candidates
 
