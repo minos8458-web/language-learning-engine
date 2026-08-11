@@ -35,6 +35,7 @@ let enrollment;
 let baseAssignment;
 let baseSession;
 let baseAttempt;
+let baseFinalization;
 let productionBefore;
 let fixtureOrdinal = 0;
 
@@ -1019,7 +1020,12 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       ],
       correctionAggregates: correctionBuckets(0).reverse(),
     });
+    const { rows: sessionBefore } = await pool.query(
+      'SELECT ended_at, terminal_outcome FROM evidence_sessions WHERE session_id = $1',
+      [baseSession.session_id]
+    );
     const result = await repository.finalizeAttempt(pool, input);
+    baseFinalization = result;
 
     assert.deepEqual(Object.keys(result), [
       'replayed',
@@ -1038,6 +1044,9 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       'rubricVersion',
       'evaluationCount',
       'correctionBucketCount',
+      'assignmentTerminalOutcome',
+      'assignmentCompletedAt',
+      'assignmentCompletionAttemptId',
     ]);
     assert.equal(result.replayed, false);
     assert.equal(result.attemptId, baseAttempt.attemptId);
@@ -1051,6 +1060,9 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.equal(result.evaluationCount, 2);
     assert.equal(result.correctionBucketCount, 12);
     assert.ok(Date.parse(result.finalizedAt) >= Date.parse(result.serverReceivedAt));
+    assert.equal(result.assignmentTerminalOutcome, 'COMPLETED');
+    assert.equal(result.assignmentCompletedAt, result.finalizedAt);
+    assert.equal(result.assignmentCompletionAttemptId, baseAttempt.attemptId);
 
     const { rows: finalizations } = await pool.query(
       'SELECT * FROM evidence_attempt_finalizations WHERE attempt_id = $1',
@@ -1073,6 +1085,22 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.ok(evaluations.every((row) => row.evaluation_source === 'RULE'));
     assert.ok(evaluations.every((row) => row.rubric_id === REFERENCES.rubricId));
     assert.deepEqual(await readFinalizationCounts(baseAttempt.attemptId), [1, 2, 12]);
+
+    const { rows: assignmentRows } = await pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [baseAssignment.assignment.assignment_id]
+    );
+    assert.equal(assignmentRows[0].terminal_outcome, 'COMPLETED');
+    assert.equal(assignmentRows[0].completion_attempt_id, baseAttempt.attemptId);
+    assert.deepEqual(assignmentRows[0].completed_at, new Date(result.finalizedAt));
+
+    const { rows: sessionAfter } = await pool.query(
+      'SELECT ended_at, terminal_outcome FROM evidence_sessions WHERE session_id = $1',
+      [baseSession.session_id]
+    );
+    assert.deepEqual(sessionAfter, sessionBefore);
   });
 
   test('protocol snapshot mismatch rejects before writing any aggregate row', async () => {
@@ -1652,21 +1680,40 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
   });
 
   test('SCORABLE, UNSCORABLE, and TECHNICAL_INVALID outcomes follow precedence', async () => {
+    const readLifecycle = (assignmentId) => pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [assignmentId]
+    ).then(({ rows }) => rows[0]);
+
     const scorable = await createConfiguredAttempt();
-    assert.equal(
-      (await repository.finalizeAttempt(pool, finalizationInputFor(scorable))).attemptOutcome,
-      'SCORABLE'
-    );
+    const scorableResult = await repository.finalizeAttempt(pool, finalizationInputFor(scorable));
+    assert.equal(scorableResult.attemptOutcome, 'SCORABLE');
+    assert.equal(scorableResult.assignmentTerminalOutcome, 'COMPLETED');
+    assert.equal(scorableResult.assignmentCompletedAt, scorableResult.finalizedAt);
+    assert.equal(scorableResult.assignmentCompletionAttemptId, scorable.attempt.attemptId);
+    assert.deepEqual(await readLifecycle(scorable.assignment.assignment.assignment_id), {
+      terminal_outcome: 'COMPLETED',
+      completion_attempt_id: scorable.attempt.attemptId,
+      completed_at: new Date(scorableResult.finalizedAt),
+    });
 
     const unscorable = await createConfiguredAttempt();
-    assert.equal(
-      (await repository.finalizeAttempt(pool, finalizationInputFor(unscorable, {
-        evaluations: unscorable.targetNodeIds.map(
-          (nodeId) => evaluation(nodeId, 'UNCLASSIFIED')
-        ),
-      }))).attemptOutcome,
-      'UNSCORABLE'
-    );
+    const unscorableResult = await repository.finalizeAttempt(pool, finalizationInputFor(unscorable, {
+      evaluations: unscorable.targetNodeIds.map(
+        (nodeId) => evaluation(nodeId, 'UNCLASSIFIED')
+      ),
+    }));
+    assert.equal(unscorableResult.attemptOutcome, 'UNSCORABLE');
+    assert.equal(unscorableResult.assignmentTerminalOutcome, null);
+    assert.equal(unscorableResult.assignmentCompletedAt, null);
+    assert.equal(unscorableResult.assignmentCompletionAttemptId, null);
+    assert.deepEqual(await readLifecycle(unscorable.assignment.assignment.assignment_id), {
+      terminal_outcome: null,
+      completion_attempt_id: null,
+      completed_at: null,
+    });
 
     const technical = await createConfiguredAttempt();
     const technicalInput = finalizationInputFor(technical, {
@@ -1676,10 +1723,16 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       ),
     });
     delete technicalInput.responseText;
-    assert.equal(
-      (await repository.finalizeAttempt(pool, technicalInput)).attemptOutcome,
-      'TECHNICAL_INVALID'
-    );
+    const technicalResult = await repository.finalizeAttempt(pool, technicalInput);
+    assert.equal(technicalResult.attemptOutcome, 'TECHNICAL_INVALID');
+    assert.equal(technicalResult.assignmentTerminalOutcome, null);
+    assert.equal(technicalResult.assignmentCompletedAt, null);
+    assert.equal(technicalResult.assignmentCompletionAttemptId, null);
+    assert.deepEqual(await readLifecycle(technical.assignment.assignment.assignment_id), {
+      terminal_outcome: null,
+      completion_attempt_id: null,
+      completed_at: null,
+    });
   });
 
   test('mixed modality failure and nonempty modality-failure responses reject', async () => {
@@ -1874,9 +1927,18 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     const fixture = await createConfiguredAttempt();
     const input = finalizationInputFor(fixture);
     const created = await repository.finalizeAttempt(pool, input);
+    assert.equal(created.attemptOutcome, 'SCORABLE');
+    assert.equal(created.assignmentTerminalOutcome, 'COMPLETED');
+
+    // Independently advance the assignment lifecycle (unrelated to this
+    // finalization) to prove replay never re-derives or rewrites it. The
+    // write-once CHECK constraint requires completed_at/completion_attempt_id
+    // to be cleared whenever terminal_outcome is set to a non-COMPLETED value.
     await pool.query(
       `UPDATE evidence_assignments
-          SET terminal_outcome = 'UNSCORABLE'
+          SET terminal_outcome = 'UNSCORABLE',
+              completed_at = NULL,
+              completion_attempt_id = NULL
         WHERE assignment_id = $1`,
       [fixture.assignment.assignment.assignment_id]
     );
@@ -1894,13 +1956,41 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.deepEqual(replay, { ...created, replayed: true });
     assert.equal(replay.serverReceivedAt, created.serverReceivedAt);
     assert.equal(replay.finalizedAt, created.finalizedAt);
+    assert.equal(replay.assignmentTerminalOutcome, created.assignmentTerminalOutcome);
+    assert.equal(replay.assignmentCompletedAt, created.assignmentCompletedAt);
+    assert.equal(replay.assignmentCompletionAttemptId, created.assignmentCompletionAttemptId);
     assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [1, 2, 12]);
+
+    // The replay must not touch evidence_assignments at all -- the row must
+    // still reflect the independent advancement made above, not the replayed
+    // completion values.
+    const { rows: assignmentRows } = await pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [fixture.assignment.assignment.assignment_id]
+    );
+    assert.deepEqual(assignmentRows[0], {
+      terminal_outcome: 'UNSCORABLE',
+      completion_attempt_id: null,
+      completed_at: null,
+    });
   });
 
   test('same identity different digest and different identity reject immutable mutation', async () => {
     const fixture = await createConfiguredAttempt();
     const input = finalizationInputFor(fixture);
-    await repository.finalizeAttempt(pool, input);
+    const created = await repository.finalizeAttempt(pool, input);
+    const readAssignmentLifecycle = () => pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [fixture.assignment.assignment.assignment_id]
+    ).then(({ rows }) => rows[0]);
+    const originalLifecycle = await readAssignmentLifecycle();
+    assert.equal(originalLifecycle.terminal_outcome, 'COMPLETED');
+    assert.equal(originalLifecycle.completion_attempt_id, fixture.attempt.attemptId);
+
     await rejectsWithCode(
       () => repository.finalizeAttempt(pool, { ...input, responseText: 'changed' }),
       'CONTRACT_VIOLATION'
@@ -1913,6 +2003,11 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       'CONTRACT_VIOLATION'
     );
     assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [1, 2, 12]);
+
+    // A rejected conflicting replay must leave the original SCORABLE
+    // completion exactly as first recorded.
+    assert.deepEqual(await readAssignmentLifecycle(), originalLifecycle);
+    assert.equal(created.assignmentCompletionAttemptId, fixture.attempt.attemptId);
   });
 
   test('concurrent identical finalizations converge to one create and all remaining replays', async () => {
@@ -1969,6 +2064,31 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       /failure after evaluation inserts/
     );
     assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
+  test('failure injected at the assignment completion UPDATE rolls back everything', async () => {
+    const fixture = await createConfiguredAttempt();
+    const failingPool = createFinalizationFailurePool(
+      pool,
+      /UPDATE\s+evidence_assignments\b/i,
+      () => new Error('failure after assignment completion update')
+    );
+    await assert.rejects(
+      () => repository.finalizeAttempt(failingPool, finalizationInputFor(fixture)),
+      /failure after assignment completion update/
+    );
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+    const { rows: assignmentRows } = await pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [fixture.assignment.assignment.assignment_id]
+    );
+    assert.deepEqual(assignmentRows[0], {
+      terminal_outcome: null,
+      completion_attempt_id: null,
+      completed_at: null,
+    });
   });
 
   test('operation-local PostgreSQL error mappings are exact and unexpected errors survive', async () => {
@@ -2033,6 +2153,27 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     );
   });
 
+  test('caller-supplied completion-intent-like keys remain rejected by exact-shape validation', async () => {
+    const fixture = await createConfiguredAttempt();
+    for (const completionIntentKey of [
+      'completionIntent',
+      'completeAssignment',
+      'assignmentCompleted',
+      'assignmentTerminalOutcome',
+      'assignmentCompletedAt',
+      'assignmentCompletionAttemptId',
+    ]) {
+      await rejectsWithCode(
+        () => repository.finalizeAttempt(pool, {
+          ...finalizationInputFor(fixture),
+          [completionIntentKey]: true,
+        }),
+        'CONTRACT_VIOLATION'
+      );
+    }
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [0, 0, 0]);
+  });
+
   test('a small valid jsonMaxUtf8Bytes bound rejects a JSON response using real PostgreSQL JSONB text length', async () => {
     const fixture = await createConfiguredAttempt({
       protocolId: 'INSTRUMENTATION_JSON_BOUND_REJECT',
@@ -2072,9 +2213,16 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
 
   test('a genuine finalization PK race reloads the committed row and replays it', async () => {
     const fixture = await createConfiguredAttempt();
-    const input = finalizationInputFor(fixture);
+    // UNSCORABLE keeps the assignment nonterminal after the original
+    // finalization, so the hidden-lookup retry below reaches the real
+    // evidence_attempt_finalizations unique-constraint race below instead of
+    // being short-circuited by B-1b's already-terminal assignment guard.
+    const input = finalizationInputFor(fixture, {
+      evaluations: fixture.targetNodeIds.map((nodeId) => evaluation(nodeId, 'UNCLASSIFIED')),
+    });
     const original = await repository.finalizeAttempt(pool, input);
     assert.equal(original.replayed, false);
+    assert.equal(original.attemptOutcome, 'UNSCORABLE');
 
     const beforePool = {
       total: pool.totalCount,
@@ -2095,6 +2243,86 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [1, 2, 12]);
     assert.equal(pool.waitingCount, 0);
     assert.equal(pool.totalCount - pool.idleCount, beforePool.total - beforePool.idle);
+  });
+
+  test('a second INITIAL finalization on an already SCORABLE-completed assignment is rejected', async () => {
+    const fixture = await createConfiguredAttempt();
+    const secondAttempt = await repository.openAttempt(pool, {
+      assignmentId: fixture.assignment.assignment.assignment_id,
+      sessionId: fixture.session.session_id,
+      idempotencyIdentity: 'idem-sequential-second-attempt',
+      instrumentationProtocolId: fixture.protocolId,
+      instrumentationProtocolVersion: 1,
+      openPayload: { responseMode: 'TEXT', ordinal: 2 },
+    });
+
+    const firstResult = await repository.finalizeAttempt(pool, finalizationInputFor(fixture));
+    assert.equal(firstResult.attemptOutcome, 'SCORABLE');
+    assert.equal(firstResult.assignmentTerminalOutcome, 'COMPLETED');
+    assert.equal(firstResult.assignmentCompletionAttemptId, fixture.attempt.attemptId);
+
+    await rejectsWithCode(
+      () => repository.finalizeAttempt(
+        pool,
+        finalizationInputFor({ ...fixture, attempt: secondAttempt })
+      ),
+      'CONTRACT_VIOLATION'
+    );
+
+    assert.deepEqual(await readFinalizationCounts(fixture.attempt.attemptId), [1, 2, 12]);
+    assert.deepEqual(await readFinalizationCounts(secondAttempt.attemptId), [0, 0, 0]);
+
+    const { rows: assignmentRows } = await pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [fixture.assignment.assignment.assignment_id]
+    );
+    assert.equal(assignmentRows[0].terminal_outcome, 'COMPLETED');
+    assert.equal(assignmentRows[0].completion_attempt_id, fixture.attempt.attemptId);
+    assert.deepEqual(assignmentRows[0].completed_at, new Date(firstResult.finalizedAt));
+  });
+
+  test('two pre-opened SCORABLE finalizations racing on the same assignment produce exactly one winner', async () => {
+    const fixture = await createConfiguredAttempt();
+    const secondAttempt = await repository.openAttempt(pool, {
+      assignmentId: fixture.assignment.assignment.assignment_id,
+      sessionId: fixture.session.session_id,
+      idempotencyIdentity: 'idem-race-second-attempt',
+      instrumentationProtocolId: fixture.protocolId,
+      instrumentationProtocolVersion: 1,
+      openPayload: { responseMode: 'TEXT', ordinal: 2 },
+    });
+
+    const results = await Promise.allSettled([
+      repository.finalizeAttempt(pool, finalizationInputFor(fixture)),
+      repository.finalizeAttempt(pool, finalizationInputFor({ ...fixture, attempt: secondAttempt })),
+    ]);
+
+    const fulfilled = results.filter((result) => result.status === 'fulfilled');
+    const rejected = results.filter((result) => result.status === 'rejected');
+    assert.equal(fulfilled.length, 1);
+    assert.equal(rejected.length, 1);
+    assert.equal(rejected[0].reason.code, 'CONTRACT_VIOLATION');
+    assert.equal(fulfilled[0].value.assignmentTerminalOutcome, 'COMPLETED');
+
+    const winningAttemptId = fulfilled[0].value.attemptId;
+    const losingAttemptId = winningAttemptId === fixture.attempt.attemptId
+      ? secondAttempt.attemptId
+      : fixture.attempt.attemptId;
+
+    const { rows: assignmentRows } = await pool.query(
+      `SELECT terminal_outcome, completion_attempt_id, completed_at
+         FROM evidence_assignments
+        WHERE assignment_id = $1`,
+      [fixture.assignment.assignment.assignment_id]
+    );
+    assert.equal(assignmentRows[0].terminal_outcome, 'COMPLETED');
+    assert.equal(assignmentRows[0].completion_attempt_id, winningAttemptId);
+    assert.deepEqual(assignmentRows[0].completed_at, new Date(fulfilled[0].value.finalizedAt));
+
+    assert.deepEqual(await readFinalizationCounts(winningAttemptId), [1, 2, 12]);
+    assert.deepEqual(await readFinalizationCounts(losingAttemptId), [0, 0, 0]);
   });
 
   test('NORMAL_EMPTY with only UNCLASSIFIED evaluations is rejected by the NORMAL_EMPTY coverage rule', async () => {
@@ -2156,15 +2384,28 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
   });
 
   test('test-controlled DB boundary failure rolls back a newly created series', async () => {
+    // Uses a dedicated fresh assignment/session rather than the shared
+    // baseAssignment/baseSession fixture: baseAssignment is SCORABLE-completed
+    // by an earlier finalizeAttempt test in this file, and a terminal
+    // assignment would make openAttempt reject before ever reaching the
+    // INSERT this test targets.
+    const freshAssignment = await repository.createAssignment(pool, assignmentInput({
+      targetNodeIds: ['NODE_EVIDENCE_C'],
+    }));
+    const freshSession = await createSession(enrollment.enrollment_id);
     const beforeAttempts = await countRows('evidence_attempts');
     const beforeSeries = await countRows('evidence_attempt_series');
     const failingPool = createAttemptInsertFailurePool(pool);
 
     await assert.rejects(
-      () => repository.openAttempt(
-        failingPool,
-        attemptInput('idem-attempt-db-boundary-failure', { responseMode: 'TEXT' })
-      ),
+      () => repository.openAttempt(failingPool, {
+        assignmentId: freshAssignment.assignment.assignment_id,
+        sessionId: freshSession.session_id,
+        idempotencyIdentity: 'idem-attempt-db-boundary-failure',
+        instrumentationProtocolId: REFERENCES.instrumentationProtocolId,
+        instrumentationProtocolVersion: REFERENCES.instrumentationProtocolVersion,
+        openPayload: { responseMode: 'TEXT' },
+      }),
       /test-controlled attempt insert failure/
     );
 
@@ -2219,10 +2460,14 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
         WHERE session_id = $1`,
       [baseSession.session_id]
     );
+    // baseAssignment/baseAttempt were SCORABLE-finalized earlier in this
+    // describe block ("finalizeAttempt happy path..."), so B-1b legitimately
+    // wrote the assignment-completion lifecycle. Session lifecycle remains
+    // untouched by finalizeAttempt regardless.
     assert.deepEqual(assignmentRows[0], {
-      completed_at: null,
-      completion_attempt_id: null,
-      terminal_outcome: null,
+      completed_at: new Date(baseFinalization.finalizedAt),
+      completion_attempt_id: baseAttempt.attemptId,
+      terminal_outcome: 'COMPLETED',
     });
     assert.deepEqual(sessionRows[0], {
       ended_at: null,
@@ -2247,7 +2492,6 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.doesNotMatch(repositorySource, /\bUPDATE\s+progress\b/i);
     assert.doesNotMatch(repositorySource, /\bINSERT\s+INTO\s+attempt_records\b/i);
     assert.doesNotMatch(repositorySource, /\bUPDATE\s+attempt_records\b/i);
-    assert.doesNotMatch(repositorySource, /\bUPDATE\s+evidence_assignments\b/i);
 
     // Attempt lifecycle (openAttempt/finalizeAttempt) must never flip session
     // terminal state directly -- only the dedicated B-1a session-lifecycle
@@ -2256,6 +2500,14 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     const finalizeAttemptSource = extractFunctionSource(repositorySource, 'finalizeAttempt');
     assert.doesNotMatch(openAttemptSource, /\bUPDATE\s+evidence_sessions\b/i);
     assert.doesNotMatch(finalizeAttemptSource, /\bUPDATE\s+evidence_sessions\b/i);
+
+    // B-1b: only finalizeAttempt's SCORABLE-conditional write-once branch may
+    // update evidence_assignments; openAttempt and createAssignment must not.
+    assert.match(finalizeAttemptSource, /\bUPDATE\s+evidence_assignments\b/i);
+    assert.match(finalizeAttemptSource, /rowCount\s*!==\s*1/);
+    assert.doesNotMatch(openAttemptSource, /\bUPDATE\s+evidence_assignments\b/i);
+    const createAssignmentSource = extractFunctionSource(repositorySource, 'createAssignment');
+    assert.doesNotMatch(createAssignmentSource, /\bUPDATE\s+evidence_assignments\b/i);
   });
 
   test('startSession requires an ACTIVE enrollment and creates nonterminal, non-idempotent sessions', async () => {

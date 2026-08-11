@@ -1727,6 +1727,7 @@ async function finalizeAttempt(pool, input) {
 
     const receivedMs = new Date(serverReceivedAt).getTime();
     const finalizedAt = new Date(Math.max(Date.now(), receivedMs)).toISOString();
+    const isScorableCompletion = attemptOutcome === 'SCORABLE';
     const replayResult = {
       replayed: false,
       attemptId: normalizedBase.attemptId,
@@ -1747,6 +1748,11 @@ async function finalizeAttempt(pool, input) {
       rubricVersion: Number(assignment.rubric_version),
       evaluationCount: evaluations.length,
       correctionBucketCount: correctionAggregates.length,
+      assignmentTerminalOutcome: isScorableCompletion ? 'COMPLETED' : null,
+      assignmentCompletedAt: isScorableCompletion ? finalizedAt : null,
+      assignmentCompletionAttemptId: isScorableCompletion
+        ? normalizedBase.attemptId
+        : null,
     };
 
     await client.query(
@@ -1845,6 +1851,23 @@ async function finalizeAttempt(pool, input) {
           aggregate.count,
         ]
       );
+    }
+
+    if (isScorableCompletion) {
+      const { rowCount } = await client.query(
+        `UPDATE evidence_assignments
+            SET terminal_outcome = 'COMPLETED',
+                completion_attempt_id = $2,
+                completed_at = $3
+          WHERE assignment_id = $1
+            AND terminal_outcome IS NULL`,
+        [assignment.assignment_id, normalizedBase.attemptId, finalizedAt]
+      );
+      if (rowCount !== 1) {
+        throw new ContractViolationError(
+          'finalizeAttempt: assignment completion write did not affect exactly one row'
+        );
+      }
     }
 
     await client.query('COMMIT');
