@@ -1293,7 +1293,7 @@ Learning Flow, public controller, public route and external client use are prohi
 
 ##### Exact input
 
-Identical for both the current runtime operation and the B-1b target contract — the B-1b increment adds no input field and no caller-supplied completion intent. There is no completion-intent field today, and none is planned.
+Identical for both the current runtime operation and the B-1b target contract — the B-1b increment adds no input field and no caller-supplied completion intent. There is no completion-intent field today.
 
 Allowed top-level keys:
 
