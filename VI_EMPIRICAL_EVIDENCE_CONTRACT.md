@@ -222,6 +222,32 @@ assignment_version_snapshot
 
 `null`, `MISSING`, `NORMAL_EMPTY`, `TECHNICAL_FAILURE` 및 점수 0은 같은 의미로 취급하지 않는다.
 
+#### 7.2.1 B-1b bounded completion predicate (owner-approved 2026-08-11)
+
+B-1b는 `COMPLETED`에 한정된 narrow-scope predicate만 정의한다. `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY`의 assignment-level terminalization은 이 조항에서 정의하거나 구현하지 않으며, 해당 outcome이 발생해도 assignment lifecycle은 nonterminal로 유지된다.
+
+Successful INITIAL, non-replay `finalizeAttempt`에서 기존 lifecycle/ownership/version/instrumentation/rubric guard가 모두 통과하고, server-derived
+
+```text
+attemptOutcome === SCORABLE
+```
+
+이면 assignment는 같은 transaction에서 다음으로 write-once terminalize된다.
+
+```text
+terminal_outcome = COMPLETED
+completion_attempt_id = finalizing attempt_id
+completed_at = finalized_at
+```
+
+`attemptOutcome !== SCORABLE`이면 B-1b는 assignment lifecycle을 변경하지 않는다.
+
+현재 정의된 모든 `assignment_type`에 동일한 predicate를 적용하며, assignment_type별 별도 completion rule은 만들지 않는다.
+
+이 predicate는 caller-supplied completion intent가 아니라 server-derived attempt outcome을 authority fact로 사용한다. Caller-supplied completion intent semantic category의 reserved/미실현 상태는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §7.3에서 clarify한다.
+
+이 조항은 §7.2의 다른 terminal outcome semantics를 변경하지 않는다. Exact writer mechanics(transaction, locking, deferred boundary)의 authority는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §9.4·§9.4.1·§9.4.12와 `API_CONTRACT.md` §13.10.7·§13.10.7.1이다.
+
 ### 7.3 Timepoint anchor candidates
 
 Timepoint anchor는 현재 하나로 확정하지 않는다. n=1~3 instrumentation 단계에서 다음 후보를 versioned protocol로 비교한다.
@@ -1068,6 +1094,8 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | VAD parameter | `DEFER` | Audio milestone | 미정 |
 | Speaking repair taxonomy | `DEFER` | Audio milestone | 미정 |
 | Provider prompt/raw retention | `OWNER-DECISION` | Privacy/Operations | Actual provider 전 결정 |
+| Assignment completion applicability predicate (B-1b) | `OWNER-APPROVED` | Control Tower | 2026-08-11 결정: `attemptOutcome === SCORABLE` → assignment `COMPLETED`; non-SCORABLE → B-1b에서 assignment lifecycle 불변 |
+| Assignment completion timestamp source (B-1b) | `OWNER-APPROVED` | Control Tower | 2026-08-11 결정: `completed_at = finalized_at`(same-transaction); 별도 completion timestamp source 없음 |
 
 근거 없는 숫자 placeholder는 architecture blocker가 아니다. 관련 단계에서 값이 필요한 경우에만 stage gate가 된다.
 

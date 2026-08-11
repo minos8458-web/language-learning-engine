@@ -1268,7 +1268,7 @@ Hash 또는 serialization algorithm은 implementation HOW다.
 
 #### 13.10.7.1 Current bounded `finalizeAttempt` repository contract
 
-> Reconciliation: §13.10.7 is the future full-finalization category contract. For the current bounded writer slice, this §13.10.7.1 contract takes precedence for authorized caller, transaction contents, success result and deferred scope. In particular, current success does not include assignment completion.
+> Reconciliation: §13.10.7 is the future full-finalization category contract. For the current bounded writer slice, this §13.10.7.1 contract takes precedence for authorized caller, transaction contents, success result and deferred scope. In particular, current bounded success follows the owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): a successful INITIAL, non-replay finalization whose server-derived `attemptOutcome === SCORABLE` includes assignment `COMPLETED`; a successful non-SCORABLE finalization leaves assignment lifecycle unchanged; all other assignment-level terminalization (`MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY`) remains deferred/out of scope for this writer.
 
 The current bounded milestone implements the internal repository operation:
 
@@ -1388,11 +1388,19 @@ Caller cannot supply:
   rubricId,
   rubricVersion,
   evaluationCount,
-  correctionBucketCount
+  correctionBucketCount,
+  assignmentTerminalOutcome,
+  assignmentCompletedAt,
+  assignmentCompletionAttemptId
 }
 ```
 
-Equivalent replay returns the original fields and timestamps and changes only `replayed` to true.
+`assignmentTerminalOutcome`, `assignmentCompletedAt`, `assignmentCompletionAttemptId` are output-only fields reflecting the owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1); no corresponding input field exists or may be added.
+
+- SCORABLE qualifying INITIAL finalization: `assignmentTerminalOutcome = COMPLETED`, `assignmentCompletedAt = finalizedAt`, `assignmentCompletionAttemptId = attemptId`.
+- Successful non-SCORABLE finalization: all three fields are `null`.
+
+Equivalent replay returns the original authoritative fields, timestamps and the three assignment-completion fields above exactly as first recorded, and changes only `replayed` to true. Replay never re-derives or rewrites assignment completion.
 
 ##### Transaction
 
@@ -1400,11 +1408,12 @@ One transaction atomically writes:
 
 - finalization,
 - one RULE evaluation per assignment snapshot target node,
-- the protocol-required correction aggregate set.
+- the protocol-required correction aggregate set,
+- conditional assignment `COMPLETED` update, applied only when this is a successful INITIAL, non-replay finalization and server-derived `attemptOutcome === SCORABLE` (owner-approved B-1b predicate, 2026-08-11).
 
 Partial success is prohibited.
 
-The transaction does not update assignment completion or session lifecycle.
+The transaction does not update session lifecycle. It does not update assignment lifecycle for any outcome other than the SCORABLE-conditional `COMPLETED` write above; `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY` assignment-level terminalization remain deferred/out of scope for this writer.
 
 ##### Instrumentation definition
 
