@@ -966,6 +966,8 @@ Finalization digest의 최소 semantic categories:
 * Caller-supplied completion intent
 * Instrumentation version
 
+`Caller-supplied completion intent`는 reserved/미실현 semantic category다. 현재 B-1b bounded writer(§9.4.1)는 이 category를 caller input으로 받지 않는다 — `API_CONTRACT.md` §13.10.7.1 Exact input에 completion-intent 필드가 존재하지 않는다. 현재 B-1b assignment completion 적용 여부는 caller-supplied completion intent가 아니라 server-derived `attemptOutcome === SCORABLE`만으로 결정한다(owner-approved 2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1). 이 category를 실현하기 위해 finalization digest에 새 필드를 추가하지 않는다.
+
 Excluded from caller-payload normalization:
 
 * Server-issued IDs
@@ -1184,6 +1186,8 @@ Atomic set:
 * Attempt terminal outcome
 * Applicable assignment completion
 
+`Applicable assignment completion`은 owner-approved B-1b predicate(2026-08-11)로 operationalize된다: server-derived `attemptOutcome === SCORABLE`인 successful INITIAL, non-replay finalization에서만 적용되며, 적용 시 `evidence_assignments.terminal_outcome = COMPLETED`, `completion_attempt_id = finalizing attempt_id`, `completed_at = finalized_at`을 같은 transaction에서 write-once로 기록한다. `attemptOutcome !== SCORABLE`이면 no-op이다. 다른 assignment terminal outcome(`MISSING`/`TECHNICAL_FAILURE`/`WITHDRAWN`/`UNSCORABLE`/`NORMAL_EMPTY`)의 assignment-level terminalization은 B-1b 범위 밖이다(§9.4.12).
+
 Concurrency:
 
 * Assignment completion 시 assignment row를 먼저 lock한다.
@@ -1215,16 +1219,21 @@ The operation uses object input and atomically inserts:
 
 Partial success is prohibited.
 
-This writer does not update:
+Owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): when this finalization is a successful INITIAL, non-replay finalization and the server-derived `attemptOutcome === SCORABLE`, the same transaction additionally write-once updates:
 
-- `evidence_assignments.completion_attempt_id`,
-- `evidence_assignments.completed_at`,
-- `evidence_assignments.terminal_outcome`,
+- `evidence_assignments.completion_attempt_id = finalizing attempt_id`,
+- `evidence_assignments.completed_at = finalized_at`,
+- `evidence_assignments.terminal_outcome = COMPLETED`.
+
+When `attemptOutcome !== SCORABLE`, or the finalization is an equivalent replay, this writer does not update any of the three fields above.
+
+This writer never updates:
+
 - session terminal fields,
 - restart lineage,
 - reschedule/supersede lineage.
 
-Assignment completion, session lifecycle, restart, reschedule and multi-root technical-failure terminalization remain deferred writer contracts.
+Assignment-level `MISSING`, `TECHNICAL_FAILURE`, `WITHDRAWN`, `UNSCORABLE`, `NORMAL_EMPTY` terminalization, session lifecycle, restart, reschedule and multi-root technical-failure terminalization remain deferred writer contracts (§9.4.12).
 
 The current writer accepts only `evaluation_source = RULE`. `HUMAN` and `AI_ASSISTED` remain reserved physical values and are not accepted by this operation.
 
@@ -1683,12 +1692,17 @@ Current implementation scope:
 - finalization idempotency,
 - timing and response validation,
 - error classification,
-- transaction rollback.
+- transaction rollback,
+- owner-approved B-1b predicate: SCORABLE-conditional assignment `COMPLETED` write, i.e. `terminal_outcome = COMPLETED` / `completion_attempt_id` / `completed_at = finalized_at`, applied only when the finalization is a successful INITIAL non-replay finalization and server-derived `attemptOutcome === SCORABLE` (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1).
 
 Deferred:
 
-- assignment completion,
-- completion-attempt ownership write,
+- assignment-level `MISSING` terminalization,
+- assignment-level `TECHNICAL_FAILURE` terminalization,
+- assignment-level `WITHDRAWN` terminalization,
+- assignment-level `UNSCORABLE` terminalization,
+- assignment-level `NORMAL_EMPTY` terminalization,
+- assignment_type-specific completion rules,
 - session terminalization,
 - restart,
 - reschedule,
@@ -1700,6 +1714,8 @@ Deferred:
 - human/AI evaluation,
 - actual provider,
 - audio.
+
+이 문서 patch는 위 B-1b predicate의 contract definition일 뿐이며, 현재 코드가 이를 구현했다고 기록하지 않는다.
 
 ## 9.5 Technical-failure terminalization
 
@@ -2741,7 +2757,7 @@ Evidence attempts/series.
 * One finalization
 * Expected evaluations
 * Expected correction rows
-* Applicable assignment completion
+* Applicable assignment completion — SCORABLE initial finalization writes `terminal_outcome = COMPLETED` / `completion_attempt_id` / `completed_at = finalized_at`; non-SCORABLE or replay leaves assignment lifecycle unchanged (owner-approved B-1b predicate, 2026-08-11; contract definition only — this acceptance matrix does not assert current test PASS status)
 
 ### Rejected rows
 
