@@ -1215,19 +1215,18 @@ The operation uses object input and atomically inserts:
 
 - one immutable `evidence_attempt_finalizations` row,
 - exactly one `evidence_target_node_evaluations` row for every assignment-snapshot target node,
-- the complete `evidence_correction_aggregates` set required by the pinned instrumentation protocol.
+- the complete `evidence_correction_aggregates` set required by the pinned instrumentation protocol,
+- for a qualifying successful INITIAL, non-replay finalization with server-derived `attemptOutcome === SCORABLE` only: a write-once assignment `COMPLETED` lifecycle update (below).
 
 Partial success is prohibited.
 
-Current runtime behavior: this writer does not update `evidence_assignments.completion_attempt_id`, `evidence_assignments.completed_at`, or `evidence_assignments.terminal_outcome` for any finalization outcome. Assignment lifecycle is entirely untouched by the code as currently implemented.
-
-B-1b target bounded writer contract — **CONTRACT DEFINED, IMPLEMENTATION PENDING** (owner-approved 2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): when this finalization is a successful INITIAL, non-replay finalization and the server-derived `attemptOutcome === SCORABLE`, the same transaction must additionally write-once update:
+Current runtime behavior (implemented; owner-approved B-1b predicate, 2026-08-11, `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1; integration anchor `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`; post-merge PostgreSQL verification PASS): when this finalization is a successful INITIAL, non-replay finalization and the server-derived `attemptOutcome === SCORABLE`, the same transaction additionally write-once updates:
 
 - `evidence_assignments.completion_attempt_id = finalizing attempt_id`,
 - `evidence_assignments.completed_at = finalized_at`,
 - `evidence_assignments.terminal_outcome = COMPLETED`.
 
-When `attemptOutcome !== SCORABLE`, or the finalization is an equivalent replay, the target contract requires this writer to leave the three fields above unchanged. This paragraph is a contract definition for a pending implementation increment; current runtime code does not yet perform this SCORABLE-conditional write.
+When `attemptOutcome !== SCORABLE`, this writer leaves the three fields above unchanged — a no-op for assignment lifecycle. An equivalent replay returns the original stored completion values exactly as first recorded and does not rewrite assignment lifecycle.
 
 This writer never updates, in either current or target scope:
 
@@ -1696,23 +1695,22 @@ Actually shipped in current `main` runtime:
 - finalization idempotency,
 - timing and response validation,
 - error classification,
-- transaction rollback.
+- transaction rollback,
+- for a qualifying successful INITIAL, non-replay finalization with server-derived `attemptOutcome === SCORABLE` only: applicable assignment `COMPLETED` lifecycle update (item B).
 
-Current runtime does not write any assignment-lifecycle field. `evidence_assignments.completion_attempt_id`, `completed_at`, `terminal_outcome` are untouched by every finalization outcome as currently implemented.
+**B. B-1b bounded increment — implemented and post-merge verified**
 
-**B. B-1b contract-defined next increment — implementation pending**
-
-**CONTRACT DEFINED. IMPLEMENTATION PENDING.** Not yet present in current runtime code.
-
-Owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1): a successful INITIAL, non-replay finalization whose server-derived `attemptOutcome === SCORABLE` must, in the same transaction, write-once update:
+Owner-approved B-1b predicate (2026-08-11; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7.2.1) is implemented in current `main` runtime (integration anchor `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`; review record `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`). A successful INITIAL, non-replay finalization whose server-derived `attemptOutcome === SCORABLE` writes, in the same transaction, write-once:
 
 - `evidence_assignments.terminal_outcome = COMPLETED`,
 - `evidence_assignments.completion_attempt_id = finalizing attempt_id`,
 - `evidence_assignments.completed_at = finalized_at`.
 
-`attemptOutcome !== SCORABLE` (or an equivalent replay) requires no assignment-lifecycle mutation under this target contract.
+`attemptOutcome !== SCORABLE` is a no-op for assignment lifecycle. An equivalent replay returns the original stored completion values and does not rewrite assignment lifecycle.
 
-This section defines the target contract for a future implementation increment only. It does not assert that current code performs this write, that current output already returns the corresponding fields, or that any test currently passes against this contract.
+Actual post-merge PostgreSQL verification on `main` (16 evidence tables, migration 012 highest, migration 013 absent, 0 applied/12 skipped): focused 78/78 PASS, full 338/338 PASS across 52 suites, fail 0 / cancelled 0 / skipped 0 / todo 0.
+
+This section records the implemented B-1b increment only; it does not assert that B-1b broadens into full B-1 assignment terminalization or that any outcome in **C** below is implemented.
 
 **C. Deferred beyond B-1b**
 
@@ -2776,7 +2774,7 @@ Evidence attempts/series.
 * One finalization
 * Expected evaluations
 * Expected correction rows
-* Applicable assignment completion — SCORABLE initial finalization writes `terminal_outcome = COMPLETED` / `completion_attempt_id` / `completed_at = finalized_at`; non-SCORABLE or replay leaves assignment lifecycle unchanged (owner-approved B-1b predicate, 2026-08-11; contract definition only — this acceptance matrix does not assert current test PASS status)
+* Applicable assignment completion — SCORABLE initial finalization writes `terminal_outcome = COMPLETED` / `completion_attempt_id` / `completed_at = finalized_at`; non-SCORABLE or replay leaves assignment lifecycle unchanged (owner-approved B-1b predicate, 2026-08-11; implemented and post-merge PostgreSQL verified — focused 78/78 PASS, full 338/338 PASS, 52 suites, fail 0/cancelled 0/skipped 0/todo 0; 16 evidence tables, migration 012 highest, migration 013 absent, 0 applied/12 skipped)
 
 ### Rejected rows
 
