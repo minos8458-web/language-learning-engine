@@ -248,7 +248,7 @@ completed_at = finalized_at
 
 이 조항은 §7.2의 다른 terminal outcome semantics를 변경하지 않는다. Exact writer mechanics(transaction, locking, deferred boundary)의 authority는 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §9.4·§9.4.1·§9.4.12와 `API_CONTRACT.md` §13.10.7·§13.10.7.1이다.
 
-이 조항은 CONTRACT DEFINED / IMPLEMENTATION PENDING 상태다. 현재 main runtime 코드는 이 predicate를 아직 구현하지 않았다.
+이 조항은 IMPLEMENTED 상태다. Owner-approved predicate는 main runtime에 통합되었다(integration anchor: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §9.4.1·§9.4.12, post-merge PostgreSQL 실행 검증 PASS). Qualifying SCORABLE `finalizeAttempt`는 위에 명시된 write를 수행하며, non-SCORABLE/equivalent replay boundary와 §7.2의 다섯 개 deferred assignment terminal outcome은 변경 없이 그대로 유지된다.
 
 ### 7.3 Timepoint anchor candidates
 
