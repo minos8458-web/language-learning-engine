@@ -41,14 +41,130 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 
 - VI canonical node 총수: 24
 - pilot node 수: `[EVIDENCE-BOUND: 12~20]`
-- exact node manifest: `[RESEARCH/PILOT-OWNED]`
+- exact node manifest: Research/Pilot-owned exact 18-node manifest — §3.1에 기록됨
 - 포함 기준:
   - 빈도
   - 난이도 분포
   - 관계 구조
   - item 제작 가능성
   - 6개 scenario coverage
-- 제외 및 이유 기록 필수
+- 제외 및 이유 기록 필수 — 아래 §3.2에 기록됨
+
+### 3.1 Selected pilot node manifest
+
+Research/Pilot adjudication으로 확정된 선정 node는 정확히 18개이며 순서는 다음과 같다.
+
+1. `GRAMMAR_VI_DA`
+2. `GRAMMAR_VI_SE`
+3. `GRAMMAR_VI_DANG`
+4. `GRAMMAR_VI_ROI`
+5. `GRAMMAR_VI_CO_THE`
+6. `GRAMMAR_VI_DUOC_ABILITY`
+7. `GRAMMAR_VI_MUON`
+8. `GRAMMAR_VI_PHAI`
+9. `GRAMMAR_VI_KHONG`
+10. `GRAMMAR_VI_CHUA`
+11. `GRAMMAR_VI_CO_KHONG`
+12. `GRAMMAR_VI_WH_INSITU`
+13. `GRAMMAR_VI_CL_CAI`
+14. `GRAMMAR_VI_CL_CON`
+15. `GRAMMAR_VI_HON`
+16. `GRAMMAR_VI_NHAT`
+17. `GRAMMAR_VI_HAY`
+18. `GRAMMAR_VI_DI`
+
+선정 수 18은 pilot bound `[EVIDENCE-BOUND: 12~20]` 안에 있다.
+
+Approved category distribution:
+
+- TENSE 2
+- ASPECT 2
+- MODALITY 4
+- NEGATION 2
+- MOOD 4
+- QUANTITY 2
+- COMPARISON 2
+
+Approved difficulty distribution:
+
+- D1 7
+- D2 7
+- D3 2
+- D4 2
+
+Approved canonical relation retention:
+
+- PREREQUISITE 4/4
+- CONTRAST 4/5
+- ALTERNATIVE 1/1
+- RELATED 4/6
+
+Limitation — 명시적 기록:
+
+Repository evidence has no validated corpus-frequency ranking.
+따라서 이 18개를 "가장 빈도가 높은 Vietnamese construction 18개"라고 주장하지 않는다.
+
+### 3.2 Excluded nodes and reasons
+
+제외 node는 정확히 6개이며 각각의 disposition, scenario impact, relation impact, reason을 기록한다.
+
+**1. `GRAMMAR_VI_NEU_THI`**
+
+- category: CONDITIONAL
+- difficulty: 3
+- disposition: ACCEPTABLE TRADEOFF
+- scenario impact: S4 remains measurable with `GRAMMAR_VI_SE`; conditional extension is deferred.
+- relation impact: No canonical relation is removed.
+- reason: Adds multi-clause/item-family/timepoint burden and RT/working-memory confounding.
+
+**2. `GRAMMAR_VI_DUOC_PASSIVE`**
+
+- category: VOICE
+- difficulty: 3
+- disposition: SAFE EXCLUSION
+- scenario impact: No six-scenario core target requires it.
+- relation impact: DUOC_PASSIVE ↔ BI contrast is omitted.
+- reason: Adds passive `được` functional/scoring ambiguity while DUOC_ABILITY is separately selected.
+
+**3. `GRAMMAR_VI_BI`**
+
+- category: VOICE
+- difficulty: 3
+- disposition: SAFE EXCLUSION
+- scenario impact: No six-scenario core target requires it.
+- relation impact: Same omitted Voice contrast pair.
+- reason: Adds lexical-valence/scoring burden without core P1 necessity.
+
+**4. `GRAMMAR_VI_A_POLITE`**
+
+- category: PRAGMATICS
+- difficulty: 2
+- disposition: SAFE EXCLUSION
+- scenario impact: S6 pragmatics are optional; directive core remains HAY/DI.
+- relation impact: Related links with NHE/A_CONFIRM are omitted.
+- reason: Social/register dependence adds unnecessary P1 scoring ambiguity.
+
+**5. `GRAMMAR_VI_NHE`**
+
+- category: PRAGMATICS
+- difficulty: 2
+- disposition: SAFE EXCLUSION
+- scenario impact: Optional S6 probe only.
+- relation impact: A_POLITE ↔ NHE omitted.
+- reason: Context-dependent softening is not required for S6 core.
+
+**6. `GRAMMAR_VI_A_CONFIRM`**
+
+- category: PRAGMATICS
+- difficulty: 2
+- disposition: SAFE EXCLUSION
+- scenario impact: Optional probe only.
+- relation impact: A_POLITE ↔ A_CONFIRM omitted.
+- reason: Pragmatic confirmation burden is unnecessary for text-only P1 core.
+
+### 3.3 Reconciliation
+
+18 selected + 6 excluded = 24 canonical VI nodes.
 
 ## 4. Lexical envelope
 
@@ -60,10 +176,25 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 - canonical Vocabulary 변경: 금지
 - canonical Lexico-Construction Graph: 금지
 
+### 4.1 Lexical manifest status (unresolved)
+
+이 patch는 lexical manifest를 작성하지 않는다. 현재 상태는 다음과 같다.
+
+- lexical manifest ID/version: UNRESOLVED
+- lexical entries: UNRESOLVED
+- `source_refs`: UNRESOLVED
+- provenance: UNRESOLVED
+- license verification: UNRESOLVED
+
+§3의 node manifest와 §5의 scenario 기록은 B-2의 lexical-manifest component를 충족하지 않는다.
+B-2 remains open.
+
+manifest_id, version, source, license는 여기서 발명하지 않는다.
+
 ## 5. Scenario manifest
 
 - bounded scenario 수: `[EVIDENCE-BOUND: 정확히 6]`
-- scenario IDs와 설명: `[RESEARCH/PILOT-OWNED]`
+- scenario IDs와 설명: Research/Pilot-owned exact six-scenario manifest — §5.1에 기록됨
 - 각 scenario의:
   - target node coverage
   - item-family coverage
@@ -73,6 +204,103 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 - scenario holdout:
   - 필수 gate 아님
   - `[PILOT-CALIBRATE: exploratory/confirmatory 여부]`
+
+### 5.1 Pilot scenario manifest
+
+Ownership 경계 — 명시적 기록:
+
+아래 여섯 scenario는 Research/Pilot-owned empirical pilot scenario다.
+이들은 canonical `VI_LANGUAGE_PACK.md`의 Learning Outcome Scenario가 **아니다**.
+
+기록된 scenario는 정확히 6개다.
+
+#### 1. `VI_PILOT_SCN_01_EVENT_STATUS` — Event Status & Completion
+
+- description: Learner reports whether a familiar event/task occurred, was completed, remains incomplete, or is negative/non-occurring in a short everyday status context.
+- target node coverage — primary: `GRAMMAR_VI_DA`, `GRAMMAR_VI_ROI`, `GRAMMAR_VI_KHONG`, `GRAMMAR_VI_CHUA`
+- target node coverage — secondary: `GRAMMAR_VI_DANG`
+- item-family coverage intent:
+  - past-event reporting
+  - completion/not-yet/negative-status
+  - optional DA/DANG contrast
+- lexical-control intent: use low-ambiguity verbs/nouns and avoid cues that mechanically reveal the target marker.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: STRONG
+
+#### 2. `VI_PILOT_SCN_02_CURRENT_ACTIVITY` — Current Activity Inquiry
+
+- description: Learner asks about or verifies an interlocutor's current activity using bounded open-information and yes/no inquiry contexts.
+- target node coverage — primary: `GRAMMAR_VI_DANG`, `GRAMMAR_VI_WH_INSITU`, `GRAMMAR_VI_CO_KHONG`
+- target node coverage — secondary: `GRAMMAR_VI_DA`, `GRAMMAR_VI_KHONG`
+- item-family coverage intent:
+  - open WH inquiry
+  - yes/no verification
+  - optional DA/DANG temporal contrast
+- lexical-control intent: bound WH vocabulary and keep simple KHONG distinct from CO_KHONG.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: STRONG
+
+#### 3. `VI_PILOT_SCN_03_CAPABILITY_DECISION` — Capability, Need & Preference
+
+- description: Learner chooses and produces ability, necessity, or desire constructions within a constrained everyday decision context.
+- target node coverage — primary: `GRAMMAR_VI_CO_THE`, `GRAMMAR_VI_DUOC_ABILITY`, `GRAMMAR_VI_MUON`, `GRAMMAR_VI_PHAI`
+- target node coverage — secondary: `GRAMMAR_VI_KHONG`, `GRAMMAR_VI_CO_KHONG`
+- item-family coverage intent:
+  - capability
+  - alternate ability realization
+  - necessity/preference discrimination
+  - bounded capability question
+- lexical-control intent: reuse a controlled verb inventory; avoid unrelated lexical uses of `có`; keep DUOC_ABILITY function/position explicit.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: STRONG
+
+#### 4. `VI_PILOT_SCN_04_FUTURE_CONTINGENCY` — Future Plan & Contingency
+
+- description: Learner states a near-future plan under bounded contextual constraints. The scenario may contain contingency in context, but P1 does not require a learner-produced conditional clause.
+- target node coverage — primary: `GRAMMAR_VI_SE`
+- target node coverage — secondary: `GRAMMAR_VI_MUON`, `GRAMMAR_VI_PHAI`
+- **IMPORTANT**: `GRAMMAR_VI_NEU_THI` MUST NOT be a selected primary or secondary target.
+- item-family coverage intent:
+  - scheduled future plan
+  - future plan under changed context
+  - optional preference/necessity context
+- lexical-control intent: avoid prompt wording that mechanically supplies SE; keep response length bounded.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: ADEQUATE
+
+#### 5. `VI_PILOT_SCN_05_COMPARE_SELECT` — Compare & Select
+
+- description: Learner compares/ranks bounded objects or animals and selects an appropriate candidate.
+- target node coverage — primary: `GRAMMAR_VI_HON`, `GRAMMAR_VI_NHAT`, `GRAMMAR_VI_CL_CAI`, `GRAMMAR_VI_CL_CON`
+- target node coverage — secondary: none
+- item-family coverage intent:
+  - inanimate comparison
+  - animate comparison
+  - comparison-only held-out family
+- lexical-control intent: bound noun semantic classes and adjective inventory.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: STRONG
+
+#### 6. `VI_PILOT_SCN_06_DIRECTIVE_ACTION` — Directive & Action Prompt
+
+- description: Learner produces a short concrete instruction/directive in an everyday cooperative-action context.
+- target node coverage — primary: `GRAMMAR_VI_HAY`, `GRAMMAR_VI_DI`
+- target node coverage — secondary: none
+- item-family coverage intent:
+  - preverbal HAY directive
+  - sentence-final DI directive
+  - different action-family held-out transfer
+- mandatory lexical control: grammatical sentence-final DI and lexical verb `đi` MUST NOT occur in the same item.
+- stimulus_modality_components: `[TEXT]`
+- response_modality_components: `[TEXT_ENTRY]`
+- coverage: STRONG
+
+이 절은 실제 item ID나 item-family ID를 작성하지 않는다.
 
 ## 6. Item and item-family design
 
@@ -88,6 +316,19 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 - modality components
 
 Item-family holdout은 primary unseen transfer에 필수다.
+
+### 6.1 Item and item-family manifest status (unresolved)
+
+위의 generic item/item-family design contract는 그대로 유지된다. 이 patch는 item bank를 작성하지 않는다.
+
+- 정확한 pilot-specific item/item-family manifest: UNRESOLVED
+- `VI_CONTENT.md`는 authoring 및 rubric design의 참고 자료로 사용될 수 있다.
+- `VI_CONTENT.md`는 empirical held-out item-family bank가 **아니다**.
+- primary unseen transfer는 `DIFFERENT_ITEM_FAMILY`를 요구한다.
+- 이 partial patch는 B-2의 item/item-family component를 충족하지 않는다.
+- B-2 remains open.
+
+다음은 여기서 발명하지 않는다: `item_id`, `item_version`, `item_family_id`, rubric ID/version, expected-response bank.
 
 ## 7. Experimental conditions
 
@@ -279,6 +520,43 @@ P1→P2 진입 전 확인:
 - decision date
 - applies-from phase
 - superseded-by
+
+### 18.1 Recorded Research/Pilot decisions
+
+기존 §18 schema를 그대로 사용한다. 새 column이나 register 구조 변경은 없다.
+
+**Decision A**
+
+- name: exact VI pilot Grammar Node set
+- classification: EVIDENCE-BOUND
+- owner: Research/Pilot
+- current value: exact ordered 18-node set in §3.1
+- source/evidence: B-2 final Research/Pilot adjudication
+- version: 1
+- decision date: 2026-08-12
+- applies-from phase: P1
+- superseded-by: none
+
+**Decision B**
+
+- name: exact VI pilot six-scenario set
+- classification: EVIDENCE-BOUND
+- owner: Research/Pilot
+- current value: exact six `VI_PILOT_SCN_*` IDs in §5.1
+- source/evidence: B-2 six-scenario Research/Pilot adjudication
+- version: 1
+- decision date: 2026-08-12
+- applies-from phase: P1
+- superseded-by: none
+
+### 18.2 Lifecycle status after this record
+
+- 문서 상태: Proposed (변경 없음)
+- 이 patch가 기록한 것: exact 18-node inclusion/exclusion manifest, exact six pilot scenarios
+- B-2에서 여전히 미해결: pilot-specific item/item-family manifest, lexical manifest, lexical source/provenance/license verification
+- B-2: UNRESOLVED / OPEN
+- B-3: UNRESOLVED
+- P1: NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE
 
 ## 19. Pilot stop conditions
 
