@@ -9,9 +9,9 @@
 Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
 - **GitHub main ref**: `GitHub refs/heads/main` is the authority for current repository HEAD.
-- **Runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+- **Runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`)
 - **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Review-record commit**: `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.41 — B-5/B-4 governance documentation independent review and main integration record)
+- **Review-record commit**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46 — B-1b canonical status sync independent review and main integration record)
 
 Detailed runtime figures (environment, test totals, migration/table counts) are owned only by `VALIDATION_STATUS.md` §A.2.
 
@@ -24,6 +24,8 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - Evidence Foundation 16-table persistence
 - Bounded assignment creation, attempt open, and finalization repository operations
 - RULE-based target-node evaluation and correction aggregate persistence
+- Evidence session lifecycle (B-1a, main `d785abfc74a669cbc472ff24df9869874a165ecb`): `startSession`, `terminalizeSession`, `restartSession`
+- Bounded assignment completion (B-1b, main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`): a qualifying successful INITIAL non-replay `finalizeAttempt` with `attemptOutcome === SCORABLE` writes assignment `COMPLETED`, with `completed_at = finalizedAt` and `completion_attempt_id` set to the finalizing attempt; replay does not rewrite the recorded completion; successful non-SCORABLE finalization leaves assignment lifecycle a no-op. Assignment-level terminalization for `MISSING`/`TECHNICAL_FAILURE`/`WITHDRAWN`/`UNSCORABLE`/`NORMAL_EMPTY` outcomes remains out of this bounded scope (see §4).
 
 ## 3. Product Readiness
 
@@ -31,7 +33,7 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - Actual provider: incomplete
 - Evidence Foundation overall: incomplete
 - VI pilot: not started
-- VI Empirical Pilot P1 governance prerequisites B-4 (cost/operational stop conditions) and B-5 (approval-provenance scope) are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`); implementation/data prerequisites B-1 (assignment/session lifecycle writer), B-2 (VI pilot content manifest), and B-3 (human-data/privacy owner decision) remain unresolved and P1 remains not started.
+- VI Empirical Pilot P1 governance prerequisites B-4 (cost/operational stop conditions) and B-5 (approval-provenance scope) are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`). Implementation/data prerequisite B-1 (assignment/session lifecycle writer) is now complete as a bounded prerequisite (B-1a main `d785abfc74a669cbc472ff24df9869874a165ecb`; B-1b main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). B-2 (VI pilot content manifest) and B-3 (human-data/privacy owner decision) remain unresolved, and P1 remains not started / not activated / still not eligible to activate.
 - Client/user app: incomplete
 - Beta readiness: not ready
 
@@ -40,10 +42,9 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - Evidence recorder orchestration
 - Learning Flow/Public evidence integration
 - production/evidence dual-write
-- assignment completion
-- full session lifecycle
-- restart/reschedule
-- full retry lifecycle
+- assignment-level terminalization beyond B-1b (`MISSING` / `TECHNICAL_FAILURE` / `WITHDRAWN` / `UNSCORABLE` / `NORMAL_EMPTY`)
+- assignment_type-specific terminal rules
+- reschedule / broader retry lifecycle
 - human/AI-assisted evidence rating
 - actual provider
 - raw audio/acoustic processing
