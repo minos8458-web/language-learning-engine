@@ -10,11 +10,11 @@ This document is the **sole owner** of Validation State for the project. `BOOTST
 
 This ledger distinguishes the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-- **Ledger snapshot baseline**: `1719749ff90bbdb326cdd12399475206b7088ca4`
+- **Ledger snapshot baseline**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`
 - **GitHub main ref**: `GitHub refs/heads/main` (authority for current repository HEAD; no hard-coded SHA in this document replaces it)
-- **Last runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+- **Last runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`)
 - **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Current review-record commit**: `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.41)
+- **Current review-record commit**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46)
 
 ### A.1 Validation Level State
 
@@ -25,30 +25,30 @@ Code/artifact presence is a separate claim from validation PASS. The two are not
 
 ### A.2 Evidence Foundation Bounded Runtime Evidence
 
-**Last runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+**Last runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation `d785abfc74a669cbc472ff24df9869874a165ecb`)
 
 **Environment**:
 
-- Windows PowerShell 5.1
+- Windows PowerShell
 - PostgreSQL 17.10
-- Node.js 24.18.0
-- npm 11.16.0
+- database `lle_dev`, user `postgres`
 
 **Evidence database**:
 
 - evidence tables: 16
 - highest migration: 012
 - migration 013: absent
+- migration regression: 0 applied / 12 skipped
 
 **Focused test result**:
 
-- tests 64, suites 1, pass 64, fail 0, cancelled 0, skipped 0, todo 0
+- tests 78, suites 1, pass 78, fail 0, cancelled 0, skipped 0, todo 0
 
 **Full test result**:
 
-- tests 324, suites 52, pass 324, fail 0, cancelled 0, skipped 0, todo 0
+- tests 338, suites 52, pass 338, fail 0, cancelled 0, skipped 0, todo 0
 
-This is the bounded Evidence Foundation P0 finalization writer runtime-validation record. It does not declare Evidence Foundation overall complete.
+This is the bounded B-1 (B-1a + B-1b) runtime-validation record, reflecting the latest actual post-merge B-1b runtime verification. It does not declare Evidence Foundation overall complete. The prior Evidence Foundation P0 finalization-writer runtime-validation record (`593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`) is preserved unchanged in §B.3.
 
 ### A.3 Independent Review Evidence
 
@@ -86,7 +86,33 @@ This absence reflects that main does not retain a permanent CI workflow. It is s
 - **Main integration**: `37eb97a295df10bfd4d48ab06e13be20c85c3beb`, `4305eb4a3ccf294f9f35efb4a3ef1574e9c8e143`
 - **Review-record candidate/main**: `ca31ff6486a22780aa7aedf44c3c00b8aefb26b2` / `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`
 - **Verdict**: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM/LOW 0, NOTE 2 (G-N01, G-N02); ELIGIBLE
-- This is a documentation-only governance review, distinct from the §A.3 entry for `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`. It adds, changes, or supersedes no runtime test evidence. `Last runtime-validated implementation` remains `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`, and §A.2's focused (64/64) and full (324/324) test results are unchanged.
+- This is a documentation-only governance review, distinct from the §A.3 entry for `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`. It adds, changes, or supersedes no runtime test evidence. At the time of this B-5/B-4 review, `Last runtime-validated implementation` was `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e` with §A.2 focused (64/64) and full (324/324) test results; that pointer has since been superseded by the B-1 chain in §A.7 below, and this entry's figures are preserved unchanged as the historical record of what was true when this B-5/B-4 review was recorded.
+
+### A.7 B-1 Evidence Chain (current)
+
+B-1 (assignment/session lifecycle writer) is recorded **COMPLETE** as a bounded VI Empirical Pilot P1 implementation prerequisite. This does not declare Evidence Foundation overall complete, B-2 complete, B-3 complete, or VI Empirical Pilot P1 activated.
+
+**B-1a — evidence session lifecycle writer** (`startSession` / `terminalizeSession` / `restartSession`)
+
+- Main implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`
+- Review-record main: `08c6e0ca1c771398ae89f1d467e2bef4386eece3`
+- Post-merge runtime: Windows PowerShell / PostgreSQL 17.10, evidence tables 16, highest migration 012, migration 013 absent, migration regression 0 applied / 12 skipped, focused 74/74 PASS, full 334/334 PASS
+- Independent review verdict: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM/LOW 0, NOTE 3; ELIGIBLE
+
+**B-1b — SCORABLE assignment completion writer**
+
+- Runtime candidate: `62567510bb4b8211c457dbfedff5caae8002a65d`
+- Runtime main: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`
+- Runtime review-record main: `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`
+- Runtime independent review verdict: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM 0, LOW 1, NOTE 1; ELIGIBLE. F1 (non-blocking test-hardening follow-up) remains unresolved.
+- Post-merge runtime: Windows PowerShell / PostgreSQL 17.10, database `lle_dev`, evidence tables 16, highest migration 012, migration 013 absent, migration regression 0 applied / 12 skipped, focused 78/78 PASS, full 338/338 PASS, 52 suites, fail/cancelled/skipped/todo 0
+- Canonical status-sync candidate: `74bce252a62c0163f07c1156c60263d2b45104f4`
+- Canonical status-sync main: `3fb3f0c8d325336310e1c1d82fa75458e7670f79`
+- Canonical status-sync review-record main: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46)
+- Canonical status-sync independent review verdict: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM/LOW 0, NOTE 1; ELIGIBLE. F2 CLOSED.
+- The canonical status-sync integration is documentation-only; it did not rerun PostgreSQL/npm. The runtime evidence above was established by the prior runtime-implementation session and is not re-claimed as re-executed by the status-sync session.
+
+**Remaining after B-1 completion**: B-2 (VI pilot content manifest / exact 12–20 grammar-node inclusion set) and B-3 (human-data/privacy owner decision) remain unresolved. VI Empirical Pilot P1 is NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE.
 
 ---
 
@@ -173,3 +199,32 @@ None
 #### B.2.7 Regression (historical)
 
 260 / 260 PASS
+
+### B.3 Evidence Foundation P0 Bounded Runtime Evidence — Prior Pointer (historical)
+
+This is the prior `Last runtime-validated implementation` / §A.2 pointer, preserved unchanged for historical continuity. It has been superseded as the current pointer by `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (see current §A.2 and §A.7), but remains valid, non-superseded evidence for the Evidence Foundation P0 finalization writer scope it was recorded against.
+
+**Runtime-validated implementation**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`
+
+**Environment**:
+
+- Windows PowerShell 5.1
+- PostgreSQL 17.10
+- Node.js 24.18.0
+- npm 11.16.0
+
+**Evidence database**:
+
+- evidence tables: 16
+- highest migration: 012
+- migration 013: absent
+
+**Focused test result**:
+
+- tests 64, suites 1, pass 64, fail 0, cancelled 0, skipped 0, todo 0
+
+**Full test result**:
+
+- tests 324, suites 52, pass 324, fail 0, cancelled 0, skipped 0, todo 0
+
+This is the bounded Evidence Foundation P0 finalization writer runtime-validation record. It does not declare Evidence Foundation overall complete.

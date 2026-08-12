@@ -17,12 +17,12 @@
 
 This document is pinned to the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-- **Ledger snapshot baseline**: `1719749ff90bbdb326cdd12399475206b7088ca4` — the commit this reconciliation ledger was written against.
+- **Ledger snapshot baseline**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` — the commit this reconciliation ledger was written against.
 - **Current GitHub Main**: `GitHub refs/heads/main` is the authority for current repository HEAD. No hard-coded SHA in this document replaces that ref.
-- **Immediate runtime implementation parent**: `593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e` — last runtime-validated implementation. Detailed environment and figures are owned by `VALIDATION_STATUS.md`.
+- **Current B-1 runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` — B-1b assignment completion writer, the latest B-1 runtime implementation (B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`). Detailed environment and figures are owned by `VALIDATION_STATUS.md`.
 - **Production finalization implementation**: `674bd9fb46bd1d799293c0e73984672b57c8a98c` — the commit that implemented the Evidence Foundation P0 bounded finalization writer.
 - **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f` — the reviewed test-hardening commit (APPROVE WITH NON-BLOCKING NOTES; see `VALIDATION_STATUS.md` §A.3).
-- **Current documentation review record**: `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8` — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.41 (B-5/B-4 governance documentation independent review and main integration record).
+- **Current documentation review record**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46 (B-1b canonical status sync independent review and main integration record).
 
 ## Current Project Position
 
@@ -33,10 +33,13 @@ This document is pinned to the following identities. Git ref, runtime-validated 
 -   Evidence Foundation overall remains incomplete.
 -   VI empirical pilot has not started.
 -   B-5 (approval-provenance scope) and B-4 (cost/operational stop conditions) governance prerequisites are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`).
+-   B-1 (assignment/session lifecycle writer) is complete as a bounded VI Empirical Pilot P1 implementation prerequisite, composed of B-1a (evidence session lifecycle writer, main `d785abfc74a669cbc472ff24df9869874a165ecb`) and B-1b (SCORABLE assignment completion writer, main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`; canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). This does not activate VI Empirical Pilot P1.
 
 ## Last Completed Bounded Milestone
 
-Evidence Foundation P0 bounded finalization writer (`674bd9fb46bd1d799293c0e73984672b57c8a98c`) and its independent test-hardening review (`30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`, verdict APPROVE WITH NON-BLOCKING NOTES, preserved finding F-L01 non-blocking) are complete as bounded operations. This does not declare Evidence Foundation overall complete. See `VALIDATION_STATUS.md` §A for the full evidence chain.
+**B-1 lifecycle prerequisite completion** — B-1a (evidence session lifecycle writer: `startSession`/`terminalizeSession`/`restartSession`; main implementation `d785abfc74a669cbc472ff24df9869874a165ecb`, review-record main `08c6e0ca1c771398ae89f1d467e2bef4386eece3`) and B-1b (SCORABLE assignment completion writer; runtime implementation main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, runtime review-record main `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`, canonical status-sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`, status-sync review-record main `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`) are each complete, together completing B-1 as a bounded VI Empirical Pilot P1 implementation prerequisite. This does not declare Evidence Foundation overall complete and does not activate VI Empirical Pilot P1. See `VALIDATION_STATUS.md` §A for the full evidence chain.
+
+Prior bounded milestone, preserved: Evidence Foundation P0 bounded finalization writer (`674bd9fb46bd1d799293c0e73984672b57c8a98c`) and its independent test-hardening review (`30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`, verdict APPROVE WITH NON-BLOCKING NOTES, preserved finding F-L01 non-blocking).
 
 ## Last Completed Governance Milestone
 
@@ -50,19 +53,24 @@ None. No governance or implementation milestone is currently in progress. The ne
 
 ## Remaining Blocking-Gap Sequence
 
-VI Empirical Pilot P1 activation remains gated on the following implementation/data prerequisites, in addition to the completed governance prerequisites above. No implementation has started on any of these.
+VI Empirical Pilot P1 activation remains gated on the following implementation/data prerequisites, in addition to the completed governance prerequisites above.
 
-- **B-1** — assignment/session lifecycle writer required for pilot evidence execution (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7, §8, §24.2).
+**Completed:**
+
+- **B-1** — assignment/session lifecycle writer required for pilot evidence execution (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7, §8, §24.2). Complete as a bounded prerequisite (B-1a main `d785abfc74a669cbc472ff24df9869874a165ecb`; B-1b main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). This completion does not activate VI Empirical Pilot P1.
+
+**Remaining blockers — no implementation has started on either of these:**
+
 - **B-2** — Vietnamese pilot content manifest / exact 12–20 grammar-node inclusion set required (see `VI_EMPIRICAL_PILOT_SPEC.md` §3, §5, §6; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §15, §24.2).
 - **B-3** — human-data/privacy owner decision required before participant data collection (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §19, §24.3; `VI_EMPIRICAL_PILOT_SPEC.md` §15).
 
-These labels are introduced here for the first time as ledger cross-references to existing unresolved prerequisites; they declare no new scope.
+VI Empirical Pilot P1 remains gated on B-2 and B-3; it is still not eligible to activate.
 
 ## Next Product Milestone Candidate
 
 **VI Empirical Pilot P1 Readiness**
 
-Activation: not started; Control Tower gate required, and additionally gated on B-1/B-2/B-3 above. This is a candidate only and is not an active milestone.
+Activation: not started; not activated; Control Tower gate required, and additionally gated on B-2/B-3 above (B-1 is now complete but does not by itself activate P1). This is a candidate only and is not an active milestone.
 
 ## Explicit Non-Declarations
 
