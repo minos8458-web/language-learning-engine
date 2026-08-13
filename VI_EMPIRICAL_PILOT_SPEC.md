@@ -170,26 +170,38 @@ Repository evidence has no validated corpus-frequency ranking.
 
 - vocabulary target: `[EVIDENCE-BOUND: 300~500]`
 - chunk/collocation/construction target: `[EVIDENCE-BOUND: 80~150]`
-- manifest ID/version: `[RESEARCH/PILOT-OWNED]`
-- source/provenance/license: 사람 data 전 확정
-- OOV policy: `[PILOT-CALIBRATE]`
+- manifest document: `VI_PILOT_LEXICAL_MANIFEST.md`
+- manifest ID: `LEXICAL_MANIFEST_VI_EMPIRICAL_PILOT`
+- manifest version: `1`
+- exact vocabulary candidate count: `300` (the fixed pilot scope's lower evidence-bound; occupies the low end of `[EVIDENCE-BOUND: 300~500]`)
+- exact combined chunk/collocation/construction candidate count: `80` (the fixed pilot scope's lower evidence-bound; occupies the low end of `[EVIDENCE-BOUND: 80~150]`)
+- source/provenance/license: pinned Leipzig `vie_news_2022_1M` News corpus derivative, CC BY 4.0 verified — recorded in `VI_PILOT_LEXICAL_MANIFEST.md` §2
+- `approved_for_pilot`: `false`
 - canonical Vocabulary 변경: 금지
 - canonical Lexico-Construction Graph: 금지
+- OOV policy: `[PILOT-CALIBRATE]` (partly — see `VI_PILOT_LEXICAL_MANIFEST.md` §10 for the FIX NOW / PILOT-CALIBRATE / DEFER split)
 
-### 4.1 Lexical manifest status (unresolved)
+### 4.1 Lexical manifest status
 
-이 patch는 lexical manifest를 작성하지 않는다. 현재 상태는 다음과 같다.
+이 patch는 versioned lexical candidate를 기록한다. 현재 상태는 다음과 같다.
 
-- lexical manifest ID/version: UNRESOLVED
-- lexical entries: UNRESOLVED
-- `source_refs`: UNRESOLVED
-- provenance: UNRESOLVED
-- license verification: UNRESOLVED
+- exact versioned lexical candidate (`LEXICAL_MANIFEST_VI_EMPIRICAL_PILOT`, version 1): RECORDED
+- exact 300 word/lemma-like entries (`LEXICAL_ENTRY_VI_0001..0300`): RECORDED
+- exact 80 multiword entries (`LEXICAL_ENTRY_VI_0301..0380`): RECORDED
+- `source_refs`: RECORDED
+- provenance: RECORDED
+- Leipzig source/license verification: RECORDED
+- `approved_for_pilot`: `false`
+- `item_links`: 모든 entry에서 `[]` — pilot-specific item/item-family manifest가 여전히 unresolved이기 때문에 비어 있다
+- 이 lexical recording은 Pilot Spec을 승인하지 않는다
+- 이 lexical recording은 P1을 활성화하지 않는다
+- 이 lexical recording은 human-data collection을 승인하지 않는다
+- §6.1이 여전히 unresolved이므로 B-2는 여전히 OPEN이다
 
-§3의 node manifest와 §5의 scenario 기록은 B-2의 lexical-manifest component를 충족하지 않는다.
+§3의 node manifest, §5의 scenario 기록, 그리고 이제 기록된 lexical manifest는 B-2의 item/item-family component를 충족하지 않는다.
 B-2 remains open.
 
-manifest_id, version, source, license는 여기서 발명하지 않는다.
+전체 lexical entry 데이터, provenance, license 경계, control 규칙은 `VI_PILOT_LEXICAL_MANIFEST.md`를 authoritative source로 한다. 이 문서는 그 매니페스트를 재기술하거나 재해석하지 않고 pointer-level 상태만 기록한다.
 
 ## 5. Scenario manifest
 
@@ -548,6 +560,25 @@ P1→P2 진입 전 확인:
 - decision date: 2026-08-12
 - applies-from phase: P1
 - superseded-by: none
+
+**Decision C**
+
+- name: exact VI pilot lexical manifest
+- classification: EVIDENCE-BOUND
+- owner: Research/Pilot
+- current value: `LEXICAL_MANIFEST_VI_EMPIRICAL_PILOT`, version 1, exact 300 word + 80 multiword entries, recorded in `VI_PILOT_LEXICAL_MANIFEST.md`
+- source/evidence:
+  - Research report SHA: `9de36106990dbf217e2e06e98f5587710f99b9c339d26d9098aaeacc04cf1155`
+  - reproducer SHA: `921cc70001229f95ebd7de7c0e1b7449e4bc15b031741b47714de37214d03be8`
+  - archive SHA: `0f85f20b637f15f4fe2dac82b38ca96bcd4310b18187c50b73c9e6aa3dab5aef`
+  - words SHA: `fcc910484c334a4cbe22f76ede68c14295b877695629db7445c6db2715915c1f`
+  - co_n SHA: `9b2e91e439f851d7cd89bd6e13437ed22c2b1b6029d894ee46e89f17a2086857`
+  - meta SHA: `2120035d4794ce0e6b1de9b4ae1d79b15d5ea24a7361bba63b34b847acf79c56`
+- version: 1
+- decision date: 2026-08-13
+- applies-from phase: P1
+- superseded-by: none
+- status qualifier: `approved_for_pilot=false`; recording does not activate P1 and does not authorize human data
 
 ### 18.2 Lifecycle status after this record
 
