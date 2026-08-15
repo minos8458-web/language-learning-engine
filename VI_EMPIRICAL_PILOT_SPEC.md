@@ -192,13 +192,13 @@ Repository evidence has no validated corpus-frequency ranking.
 - provenance: RECORDED
 - Leipzig source/license verification: RECORDED
 - `approved_for_pilot`: `false`
-- `item_links`: 모든 entry에서 `[]` — pilot-specific item/item-family manifest가 여전히 unresolved이기 때문에 비어 있다
+- `item_links`: 모든 entry에서 `[]` — lexical manifest v1은 immutable하며, A-ITEM-03에 따라 `ITEM → lexical entry` one-way link만 이 B-2 item recording의 authoritative 형태다. Backlink 발행은 B-2 item recording의 prerequisite가 아니며, 발행하더라도 v1을 수정하지 않고 별도 v2 이상 version으로 해야 한다.
 - 이 lexical recording은 Pilot Spec을 승인하지 않는다
 - 이 lexical recording은 P1을 활성화하지 않는다
 - 이 lexical recording은 human-data collection을 승인하지 않는다
-- §6.1이 여전히 unresolved이므로 B-2는 여전히 OPEN이다
+- §6.1은 이제 `VI_PILOT_ITEM_FAMILY_MANIFEST.md`의 pointer-level 상태를 기록하지만, B-2는 normal independent-review / main-integration / review-record 절차를 거치기 전까지는 여전히 OPEN이다
 
-§3의 node manifest, §5의 scenario 기록, 그리고 이제 기록된 lexical manifest는 B-2의 item/item-family component를 충족하지 않는다.
+§3의 node manifest, §5의 scenario 기록, 이 lexical manifest, 그리고 §6.1의 item/item-family manifest pointer는 각자의 authority location에서 기록되었다. 이 기록들은 B-2 전체 lifecycle 완료를 스스로 선언하지 않는다.
 B-2 remains open.
 
 전체 lexical entry 데이터, provenance, license 경계, control 규칙은 `VI_PILOT_LEXICAL_MANIFEST.md`를 authoritative source로 한다. 이 문서는 그 매니페스트를 재기술하거나 재해석하지 않고 pointer-level 상태만 기록한다.
@@ -329,18 +329,22 @@ Ownership 경계 — 명시적 기록:
 
 Item-family holdout은 primary unseen transfer에 필수다.
 
-### 6.1 Item and item-family manifest status (unresolved)
+### 6.1 Item and item-family manifest status
 
-위의 generic item/item-family design contract는 그대로 유지된다. 이 patch는 item bank를 작성하지 않는다.
+위의 generic item/item-family design contract는 그대로 유지된다.
 
-- 정확한 pilot-specific item/item-family manifest: UNRESOLVED
+- pilot-specific item/item-family manifest document: `VI_PILOT_ITEM_FAMILY_MANIFEST.md`
+- manifest documentation identity: `ITEM_FAMILY_MANIFEST_VI_EMPIRICAL_PILOT`, version `1`
+- exact family count: 50 (`VI_PILOT_FAMILY_001..050`)
+- exact item count: 86 (`VI_PILOT_ITEM_0001..0086`)
+- rubric: `RUBRIC_VI_EMPIRICAL_PILOT_BINARY@1`
+- lexical authority: `LEXICAL_MANIFEST_VI_EMPIRICAL_PILOT@1`
+- core modality: `[TEXT]` → `[TEXT_ENTRY]`
 - `VI_CONTENT.md`는 authoring 및 rubric design의 참고 자료로 사용될 수 있다.
 - `VI_CONTENT.md`는 empirical held-out item-family bank가 **아니다**.
-- primary unseen transfer는 `DIFFERENT_ITEM_FAMILY`를 요구한다.
-- 이 partial patch는 B-2의 item/item-family component를 충족하지 않는다.
-- B-2 remains open.
-
-다음은 여기서 발명하지 않는다: `item_id`, `item_version`, `item_family_id`, rubric ID/version, expected-response bank.
+- primary unseen transfer는 `DIFFERENT_ITEM_FAMILY`를 요구하며, 실제 lineage는 assignment-time exposure-history snapshot에서 판정된다 — `VI_PILOT_ITEM_FAMILY_MANIFEST.md`에 기록된 `primary_unseen_candidate`는 design intent이지 static fact가 아니다.
+- 이 documentation record는 그 자체로 B-2를 COMPLETE로 선언하지 않고, Pilot Spec을 승인하지 않으며, P1을 활성화하지 않고, human-data collection을 승인하지 않는다.
+- B-2 remains open — normal independent-review / main-integration / review-record 절차를 거치기 전까지.
 
 ## 7. Experimental conditions
 
@@ -580,14 +584,33 @@ P1→P2 진입 전 확인:
 - superseded-by: none
 - status qualifier: `approved_for_pilot=false`; recording does not activate P1 and does not authorize human data
 
+**Decision D**
+
+- name: exact VI pilot item/item-family manifest
+- classification: EVIDENCE-BOUND
+- owner: Research/Pilot
+- current value: `ITEM_FAMILY_MANIFEST_VI_EMPIRICAL_PILOT`, version 1, exact 50 families (`VI_PILOT_FAMILY_001..050`) / 86 items (`VI_PILOT_ITEM_0001..0086`), recorded in `VI_PILOT_ITEM_FAMILY_MANIFEST.md`
+- rubric: `RUBRIC_VI_EMPIRICAL_PILOT_BINARY@1`
+- lexical pin: `LEXICAL_MANIFEST_VI_EMPIRICAL_PILOT@1`
+- source/evidence:
+  - Research R2 report SHA: `2b952d3b0eae944ecab24e6eb3a16be57eb5e5e60b8b649296d9aea39c40dcb0`
+  - Architecture readjudication SHA: `9e7b8c90bdef51936cc9929ea1466b88298058eedaccf8b66d05c89e2c81e82c`
+- version: 1
+- decision date: 2026-08-13
+- applies-from phase: P1
+- superseded-by: none
+- status qualifier: `approved_for_pilot=false`; recording does not activate P1 and does not authorize human data
+
 ### 18.2 Lifecycle status after this record
 
 - 문서 상태: Proposed (변경 없음)
-- 이 patch가 기록한 것: exact 18-node inclusion/exclusion manifest, exact six pilot scenarios
-- B-2에서 여전히 미해결: pilot-specific item/item-family manifest, lexical manifest, lexical source/provenance/license verification
+- 지금까지 각 authority location에 기록된 documentation candidate: exact 18-node inclusion/exclusion manifest(§3.1/§3.2), exact six pilot scenarios(§5.1), exact versioned lexical manifest(§4.1, `VI_PILOT_LEXICAL_MANIFEST.md`), exact item/item-family manifest(§6.1, `VI_PILOT_ITEM_FAMILY_MANIFEST.md`)
+- 이 문서는 그 자체로 global B-2 lifecycle 완료를 소유하거나 독립적으로 advance하지 않는다
+- B-2 lifecycle은 normal independent-review / main-integration / review-record 절차로 통제된다
 - B-2: UNRESOLVED / OPEN
 - B-3: UNRESOLVED
 - P1: NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE
+- human-data collection: NOT AUTHORIZED
 
 ## 19. Pilot stop conditions
 
