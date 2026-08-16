@@ -66,7 +66,7 @@ VI Empirical Pilot P1 activation remains gated on the following implementation/d
 
 **Remaining blocker — no implementation has started:**
 
-- **B-3** — human-data/privacy owner decision required before participant data collection (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §19, §24.3; `VI_EMPIRICAL_PILOT_SPEC.md` §15).
+- **B-3** — human-data/privacy owner decision required before participant data collection (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §19, §24.3; `VI_EMPIRICAL_PILOT_SPEC.md` §15). B-3 decision owner designation (identity annotation only, not a `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §20.2 Parameter-register entry or edit, and not a parameter decision): the B-3 human-data/privacy decision owner is designated as 미노 (project decision owner); this designation alone does not resolve any B-3 policy parameter — all remain UNRESOLVED — does not authorize human-data collection (NOT AUTHORIZED), and does not activate VI Empirical Pilot P1 (NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE).
 
 VI Empirical Pilot P1 remains gated on B-3 alone; it is still not eligible to activate.
 
