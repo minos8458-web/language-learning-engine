@@ -1087,6 +1087,7 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | Pseudonymous mapping policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Evidence access policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Participant deletion policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
+| Consent policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Raw audio retention | `DEFER` | Privacy/Legal/Operations | 현재 raw audio 미수집 |
 | Derived acoustic feature retention | `DEFER` | Privacy/Legal/Operations | Audio milestone로 연기 |
 | Reschedule count/expiry | `OWNER-DECISION` | Research/Operations | Protocol placeholder |
