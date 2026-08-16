@@ -34,10 +34,13 @@ This document is pinned to the following identities. Git ref, runtime-validated 
 -   VI empirical pilot has not started.
 -   B-5 (approval-provenance scope) and B-4 (cost/operational stop conditions) governance prerequisites are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`).
 -   B-1 (assignment/session lifecycle writer) is complete as a bounded VI Empirical Pilot P1 implementation prerequisite, composed of B-1a (evidence session lifecycle writer, main `d785abfc74a669cbc472ff24df9869874a165ecb`) and B-1b (SCORABLE assignment completion writer, main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`; canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). This does not activate VI Empirical Pilot P1.
+-   B-2 (Vietnamese pilot content manifest) is complete as a bounded VI Empirical Pilot P1 implementation/data prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node Grammar Node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`). This does not activate VI Empirical Pilot P1.
 
 ## Last Completed Bounded Milestone
 
-**B-1 lifecycle prerequisite completion** — B-1a (evidence session lifecycle writer: `startSession`/`terminalizeSession`/`restartSession`; main implementation `d785abfc74a669cbc472ff24df9869874a165ecb`, review-record main `08c6e0ca1c771398ae89f1d467e2bef4386eece3`) and B-1b (SCORABLE assignment completion writer; runtime implementation main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, runtime review-record main `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`, canonical status-sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`, status-sync review-record main `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`) are each complete, together completing B-1 as a bounded VI Empirical Pilot P1 implementation prerequisite. This does not declare Evidence Foundation overall complete and does not activate VI Empirical Pilot P1. See `VALIDATION_STATUS.md` §A for the full evidence chain.
+**B-2 pilot content manifest prerequisite completion** — B-2 (Vietnamese pilot content manifest) is complete as a bounded VI Empirical Pilot P1 implementation/data prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node Grammar Node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`, review-record `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.48), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`, review-record revision 1.49), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`, review-record revision 1.50), reconciled by this B-2 completion ledger reconciliation (review-record revision 1.51). This does not declare Evidence Foundation overall complete, does not resolve B-3, and does not activate VI Empirical Pilot P1. See `VALIDATION_STATUS.md` §A.8 for the full evidence chain.
+
+Prior bounded milestone, preserved: B-1 lifecycle prerequisite completion — B-1a (evidence session lifecycle writer: `startSession`/`terminalizeSession`/`restartSession`; main implementation `d785abfc74a669cbc472ff24df9869874a165ecb`, review-record main `08c6e0ca1c771398ae89f1d467e2bef4386eece3`) and B-1b (SCORABLE assignment completion writer; runtime implementation main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, runtime review-record main `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`, canonical status-sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`, status-sync review-record main `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`), together completing B-1 as a bounded VI Empirical Pilot P1 implementation prerequisite.
 
 Prior bounded milestone, preserved: Evidence Foundation P0 bounded finalization writer (`674bd9fb46bd1d799293c0e73984672b57c8a98c`) and its independent test-hardening review (`30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`, verdict APPROVE WITH NON-BLOCKING NOTES, preserved finding F-L01 non-blocking).
 
@@ -59,18 +62,19 @@ VI Empirical Pilot P1 activation remains gated on the following implementation/d
 
 - **B-1** — assignment/session lifecycle writer required for pilot evidence execution (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §7, §8, §24.2). Complete as a bounded prerequisite (B-1a main `d785abfc74a669cbc472ff24df9869874a165ecb`; B-1b main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). This completion does not activate VI Empirical Pilot P1.
 
-**Remaining blockers — no implementation has started on either of these:**
+- **B-2** — Vietnamese pilot content manifest (see `VI_EMPIRICAL_PILOT_SPEC.md` §3, §5, §6; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §15, §24.2). Complete as a bounded prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`). This completion does not activate VI Empirical Pilot P1.
 
-- **B-2** — Vietnamese pilot content manifest / exact 12–20 grammar-node inclusion set required (see `VI_EMPIRICAL_PILOT_SPEC.md` §3, §5, §6; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §15, §24.2).
+**Remaining blocker — no implementation has started:**
+
 - **B-3** — human-data/privacy owner decision required before participant data collection (see `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §19, §24.3; `VI_EMPIRICAL_PILOT_SPEC.md` §15).
 
-VI Empirical Pilot P1 remains gated on B-2 and B-3; it is still not eligible to activate.
+VI Empirical Pilot P1 remains gated on B-3 alone; it is still not eligible to activate.
 
 ## Next Product Milestone Candidate
 
 **VI Empirical Pilot P1 Readiness**
 
-Activation: not started; not activated; Control Tower gate required, and additionally gated on B-2/B-3 above (B-1 is now complete but does not by itself activate P1). This is a candidate only and is not an active milestone.
+Activation: not started; not activated; Control Tower gate required, and additionally gated on B-3 above (B-1 and B-2 are now complete but do not by themselves activate P1). This is a candidate only and is not an active milestone.
 
 ## Explicit Non-Declarations
 
