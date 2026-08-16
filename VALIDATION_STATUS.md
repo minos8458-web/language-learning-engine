@@ -114,6 +114,43 @@ B-1 (assignment/session lifecycle writer) is recorded **COMPLETE** as a bounded 
 
 **Remaining after B-1 completion**: B-2 (VI pilot content manifest / exact 12–20 grammar-node inclusion set) and B-3 (human-data/privacy owner decision) remain unresolved. VI Empirical Pilot P1 is NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE.
 
+### A.8 B-2 Evidence Chain (current)
+
+B-2 (VI pilot content manifest) is recorded **COMPLETE** as a bounded VI Empirical Pilot P1 implementation/data prerequisite. This does not declare Evidence Foundation overall complete, B-3 complete, or VI Empirical Pilot P1 activated.
+
+**B-2 component 1 — exact 18-node inclusion/exclusion manifest + exact six pilot-scenario manifest**
+
+- Candidate: `2fd0ba96db23fd34839f59e74c6cacb555124278`
+- Main integration: `b955facad49fa1daf217b88f93174682ef04eb1b`
+- Review-record: `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.48
+- Independent review verdict: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM 0, LOW 1, NOTE 1; ELIGIBLE
+- Documentation-only; runtime tests were not executed for this component
+
+**B-2 component 2 — exact versioned lexical manifest + source/provenance/license verification**
+
+- Candidate: `52ddcf10b6cd8a5bdf4c88965c32b46d01fb54ec`
+- Main integration: `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`
+- Review-record: `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.49
+- Independent review verdict: APPROVE WITH NON-BLOCKING NOTES; BLOCKER/HIGH/MEDIUM/LOW 0, NOTE 3; ELIGIBLE
+- 380 lexical entries (300 word + 80 multiword); 5/5 required source artifact SHA-256 independently recomputed and verified; documentation-only; runtime tests were not executed for this component
+
+**B-2 component 3 — exact item/item-family manifest**
+
+- Candidate: `4fa3e1a4569e908446dc867d637fd9edd47caa0e`
+- Main integration: `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`
+- Review-record: `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.50
+- Independent review verdict: APPROVE; BLOCKER/HIGH/MEDIUM/LOW/NOTE all 0
+- 50 item families / 86 items, source/DAY_7/DAY_30 = 54/16/16, evaluation rows 24/19, held-out families 32 (multi-item held-out 0)
+- Post-merge runtime: Windows PowerShell, PostgreSQL 17.10, database `lle_dev`, Node `pg` authentication PASS, `npm.cmd test` 338/338 PASS, fail/cancelled/skipped/todo all 0 (~12.9s) — this is the most recent actual runtime evidence for the B-2 component layer
+
+**B-2 completion reconciliation (this record)**
+
+- Cross-document consistency across `VI_EMPIRICAL_PILOT_SPEC.md`, `VI_PILOT_ITEM_FAMILY_MANIFEST.md`, and `VI_PILOT_LEXICAL_MANIFEST.md` was confirmed by a prior read-only Control Tower inspection; this reconciliation cites that confirmation as supplied evidence and does not re-derive it.
+- This reconciliation is documentation-only. It did not rerun PostgreSQL/npm. The runtime evidence above (338/338 PASS) was established by the prior B-2 component-3 session and is not re-claimed as re-executed by this reconciliation. GitHub Actions PASS is not separately established and is not declared.
+- B-2: **COMPLETE** as a bounded VI Empirical Pilot P1 implementation/data prerequisite.
+
+**Remaining after B-2 completion**: B-3 (human-data/privacy owner decision) remains unresolved. VI Empirical Pilot P1 is NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE. Pilot Spec document status remains Proposed; all four B-2 manifests remain `approved_for_pilot=false`.
+
 ---
 
 ## B. Historical Validation Records
