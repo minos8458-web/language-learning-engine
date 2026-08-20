@@ -1084,6 +1084,8 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | Double-rating overlap | `PILOT-CALIBRATE` | Research/Pilot | Formative subset placeholder |
 | Agreement threshold | `PILOT-CALIBRATE` | Research/Pilot | Formula/protocol placeholder |
 | Human-audit staffing/cost | `OWNER-DECISION` | Operations | Formative pilot 전 결정 |
+| Operational support | `OWNER-DECISION` | Operations | 사람 데이터 전 결정 |
+| Incident handling | `OWNER-DECISION` | Operations | 사람 데이터 전 결정 |
 | Pseudonymous mapping policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Evidence access policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Participant deletion policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
@@ -1099,6 +1101,7 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | Provider prompt/raw retention | `OWNER-DECISION` | Privacy/Operations | Actual provider 전 결정 |
 | Assignment completion applicability predicate (B-1b) | `OWNER-APPROVED` | Control Tower | 2026-08-11 결정: `attemptOutcome === SCORABLE` → assignment `COMPLETED`; non-SCORABLE → B-1b에서 assignment lifecycle 불변 |
 | Assignment completion timestamp source (B-1b) | `OWNER-APPROVED` | Control Tower | 2026-08-11 결정: `completed_at = finalized_at`(same-transaction); 별도 completion timestamp source 없음 |
+Contract §24.3의 `operational escalation`은 `Incident handling`의 child/sub-decision이며, 이는 Architecture structural mapping이지 policy-value 결정이 아니다.
 
 근거 없는 숫자 placeholder는 architecture blocker가 아니다. 관련 단계에서 값이 필요한 경우에만 stage gate가 된다.
 
