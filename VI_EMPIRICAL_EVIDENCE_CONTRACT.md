@@ -1088,7 +1088,7 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | Human-audit staffing/cost | `OWNER-DECISION` | Operations | Formative pilot 전 결정 |
 | Operational support | `OWNER-DECISION` | Operations | 사람 데이터 전 결정 |
 | Incident handling | `OWNER-DECISION` | Operations | 사람 데이터 전 결정 |
-| Pseudonymous mapping policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
+| Pseudonymous mapping policy | `OWNER-APPROVED` | Privacy/Operations | 2026-08-21 owner decision: mapping store owner = designated Privacy/Operations custodian; re-identification = consent 관리, withdrawal/deletion 요청 처리, 또는 incident handling에 필요한 경우에만 허용하며 Research/Pilot 분석·human rating·efficacy scoring 목적에는 금지; mapping retention = participant의 마지막 예정 pilot interaction이 종료되고 identity mapping이 필요한 open withdrawal/deletion/incident 처리가 모두 종료될 때까지 보존한 뒤 mapping 삭제, fixed-day retention 없음; mapping access rights = designated Privacy/Operations personnel만 허용하며 Research/Pilot 및 human rater 접근 금지 |
 | Evidence access policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Human rater access | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
 | Participant deletion policy | `OWNER-DECISION` | Privacy/Operations | 사람 데이터 전 결정 |
