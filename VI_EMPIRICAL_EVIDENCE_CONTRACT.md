@@ -1107,6 +1107,7 @@ Owner가 사람 데이터 수집 전에 결정해야 하는 내용:
 | Assignment completion timestamp source (B-1b) | `OWNER-APPROVED` | Control Tower | 2026-08-11 결정: `completed_at = finalized_at`(same-transaction); 별도 completion timestamp source 없음 |
 Contract §24.3의 `operational escalation`은 `Incident handling`의 child/sub-decision이며, 이는 Architecture structural mapping이지 policy-value 결정이 아니다.
 Contract §19의 `mapping store owner`, `재식별 가능성`, `mapping retention`과 §5.1의 `mapping 접근권한`은 모두 `Pseudonymous mapping policy`의 child/sub-decision이며, 이는 Architecture structural mapping이지 policy-value 결정이 아니다.
+Pilot Spec §19.1 item 1의 `cost ceiling` OWNER-DECISION(승인된 ceiling 금액)은 `Incident handling`의 child/sub-decision이며, 이는 Architecture structural mapping이지 cost ceiling grain·amount·unit policy-value 결정이 아니다.
 
 근거 없는 숫자 placeholder는 architecture blocker가 아니다. 관련 단계에서 값이 필요한 경우에만 stage gate가 된다.
 
