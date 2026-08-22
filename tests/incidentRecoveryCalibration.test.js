@@ -144,14 +144,36 @@ function classificationOf(episode) {
   // full-matrix runs is observed repeatability for THOSE executions only.
   return {
     failure_family: episode.failure_family,
-    recovery_succeeded_final: episode.recovery_attempt_ordinal
-      ? episode.__succeededFinal
-      : null,
     integrity_verification_result: episode.integrity_verification_result,
     duplicate_detected: episode.duplicate_detected,
     contamination_detected: episode.contamination_detected,
     missing_ambiguity_detected: episode.missing_ambiguity_detected,
   };
+}
+
+// F1 correction: asserts that the harness-configured fault actually fired,
+// derived from the recovery trace AND the fault counter's own observation
+// log — not merely inferred from final-state success. Without this, a
+// future SQL/matcher drift could make injection silently non-firing while
+// the surrounding final-state assertions kept passing on an unfaulted path.
+function assertFaultFired(trace, counter, expectedInjectedCount, context) {
+  const injectedObservations = counter.attempts.filter((observation) => observation.injectedFailure);
+  assert.equal(
+    injectedObservations.length,
+    expectedInjectedCount,
+    `${context}: expected exactly ${expectedInjectedCount} harness-injected failure(s) to have actually ` +
+      `fired (observed ${injectedObservations.length}) — this is the fault-injection matcher no longer ` +
+      'matching its target SQL, not a recovery-behavior finding'
+  );
+  const injectedTraceEntry = trace.find(
+    (entry) => entry.recovery_succeeded === false
+      && entry.error_class === 'HARNESS_INJECTED_TRANSIENT_FAILURE'
+  );
+  assert.ok(
+    injectedTraceEntry,
+    `${context}: recovery trace contains no attempt whose failure was the harness-injected fault`
+  );
+  return injectedObservations.length;
 }
 
 function rubricDefinition(prefix, nodeA, nodeB) {
@@ -405,7 +427,6 @@ async function runFamily1(fixture, prefix) {
     duplicate_detected: false,
     contamination_detected: false,
     missing_ambiguity_detected: false,
-    __succeededFinal: true,
     diagnostic: {
       retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
       fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -478,6 +499,7 @@ async function runFamily2(fixture, prefix) {
 
   const firstSuccess = trace.find((entry) => entry.recovery_succeeded);
   const healthyAtMs = firstSuccess.recovery_attempt_at_ms;
+  const faultFiredCount = assertFaultFired(trace, counter, 1, 'FAMILY_2');
 
   const verificationStart = harness.isoNow();
   const verificationStartMs = harness.nowMs();
@@ -532,7 +554,6 @@ async function runFamily2(fixture, prefix) {
       duplicate_detected: false,
       contamination_detected: finalizationCount !== 1,
       missing_ambiguity_detected: false,
-      __succeededFinal: true,
       diagnostic: {
         retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
         fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -547,6 +568,7 @@ async function runFamily2(fixture, prefix) {
         ],
         total_recovery_elapsed_ms: verificationEndMs - injectedFaultStartMs,
         fault_counter_observations: counter.attempts,
+        fault_fired_count: faultFiredCount,
         matrix_prefix: prefix,
       },
     }),
@@ -601,7 +623,15 @@ async function runFamily3(prefix) {
   const { rows: pidRows } = await workingClient.query('SELECT pg_backend_pid() AS pid');
   const { rows: dbRows } = await workingClient.query('SELECT current_database() AS db');
   reconnectedPid = pidRows[0].pid;
-  const integrityPass = reconnectedPid !== originalPid && dbRows[0].db === process.env.PGDATABASE;
+  // F5 correction: the expected database identity is derived from the
+  // shared, already-healthy db/pool.js connection itself — a live trusted
+  // reference — rather than from process.env.PGDATABASE. Comparing against
+  // an unset env var would silently pass (undefined === undefined) if
+  // PGDATABASE were ever absent from the environment; comparing two live
+  // connections' own reported identity cannot silently degrade that way.
+  const { rows: trustedDbRows } = await pool.query('SELECT current_database() AS db');
+  const expectedDatabase = trustedDbRows[0].db;
+  const integrityPass = reconnectedPid !== originalPid && dbRows[0].db === expectedDatabase;
   const verificationEnd = harness.isoNow();
   const verificationEndMs = harness.nowMs();
 
@@ -642,7 +672,6 @@ async function runFamily3(prefix) {
     duplicate_detected: false,
     contamination_detected: false,
     missing_ambiguity_detected: false,
-    __succeededFinal: true,
     diagnostic: {
       retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
       fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -658,6 +687,7 @@ async function runFamily3(prefix) {
       total_recovery_elapsed_ms: verificationEndMs - injectedFaultStartMs,
       original_pid: originalPid,
       reconnected_pid: reconnectedPid,
+      expected_database: expectedDatabase,
       matrix_prefix: prefix,
     },
   });
@@ -701,6 +731,7 @@ async function runFamily5(fixture, prefix) {
   });
   const firstSuccess = trace.find((entry) => entry.recovery_succeeded);
   const healthyAtMs = firstSuccess.recovery_attempt_at_ms;
+  const faultFiredCount = assertFaultFired(trace, counter, 1, 'FAMILY_5');
 
   const verificationStart = harness.isoNow();
   const verificationStartMs = harness.nowMs();
@@ -772,7 +803,6 @@ async function runFamily5(fixture, prefix) {
       duplicate_detected: duplicateDetected,
       contamination_detected: rowCountAfterReplay !== 1 || rowCountAfterConflict !== 1,
       missing_ambiguity_detected: false,
-      __succeededFinal: true,
       diagnostic: {
         retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
         fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -789,6 +819,7 @@ async function runFamily5(fixture, prefix) {
         ],
         total_recovery_elapsed_ms: verificationEndMs - injectedFaultStartMs,
         fault_counter_observations: counter.attempts,
+        fault_fired_count: faultFiredCount,
         matrix_prefix: prefix,
       },
     }),
@@ -808,13 +839,20 @@ async function runFamily6(fixture, prefix) {
   const techFailureAssignment = await createFixtureAssignment(fixture);
   const techFailureAssignmentId = techFailureAssignment.assignment.assignment_id;
 
-  // No repository-level setter exists for assignment-level terminal_outcome
-  // transitions outside finalizeAttempt's COMPLETED path (by design — that
-  // authority is out of P0 repository scope, mirroring the direct-SQL
-  // terminal-state fixtures already used in
-  // tests/evidenceFoundationRepository.test.js). Both values below are
-  // valid members of the real evidence_assignments_outcome_check CHECK
-  // constraint enforced by actual PostgreSQL.
+  // F6 correction: assignment-level MISSING / TECHNICAL_FAILURE are
+  // constructed directly here (raw SQL) because no repository API currently
+  // derives those assignment terminal states — evidenceRepository.js
+  // exposes no assignment-terminal-state setter beyond finalizeAttempt's
+  // COMPLETED path. This is NOT the same pattern as
+  // tests/evidenceFoundationRepository.test.js's own direct-SQL fixtures
+  // (those construct ENROLLMENT status — a different table and column;
+  // there is no existing assignment-level precedent to point to). Both
+  // values below ARE schema-valid members of the real
+  // evidence_assignments_outcome_check CHECK constraint enforced by actual
+  // PostgreSQL, so this fixture exercises a state the live schema genuinely
+  // allows. FAMILY 6's scope is classification-STATE READ-BACK / integrity
+  // under fault — not production classification derivation: no engine or
+  // repository code decided these outcomes here, the harness set them.
   await pool.query(
     `UPDATE evidence_assignments SET terminal_outcome = 'MISSING' WHERE assignment_id = $1`,
     [missingAssignmentId]
@@ -852,6 +890,7 @@ async function runFamily6(fixture, prefix) {
   });
   const firstSuccess = trace.find((entry) => entry.recovery_succeeded);
   const healthyAtMs = firstSuccess.recovery_attempt_at_ms;
+  const faultFiredCount = assertFaultFired(trace, counter, 1, 'FAMILY_6');
 
   const verificationStart = harness.isoNow();
   const verificationStartMs = harness.nowMs();
@@ -898,7 +937,6 @@ async function runFamily6(fixture, prefix) {
       duplicate_detected: false,
       contamination_detected: false,
       missing_ambiguity_detected: ambiguityDetected,
-      __succeededFinal: true,
       diagnostic: {
         retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
         fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -914,6 +952,7 @@ async function runFamily6(fixture, prefix) {
         ],
         total_recovery_elapsed_ms: verificationEndMs - injectedFaultStartMs,
         fault_counter_observations: counter.attempts,
+        fault_fired_count: faultFiredCount,
         matrix_prefix: prefix,
         secondary_assignment_id: techFailureAssignmentId,
       },
@@ -938,34 +977,46 @@ async function runFamily7Narrow(prefix, priorResults) {
   const injectedFaultStart = harness.isoNow();
   const counter = harness.createFaultCounter(1);
   const faultyPool = harness.wrapPoolWithFaults(pool, {
-    matcher: /SELECT a\.assignment_id, a\.session_id\s+FROM evidence_attempts a/i,
+    matcher: /SELECT\s+\(SELECT is_nullable FROM information_schema\.columns/i,
     counter,
   });
 
-  const orphanCheckSql = `
-    SELECT a.assignment_id, a.session_id
-      FROM evidence_attempts a
-      LEFT JOIN evidence_assignments asg ON asg.assignment_id = a.assignment_id
-      LEFT JOIN evidence_sessions ses ON ses.session_id = a.session_id
-     WHERE a.attempt_id = ANY($1)
-       AND (asg.assignment_id IS NULL OR ses.session_id IS NULL)
-  `;
-
+  // F2 correction: the previous version of this check ran a LEFT JOIN
+  // looking for evidence_attempts rows with no matching
+  // evidence_assignments/evidence_sessions row. That query is tautological
+  // — assignment_id and session_id are both NOT NULL with FK constraints on
+  // evidence_attempts, so a committed orphan row is structurally impossible
+  // and the query could only ever return zero rows. Presenting that as a
+  // dynamic orphan-integrity verification would overclaim what was tested.
+  // What is honestly verifiable, and is verified here, is that the REAL
+  // constraints which make orphan rows impossible are actually present in
+  // the LIVE schema (a live PostgreSQL catalog query, not a hardcoded
+  // assumption) — a schema-safety assertion, not an "orphan observed" claim.
   const scopedAttemptIds = [family2.attemptId, family5.attemptId];
+  const schemaConstraintCheckSql = "SELECT "
+    + "(SELECT is_nullable FROM information_schema.columns WHERE table_name = 'evidence_attempts' AND column_name = 'assignment_id') AS assignment_id_nullable, "
+    + "(SELECT is_nullable FROM information_schema.columns WHERE table_name = 'evidence_attempts' AND column_name = 'session_id') AS session_id_nullable, "
+    + "(SELECT count(*) FROM pg_constraint WHERE conname = 'evidence_attempts_assignment_fk') AS assignment_fk_count, "
+    + "(SELECT count(*) FROM pg_constraint WHERE conname = 'evidence_attempts_session_fk') AS session_fk_count";
 
-  const { result: orphanResult, trace } = await harness.runWithHarnessRecovery({
-    operation: () => faultyPool.query(orphanCheckSql, [scopedAttemptIds]),
+  const { result: constraintResult, trace } = await harness.runWithHarnessRecovery({
+    operation: () => faultyPool.query(schemaConstraintCheckSql),
     maxAttempts: HARNESS_INPUTS.maxAttempts,
     spacingMs: HARNESS_INPUTS.spacingMs,
     cadenceMode: HARNESS_INPUTS.cadenceMode,
   });
   const firstSuccess = trace.find((entry) => entry.recovery_succeeded);
   const healthyAtMs = firstSuccess.recovery_attempt_at_ms;
+  const faultFiredCount = assertFaultFired(trace, counter, 1, 'FAMILY_7_NARROW');
 
   const verificationStart = harness.isoNow();
   const verificationStartMs = harness.nowMs();
 
-  const orphanCount = orphanResult.rows.length;
+  const constraintRow = constraintResult.rows[0];
+  const constraintsGuaranteeNoOrphans = constraintRow.assignment_id_nullable === 'NO'
+    && constraintRow.session_id_nullable === 'NO'
+    && Number(constraintRow.assignment_fk_count) === 1
+    && Number(constraintRow.session_fk_count) === 1;
 
   // Narrow duplicate-state re-check (scoped to family 5's assignment).
   const family5DuplicateCount = await countRows(
@@ -1012,7 +1063,7 @@ async function runFamily7Narrow(prefix, priorResults) {
     && digestRows[0].finalization_payload_digest
   );
 
-  const contaminationDetected = orphanCount > 0
+  const contaminationDetected = !constraintsGuaranteeNoOrphans
     || family5DuplicateCount !== 1
     || family2FinalizationCount !== 1;
   const missingAmbiguityDetected = !classificationStillCorrect;
@@ -1048,7 +1099,6 @@ async function runFamily7Narrow(prefix, priorResults) {
     duplicate_detected: family5DuplicateCount !== 1,
     contamination_detected: contaminationDetected,
     missing_ambiguity_detected: missingAmbiguityDetected,
-    __succeededFinal: true,
     diagnostic: {
       retry_cadence_mode: HARNESS_INPUTS.cadenceMode,
       fault_recoverability_state_by_attempt: trace.map((e) => e.fault_recoverability_state),
@@ -1058,7 +1108,12 @@ async function runFamily7Narrow(prefix, priorResults) {
       integrity_verified_at: verificationEnd,
       fixture_scale: FIXTURE_SCALE,
       integrity_check_set: [
-        'scoped_orphan_fk_check(evidence_attempts -> evidence_assignments/evidence_sessions)',
+        // Live-schema constraint presence check (NOT a dynamic orphan
+        // observation — a committed orphan row is structurally impossible
+        // under these constraints, so no "orphan observed/verified" claim
+        // is made; this confirms the constraints that make it impossible
+        // are actually present in the live schema).
+        'live_schema_constraint_presence_check(evidence_attempts.assignment_id/session_id NOT NULL + FK to evidence_assignments/evidence_sessions)',
         'scoped_duplicate_row_count(evidence_attempts)',
         'scoped_rollback_leftover_check(evidence_attempt_finalizations)',
         'scoped_classification_stability_check(evidence_assignments)',
@@ -1066,8 +1121,10 @@ async function runFamily7Narrow(prefix, priorResults) {
       ],
       total_recovery_elapsed_ms: verificationEndMs - injectedFaultStartMs,
       fault_counter_observations: counter.attempts,
+      fault_fired_count: faultFiredCount,
       matrix_prefix: prefix,
       scoped_attempt_ids: scopedAttemptIds,
+      schema_constraints_guarantee_no_orphans: constraintsGuaranteeNoOrphans,
     },
   });
 }
@@ -1129,6 +1186,20 @@ describe('B-3 M1 incident recovery calibration', () => {
   });
 
   after(async () => {
+    // F4 correction: clean up the ephemeral episode-package temp file after
+    // this describe block's own tests (including the one that validates its
+    // existence and location) have finished running. Only the exact
+    // harness-created path is ever removed; absence is tolerated rather than
+    // treated as a failure, since a cleanup pass should not itself become a
+    // second point of failure.
+    try {
+      if (sink && sink.filePath && fs.existsSync(sink.filePath)) {
+        fs.unlinkSync(sink.filePath);
+      }
+    } catch {
+      // Best-effort cleanup of a harness-owned temp file; never fails the
+      // suite over it.
+    }
     await pool.end();
   });
 
@@ -1146,6 +1217,10 @@ describe('B-3 M1 incident recovery calibration', () => {
     assert.equal(episode.recovery_succeeded, true);
     assert.equal(episode.integrity_verification_result, 'PASS');
     assert.equal(episode.contamination_detected, false);
+    // F1 correction: fault-fired proof, not merely final-state inference —
+    // a matcher/SQL drift that silenced injection would fail this.
+    assert.equal(episode.diagnostic.fault_fired_count, 1);
+    assert.ok(episode.recovery_attempt_ordinal > 1);
   });
 
   test('FAMILY 3 (DB connection/backend unavailable then restored): isolated harness-owned backend termination and reconnection against actual PostgreSQL', () => {
@@ -1162,6 +1237,8 @@ describe('B-3 M1 incident recovery calibration', () => {
     assert.equal(episode.duplicate_detected, true);
     assert.equal(episode.integrity_verification_result, 'PASS');
     assert.equal(episode.contamination_detected, false);
+    assert.equal(episode.diagnostic.fault_fired_count, 1);
+    assert.ok(episode.recovery_attempt_ordinal > 1);
   });
 
   test('FAMILY 6 (missing / technical-failure classification integrity): MISSING and TECHNICAL_FAILURE stay distinguishable through fault/recovery', () => {
@@ -1169,14 +1246,19 @@ describe('B-3 M1 incident recovery calibration', () => {
     assert.equal(episode.failure_family, 'FAMILY_6_MISSING_VS_TECHNICAL_FAILURE_CLASSIFICATION');
     assert.equal(episode.missing_ambiguity_detected, false);
     assert.equal(episode.integrity_verification_result, 'PASS');
+    assert.equal(episode.diagnostic.fault_fired_count, 1);
+    assert.ok(episode.recovery_attempt_ordinal > 1);
   });
 
-  test('FAMILY 7-NARROW (raw-evidence integrity verification after recovery): scoped orphan/duplicate/classification/digest checks pass', () => {
+  test('FAMILY 7-NARROW (raw-evidence integrity verification after recovery): scoped duplicate/rollback/classification/digest-presence checks pass, and live-schema constraints that make committed orphans structurally impossible are confirmed present (not a dynamic orphan observation)', () => {
     const episode = run1.episodes.family7narrow;
     assert.equal(episode.failure_family, 'FAMILY_7_NARROW_RAW_EVIDENCE_INTEGRITY');
     assert.equal(episode.contamination_detected, false);
     assert.equal(episode.missing_ambiguity_detected, false);
     assert.equal(episode.integrity_verification_result, 'PASS');
+    assert.equal(episode.diagnostic.schema_constraints_guarantee_no_orphans, true);
+    assert.equal(episode.diagnostic.fault_fired_count, 1);
+    assert.ok(episode.recovery_attempt_ordinal > 1);
   });
 
   test('FAMILY 4 (cascade_jobs worker/job processing) and FAMILY 7-FULL (generalized metric/recomputation) are absent/deferred, not implemented', () => {
@@ -1205,8 +1287,8 @@ describe('B-3 M1 incident recovery calibration', () => {
       const a = run1.classificationSummary[key];
       const b = run2.classificationSummary[key];
       assert.deepEqual(
-        { ...a, recovery_succeeded_final: undefined },
-        { ...b, recovery_succeeded_final: undefined },
+        a,
+        b,
         `integrity classification for ${key} differs between the two executions — ` +
           'this is a harness/evidence reliability failure requiring investigation, ' +
           'not an expected outcome under matching declared inputs'
