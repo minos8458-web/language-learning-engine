@@ -2,10 +2,24 @@
 
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pool } = require('../db/pool');
 const { runMigrations, listMigrationFiles, MIGRATIONS_DIR } = require('../db/migrate');
+
+// Frozen at the VI P1 item-lineage runtime milestone baseline (main
+// cb5d5d612d350b3b0bcaef2b5ac8fbdb61eea693): 012_create_evidence_foundation.sql
+// must not change while 013 is added.
+const MIGRATION_012_EXPECTED_SHA256 =
+  '1414c46cc3f3aee202da9931b76ede03914b5663aa1665929a9a27b024ea5f0b';
+
+const ITEM_LINEAGE_VALUES = [
+  'EXACT_REPEAT',
+  'SURFACE_VARIANT',
+  'SAME_ITEM_FAMILY',
+  'DIFFERENT_ITEM_FAMILY',
+];
 
 const EVIDENCE_TABLES = [
   'evidence_experiments',
@@ -18,6 +32,7 @@ const EVIDENCE_TABLES = [
   'evidence_assignments',
   'evidence_assignment_snapshots',
   'evidence_assignment_snapshot_nodes',
+  'evidence_assignment_item_exposures',
   'evidence_sessions',
   'evidence_attempt_series',
   'evidence_attempts',
@@ -42,8 +57,15 @@ const REQUIRED_CONSTRAINTS = [
   'evidence_assignment_snapshots_pk',
   'evidence_assignment_snapshots_content_pair_check',
   'evidence_assignment_snapshots_versions_positive',
+  'evidence_assignment_snapshots_exposure_cutoff_nonnegative',
+  'evidence_assignment_snapshots_item_lineage_check',
   'evidence_assignment_snapshot_nodes_node_fk',
   'evidence_assignment_snapshot_nodes_ordinal_unique',
+  'evidence_assignment_item_exposures_pk',
+  'evidence_assignment_item_exposures_assignment_fk',
+  'evidence_assignment_item_exposures_assignment_unique',
+  'evidence_assignment_item_exposures_ordinal_unique',
+  'evidence_assignment_item_exposures_ordinal_positive',
   'evidence_sessions_outcome_check',
   'evidence_attempt_series_ownership_unique',
   'evidence_attempts_assignment_idempotency_unique',
@@ -90,7 +112,9 @@ async function applyBaselineMigrationsOnly() {
     )
   `);
 
-  const files = listMigrationFiles().filter((filename) => !filename.startsWith('012_'));
+  const files = listMigrationFiles().filter(
+    (filename) => !filename.startsWith('012_') && !filename.startsWith('013_')
+  );
   assert.equal(files.length, 11, 'baseline fixture must apply exactly migrations 001 through 011');
 
   for (const filename of files) {
@@ -183,7 +207,7 @@ describe('Evidence Foundation P0 migration', { concurrency: false }, () => {
     await pool.end();
   });
 
-  test('migration list contains the exact 001 through 012 sequence', () => {
+  test('migration list contains the exact 001 through 013 sequence', () => {
     assert.deepEqual(listMigrationFiles(), [
       '001_create_users.sql',
       '002_create_concepts.sql',
@@ -197,18 +221,37 @@ describe('Evidence Foundation P0 migration', { concurrency: false }, () => {
       '010_create_indexes.sql',
       '011_add_aud002_spaced_review.sql',
       '012_create_evidence_foundation.sql',
+      '013_add_vi_p1_item_lineage.sql',
     ]);
   });
 
-  test('012 applies atomically after baseline migrations and ledger count is 12', async () => {
-    assert.deepEqual(migrationResult.applied, ['012_create_evidence_foundation.sql']);
-    assert.equal(migrationResult.skipped.length, 11);
-    const { rows } = await pool.query('SELECT filename FROM schema_migrations ORDER BY filename');
-    assert.equal(rows.length, 12);
-    assert.equal(rows.at(-1).filename, '012_create_evidence_foundation.sql');
+  test('012 is byte-identical to the VI P1 item-lineage runtime baseline', () => {
+    const sha256 = createHash('sha256')
+      .update(fs.readFileSync(path.join(MIGRATIONS_DIR, '012_create_evidence_foundation.sql')))
+      .digest('hex');
+    assert.equal(sha256, MIGRATION_012_EXPECTED_SHA256, 'migration 012 must remain unchanged');
   });
 
-  test('all 16 evidence tables exist', async () => {
+  test('012 and 013 apply atomically after baseline migrations and ledger count is 13', async () => {
+    assert.deepEqual(migrationResult.applied, [
+      '012_create_evidence_foundation.sql',
+      '013_add_vi_p1_item_lineage.sql',
+    ]);
+    assert.equal(migrationResult.skipped.length, 11);
+    const { rows } = await pool.query('SELECT filename FROM schema_migrations ORDER BY filename');
+    assert.equal(rows.length, 13);
+    assert.equal(rows.at(-1).filename, '013_add_vi_p1_item_lineage.sql');
+  });
+
+  test('rerunning the migration runner skips 001 through 013 without error (idempotency contract)', async () => {
+    const rerun = await runMigrations();
+    assert.deepEqual(rerun.applied, []);
+    assert.deepEqual(rerun.skipped, listMigrationFiles());
+    const { rows } = await pool.query('SELECT filename FROM schema_migrations ORDER BY filename');
+    assert.equal(rows.length, 13);
+  });
+
+  test('all 17 evidence tables exist', async () => {
     const { rows } = await pool.query(
       `SELECT table_name
          FROM information_schema.tables
@@ -420,5 +463,273 @@ describe('Evidence Foundation P0 migration', { concurrency: false }, () => {
 
   test('next_review_at type, nullability, and default are unchanged', async () => {
     assert.deepEqual(await readNextReviewShape(), baselineCatalog.nextReviewAt);
+  });
+
+  describe('013 VI P1 item-lineage runtime schema', { concurrency: false }, () => {
+    let assignmentIdA;
+    let assignmentIdB;
+    let assignmentIdC;
+
+    before(async () => {
+      await pool.query(
+        `INSERT INTO evidence_experiments (experiment_id)
+         VALUES ('EXP_MIGRATION_LINEAGE')`
+      );
+      await pool.query(
+        `INSERT INTO evidence_experiment_versions (
+           experiment_id, version, definition, definition_digest,
+           digest_algorithm, normalization_version
+         ) VALUES ('EXP_MIGRATION_LINEAGE', 1, '{}'::jsonb, 'd', 'sha256', 'v1')`
+      );
+      await pool.query(
+        `INSERT INTO evidence_conditions (condition_id)
+         VALUES ('COND_MIGRATION_LINEAGE')`
+      );
+      await pool.query(
+        `INSERT INTO evidence_condition_versions (
+           condition_id, version, condition_class, definition, definition_digest,
+           digest_algorithm, normalization_version
+         ) VALUES (
+           'COND_MIGRATION_LINEAGE', 1, 'ENGINEERING_BASELINE', '{}'::jsonb, 'd', 'sha256', 'v1'
+         )`
+      );
+      const { rows: participantRows } = await pool.query(
+        'INSERT INTO evidence_participants DEFAULT VALUES RETURNING participant_id'
+      );
+      const { rows: enrollmentRows } = await pool.query(
+        `INSERT INTO evidence_enrollments (
+           participant_id, experiment_id, experiment_version, condition_id, condition_version
+         ) VALUES ($1, 'EXP_MIGRATION_LINEAGE', 1, 'COND_MIGRATION_LINEAGE', 1)
+         RETURNING enrollment_id`,
+        [participantRows[0].participant_id]
+      );
+      const enrollmentId = enrollmentRows[0].enrollment_id;
+
+      async function insertAssignmentWithSnapshot() {
+        const { rows: assignmentRows } = await pool.query(
+          `INSERT INTO evidence_assignments (
+             enrollment_id, assignment_type, target_timepoint, anchor_strategy
+           ) VALUES ($1, 'ASSESSMENT', 'IMMEDIATE', 'NODE_ASSIGNMENT_COMPLETION')
+           RETURNING assignment_id`,
+          [enrollmentId]
+        );
+        const assignmentId = assignmentRows[0].assignment_id;
+        await pool.query(
+          `INSERT INTO evidence_assignment_snapshots (
+             assignment_id,
+             experiment_id, experiment_version, condition_id, condition_version,
+             item_id, item_version, scenario_id, scenario_version,
+             item_family_id, item_family_version,
+             lexical_manifest_id, lexical_manifest_version,
+             rubric_id, rubric_version, formula_id, formula_version,
+             scheduler_protocol_id, scheduler_protocol_version,
+             instrumentation_protocol_id, instrumentation_protocol_version,
+             planned_stimulus_modalities, planned_response_modalities,
+             snapshot_digest, digest_algorithm, normalization_version,
+             exposure_history_cutoff_ordinal, resolved_item_lineage
+           ) VALUES (
+             $1,
+             'EXP_MIGRATION_LINEAGE', 1, 'COND_MIGRATION_LINEAGE', 1,
+             'ITEM_X', 1, 'SCENARIO_X', 1,
+             'FAMILY_X', 1,
+             'LEXICAL_X', 1,
+             'RUBRIC_X', 1, 'FORMULA_X', 1,
+             'SCHEDULER_X', 1,
+             'INSTRUMENTATION_X', 1,
+             '["TEXT"]'::jsonb, '["TEXT_ENTRY"]'::jsonb,
+             'digest', 'sha256', 'v1',
+             0, NULL
+           )`,
+          [assignmentId]
+        );
+        return assignmentId;
+      }
+
+      assignmentIdA = await insertAssignmentWithSnapshot();
+      assignmentIdB = await insertAssignmentWithSnapshot();
+      assignmentIdC = await insertAssignmentWithSnapshot();
+    });
+
+    test('exposure_history_cutoff_ordinal exists, is non-null, and rejects a negative value', async () => {
+      const { rows } = await pool.query(
+        `SELECT is_nullable, data_type
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'evidence_assignment_snapshots'
+            AND column_name = 'exposure_history_cutoff_ordinal'`
+      );
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].is_nullable, 'NO');
+      assert.equal(rows[0].data_type, 'bigint');
+
+      await assert.rejects(
+        () => pool.query(
+          `UPDATE evidence_assignment_snapshots
+              SET exposure_history_cutoff_ordinal = -1
+            WHERE assignment_id = $1`,
+          [assignmentIdA]
+        ),
+        /evidence_assignment_snapshots_exposure_cutoff_nonnegative/
+      );
+    });
+
+    test('resolved_item_lineage exists, is nullable, rejects a fifth value, and accepts the four allowed values', async () => {
+      const { rows } = await pool.query(
+        `SELECT is_nullable, data_type
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'evidence_assignment_snapshots'
+            AND column_name = 'resolved_item_lineage'`
+      );
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].is_nullable, 'YES');
+      assert.equal(rows[0].data_type, 'text');
+
+      await assert.rejects(
+        () => pool.query(
+          `UPDATE evidence_assignment_snapshots
+              SET resolved_item_lineage = 'NOT_A_LINEAGE_VALUE'
+            WHERE assignment_id = $1`,
+          [assignmentIdA]
+        ),
+        /evidence_assignment_snapshots_item_lineage_check/
+      );
+
+      for (const value of ITEM_LINEAGE_VALUES) {
+        await pool.query(
+          `UPDATE evidence_assignment_snapshots
+              SET resolved_item_lineage = $2
+            WHERE assignment_id = $1`,
+          [assignmentIdA, value]
+        );
+        const { rows: stored } = await pool.query(
+          `SELECT resolved_item_lineage
+             FROM evidence_assignment_snapshots
+            WHERE assignment_id = $1`,
+          [assignmentIdA]
+        );
+        assert.equal(stored[0].resolved_item_lineage, value);
+      }
+
+      await pool.query(
+        `UPDATE evidence_assignment_snapshots
+            SET resolved_item_lineage = NULL
+          WHERE assignment_id = $1`,
+        [assignmentIdA]
+      );
+    });
+
+    test('evidence_assignment_item_exposures has exactly the required columns and no generic event columns', async () => {
+      const { rows } = await pool.query(
+        `SELECT column_name, is_nullable
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'evidence_assignment_item_exposures'
+          ORDER BY ordinal_position`
+      );
+      assert.deepEqual(rows.map((row) => row.column_name).sort(), [
+        'assignment_id',
+        'created_at',
+        'exposed_at',
+        'exposure_id',
+        'exposure_ordinal',
+      ].sort());
+      assert.ok(rows.every((row) => row.is_nullable === 'NO'), 'no nullable columns');
+
+      for (const forbidden of [
+        'event_type',
+        'event_payload',
+        'observation',
+        'payload',
+        'metadata',
+        'enrollment_id',
+        'item_id',
+        'item_version',
+        'item_family_id',
+        'scenario_id',
+        'target_node_ids',
+      ]) {
+        assert.equal(
+          rows.some((row) => row.column_name === forbidden),
+          false,
+          `unexpected generic-event-like column: ${forbidden}`
+        );
+      }
+    });
+
+    test('evidence_assignment_item_exposures FK targets evidence_assignments only', async () => {
+      const { rows } = await pool.query(
+        `SELECT target.relname AS target_table
+           FROM pg_constraint c
+           JOIN pg_class source ON source.oid = c.conrelid
+           JOIN pg_class target ON target.oid = c.confrelid
+           JOIN pg_namespace n ON n.oid = source.relnamespace
+          WHERE n.nspname = 'public'
+            AND source.relname = 'evidence_assignment_item_exposures'
+            AND c.contype = 'f'`
+      );
+      assert.deepEqual(rows.map((row) => row.target_table), ['evidence_assignments']);
+    });
+
+    test('one exposure row per assignment: a second row for the same assignment is rejected', async () => {
+      await pool.query(
+        `INSERT INTO evidence_assignment_item_exposures (assignment_id) VALUES ($1)`,
+        [assignmentIdA]
+      );
+      await assert.rejects(
+        () => pool.query(
+          `INSERT INTO evidence_assignment_item_exposures (assignment_id) VALUES ($1)`,
+          [assignmentIdA]
+        ),
+        /evidence_assignment_item_exposures_assignment_unique/
+      );
+    });
+
+    test('exposure_ordinal is unique across the whole table, not per assignment', async () => {
+      const { rows: seedRows } = await pool.query(
+        `INSERT INTO evidence_assignment_item_exposures (assignment_id)
+         VALUES ($1)
+         RETURNING exposure_ordinal`,
+        [assignmentIdC]
+      );
+      const usedOrdinal = seedRows[0].exposure_ordinal;
+      await assert.rejects(
+        () => pool.query(
+          `INSERT INTO evidence_assignment_item_exposures (assignment_id, exposure_ordinal)
+           VALUES ($1, $2)`,
+          [assignmentIdB, usedOrdinal]
+        ),
+        /evidence_assignment_item_exposures_ordinal_unique/
+      );
+    });
+
+    test('exposure_ordinal must be positive', async () => {
+      await assert.rejects(
+        () => pool.query(
+          `INSERT INTO evidence_assignment_item_exposures (assignment_id, exposure_ordinal)
+           VALUES ($1, 0)`,
+          [assignmentIdB]
+        ),
+        /evidence_assignment_item_exposures_ordinal_positive/
+      );
+      await assert.rejects(
+        () => pool.query(
+          `INSERT INTO evidence_assignment_item_exposures (assignment_id, exposure_ordinal)
+           VALUES ($1, -5)`,
+          [assignmentIdB]
+        ),
+        /evidence_assignment_item_exposures_ordinal_positive/
+      );
+    });
+
+    test('exposure_ordinal is server-issued by a global sequence when omitted', async () => {
+      const { rows } = await pool.query(
+        `INSERT INTO evidence_assignment_item_exposures (assignment_id)
+         VALUES ($1)
+         RETURNING exposure_ordinal`,
+        [assignmentIdB]
+      );
+      assert.ok(Number(rows[0].exposure_ordinal) > 0);
+    });
   });
 });
