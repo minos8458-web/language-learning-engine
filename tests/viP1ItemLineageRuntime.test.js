@@ -674,4 +674,124 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       assert.equal(snapshot.resolved_item_lineage, 'EXACT_REPEAT');
     }
   });
+
+  // F-R01 correction: T05/T17 both use a CURRENT enrollment with cutoff 0,
+  // so a foreign target-overlapping exposure is excluded by the
+  // `exposure.exposure_ordinal <= cutoff` predicate alone (every real
+  // ordinal is positive) -- those fixtures cannot detect the removal of the
+  // same-enrollment predicate on its own. T26 forces a POSITIVE current
+  // cutoff via the current enrollment's own, non-target-relevant prior
+  // exposure, so a foreign exposure whose ordinal is <= that positive
+  // cutoff is the only thing standing between null and EXACT_REPEAT.
+  test('T26 cross-enrollment lower-or-equal ordinal cannot defeat no-prior null with positive current cutoff', async () => {
+    const NODE_T26_TARGET = 'NODE_LINEAGE_T26_TARGET';
+    const NODE_T26_OTHER = 'NODE_LINEAGE_T26_OTHER';
+    const ITEM_T26 = 'ITEM_LINEAGE_T26';
+    const FAMILY_T26 = 'FAMILY_LINEAGE_T26';
+
+    // Self-contained fixture rows -- new node/item/family IDs so nothing
+    // here can collide with or depend on T05/T13/T17 or any other test.
+    await pool.query(
+      `INSERT INTO grammar_nodes (node_id, language, concept_ids, label, difficulty)
+       VALUES
+         ($1, 'VI', '[]'::jsonb, 'Lineage T26 Target', 1),
+         ($2, 'VI', '[]'::jsonb, 'Lineage T26 Other', 1)`,
+      [NODE_T26_TARGET, NODE_T26_OTHER]
+    );
+    await registerReference('ITEM', ITEM_T26, 1);
+    await registerReference('ITEM_FAMILY', FAMILY_T26, 1);
+
+    // Preferred strong fixture: one participant, two separate ACTIVE
+    // enrollments. This catches both a fully unscoped history read and a
+    // participant-scoped-but-enrollment-unscoped one.
+    const participant = await repository.createParticipant(pool, {});
+    const foreignEnrollment = await repository.createEnrollment(pool, {
+      participantId: participant.participant_id,
+      experimentId: EXPERIMENT_ID,
+      experimentVersion: 1,
+      conditionId: CONDITION_ID,
+      conditionVersion: 1,
+    });
+    const currentEnrollment = await repository.createEnrollment(pool, {
+      participantId: participant.participant_id,
+      experimentId: EXPERIMENT_ID,
+      experimentVersion: 1,
+      conditionId: CONDITION_ID,
+      conditionVersion: 1,
+    });
+
+    // 1-3. FOREIGN enrollment: expose NODE_T26_TARGET with the exact same
+    // item/family the current assessment will use below, so this exposure
+    // would otherwise be capable of producing EXACT_REPEAT if enrollment
+    // scoping were absent.
+    const foreignExposure = await exposeNewAssignment(foreignEnrollment.enrollment_id, {
+      targetNodeIds: [NODE_T26_TARGET],
+      itemId: ITEM_T26,
+      itemFamilyId: FAMILY_T26,
+    });
+    const foreignOrdinal = foreignExposure.exposure.exposureOrdinal;
+
+    // 4-6. CURRENT enrollment: a same-enrollment prior exposure targeting a
+    // DIFFERENT node (NODE_T26_OTHER). This establishes a POSITIVE cutoff
+    // without being target-relevant to NODE_T26_TARGET.
+    const currentPriorExposure = await exposeNewAssignment(currentEnrollment.enrollment_id, {
+      targetNodeIds: [NODE_T26_OTHER],
+      itemId: ITEM_T26,
+      itemFamilyId: FAMILY_T26,
+    });
+    const currentNonRelevantOrdinal = currentPriorExposure.exposure.exposureOrdinal;
+
+    // Deterministic ordering: the foreign exposure was created/recorded
+    // strictly before the current enrollment's own non-relevant exposure.
+    // Only relative ordering is asserted -- never a fixed literal ordinal.
+    assert.ok(foreignOrdinal < currentNonRelevantOrdinal);
+
+    // 7. ASSESSMENT in the CURRENT enrollment targeting NODE_T26_TARGET,
+    // using the same item/family as the foreign exposure.
+    const assessment = await createAssignmentFixture(currentEnrollment.enrollment_id, {
+      assignmentType: 'ASSESSMENT',
+      targetNodeIds: [NODE_T26_TARGET],
+      itemId: ITEM_T26,
+      itemFamilyId: FAMILY_T26,
+    });
+    const snapshot = await readSnapshot(assessment.assignment.assignment_id);
+    const cutoff = Number(snapshot.exposure_history_cutoff_ordinal);
+
+    // 8. Cutoff is the max prior SAME-enrollment exposure ordinal, and it
+    // is POSITIVE.
+    assert.equal(cutoff, currentNonRelevantOrdinal);
+    assert.ok(cutoff > 0);
+
+    // 9. The foreign exposure's global ordinal is <= the current positive
+    // cutoff -- it is not excluded by an ordinal/cutoff argument alone.
+    assert.ok(foreignOrdinal <= cutoff);
+
+    // 10. Direct proof: the CURRENT enrollment has no cutoff-bounded,
+    // target-relevant prior exposure for NODE_T26_TARGET. Its only
+    // same-enrollment prior exposure targets NODE_T26_OTHER, which does not
+    // overlap NODE_T26_TARGET.
+    const { rows: relevantRows } = await pool.query(
+      `SELECT exposure.exposure_id
+         FROM evidence_assignment_item_exposures exposure
+         JOIN evidence_assignments prior_assignment
+           ON prior_assignment.assignment_id = exposure.assignment_id
+         JOIN evidence_assignment_snapshot_nodes prior_node
+           ON prior_node.assignment_id = exposure.assignment_id
+        WHERE prior_assignment.enrollment_id = $1
+          AND exposure.exposure_ordinal <= $2
+          AND prior_node.node_id = $3`,
+      [currentEnrollment.enrollment_id, cutoff, NODE_T26_TARGET]
+    );
+    assert.deepEqual(relevantRows, []);
+
+    // 11-12. resolved_item_lineage remains null -- not any of the four
+    // lineage vocabulary values -- even though another enrollment (of the
+    // SAME participant) has a target-overlapping, ordinal<=cutoff,
+    // lineage-capable exposure.
+    assert.equal(snapshot.resolved_item_lineage, null);
+    assert.notEqual(snapshot.resolved_item_lineage, 'EXACT_REPEAT');
+    assert.notEqual(snapshot.resolved_item_lineage, 'SURFACE_VARIANT');
+    assert.notEqual(snapshot.resolved_item_lineage, 'SAME_ITEM_FAMILY');
+    assert.notEqual(snapshot.resolved_item_lineage, 'DIFFERENT_ITEM_FAMILY');
+  });
 });
