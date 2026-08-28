@@ -972,6 +972,8 @@ Server-side evidence boundary가 발행하거나 resolve한다.
 * Evaluation identity
 * Server timestamps
 * Assignment version snapshot
+* Assignment item first-exposure identity, exposure ordinal 및 exposed timestamp
+* Assignment exposure-history cutoff 및 resolved item lineage
 * Enrollment/assignment/session/attempt ownership
 * Idempotency replay result
 * Retry ordinal
@@ -1204,19 +1206,76 @@ Hash 또는 serialization algorithm은 implementation HOW다.
 
 #### 13.10.4 Assignment creation
 
-| 항목                      | 계약                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| Authorized caller       | P0 validation harness, server-side pilot orchestration                                |
-| Input authority         | Enrollment, assignment type intent, selected references, target timepoint intent      |
-| Server-issued           | Assignment ID, authoritative snapshot, lifecycle, created timestamp                   |
-| Validation owner        | Evidence component                                                                    |
-| Transaction             | Assignment + resolved snapshot + initial lifecycle atomic                             |
-| Idempotency             | Retried creation은 implementation-defined operation identity 없이 blind retry하지 않음       |
-| Success                 | Assignment and immutable snapshot                                                     |
-| Normal empty            | 해당 없음                                                                                 |
-| Error                   | Invalid reference, unpublished version, cross-enrollment selection, partial reference |
-| Retry                   | Same creation identity and same normalized intent가 구현된 경우 existing assignment replay  |
-| Prohibited side effects | Existing assignment mutation, Progress, production scheduling                         |
+| 항목                      | 계약 |
+| ----------------------- | --- |
+| Authorized caller       | P0 validation harness, server-side pilot orchestration |
+| Input authority         | Enrollment, assignment type intent, selected references, target timepoint intent. Caller는 exposure-history cutoff 또는 resolved item lineage를 제공하지 않음 |
+| Server-issued           | Assignment ID, authoritative snapshot, `exposure_history_cutoff_ordinal`, `resolved_item_lineage`, lifecycle, created timestamp |
+| Validation owner        | Evidence component |
+| Transaction             | Owning enrollment serialization + committed prior-exposure cutoff resolution + item-lineage resolution + assignment + resolved snapshot + initial lifecycle atomic |
+| Idempotency             | Retried creation은 implementation-defined operation identity 없이 blind retry하지 않음 |
+| Success                 | Assignment and immutable snapshot including server-resolved exposure cutoff and item lineage |
+| Normal empty            | 해당 없음 |
+| Error                   | Invalid reference, unpublished version, cross-enrollment selection, partial reference, inconsistent item-lineage authority |
+| Retry                   | Same creation identity and same normalized intent가 구현된 경우 existing assignment replay |
+| Prohibited side effects | Existing assignment/snapshot/cutoff/lineage mutation, caller-supplied actual lineage, Progress write, production attempt write, production scheduling write |
+
+#### 13.10.4.1 Assignment item first-exposure recording
+
+Target internal repository operation:
+
+```javascript
+recordAssignmentItemExposure(pool, input)
+```
+
+Exact input:
+
+```text
+{
+  assignmentId
+}
+```
+
+`assignmentId`만 caller input이다. `exposureId`, `enrollmentId`, `exposureOrdinal`, `exposedAt`, item/item-family/scenario IDs 또는 versions, target nodes는 input으로 허용하지 않는다.
+
+| 항목 | 계약 |
+|---|---|
+| Authorized caller | P0 validation harness, server-side pilot orchestration; P1 Learning Flow orchestration after learner-facing presentation |
+| Input authority | Existing `assignmentId` only. Authorized server-side orchestration은 pinned item stimulus가 learner-facing execution에서 실제로 제시되어 learner가 사용할 수 있는 상태가 된 뒤에만 호출 |
+| Server-issued | Exposure ID, owning enrollment projection, positive unique exposure ordinal, exposed timestamp; item/item-family/scenario IDs와 versions는 assignment snapshot에서 server-resolved |
+| Validation owner | Evidence component |
+| Transaction | Assignment/snapshot validation + owning enrollment serialization + existing first-exposure replay check + exposure ordinal issuance + first-exposure insert atomic |
+| Idempotency | `assignmentId`가 first-exposure idempotency grain. Existing exposure가 있으면 최초 authoritative result replay; second exposure fact 생성 금지 |
+| Success | Exact first-exposure fact 또는 equivalent replay |
+| Normal empty | 해당 없음 |
+| Error | Unknown assignment → `INVALID_ID`; lifecycle/ownership/server-resolved-authority violation 또는 learner-facing presentation 전 invocation → `CONTRACT_VIOLATION` |
+| Retry | Same `assignmentId` retry는 existing first-exposure fact replay |
+| Prohibited side effects | Caller-supplied exposure/enrollment/item/family/scenario/ordinal/timestamp authority, assignment snapshot mutation, Progress write, production `attempt_records` write, production scheduling write, generic learner-event/observation persistence |
+
+Exact success result:
+
+```text
+{
+  replayed,
+  exposureId,
+  assignmentId,
+  enrollmentId,
+  exposureOrdinal,
+  exposedAt,
+  itemId,
+  itemVersion,
+  itemFamilyId,
+  itemFamilyVersion,
+  scenarioId,
+  scenarioVersion
+}
+```
+
+The result's enrollment, item, family and scenario fields are server-resolved projections of existing assignment authority. They are not duplicated caller authority.
+
+This operation records the assignment's first learner-facing item exposure only. Assignment creation, session start, attempt open and attempt finalization do not implicitly invoke or substitute for this operation.
+
+This operation is an internal Pilot Evidence Instrumentation Component operation. It is not a public HTTP API, not a canonical Engine API and does not change existing Engine API counts.
 
 #### 13.10.5 Session start
 
@@ -1677,6 +1736,28 @@ Deferred:
 | Retry                   | Safe read retry                                                                   |
 | Prohibited side effects | Raw fact mutation, materialized authority creation, Progress write                |
 
+##### Unseen-transfer lineage rebuild source
+
+The existing §13.10.11 query contract is unchanged. For unseen-transfer rebuild, its committed source additionally includes:
+
+- assignment immutable snapshot
+- stored `exposure_history_cutoff_ordinal`
+- stored `resolved_item_lineage`
+- cutoff-bounded Assignment item first-exposure facts
+- exposed assignments' immutable item, item-family and target-node references
+- formula version reference
+- analysis cutoff
+
+The query uses only Assignment item exposure facts that belong to the same enrollment and whose `exposure_ordinal` is less than or equal to the assignment's stored cutoff.
+
+For each evaluated node, primary unseen eligibility additionally requires at least one cutoff-bounded target-relevant prior exposure containing that exact `node_id`. Absence of such exposure excludes the node evaluation from the unseen-transfer denominator; it does not create a fifth lineage value.
+
+Validation/rebuild recomputes assignment item lineage from the stored cutoff and committed exposure facts using the canonical priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`. If that recomputation disagrees with non-null stored `resolved_item_lineage`, the query fails with `CONTRACT_VIOLATION` and returns no normal metric result.
+
+Analysis-time latest exposure history must not replace the stored assignment cutoff and must not retroactively reclassify an earlier assignment.
+
+This clarification does not change the existing formula-version authority, analysis-cutoff authority, read-only consistent-snapshot rule, raw-fact immutability, materialized-authority prohibition or Progress non-interference rule.
+
 ### 13.11 Production/evidence dual-write orchestration
 
 P0는 production/evidence dual-write를 요구하지 않는다.
@@ -1739,6 +1820,8 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 * Correction aggregate
 * Raw evidence query/rebuild
 * PostgreSQL synthetic validation
+* Bounded assignment first-item exposure authority for item-lineage reconstruction
+* Assignment-owned exposure-history cutoff and resolved item lineage
 
 #### P0 excluded
 
@@ -1747,7 +1830,7 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 * Generic observation persistence
 * Human rating/adjudication
 * Generation/validator runs
-* Learner exposure
+* §13.10.4.1의 bounded assignment first-item exposure authority 밖 generic learner-exposure/event persistence
 * Raw audio
 * Materialized metric persistence
 * Pseudonymous mapping
@@ -1814,3 +1897,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.21 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — existing §13.10.7을 future full-finalization category contract로 보존하고 §13.10.7.1을 current precedence contract로 추가. `finalizeAttempt(pool, input)`, exact protocol/rubric definitions, response/timing/outcome, RULE evaluation, correction coverage, replay/concurrency 및 existing five-code mapping을 확정하며 assignment completion·session lifecycle·recorder·Learning Flow/Public integration은 deferred로 유지 |
 | 1.22 | 2026-07-30 | Evidence P0 finalization writer correction — supplied instrumentation protocol ID/version이 assignment snapshot values와 반드시 일치하고 mismatch는 `CONTRACT_VIOLATION`임을 명시. Existing API count, five-code registry, database schema 및 status boundary는 불변 |
 | 1.23 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §13.6.4 stale current-state sentence updated: current bounded finalization writer(§13.10.7.1)가 internal repository operation으로 구현됨을 기록하고, assignment completion·full retry lifecycle·recorder orchestration·Learning Flow/Public integration·production dual-write가 deferred임을 명시. API count, schema, behavior 변경 없음 |
+| 1.24 | 2026-08-28 | VI P1 Measurement Readiness narrow item-lineage authority clarification — §13.10.4 assignment creation에 immutable exposure-history cutoff/resolved lineage authority를 추가하고 internal `recordAssignmentItemExposure(pool, input)` first-exposure operation과 §13.10.11 cutoff-bounded unseen-transfer rebuild source를 정의. Existing raw metric query architecture, five-code registry, public API/Engine API count, Progress/production attempt boundaries는 유지하며 migration/source implementation·P1 activation·human-data authorization은 승인하지 않음 |
