@@ -2144,7 +2144,17 @@ P0에는 human rating row가 없으므로 human agreement query는:
 
 ## 12.2 Query input
 
-Minimum query input:
+Derived metric query boundary는 두 mode로 나뉜다: `RAW_SOURCE`와 `METRIC_RESULT`.
+
+**RAW_SOURCE** 최소 input:
+
+* Formula ID/version
+* Analysis cutoff
+* Raw-source filters(API §13.10.11.1 `filters`의 exact seven key)
+
+RAW_SOURCE는 aggregation grain을 요구하지 않는다 — aggregation이 일어나지 않기 때문이다.
+
+**METRIC_RESULT** 최소 input(기존 계약 유지):
 
 * Formula ID/version
 * Analysis cutoff
@@ -2152,9 +2162,11 @@ Minimum query input:
 * Condition/enrollment/timepoint filters
 * Optional node/item-family filters
 
+Metric-specific semantic authority(§12.4/§12.5)는 변경하지 않는다.
+
 ## 12.3 Query output
 
-Minimum result:
+**METRIC_RESULT** 최소 result는 기존 계약을 그대로 유지한다:
 
 ```text
 formula_reference
@@ -2184,6 +2196,70 @@ Allowed status:
 * `value = null`
 * Sample counts 보존
 * Zero로 변환하지 않음
+
+**RAW_SOURCE** bundle은 API §13.10.11.1 성공 output과 exactly 대응하는 별도 bundle이다:
+
+```text
+formulaReference
+analysisCutoff
+filters
+rawFacts
+sourceRebuildReference
+```
+
+명시:
+
+* RAW_SOURCE에는 `OK`/`INSUFFICIENT` metric status가 없다.
+* Matching root가 없으면 API `empty_result`를 반환한다(metric `INSUFFICIENT`가 아니다).
+* RAW_SOURCE bundle은 materialized authority가 아니다.
+* RAW_SOURCE bundle은 현재 invocation에만 존재하며 저장되지 않는다.
+
+### 12.3.1 Raw-source projection normalization
+
+RAW_SOURCE `rawFacts`의 physical projection 규칙은 API §13.10.11.1과 동일하다:
+
+| PostgreSQL 타입 | Projection |
+| --- | --- |
+| UUID/TEXT | string |
+| TIMESTAMPTZ | canonical UTC ISO string |
+| INTEGER | JavaScript safe-integer number |
+| BIGINT | exact base-10 decimal string |
+| BOOLEAN | boolean |
+| JSONB | parsed JSON-compatible value |
+| SQL NULL | explicit `null` |
+
+Mandatory exact invariant: PostgreSQL BIGINT → exact base-10 decimal string.
+
+BIGINT comparison/ordering은 projection 이전에 PostgreSQL numeric semantics로 수행한다. RAW_SOURCE의 ordinal/cutoff comparison authority로 JavaScript Number를 사용해서는 안 된다.
+
+이 조항은 Runtime Foundation A F-R02가 resolved되었다고 주장하지 않는다.
+
+### 12.3.2 Raw-source deterministic ordering
+
+RAW_SOURCE collection ordering은 API §13.10.11.1과 정확히 동일하다:
+
+* `enrollments`: `enrollment_id ASC`
+* `assignments`: `assignment_id ASC`
+* `assignmentSnapshots`: `assignment_id ASC`
+* `assignmentSnapshotNodes`: `assignment_id ASC, ordinal ASC`
+* `assignmentItemExposures`: PostgreSQL numeric `exposure_ordinal ASC`, then `exposure_id ASC`
+* `attempts`: `assignment_id ASC, attempt_series_id ASC, retry_ordinal ASC, attempt_id ASC`
+* `attemptFinalizations`: `finalized_at ASC, attempt_id ASC`
+* `targetNodeEvaluations`: `attempt_id ASC, node_id ASC`
+* `correctionAggregates`: `attempt_id ASC, initiator ASC, feedback_phase ASC, correction_outcome ASC`
+
+`sourceRebuildReference`의 각 ID 목록은 대응하는 collection과 같은 ordering을 따른다.
+
+### 12.3.3 Raw-source read snapshot
+
+Bounded RAW_SOURCE operation에 한해 PostgreSQL transaction은:
+
+```text
+REPEATABLE READ
+READ ONLY
+```
+
+이 조항은 Runtime Foundation A의 기존 transaction/locking semantics를 변경하지 않는다.
 
 ## 12.4 Eligibility authority
 
@@ -3471,3 +3547,4 @@ Approval does not permit or declare:
 | 1.2 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §4.8 stale current-state sentence updated: the current bounded finalization writer(§9.4.1–§9.4.12)가 implemented and runtime-validated as a bounded Evidence Foundation operation임을 기록하고, assignment completion·full retry lifecycle·session lifecycle·recorder orchestration·production integration이 deferred임을 명시. Evidence Foundation overall complete는 선언하지 않음. Pattern D, trusted-writer normative contract, migration, schema, behavior 변경 없음 |
 | 1.3 | 2026-08-28 | VI P1 Measurement Readiness narrow item-lineage authority clarification — generic Learner exposure/event persistence는 계속 excluded로 유지하면서 item-lineage reconstruction에 한정된 bounded assignment first-item-exposure authority, immutable assignment `exposure_history_cutoff_ordinal`·`resolved_item_lineage`, same-enrollment ordering, non-retroactive lineage rebuild 및 no-prior-target-exposure unseen-transfer exclusion을 정의. 기존 §12 query-time metric architecture, Progress/production attempt non-interference, materialized-metric prohibition은 유지. Migration number/SQL·implementation·P1 activation·human-data authorization은 승인하지 않음 |
 | 1.4 | 2026-08-28 | Independent Review F-01 correction — `target-relevant prior exposure`를 current assessment assignment와 같은 enrollment에 속하는 Assignment item exposure로 명시하고, global `exposure_ordinal`/stored cutoff만으로 다른 enrollment exposure가 resolved lineage·null/no-prior 판정·primary unseen eligibility에 포함될 수 없음을 정밀화. §18.3.1에 cross-enrollment negative fixture를 추가. Global ordinal architecture, same-enrollment serialization, four-value lineage priority, API §13.10.11 same-enrollment query boundary, owner-value 및 lifecycle 상태는 변경하지 않음 |
+| 1.5 | 2026-08-29 | VI P1 Measurement Readiness Runtime Foundation B1 Raw Source Rebuild CORE — §12.2/§12.3에 `RAW_SOURCE`/`METRIC_RESULT` query mode 분리를 추가하고 §12.3.1(raw-source projection normalization, BIGINT exact base-10 decimal string, PostgreSQL-native BIGINT compare/order invariant), §12.3.2(raw-source deterministic ordering), §12.3.3(raw-source REPEATABLE READ READ ONLY snapshot)를 신설. 기존 METRIC_RESULT 최소 input/output, §12.4/§12.5 metric-specific eligibility authority, `evidenceMetrics.js` implementation locus(§17)는 불변이며 metric reducer·FORMULA semantic interpretation·migration 014·materialized metric persistence·provider/audio·human data·P1 activation은 승인하지 않음 |
