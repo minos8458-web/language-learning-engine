@@ -1736,6 +1736,223 @@ Deferred:
 | Retry                   | Safe read retry                                                                   |
 | Prohibited side effects | Raw fact mutation, materialized authority creation, Progress write                |
 
+#### 13.10.11.1 Current bounded raw-source query contract
+
+Exact internal operation:
+
+```text
+queryRawEvidenceForMetricRebuild(pool, input)
+```
+
+Exact input object:
+
+```text
+{
+  formulaId,
+  formulaVersion,
+  analysisCutoff,
+  filters
+}
+```
+
+`filters`는 exactly 다음 seven required array key만 갖는다:
+
+```text
+{
+  enrollmentIds,
+  assignmentIds,
+  attemptIds,
+  conditionReferences,
+  targetTimepoints,
+  nodeIds,
+  itemFamilyReferences
+}
+```
+
+Exact filter 규칙:
+
+- 일곱 key 전부 required — 하나라도 omitted/undefined면 `MISSING_REQUIRED_FIELD`; explicit `null` 또는 배열이 아니면 `CONTRACT_VIOLATION`.
+- 빈 배열(`[]`)은 그 dimension에 restriction 없음을 뜻한다.
+- `enrollmentIds` / `assignmentIds` / `attemptIds` 중 적어도 하나는 nonempty여야 한다. 셋 다 empty면 primary root가 없으므로 아래 Empty semantics를 따른다.
+- 같은 array 내부는 OR, nonempty인 서로 다른 dimension 사이는 AND다.
+- 각 배열 내부의 중복 값은 금지이며 `CONTRACT_VIOLATION`이다.
+- 배열은 query 실행 전에 deterministic canonical order로 normalize한다(각 원소 타입의 자연 정렬 — string ID는 codepoint 순서, 구조화 reference는 아래 필드 순서).
+
+`conditionReferences` 원소는 exactly:
+
+```text
+{
+  conditionId,
+  conditionVersion
+}
+```
+
+`itemFamilyReferences` 원소는 exactly:
+
+```text
+{
+  itemFamilyId,
+  itemFamilyVersion
+}
+```
+
+`targetTimepoints`는 §5.8/§13의 기존 assignment-timepoint vocabulary(`IMMEDIATE`, `DAY_7`, `DAY_30`, `NOT_APPLICABLE`)를 그대로 사용한다. Vocabulary 밖 값은 `CONTRACT_VIOLATION`이다.
+
+Validly-shaped이지만 존재하지 않는 ID/version reference(`enrollmentIds`, `assignmentIds`, `attemptIds`, `nodeIds`, `conditionReferences`, `itemFamilyReferences` 원소 포함)는 `INVALID_ID`다. 개별적으로는 valid한 reference들이 ownership/root composition에서 충돌하면(예: 다른 enrollment의 assignment ID를 같은 필터에 섞는 경우) `CONTRACT_VIOLATION`이다.
+
+**`analysisCutoff`**
+
+Required canonical UTC timestamp string이다. Normalized representation: `YYYY-MM-DDTHH:mm:ss.sssZ`.
+
+- Omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`
+- Explicit `null` 또는 non-string → `CONTRACT_VIOLATION`
+- Invalid 또는 non-normalizable timestamp → `OUT_OF_RANGE_VALUE`
+
+**FORMULA boundary**
+
+이 operation은 exact immutable reference만 검증한다:
+
+```text
+reference_kind = FORMULA
+reference_id = formulaId
+version = formulaVersion
+```
+
+CORE는 FORMULA definition semantics를 explicitly 해석하지 않는다. Metric-specific FORMULA interpretation(§12.4/§12.5 eligibility, numerator/denominator, exclusion rule 등)은 이 patch의 scope 밖이며 후속 metric-specific contract가 소유한다.
+
+**Raw-source cutoff boundary**
+
+`analysisCutoff` 이하의 authoritative fact만 반환한다. Source-time authority는 다음과 같다:
+
+- enrollment → `created_at`
+- assignment → `created_at`
+- assignment snapshot → snapshot `created_at`
+- assignment snapshot nodes → owning snapshot timestamp
+- assignment item exposure → `exposed_at`
+- attempt → `started_at`
+- finalization → `finalized_at`
+- target-node evaluation → owning finalization `finalized_at`
+- correction aggregate → owning finalization `finalized_at`
+
+이 bounded raw-source operation은 mutable lifecycle column의 historical version을 fabricate하지 않는다. Read-only transaction snapshot에서 보이는 physical enrollment/assignment row를 그대로 반환한다. 향후 metric이 필요로 하는 historical lifecycle interpretation(예: cutoff 시점의 assignment status 재구성)은 이후 metric-specific contract의 소관이다.
+
+**Exact success output**
+
+```text
+{
+  formulaReference: {
+    formulaId,
+    formulaVersion
+  },
+  analysisCutoff,
+  filters: {
+    enrollmentIds,
+    assignmentIds,
+    attemptIds,
+    conditionReferences,
+    targetTimepoints,
+    nodeIds,
+    itemFamilyReferences
+  },
+  rawFacts: {
+    enrollments,
+    assignments,
+    assignmentSnapshots,
+    assignmentSnapshotNodes,
+    assignmentItemExposures,
+    attempts,
+    attemptFinalizations,
+    targetNodeEvaluations,
+    correctionAggregates
+  },
+  sourceRebuildReference: {
+    enrollmentIds,
+    assignmentIds,
+    attemptIds,
+    exposureIds,
+    evaluationIds
+  }
+}
+```
+
+**Raw row projection normalization**
+
+`rawFacts`의 모든 row는 대응하는 Schema entity의 exact physical Evidence-row projection이다:
+
+| PostgreSQL 타입      | Projection                     |
+| ------------------- | ------------------------------- |
+| UUID/TEXT            | string                         |
+| TIMESTAMPTZ          | canonical UTC ISO string        |
+| INTEGER               | JavaScript safe-integer number |
+| BIGINT                 | exact base-10 decimal string   |
+| BOOLEAN               | boolean                        |
+| JSONB                 | parsed JSON-compatible value   |
+| SQL NULL              | explicit `null`                |
+
+이 raw-source operation이 사용하는 어떤 PostgreSQL BIGINT도 JavaScript Number를 comparison 또는 projection authority로 통과시켜서는 안 된다.
+
+**Deterministic ordering**
+
+- `enrollments`: `enrollment_id ASC`
+- `assignments`: `assignment_id ASC`
+- `assignmentSnapshots`: `assignment_id ASC`
+- `assignmentSnapshotNodes`: `assignment_id ASC, ordinal ASC`
+- `assignmentItemExposures`: PostgreSQL numeric `exposure_ordinal ASC`, then `exposure_id ASC`
+- `attempts`: `assignment_id ASC, attempt_series_id ASC, retry_ordinal ASC, attempt_id ASC`
+- `attemptFinalizations`: `finalized_at ASC, attempt_id ASC`
+- `targetNodeEvaluations`: `attempt_id ASC, node_id ASC`
+- `correctionAggregates`: `attempt_id ASC, initiator ASC, feedback_phase ASC, correction_outcome ASC`
+
+`sourceRebuildReference`의 각 ID 목록은 대응하는 raw-source collection과 같은 ordering을 따른다.
+
+**Empty semantics**
+
+Normalized primary filter(`enrollmentIds`/`assignmentIds`/`attemptIds`)가 authoritative evidence root를 하나도 select하지 않으면 existing common `empty_result`를 반환한다. Metric status `INSUFFICIENT`는 사용하지 않는다 — `OK`/`INSUFFICIENT`는 METRIC_RESULT mode 전용이다.
+
+**Read consistency**
+
+전체 bounded operation은 하나의 PostgreSQL transaction 안에서 실행한다:
+
+```text
+REPEATABLE READ
+READ ONLY
+```
+
+FORMULA existence validation과 모든 Evidence read는 그 transaction 안에서 발생한다. Mutation lock을 획득하지 않는다.
+
+**Side effects**
+
+Exactly zero:
+
+- raw fact mutation 없음
+- Progress write 없음
+- production `attempt_records` write 없음
+- `next_review_at` write 없음
+- materialized metric/result row 없음
+- sequence advance 없음
+- provider/audio call 없음
+
+**Error surface**
+
+기존 five-code registry(`INVALID_ID`, `MISSING_REQUIRED_FIELD`, `UNAUTHORIZED_CALLER`, `OUT_OF_RANGE_VALUE`, `CONTRACT_VIOLATION`)만 사용한다. 신규 error code는 추가하지 않는다.
+
+**Explicit non-authorizations**
+
+이 §13.10.11.1 CORE contract는 다음을 승인하지 않는다:
+
+- metric reducer 구현
+- unseen-transfer aggregate 계산
+- retention/RT/initiation/correction metric
+- completion/dropout/review-debt metric
+- human agreement
+- FORMULA definition semantic interpretation
+- ITEM surface-variant authority
+- migration 014
+- materialized metric table
+- provider/audio
+- P1 activation
+- human data 수집
+
 ##### Unseen-transfer lineage rebuild source
 
 The existing §13.10.11 query contract is unchanged. For unseen-transfer rebuild, its committed source additionally includes:
@@ -1898,3 +2115,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.22 | 2026-07-30 | Evidence P0 finalization writer correction — supplied instrumentation protocol ID/version이 assignment snapshot values와 반드시 일치하고 mismatch는 `CONTRACT_VIOLATION`임을 명시. Existing API count, five-code registry, database schema 및 status boundary는 불변 |
 | 1.23 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §13.6.4 stale current-state sentence updated: current bounded finalization writer(§13.10.7.1)가 internal repository operation으로 구현됨을 기록하고, assignment completion·full retry lifecycle·recorder orchestration·Learning Flow/Public integration·production dual-write가 deferred임을 명시. API count, schema, behavior 변경 없음 |
 | 1.24 | 2026-08-28 | VI P1 Measurement Readiness narrow item-lineage authority clarification — §13.10.4 assignment creation에 immutable exposure-history cutoff/resolved lineage authority를 추가하고 internal `recordAssignmentItemExposure(pool, input)` first-exposure operation과 §13.10.11 cutoff-bounded unseen-transfer rebuild source를 정의. Existing raw metric query architecture, five-code registry, public API/Engine API count, Progress/production attempt boundaries는 유지하며 migration/source implementation·P1 activation·human-data authorization은 승인하지 않음 |
+| 1.25 | 2026-08-29 | VI P1 Measurement Readiness Runtime Foundation B1 Raw Source Rebuild CORE — 기존 §13.10.11 generic category를 보존하고 §13.10.11.1에 bounded `queryRawEvidenceForMetricRebuild(pool, input)` raw-source contract(exact input/seven filter key/analysisCutoff/FORMULA reference-only boundary/exact rawFacts 9종·sourceRebuildReference 5종 output/BIGINT decimal-string projection/deterministic ordering/`empty_result` semantics/REPEATABLE READ READ ONLY 단일 transaction/zero side effect)를 정의. 기존 five-code registry·API count·§13.10.11 unseen-transfer lineage rebuild source는 불변이며 metric reducer·FORMULA semantic interpretation·migration 014·materialized metric·provider/audio·P1 activation·human data는 승인하지 않음 |
