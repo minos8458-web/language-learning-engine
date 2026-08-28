@@ -536,7 +536,7 @@ Assignment당 최초 Assignment item exposure만 authoritative history fact로 �
 
 Assignment creation은 owning enrollment의 serialization boundary 안에서, 그 assignment보다 먼저 committed된 같은-enrollment Assignment item exposure 중 가장 큰 `exposure_ordinal`을 `exposure_history_cutoff_ordinal`로 고정한다. Prior exposure가 없으면 cutoff는 `0`이다. 같은 transaction에서 cutoff 이하 exposure facts만 사용해 `resolved_item_lineage`를 고정한다.
 
-Target-relevant prior exposure는 prior exposed assignment의 immutable target-node set과 current assessment assignment의 immutable target-node set이 하나 이상의 canonical Grammar Node ID를 공유하는 exposure다.
+Target-relevant prior exposure는 current assessment assignment와 같은 enrollment에 속하는 Assignment item exposure 중, 그 prior exposed assignment의 immutable target-node set과 current assessment assignment의 immutable target-node set이 하나 이상의 canonical Grammar Node ID를 공유하는 exposure다.
 
 Non-null lineage resolution은 cutoff 이하 target-relevant prior exposure에 대해 기존 priority를 그대로 적용한다.
 
@@ -679,7 +679,7 @@ Eligible set:
 
 - §14.2의 scorable 조건
 - assignment snapshot의 `resolved_item_lineage`가 `DIFFERENT_ITEM_FAMILY`
-- 평가 대상 `node_id`가 current assignment의 `exposure_history_cutoff_ordinal` 이하 target-relevant prior Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함
+- 평가 대상 `node_id`가 current assessment assignment와 같은 enrollment에 속하고, current assignment의 `exposure_history_cutoff_ordinal` 이하인 target-relevant prior Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함
 
 해당 `node_id`에 prior target-relevant exposure가 없으면 primary unseen-transfer denominator에서 제외한다. 이 exclusion은 새로운 lineage value를 만들지 않으며 null lineage를 `DIFFERENT_ITEM_FAMILY`로 변환하지 않는다.
 

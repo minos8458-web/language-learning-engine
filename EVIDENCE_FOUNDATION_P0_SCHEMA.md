@@ -548,6 +548,8 @@ Required item-lineage authority fields:
 
 Null은 fifth lineage value가 아니다.
 
+이 문서에서 `target-relevant prior Assignment item exposure`와 `target-relevant exposure`는 `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §12.1.1의 same-enrollment 정의를 그대로 사용한다. Current assessment assignment와 다른 enrollment에 속한 Assignment item exposure는 `exposure_ordinal`이 stored `exposure_history_cutoff_ordinal` 이하이더라도 resolved item-lineage 판정, null/no-prior 판정 또는 unseen-transfer eligibility에 사용할 수 없다.
+
 Named constraints:
 
 * `evidence_assignment_snapshots_content_pair_check`
@@ -2210,9 +2212,10 @@ Raw facts는 formula result를 저장하지 않는다.
 
 * Primary assignment-level lineage eligibility는 stored `resolved_item_lineage = DIFFERENT_ITEM_FAMILY`
 * Exact repeat, surface variant, same family 및 null lineage는 primary unseen eligibility에서 제외
-* 각 evaluated `node_id`는 assignment snapshot의 `exposure_history_cutoff_ordinal` 이하 Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함돼야 한다
-* 해당 node의 prior target-relevant exposure가 없으면 primary unseen denominator에서 제외하며 새로운 lineage value를 만들지 않는다
-* Query/rebuild는 stored cutoff와 immutable Assignment item exposure facts를 사용해 lineage를 재계산할 수 있어야 한다
+* 각 evaluated `node_id`는 current assignment와 같은 enrollment에 속하고 assignment snapshot의 `exposure_history_cutoff_ordinal` 이하인 Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함돼야 한다
+* 해당 node의 same-enrollment prior target-relevant exposure가 없으면 primary unseen denominator에서 제외하며 새로운 lineage value를 만들지 않는다
+* Query/rebuild는 stored cutoff와 current assignment와 같은 enrollment에 속하는 immutable Assignment item exposure facts만 사용해 lineage를 재계산할 수 있어야 한다
+* 다른 enrollment의 Assignment item exposure는 `exposure_ordinal <= exposure_history_cutoff_ordinal`이어도 lineage resolution 또는 primary unseen eligibility에 사용할 수 없다
 * Cutoff-based recomputation과 stored `resolved_item_lineage`가 다르면 정상 metric result를 반환하지 않는다
 * Analysis-time 최신 exposure history로 earlier assignment lineage를 다시 resolve하지 않는다
 * Scenario lineage는 별도 stratification
@@ -2766,6 +2769,7 @@ Rollback or assignment aggregate cleanup.
 ### Setup
 
 * Active enrollment
+* Second active enrollment with a target-overlapping exposed assignment whose global `exposure_ordinal` is less than or equal to the current assessment assignment cutoff
 * Source assignment with valid snapshot
 * Held-out assessment assignment definitions
 * Same-item, same-family and different-family fixtures
@@ -2780,6 +2784,7 @@ Rollback or assignment aggregate cleanup.
 * Assessment assignment creation after exact-repeat exposure
 * Assessment assignment creation after same-family exposure
 * Assessment assignment creation after different-family target-relevant exposure
+* Current-enrollment assessment assignment creation while the second enrollment already contains that target-overlapping lower-or-equal-ordinal exposure
 * Later exposure after an assessment assignment has already been created
 
 ### Expected rows
@@ -2790,6 +2795,7 @@ Rollback or assignment aggregate cleanup.
 * Each assignment snapshot stores immutable `exposure_history_cutoff_ordinal`
 * Assessment lineage resolves with priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`
 * No prior target-relevant exposure yields null lineage rather than `DIFFERENT_ITEM_FAMILY`
+* If the current enrollment has no target-relevant prior exposure, `resolved_item_lineage` remains null and the node remains excluded from primary unseen eligibility even when another enrollment has a target-overlapping exposure with `exposure_ordinal <= exposure_history_cutoff_ordinal`
 * Later exposure does not alter an earlier assignment cutoff or resolved lineage
 
 ### Rejected behavior
@@ -2801,6 +2807,7 @@ Rollback or assignment aggregate cleanup.
 * Manifest design label treated as actual lineage
 * Fuzzy stimulus similarity used to create `SURFACE_VARIANT`
 * Analysis-time latest exposure history used to rewrite prior lineage
+* Any resolved lineage or primary unseen eligibility result that changes solely because another enrollment has an Assignment item exposure with `exposure_ordinal <= exposure_history_cutoff_ordinal`
 * Caller-supplied exposure ID, ordinal, timestamp, item, family, scenario or target-node authority
 
 ### Atomicity
@@ -3463,3 +3470,4 @@ Approval does not permit or declare:
 | 1.1 | 2026-07-30 | Independent review correction — finalization instrumentation protocol의 assignment snapshot 일치, uniform `MODALITY_INPUT_FAILURE`의 `NORMAL_EMPTY` representation과 outcome precedence, §9.4.1–§9.4.12의 current bounded precedence 및 snapshot-derived rubric ID/version을 명시. Database migration·error code·schema object·status 변경 없음 |
 | 1.2 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §4.8 stale current-state sentence updated: the current bounded finalization writer(§9.4.1–§9.4.12)가 implemented and runtime-validated as a bounded Evidence Foundation operation임을 기록하고, assignment completion·full retry lifecycle·session lifecycle·recorder orchestration·production integration이 deferred임을 명시. Evidence Foundation overall complete는 선언하지 않음. Pattern D, trusted-writer normative contract, migration, schema, behavior 변경 없음 |
 | 1.3 | 2026-08-28 | VI P1 Measurement Readiness narrow item-lineage authority clarification — generic Learner exposure/event persistence는 계속 excluded로 유지하면서 item-lineage reconstruction에 한정된 bounded assignment first-item-exposure authority, immutable assignment `exposure_history_cutoff_ordinal`·`resolved_item_lineage`, same-enrollment ordering, non-retroactive lineage rebuild 및 no-prior-target-exposure unseen-transfer exclusion을 정의. 기존 §12 query-time metric architecture, Progress/production attempt non-interference, materialized-metric prohibition은 유지. Migration number/SQL·implementation·P1 activation·human-data authorization은 승인하지 않음 |
+| 1.4 | 2026-08-28 | Independent Review F-01 correction — `target-relevant prior exposure`를 current assessment assignment와 같은 enrollment에 속하는 Assignment item exposure로 명시하고, global `exposure_ordinal`/stored cutoff만으로 다른 enrollment exposure가 resolved lineage·null/no-prior 판정·primary unseen eligibility에 포함될 수 없음을 정밀화. §18.3.1에 cross-enrollment negative fixture를 추가. Global ordinal architecture, same-enrollment serialization, four-value lineage priority, API §13.10.11 same-enrollment query boundary, owner-value 및 lifecycle 상태는 변경하지 않음 |
