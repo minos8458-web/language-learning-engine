@@ -68,6 +68,8 @@ const ASSIGNMENT_SERVER_FIELDS = [
   'snapshotDigest',
   'digestAlgorithm',
   'normalizationVersion',
+  'exposureHistoryCutoffOrdinal',
+  'resolvedItemLineage',
   'anchorAt',
   'dueAt',
   'completedAt',
@@ -75,6 +77,22 @@ const ASSIGNMENT_SERVER_FIELDS = [
   'terminalOutcome',
   'rescheduledFrom',
   'supersededBy',
+  'createdAt',
+];
+const ITEM_EXPOSURE_SERVER_FIELDS = [
+  'exposureId',
+  'enrollmentId',
+  'exposureOrdinal',
+  'exposedAt',
+  'itemId',
+  'itemVersion',
+  'itemFamilyId',
+  'itemFamilyVersion',
+  'scenarioId',
+  'scenarioVersion',
+  'targetNodeIds',
+  'targetNodes',
+  'replayed',
   'createdAt',
 ];
 const ATTEMPT_SERVER_FIELDS = [
@@ -518,9 +536,15 @@ async function createAssignment(pool, input) {
 
   try {
     return await withTransaction(pool, async (client) => {
+      // Owning enrollment is the serialization root for same-enrollment
+      // Assignment item exposure ordering (VI_EMPIRICAL_EVIDENCE_CONTRACT.md
+      // §12.1.1, EVIDENCE_FOUNDATION_P0_SCHEMA.md §9). Locking it here means
+      // a concurrent recordAssignmentItemExposure for this enrollment either
+      // fully precedes or fully follows this transaction's cutoff read.
       const { rows: enrollmentRows } = await client.query(
         `SELECT * FROM evidence_enrollments
-          WHERE enrollment_id = $1`,
+          WHERE enrollment_id = $1
+          FOR UPDATE`,
         [enrollmentId]
       );
       const enrollment = enrollmentRows[0];
@@ -557,6 +581,67 @@ async function createAssignment(pool, input) {
         }
       }
 
+      // exposure_history_cutoff_ordinal: the largest exposure_ordinal among
+      // Assignment item exposures already committed for THIS enrollment, or
+      // 0 when none exist. Cross-enrollment exposures never participate,
+      // regardless of their global ordinal value.
+      const { rows: cutoffRows } = await client.query(
+        `SELECT COALESCE(MAX(exposure.exposure_ordinal), 0) AS cutoff
+           FROM evidence_assignment_item_exposures exposure
+           JOIN evidence_assignments prior_assignment
+             ON prior_assignment.assignment_id = exposure.assignment_id
+          WHERE prior_assignment.enrollment_id = $1`,
+        [enrollmentId]
+      );
+      const exposureHistoryCutoffOrdinal = Number(cutoffRows[0].cutoff);
+
+      // resolved_item_lineage: ASSESSMENT-only, derived from cutoff-bounded,
+      // same-enrollment, target-overlapping ("target-relevant") prior
+      // Assignment item exposures (VI_EMPIRICAL_EVIDENCE_CONTRACT.md §12.1.1).
+      let resolvedItemLineage = null;
+      if (assignmentType === 'ASSESSMENT') {
+        const { rows: relevantRows } = await client.query(
+          `SELECT DISTINCT snap.item_id, snap.item_version, snap.item_family_id
+             FROM evidence_assignment_item_exposures exposure
+             JOIN evidence_assignments prior_assignment
+               ON prior_assignment.assignment_id = exposure.assignment_id
+             JOIN evidence_assignment_snapshots snap
+               ON snap.assignment_id = exposure.assignment_id
+            WHERE prior_assignment.enrollment_id = $1
+              AND exposure.exposure_ordinal <= $2
+              AND EXISTS (
+                SELECT 1
+                  FROM evidence_assignment_snapshot_nodes prior_node
+                 WHERE prior_node.assignment_id = exposure.assignment_id
+                   AND prior_node.node_id = ANY($3::text[])
+              )`,
+          [enrollmentId, exposureHistoryCutoffOrdinal, targetNodeIds]
+        );
+
+        if (relevantRows.length > 0) {
+          const hasExactRepeat = relevantRows.some(
+            (row) => row.item_id === references.itemId
+              && Number(row.item_version) === references.itemVersion
+          );
+          // SURFACE_VARIANT requires an explicit versioned ITEM authority
+          // relation between the current and a prior exposed item. Current
+          // repository/reference authority (registerReferenceVersion) stores
+          // an opaque ITEM definition with no such relation, so this branch
+          // is never satisfied here. It is intentionally not inferred from
+          // text similarity, edit distance, or token overlap.
+          const hasSameFamily = relevantRows.some(
+            (row) => row.item_family_id === references.itemFamilyId
+          );
+          if (hasExactRepeat) {
+            resolvedItemLineage = 'EXACT_REPEAT';
+          } else if (hasSameFamily) {
+            resolvedItemLineage = 'SAME_ITEM_FAMILY';
+          } else {
+            resolvedItemLineage = 'DIFFERENT_ITEM_FAMILY';
+          }
+        }
+      }
+
       const assignmentId = randomUUID();
       const snapshotForDigest = {
         experimentId: enrollment.experiment_id,
@@ -581,6 +666,8 @@ async function createAssignment(pool, input) {
         schedulerProtocolVersion: references.schedulerProtocolVersion,
         instrumentationProtocolId: references.instrumentationProtocolId,
         instrumentationProtocolVersion: references.instrumentationProtocolVersion,
+        exposureHistoryCutoffOrdinal,
+        resolvedItemLineage,
         plannedStimulusModalities,
         plannedResponseModalities,
       };
@@ -620,12 +707,13 @@ async function createAssignment(pool, input) {
            scheduler_protocol_id, scheduler_protocol_version,
            instrumentation_protocol_id, instrumentation_protocol_version,
            planned_stimulus_modalities, planned_response_modalities,
-           snapshot_digest, digest_algorithm, normalization_version
+           snapshot_digest, digest_algorithm, normalization_version,
+           exposure_history_cutoff_ordinal, resolved_item_lineage
          )
          VALUES (
            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
            $14, $15, $16, $17, $18, $19, $20, $21, $22, $23,
-           $24::jsonb, $25::jsonb, $26, $27, $28
+           $24::jsonb, $25::jsonb, $26, $27, $28, $29, $30
          )
          RETURNING *`,
         [
@@ -657,6 +745,8 @@ async function createAssignment(pool, input) {
           digest.digest,
           digest.digestAlgorithm,
           digest.normalizationVersion,
+          exposureHistoryCutoffOrdinal,
+          resolvedItemLineage,
         ]
       );
 
@@ -679,6 +769,139 @@ async function createAssignment(pool, input) {
     });
   } catch (error) {
     throw mapDatabaseError(error, 'createAssignment');
+  }
+}
+
+async function loadAssignmentForExposure(queryable, assignmentId) {
+  const { rows } = await queryable.query(
+    `SELECT assignment_id, enrollment_id
+       FROM evidence_assignments
+      WHERE assignment_id = $1`,
+    [assignmentId]
+  );
+  return rows[0] || null;
+}
+
+async function loadSnapshotForExposure(queryable, assignmentId) {
+  const { rows } = await queryable.query(
+    `SELECT item_id, item_version, item_family_id, item_family_version,
+            scenario_id, scenario_version
+       FROM evidence_assignment_snapshots
+      WHERE assignment_id = $1`,
+    [assignmentId]
+  );
+  return rows[0] || null;
+}
+
+async function loadExposureByAssignment(queryable, assignmentId) {
+  const { rows } = await queryable.query(
+    `SELECT exposure_id, exposure_ordinal, exposed_at
+       FROM evidence_assignment_item_exposures
+      WHERE assignment_id = $1`,
+    [assignmentId]
+  );
+  return rows[0] || null;
+}
+
+function projectExposureResult(assignment, snapshot, exposureRow, replayed) {
+  return {
+    replayed,
+    exposureId: exposureRow.exposure_id,
+    assignmentId: assignment.assignment_id,
+    enrollmentId: assignment.enrollment_id,
+    exposureOrdinal: Number(exposureRow.exposure_ordinal),
+    exposedAt: new Date(exposureRow.exposed_at).toISOString(),
+    itemId: snapshot.item_id,
+    itemVersion: Number(snapshot.item_version),
+    itemFamilyId: snapshot.item_family_id,
+    itemFamilyVersion: Number(snapshot.item_family_version),
+    scenarioId: snapshot.scenario_id,
+    scenarioVersion: Number(snapshot.scenario_version),
+  };
+}
+
+// recordAssignmentItemExposure: records the assignment's first
+// learner-facing item exposure only (API_CONTRACT.md §13.10.4.1,
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §5.9.1). Exact caller input is
+// { assignmentId } -- every other field in the result is a server-resolved
+// projection of existing assignment/snapshot authority, never caller
+// authority. This is not a generic learner-event/observation writer: it
+// writes no Progress field, no production attempt_records row, and no
+// scheduler row.
+async function recordAssignmentItemExposure(pool, input) {
+  validateInputObject(input);
+  rejectServerIssuedFieldOverrides(input, ITEM_EXPOSURE_SERVER_FIELDS);
+  assertAllowedKeys(input, ['assignmentId']);
+  const assignmentId = validateUuid(requireField(input, 'assignmentId'), 'assignmentId');
+
+  if (!pool || typeof pool.connect !== 'function') {
+    throw new ContractViolationError('pool.connect is required');
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const assignment = await loadAssignmentForExposure(client, assignmentId);
+    if (!assignment) {
+      throw new NotFoundError(`Unknown assignmentId: ${assignmentId}`);
+    }
+
+    // Owning enrollment is the same serialization root used by assignment
+    // creation, so first-exposure recording and cutoff resolution for the
+    // same enrollment can never race each other.
+    const { rows: enrollmentRows } = await client.query(
+      `SELECT enrollment_id FROM evidence_enrollments
+        WHERE enrollment_id = $1
+        FOR UPDATE`,
+      [assignment.enrollment_id]
+    );
+    if (enrollmentRows.length === 0) {
+      throw new ContractViolationError('assignment owning enrollment could not be resolved');
+    }
+
+    const snapshot = await loadSnapshotForExposure(client, assignmentId);
+    if (!snapshot) {
+      throw new ContractViolationError('assignment snapshot does not exist');
+    }
+
+    const existing = await loadExposureByAssignment(client, assignmentId);
+    let result;
+    if (existing) {
+      result = projectExposureResult(assignment, snapshot, existing, true);
+    } else {
+      const { rows: insertedRows } = await client.query(
+        `INSERT INTO evidence_assignment_item_exposures (assignment_id)
+         VALUES ($1)
+         RETURNING exposure_id, exposure_ordinal, exposed_at`,
+        [assignmentId]
+      );
+      result = projectExposureResult(assignment, snapshot, insertedRows[0], false);
+    }
+
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // Preserve the original failure.
+    }
+
+    if (
+      error?.code === '23505'
+      && error.constraint === 'evidence_assignment_item_exposures_assignment_unique'
+    ) {
+      const assignment = await loadAssignmentForExposure(pool, assignmentId);
+      const snapshot = assignment && await loadSnapshotForExposure(pool, assignmentId);
+      const existing = snapshot && await loadExposureByAssignment(pool, assignmentId);
+      if (assignment && snapshot && existing) {
+        return projectExposureResult(assignment, snapshot, existing, true);
+      }
+    }
+    throw mapDatabaseError(error, 'recordAssignmentItemExposure');
+  } finally {
+    client.release();
   }
 }
 
@@ -2152,6 +2375,7 @@ module.exports = {
   getParticipant,
   getReferenceVersion,
   openAttempt,
+  recordAssignmentItemExposure,
   registerConditionVersion,
   registerExperimentVersion,
   registerReferenceVersion,
