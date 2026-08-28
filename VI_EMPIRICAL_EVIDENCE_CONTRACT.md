@@ -35,6 +35,7 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 - response와 최소 correction aggregate
 - stimulus/response modality 분리
 - item-family 기반 unseen-context lineage
+- item lineage reconstruction에 한정된 assignment-scoped first learner-facing item exposure authority
 - production scheduler와 분리된 pilot assignment
 - retention, transfer, RT, initiation, correction, completion, dropout, review debt 계산 계약
 - VI lexical manifest boundary
@@ -86,6 +87,7 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 | Condition | 학습·연습·scheduler protocol 조합 |
 | Enrollment | 한 participant가 특정 experiment version과 condition version에 배정된 관계 |
 | Assignment | participant에게 learning, review 또는 assessment 과업을 배정한 authoritative pilot fact |
+| Assignment item exposure | Assignment snapshot이 pin한 item stimulus가 learner-facing execution에서 실제로 제시되어 learner가 사용할 수 있는 상태가 되었음을 server-side Evidence authority가 기록한 assignment-scoped 최초 노출 fact |
 | Session | 하나 이상의 assignment 또는 attempt가 수행되는 최소 durable 활동 경계 |
 | Assessment attempt | 하나의 logical learner response를 나타내는 stable root fact |
 | Observation | attempt 또는 session에 추가될 수 있는 extensible raw fact |
@@ -112,6 +114,7 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 | `condition_version` | 예 | Condition protocol의 immutable version |
 | `enrollment_id` | 예 | participant×experiment-version×condition-version 관계 |
 | `assignment_id` | 예 | 단일 learning/review/assessment assignment |
+| `exposure_id` | Assignment item exposure 기록 시 예 | Assignment당 최초 learner-facing item exposure의 stable server-issued identity |
 | `session_id` | 예 | 최소 durable session |
 | `attempt_id` | assessment 시 예 | 단일 logical response root |
 | `attempt_series_id` | retry 가능 시 예 | Pedagogical retry chain identity |
@@ -160,6 +163,8 @@ assignment_version_snapshot
   content_version?
   scenario_id
   item_family_id
+  exposure_history_cutoff_ordinal
+  resolved_item_lineage?
   lexical_manifest_id
   lexical_manifest_version
   rubric_version
@@ -177,6 +182,10 @@ assignment_version_snapshot
 4. Assignment가 reschedule돼 의미가 바뀌면 기존 row를 수정하지 않고 새 assignment를 만들고 lineage를 연결한다.
 5. Experiment version 변경 후 기존 enrollment를 새 version으로 소급 이동하지 않는다.
 6. Pseudonymous mapping policy는 snapshot에 포함하지 않고 별도 owner-controlled policy reference로 관리한다.
+7. `exposure_history_cutoff_ordinal`은 assignment 생성 transaction이 같은 enrollment의 committed Assignment item exposure history를 기준으로 server-side에서 고정하는 nonnegative integer다. 같은 enrollment에 prior exposure가 없으면 `0`이다.
+8. `resolved_item_lineage`는 `ASSESSMENT` assignment에 대해 §12.1.1의 assignment-time rule로 server-side에서 고정한다. Target-relevant prior exposure가 없으면 null이다. Non-`ASSESSMENT` assignment에서도 null이다. Null은 fifth lineage value가 아니다.
+9. Non-null `resolved_item_lineage`는 정확히 `EXACT_REPEAT`, `SURFACE_VARIANT`, `SAME_ITEM_FAMILY`, `DIFFERENT_ITEM_FAMILY` 중 하나다.
+10. `exposure_history_cutoff_ordinal`과 `resolved_item_lineage`는 assignment snapshot의 immutable semantic content이며 snapshot digest 대상이다. Assignment 생성 후 later exposure로 둘 중 어느 값도 변경하지 않는다.
 
 ## 7. Assignment lifecycle
 
@@ -515,6 +524,33 @@ response_modality_components = [TEXT_ENTRY]
 - `SAME_ITEM_FAMILY`: 다른 item ID지만 같은 elicitation family.
 - `DIFFERENT_ITEM_FAMILY`: prior learning exposure와 다른 family.
 
+#### 12.1.1 Learner-facing item exposure authority
+
+Item lineage의 raw authority는 explicit Assignment item exposure fact다.
+
+Assignment item exposure는 assignment snapshot이 pin한 item stimulus가 learner-facing execution에서 실제로 제시되어 learner가 사용할 수 있는 상태가 되었을 때만 기록한다. Assignment creation, session start, attempt open, attempt completion/finalization은 그 자체로 Assignment item exposure가 아니다. `primary_unseen_candidate`, held-out design label, production `attempt_records` 및 Progress fact도 Assignment item exposure authority가 아니다.
+
+Assignment당 최초 Assignment item exposure만 authoritative history fact로 기록한다. 이 fact는 server-issued stable `exposure_id`, owning `assignment_id`, server-issued `exposure_ordinal`, server-authoritative `exposed_at`을 가진다. Item ID/version, item-family ID/version, scenario ID/version 및 target-node set은 caller가 제공하지 않고 exposed assignment의 immutable snapshot에서 resolve한다.
+
+`exposure_ordinal`은 Evidence exposure authority 전체에서 server-issued, positive, unique, monotonically increasing ordering value다. Gapless sequence는 요구하지 않는다. Same-enrollment assignment creation과 first-exposure recording은 owning enrollment를 serialization root로 사용하여 race-dependent history ordering을 허용하지 않는다.
+
+Assignment creation은 owning enrollment의 serialization boundary 안에서, 그 assignment보다 먼저 committed된 같은-enrollment Assignment item exposure 중 가장 큰 `exposure_ordinal`을 `exposure_history_cutoff_ordinal`로 고정한다. Prior exposure가 없으면 cutoff는 `0`이다. 같은 transaction에서 cutoff 이하 exposure facts만 사용해 `resolved_item_lineage`를 고정한다.
+
+Target-relevant prior exposure는 prior exposed assignment의 immutable target-node set과 current assessment assignment의 immutable target-node set이 하나 이상의 canonical Grammar Node ID를 공유하는 exposure다.
+
+Non-null lineage resolution은 cutoff 이하 target-relevant prior exposure에 대해 기존 priority를 그대로 적용한다.
+
+1. `EXACT_REPEAT`: same item ID와 version의 prior exposure가 있거나, versioned ITEM authority가 두 item의 exact canonical stimulus identity가 동일함을 명시적으로 증명하는 경우.
+2. `SURFACE_VARIANT`: 상위 `EXACT_REPEAT`이 아니고, versioned ITEM authority가 current item과 prior exposed item 사이의 surface-variant relation을 명시적으로 제공하는 경우. Text similarity, edit distance, token overlap 또는 기타 fuzzy similarity로 추론하지 않는다.
+3. `SAME_ITEM_FAMILY`: 상위 두 condition이 없고, prior target-relevant exposed item 중 current assignment와 authoritative `item_family_id`가 같은 item이 하나 이상 있는 경우.
+4. `DIFFERENT_ITEM_FAMILY`: target-relevant prior exposure가 하나 이상 존재하고 상위 세 condition이 모두 없으며, 모든 relevant prior exposed family가 current authoritative family와 다른 경우.
+
+Target-relevant prior exposure가 없으면 `resolved_item_lineage`는 null이다. 이를 `DIFFERENT_ITEM_FAMILY`로 변환하지 않는다.
+
+Assignment 생성 뒤 기록되는 Assignment item exposure는 그 assignment의 cutoff 뒤 history다. Later exposure는 이미 저장된 `exposure_history_cutoff_ordinal` 또는 `resolved_item_lineage`를 수정하거나 analysis-time 최신 history를 이용해 과거 lineage를 다시 resolve하는 근거가 될 수 없다.
+
+Manifest의 `primary_unseen_candidate=true`, held-out role 또는 source→held-out design proof는 assessment design intent다. 이 값만으로 actual participant assignment의 `DIFFERENT_ITEM_FAMILY`를 만들 수 없다.
+
 ### 12.2 Scenario lineage
 
 별도 축:
@@ -539,7 +575,7 @@ Scenario holdout은:
 - exploratory 또는 confirmatory 분석으로 사용할 수 있다.
 - 정확히 6개 scenario인 pilot에서 사전 고정된 필수 holdout count를 요구하지 않는다.
 
-Item-family lineage는 assignment 시점의 exposure history snapshot으로 판정하며 사후 최신 노출로 과거 classification을 변경하지 않는다.
+Item-family lineage는 §12.1.1의 explicit Assignment item exposure authority와 assignment-owned `exposure_history_cutoff_ordinal`을 사용해 assignment 생성 transaction에서 고정한다. 사후 최신 exposure로 이미 저장된 `resolved_item_lineage` 또는 cutoff를 변경하지 않는다.
 
 ## 13. Pilot review assignment
 
@@ -642,7 +678,10 @@ Aggregation grain:
 Eligible set:
 
 - §14.2의 scorable 조건
-- item lineage가 `DIFFERENT_ITEM_FAMILY`
+- assignment snapshot의 `resolved_item_lineage`가 `DIFFERENT_ITEM_FAMILY`
+- 평가 대상 `node_id`가 current assignment의 `exposure_history_cutoff_ordinal` 이하 target-relevant prior Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함
+
+해당 `node_id`에 prior target-relevant exposure가 없으면 primary unseen-transfer denominator에서 제외한다. 이 exclusion은 새로운 lineage value를 만들지 않으며 null lineage를 `DIFFERENT_ITEM_FAMILY`로 변환하지 않는다.
 
 Formula:
 

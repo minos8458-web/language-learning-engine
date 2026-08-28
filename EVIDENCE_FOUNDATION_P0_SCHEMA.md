@@ -45,6 +45,8 @@ P0는 다음을 포함한다.
 * Enrollment
 * Assignment와 assignment-owned immutable snapshot
 * Assignment target-node relation
+* Item-lineage reconstruction에 한정된 bounded assignment first-item-exposure authority
+* Assignment-owned immutable exposure-history cutoff와 resolved item lineage
 * Session lifecycle
 * Stable assessment attempt root
 * Attempt retry series
@@ -72,7 +74,7 @@ P0는 다음을 포함하지 않는다.
 * Adjudication
 * Generation run
 * Validator run
-* Learner exposure
+* §5.9.1의 bounded assignment first-item-exposure authority를 제외한 generic learner-exposure persistence 또는 generic learner-event persistence
 * Provider payload
 * Raw audio
 * Acoustic feature
@@ -196,6 +198,8 @@ Application transaction은 다음 semantic integrity를 담당한다.
 * Assignment/session의 same-enrollment ownership
 * Retry parent의 same-assignment·same-series ownership
 * Longer lineage cycle prevention
+* Assignment item first-exposure fact의 assignment ownership과 server-resolved snapshot authority
+* Same-enrollment exposure ordering, assignment-time exposure cutoff 및 resolved item-lineage immutability
 
 P0는 이를 위해 discriminator column, duplicated ownership column, typed authority table, trigger 또는 추가 composite cross-row FK를 도입하지 않는다. Semantic validation 실패 시 전체 transaction을 rollback한다.
 
@@ -489,19 +493,19 @@ Assignment 시점에 server가 resolve한 exact version/reference bundle을 immu
 
 ### Physical contract
 
-| 항목                   | 계약                                                                                                                                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Primary key          | `assignment_id UUID`                                                                                                                                                                                 |
-| Required columns     | Assignment ID; experiment/condition IDs와 versions; item/scenario/family/lexical/rubric/formula/scheduler/instrumentation IDs와 versions; modality arrays; snapshot digest metadata; created timestamp |
-| Nullable columns     | `content_id TEXT`, `content_version INTEGER`                                                                                                                                                         |
-| Foreign keys         | Assignment; experiment version; condition version; Content ID when present                                                                                                                           |
-| Unique constraints   | Assignment당 정확히 한 snapshot                                                                                                                                                                           |
-| Check constraints    | Positive versions; Content ID/version pair consistency; modality JSON array checks; nonempty digest metadata                                                                                         |
-| Immutable/write-once | 모든 필드                                                                                                                                                                                                |
-| Lifecycle            | Insert-only                                                                                                                                                                                          |
-| Timestamp authority  | Server                                                                                                                                                                                               |
-| JSONB usage          | Planned stimulus/response modality arrays만                                                                                                                                                           |
-| P0 inclusion reason  | Historical reconstruction 및 server-resolved authority                                                                                                                                                |
+| 항목                   | 계약 |
+| -------------------- | --- |
+| Primary key          | `assignment_id UUID` |
+| Required columns     | Assignment ID; experiment/condition IDs와 versions; item/scenario/family/lexical/rubric/formula/scheduler/instrumentation IDs와 versions; `exposure_history_cutoff_ordinal BIGINT`; modality arrays; snapshot digest metadata; created timestamp |
+| Nullable columns     | `content_id TEXT`, `content_version INTEGER`, `resolved_item_lineage TEXT` |
+| Foreign keys         | Assignment; experiment version; condition version; Content ID when present |
+| Unique constraints   | Assignment당 정확히 한 snapshot |
+| Check constraints    | Positive versions; Content ID/version pair consistency; `exposure_history_cutoff_ordinal >= 0`; resolved item-lineage vocabulary; modality JSON array checks; nonempty digest metadata |
+| Immutable/write-once | 모든 필드 |
+| Lifecycle            | Insert-only |
+| Timestamp authority  | Server |
+| JSONB usage          | Planned stimulus/response modality arrays만 |
+| P0 inclusion reason  | Historical reconstruction, assignment-time exposure cutoff 및 server-resolved item-lineage authority |
 
 Required query-critical references:
 
@@ -528,12 +532,32 @@ Required digest metadata:
 * `digest_algorithm`
 * `normalization_version`
 
+Required item-lineage authority fields:
+
+* `exposure_history_cutoff_ordinal`
+* `resolved_item_lineage`
+
+`exposure_history_cutoff_ordinal`은 모든 assignment snapshot에 존재하며 0 이상이다. 같은 enrollment에 assignment 생성 전에 committed된 Assignment item exposure가 없으면 `0`이다.
+
+`resolved_item_lineage`는 non-`ASSESSMENT` assignment에서 null이다. `ASSESSMENT` assignment도 cutoff 이하 target-relevant prior Assignment item exposure가 없으면 null이다. 그 외에는 정확히 다음 중 하나다.
+
+* `EXACT_REPEAT`
+* `SURFACE_VARIANT`
+* `SAME_ITEM_FAMILY`
+* `DIFFERENT_ITEM_FAMILY`
+
+Null은 fifth lineage value가 아니다.
+
 Named constraints:
 
 * `evidence_assignment_snapshots_content_pair_check`
 * `evidence_assignment_snapshots_versions_positive`
 * `evidence_assignment_snapshots_stimulus_modalities_array`
 * `evidence_assignment_snapshots_response_modalities_array`
+* `evidence_assignment_snapshots_exposure_cutoff_nonnegative`
+* `evidence_assignment_snapshots_item_lineage_check`
+
+`exposure_history_cutoff_ordinal`과 `resolved_item_lineage`는 snapshot digest semantic content에 포함한다.
 
 Reference-kind validity는 assignment-creation transaction이 검증한다.
 
@@ -551,6 +575,48 @@ Reference-kind validity는 assignment-creation transaction이 검증한다.
 다른 kind에 동일한 ID/version이 존재해도 대체할 수 없다. Snapshot은 기존 scalar ID/version pair를 유지하며 discriminator column과 composite reference FK를 추가하지 않는다.
 
 Content ID가 있을 때 assignment creation은 현재 Content version이 requested version과 일치하는지 검증한다. P0는 과거 Content body archive를 새로 만들지 않는다.
+
+## 5.9.1 `evidence_assignment_item_exposures`
+
+### Purpose
+
+Item-lineage reconstruction에 필요한 assignment-scoped 최초 learner-facing item exposure만 저장한다.
+
+이 object는 generic learner-event table, generic observation table 또는 full event-sourcing surface가 아니다. Assignment creation, session start, attempt open 및 completion/finalization을 learner exposure로 재해석하지 않는다.
+
+### Physical contract
+
+| 항목                   | 계약 |
+| -------------------- | --- |
+| Primary key          | `exposure_id UUID` |
+| Required columns     | `exposure_id UUID`, `assignment_id UUID`, `exposure_ordinal BIGINT`, `exposed_at TIMESTAMPTZ`, `created_at TIMESTAMPTZ` |
+| Nullable columns     | 없음 |
+| Foreign keys         | Assignment |
+| Unique constraints   | `assignment_id` unique; `exposure_ordinal` unique |
+| Check constraints    | `exposure_ordinal > 0` |
+| Immutable/write-once | 모든 필드 |
+| Lifecycle            | Insert-only; assignment당 authoritative first exposure exactly one |
+| Timestamp authority  | `exposed_at`, `created_at`은 server |
+| JSONB usage          | 없음 |
+| P0 inclusion reason  | Assignment-time item-family lineage와 unseen-transfer raw-source reconstruction |
+
+Named constraints:
+
+* `evidence_assignment_item_exposures_assignment_unique`
+* `evidence_assignment_item_exposures_ordinal_unique`
+* `evidence_assignment_item_exposures_ordinal_positive`
+
+`exposure_id`와 `exposure_ordinal`은 server-issued다. `exposure_ordinal`은 Evidence exposure authority 전체에서 positive, unique, monotonically increasing ordering value이며 gapless일 필요는 없다.
+
+`assignment_id`가 소유하는 enrollment는 server가 `evidence_assignments`에서 resolve한다. Item ID/version, item-family ID/version, scenario ID/version 및 target-node set은 `evidence_assignment_snapshots`와 `evidence_assignment_snapshot_nodes`에서 resolve한다. 이 값들을 exposure row에 중복 저장하지 않는다.
+
+Caller는 `exposure_id`, `exposure_ordinal`, `exposed_at`, enrollment identity, item identity/version, family identity/version, scenario identity/version 또는 target-node set을 authoritative input으로 제공할 수 없다.
+
+이 fact는 pinned item stimulus가 learner-facing execution에서 실제로 제시되어 learner가 사용할 수 있는 상태가 된 뒤에만 기록한다. Assignment creation, session start, attempt open 및 attempt finalization은 이 row를 암묵적으로 생성하지 않는다.
+
+같은 assignment에 대한 equivalent retry는 기존 first-exposure fact를 반환한다. 다른 exposure row를 추가하지 않는다.
+
+Current migration 012와 current 16-table runtime baseline은 이 documentation contract로 변경됐다고 선언하지 않는다. 이 subsection은 measurement-readiness target physical contract다. 별도 승인된 Development migration이 구현·검증되기 전까지 implemented 상태가 아니다.
 
 ## 5.10 `evidence_assignment_snapshot_nodes`
 
@@ -829,7 +895,11 @@ P0 snapshot은 **bounded hybrid**를 사용한다.
 3. Scalar query-critical reference columns
 
    * item, scenario, family, lexical, rubric, formula 및 protocol ID/version
-4. Bounded JSONB
+4. Scalar assignment-time lineage authority
+
+   * `exposure_history_cutoff_ordinal`
+   * `resolved_item_lineage`
+5. Bounded JSONB
 
    * planned stimulus modality array
    * planned response modality array
@@ -838,13 +908,20 @@ P0 snapshot은 **bounded hybrid**를 사용한다.
 
 다음은 하나의 transaction이다.
 
+* Owning enrollment serialization lock
+* Assignment 생성 직전 같은 enrollment의 committed Assignment item exposure cutoff resolution
+* Cutoff 이하 target-relevant exposure를 사용한 item-lineage resolution
 * Assignment insert
 * Server-side version resolution
 * Snapshot insert
 * 모든 target-node child insert
 * 최소 target-node cardinality 확인
 
-Transaction commit 후 assignment 또는 snapshot을 수정하지 않는다.
+Assignment creation은 `exposure_history_cutoff_ordinal`과 `resolved_item_lineage`를 caller input으로 받지 않는다. 둘 다 server-resolved authority다.
+
+모든 new-assignment creation path는 이 rule을 사용한다. §9.6 reschedule이 새 assignment를 만드는 경우도 동일하다.
+
+Transaction commit 후 assignment, snapshot, cutoff 또는 resolved lineage를 수정하지 않는다.
 
 ### 6.3 Reference validation
 
@@ -1006,6 +1083,7 @@ Replay는 stored algorithm과 normalization version을 사용한다.
 
 Mandatory P0 idempotent write:
 
+* Assignment item first-exposure recording
 * Attempt open
 * Attempt finalization
 
@@ -1099,6 +1177,8 @@ P0에서 `SERIALIZABLE` 또는 global advisory lock을 요구하지 않는다.
 
 Unique constraints, FK, targeted row lock 및 consistent lock order를 사용한다.
 
+Assignment creation과 Assignment item first-exposure recording은 same-enrollment exposure ordering을 위해 owning enrollment row를 operation-specific serialization root로 사용한다. 이 enrollment lock이 필요한 operation에서 descendant evidence row lock도 필요하면 enrollment를 먼저 획득한다. 아래 Assignment → Session → Attempt 순서는 그 이후 descendant lock order이며 §9.4.10 finalization lock order를 변경하지 않는다.
+
 Lock order:
 
 1. Assignment
@@ -1113,21 +1193,66 @@ Transaction owner:
 
 Atomic set:
 
-* Enrollment validation
+* Owning enrollment validation and serialization lock
 * Version authority resolution
+* Same enrollment의 committed Assignment item exposure history cutoff resolution
+* Cutoff 이하 target-relevant exposure를 사용한 resolved item-lineage derivation
 * Assignment insert
-* Snapshot insert
+* Snapshot insert including `exposure_history_cutoff_ordinal` and `resolved_item_lineage`
 * Target-node inserts
 * Minimum node cardinality validation
 
 Concurrency:
 
+* Owning enrollment row가 assignment creation과 Assignment item first-exposure recording의 same-enrollment ordering serialization root다.
+* Cutoff는 enrollment lock을 획득한 뒤 보이는 committed exposure history에서 resolve한다.
 * Published reference rows may be read with ordinary MVCC or `FOR KEY SHARE` when necessary.
-* Coarse lock 없음.
+* Global advisory lock과 `SERIALIZABLE` isolation은 요구하지 않는다.
+* Later Assignment item exposure는 same-enrollment serialization boundary를 거친 뒤 기록되므로 earlier committed assignment cutoff를 변경하지 않는다.
 
 Rollback:
 
 * Assignment, snapshot 및 target-node row가 모두 없어야 한다.
+* Failed creation은 lineage/cutoff authority를 남기지 않는다.
+
+## 9.1.1 Assignment item first-exposure recording
+
+Transaction owner:
+
+* Evidence recorder/repository
+
+Atomic set:
+
+* Assignment existence validation
+* Owning enrollment resolution and serialization lock
+* Immutable assignment snapshot existence validation
+* Existing first-exposure replay check
+* Server-issued next `exposure_ordinal`
+* Server-issued `exposure_id`
+* Server-authoritative `exposed_at`
+* `evidence_assignment_item_exposures` insert
+
+The operation is permitted only after the pinned item stimulus has actually crossed the learner-facing presentation boundary.
+
+Concurrency:
+
+* Owning enrollment row serializes this operation against assignment creation and another same-enrollment first-exposure recording.
+* `exposure_ordinal` issuance occurs after that serialization lock is acquired.
+* Assignment당 `assignment_id` unique constraint가 duplicate first exposure arbitration을 소유한다.
+* `exposure_ordinal` unique constraint가 ordering identity duplication을 거부한다.
+
+Replay:
+
+* Same assignment에 existing first-exposure row가 있으면 그 exact authoritative fact를 반환한다.
+* Replay는 새 ordinal, exposure ID 또는 timestamp를 발행하지 않는다.
+
+Rollback:
+
+* Exposure row 없음.
+* Existing assignment/snapshot 변경 없음.
+* Existing exposure history 변경 없음.
+
+This transaction writes no Progress field, no production `attempt_records` row, no production scheduling field and no generic observation/event row.
 
 ## 9.2 Session start
 
@@ -2083,8 +2208,13 @@ Raw facts는 formula result를 저장하지 않는다.
 
 ### Unseen transfer
 
-* Primary eligibility는 different item family
-* Exact repeat/surface variant/same family 제외
+* Primary assignment-level lineage eligibility는 stored `resolved_item_lineage = DIFFERENT_ITEM_FAMILY`
+* Exact repeat, surface variant, same family 및 null lineage는 primary unseen eligibility에서 제외
+* 각 evaluated `node_id`는 assignment snapshot의 `exposure_history_cutoff_ordinal` 이하 Assignment item exposure 중 적어도 하나의 exposed-assignment target-node set에 포함돼야 한다
+* 해당 node의 prior target-relevant exposure가 없으면 primary unseen denominator에서 제외하며 새로운 lineage value를 만들지 않는다
+* Query/rebuild는 stored cutoff와 immutable Assignment item exposure facts를 사용해 lineage를 재계산할 수 있어야 한다
+* Cutoff-based recomputation과 stored `resolved_item_lineage`가 다르면 정상 metric result를 반환하지 않는다
+* Analysis-time 최신 exposure history로 earlier assignment lineage를 다시 resolve하지 않는다
 * Scenario lineage는 별도 stratification
 
 ### RT median/CV
@@ -2189,6 +2319,10 @@ Database constraints enforce:
 * Nonnegative timing/count
 * Response-kind consistency
 * No direct self-lineage
+* One first-exposure fact per assignment
+* Exposure-ordinal uniqueness and positivity
+* Assignment-snapshot exposure cutoff nonnegativity
+* Assignment-snapshot item-lineage vocabulary
 
 ## 14.2 Application-enforced
 
@@ -2209,6 +2343,12 @@ Recorder/repository enforces:
 * Snapshot/rubric consistency
 * Content version validation
 * Additive correction provenance
+* Assignment item exposure의 assignment-owned snapshot resolution
+* Learner-facing presentation 이전 first-exposure write prohibition
+* Same-enrollment assignment/exposure serialization
+* Assignment-time exposure cutoff resolution
+* Assignment-time item-lineage priority resolution
+* Stored cutoff/lineage retroactive update prohibition
 
 ## 14.3 Database-role boundary
 
@@ -2283,17 +2423,13 @@ If:
 
 implementation stops and reports the actual list. It does not choose another number without Control Tower approval.
 
-## 15.3 One-file migration
+## 15.3 Additive migration boundary
 
-All P0 evidence objects, constraints and indexes are included in one migration file.
+The original Evidence Foundation P0 foundation was installed as one atomic migration. An already-applied Evidence Foundation migration is not edited in place to add a later-approved physical authority.
 
-Reason:
+A later approved additive Evidence object or column requires a new forward migration selected only after implementation preflight confirms the then-current migration sequence.
 
-* Runner transaction boundary is per migration file.
-* P0 prohibits partially installed evidence schema.
-* One file provides atomic schema installation.
-
-Circular references may be added after both referenced objects are created within the same file and same migration transaction.
+This documentation patch does not select, reserve or approve a migration number or migration filename and does not authorize modification of migration 012.
 
 ## 15.4 Additive scope
 
@@ -2624,6 +2760,56 @@ Content/Grammar/Progress unchanged.
 ### Cleanup
 
 Rollback or assignment aggregate cleanup.
+
+## 18.3.1 Assignment item exposure and item-lineage immutability
+
+### Setup
+
+* Active enrollment
+* Source assignment with valid snapshot
+* Held-out assessment assignment definitions
+* Same-item, same-family and different-family fixtures
+* Explicit ITEM surface-variant authority fixture
+* Fixture with no prior target-relevant exposure
+
+### Transaction under test
+
+* Assignment creation before any learner-facing item exposure
+* Explicit first-exposure recording
+* Equivalent first-exposure replay
+* Assessment assignment creation after exact-repeat exposure
+* Assessment assignment creation after same-family exposure
+* Assessment assignment creation after different-family target-relevant exposure
+* Later exposure after an assessment assignment has already been created
+
+### Expected rows
+
+* Assignment creation alone creates no Assignment item exposure row
+* First-exposure recording creates exactly one immutable exposure row
+* Equivalent replay creates no second row and preserves original ID, ordinal and timestamp
+* Each assignment snapshot stores immutable `exposure_history_cutoff_ordinal`
+* Assessment lineage resolves with priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`
+* No prior target-relevant exposure yields null lineage rather than `DIFFERENT_ITEM_FAMILY`
+* Later exposure does not alter an earlier assignment cutoff or resolved lineage
+
+### Rejected behavior
+
+* Assignment creation treated as exposure
+* Session start treated as exposure
+* Attempt open treated as exposure
+* Completion/finalization treated as exposure
+* Manifest design label treated as actual lineage
+* Fuzzy stimulus similarity used to create `SURFACE_VARIANT`
+* Analysis-time latest exposure history used to rewrite prior lineage
+* Caller-supplied exposure ID, ordinal, timestamp, item, family, scenario or target-node authority
+
+### Atomicity
+
+Assignment creation and first-exposure recording each leave no partial authority on failure.
+
+### Production comparison
+
+`progress`, `attempt_records` and `next_review_at` remain unchanged.
 
 ## 18.4 Session lifecycle
 
@@ -3276,3 +3462,4 @@ Approval does not permit or declare:
 | 1.0 | 2026-07-30 | 최초 개정 이력 기록 — 기존 Evidence Foundation P0 physical schema와 trusted-writer baseline을 보존하면서 current bounded `finalizeAttempt(pool, input)` writer의 exact protocol/rubric definition, finalization·evaluation·correction transaction, timestamp·clock-quality·attempt-outcome derivation, normalization, PostgreSQL error mapping 및 current/deferred scope를 추가. Existing migration 012와 16-table contract, production non-interference 및 상태 경계는 불변 |
 | 1.1 | 2026-07-30 | Independent review correction — finalization instrumentation protocol의 assignment snapshot 일치, uniform `MODALITY_INPUT_FAILURE`의 `NORMAL_EMPTY` representation과 outcome precedence, §9.4.1–§9.4.12의 current bounded precedence 및 snapshot-derived rubric ID/version을 명시. Database migration·error code·schema object·status 변경 없음 |
 | 1.2 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §4.8 stale current-state sentence updated: the current bounded finalization writer(§9.4.1–§9.4.12)가 implemented and runtime-validated as a bounded Evidence Foundation operation임을 기록하고, assignment completion·full retry lifecycle·session lifecycle·recorder orchestration·production integration이 deferred임을 명시. Evidence Foundation overall complete는 선언하지 않음. Pattern D, trusted-writer normative contract, migration, schema, behavior 변경 없음 |
+| 1.3 | 2026-08-28 | VI P1 Measurement Readiness narrow item-lineage authority clarification — generic Learner exposure/event persistence는 계속 excluded로 유지하면서 item-lineage reconstruction에 한정된 bounded assignment first-item-exposure authority, immutable assignment `exposure_history_cutoff_ordinal`·`resolved_item_lineage`, same-enrollment ordering, non-retroactive lineage rebuild 및 no-prior-target-exposure unseen-transfer exclusion을 정의. 기존 §12 query-time metric architecture, Progress/production attempt non-interference, materialized-metric prohibition은 유지. Migration number/SQL·implementation·P1 activation·human-data authorization은 승인하지 않음 |
