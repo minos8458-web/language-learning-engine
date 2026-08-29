@@ -78,11 +78,27 @@ duplicated here.
   blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22`
 - Candidate Schema: revision `1.6`,
   blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
-- Independent Review: `PENDING`
-- Main integration: `NOT YET ELIGIBLE`
+- Independent Review: `REQUEST CORRECTION`
+- Correction required: `YES`
+- Owner value required: `NO`
+- Main integration: `NOT ELIGIBLE`
+- Finding totals: BLOCKER `0`; HIGH `1`; MEDIUM `0`; LOW `0`; NOTE `1`
+- `F-ER-01` (HIGH): candidate API blob
+  `2780cb1a22f5b6ce7ead62072e32202d2a047e22` revision history ends at `1.25`;
+  a `1.26` row is absent. The B1 `empty_result` payload body itself matches
+  the approved exact contract. Correction required: `YES`. Owner value
+  required: `NO`. Blocks main integration. Correction is an additive `1.26`
+  row in `API_CONTRACT.md` §14 on a separate correction commit; existing
+  candidate `83192d866e091bc93a477408215bfa704477a555` must not be amended.
+- `F-ER-02` (NOTE): this ledger's candidate API revision/blob assertion
+  above becomes stale once the `F-ER-01` correction produces a new candidate
+  tip/blob. Independent correction required: `NO`. Owner value required:
+  `NO`. This ledger will need a further update at that point.
+- Candidate lifecycle:
+  `REVIEWED / REQUEST CORRECTION / NOT MAIN-INTEGRATION ELIGIBLE`
 - Runtime Foundation B1: `NOT IMPLEMENTED`
 - Runtime implementation:
-  `BLOCKED UNTIL CANONICAL CLARIFICATION IS INDEPENDENTLY REVIEWED AND INTEGRATED`
+  `BLOCKED UNTIL CANONICAL CLARIFICATION CORRECTION IS RE-REVIEWED AND INTEGRATED`
 - Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
   - Status: `LOCAL-ONLY / NOT REVIEW-ELIGIBLE / NOT PUSHED`
   - Review authority: recovery candidate
@@ -180,9 +196,8 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- In a fresh Claude Opus 5 Independent Review session, perform a read-only
-  review of recovery candidate `83192d866e091bc93a477408215bfa704477a555`
-  against parent `0205080a288b7ec077ed69a4ee0d1efe915b8cc8` and the approved
-  exact B1 `empty_result = { status: "empty", data: null }` decision; before
-  this review completes, do not integrate into main, do not begin Runtime
-  Foundation B1 implementation, and do not modify the recovery candidate.
+- On the current recovery validation branch
+  `validation/vi-p1-raw-source-empty-result-contract-recovery-20260830`,
+  create a separate correction commit that additively adds exactly one
+  revision `1.26` row to `API_CONTRACT.md` §14, without amending, rebasing,
+  or resetting existing candidate `83192d866e091bc93a477408215bfa704477a555`.
