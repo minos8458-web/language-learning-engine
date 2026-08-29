@@ -57,6 +57,21 @@ duplicated here.
   `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE VERIFIED`
 - Foundation A backlog revision: `1.68`
 
+### Active B1 Contract Clarification
+
+- Clarification: RAW_SOURCE `empty_result` exact payload
+- User approval: `APPROVED`
+- Exact payload: `{ status: "empty", data: null }`
+- Applies to:
+  - all-primary-empty
+  - valid disjoint ancestry
+  - secondary-filter zero-root
+  - cutoff zero-root
+- Unknown validly-shaped reference: remains `INVALID_ID`
+- `{ status: "empty", data: [] }`: not allowed for this operation
+- Canonical Tier C synchronization: `PENDING`
+- Runtime Foundation B1 implementation: `BLOCKED ON CANONICAL SYNCHRONIZATION`
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -149,7 +164,8 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- After this bootstrap commit is present on `origin/main` and the exact Git
-  baseline is rechecked, start a separately scoped Runtime Foundation B1
-  implementation task limited to the approved
-  `queryRawEvidenceForMetricRebuild(pool, input)` RAW_SOURCE CORE contract.
+- Create a separately scoped validation-branch canonical clarification
+  candidate that updates `API_CONTRACT.md` §13.10.11.1 and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.3 to encode the approved exact
+  B1 `empty_result = { status: "empty", data: null }` contract; do not start
+  Runtime Foundation B1 implementation yet.
