@@ -69,8 +69,24 @@ duplicated here.
   - cutoff zero-root
 - Unknown validly-shaped reference: remains `INVALID_ID`
 - `{ status: "empty", data: [] }`: not allowed for this operation
-- Canonical Tier C synchronization: `PENDING`
-- Runtime Foundation B1 implementation: `BLOCKED ON CANONICAL SYNCHRONIZATION`
+- Canonical synchronization candidate: `CREATED AND PUSHED`
+- Review-eligible validation branch:
+  `validation/vi-p1-raw-source-empty-result-contract-recovery-20260830`
+- Candidate SHA: `83192d866e091bc93a477408215bfa704477a555`
+- Candidate parent: `0205080a288b7ec077ed69a4ee0d1efe915b8cc8`
+- Candidate API: revision `1.26`,
+  blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22`
+- Candidate Schema: revision `1.6`,
+  blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
+- Independent Review: `PENDING`
+- Main integration: `NOT YET ELIGIBLE`
+- Runtime Foundation B1: `NOT IMPLEMENTED`
+- Runtime implementation:
+  `BLOCKED UNTIL CANONICAL CLARIFICATION IS INDEPENDENTLY REVIEWED AND INTEGRATED`
+- Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
+  - Status: `LOCAL-ONLY / NOT REVIEW-ELIGIBLE / NOT PUSHED`
+  - Review authority: recovery candidate
+    `83192d866e091bc93a477408215bfa704477a555` only
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -164,8 +180,9 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Create a separately scoped validation-branch canonical clarification
-  candidate that updates `API_CONTRACT.md` §13.10.11.1 and
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.3 to encode the approved exact
-  B1 `empty_result = { status: "empty", data: null }` contract; do not start
-  Runtime Foundation B1 implementation yet.
+- In a fresh Claude Opus 5 Independent Review session, perform a read-only
+  review of recovery candidate `83192d866e091bc93a477408215bfa704477a555`
+  against parent `0205080a288b7ec077ed69a4ee0d1efe915b8cc8` and the approved
+  exact B1 `empty_result = { status: "empty", data: null }` decision; before
+  this review completes, do not integrate into main, do not begin Runtime
+  Foundation B1 implementation, and do not modify the recovery candidate.
