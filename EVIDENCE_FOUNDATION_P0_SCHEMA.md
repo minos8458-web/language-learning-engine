@@ -2154,6 +2154,28 @@ Derived metric query boundary는 두 mode로 나뉜다: `RAW_SOURCE`와 `METRIC_
 
 RAW_SOURCE는 aggregation grain을 요구하지 않는다 — aggregation이 일어나지 않기 때문이다.
 
+**RAW_SOURCE physical filter authority**
+
+* `enrollmentIds` → `evidence_enrollments.enrollment_id`
+* `assignmentIds` → `evidence_assignments.assignment_id`
+* `attemptIds` → `evidence_attempts.attempt_id`
+* `conditionReferences` → owning `evidence_enrollments.(condition_id, condition_version)`
+* `targetTimepoints` → `evidence_assignments.target_timepoint`
+* `nodeIds` → `evidence_assignment_snapshot_nodes.node_id`
+* `itemFamilyReferences` → owning `evidence_assignment_snapshots.(item_family_id, item_family_version)`
+
+Existence authority: condition reference existence는 `evidence_condition_versions(condition_id, version)`, node ID existence는 `grammar_nodes.node_id`, item-family reference existence는 `evidence_reference_versions`의 exact `reference_kind = ITEM_FAMILY`다. `conditionReferences`는 snapshot이 아니라 owning enrollment의 condition version을 필터하며 snapshot-vs-enrollment condition mismatch error는 없다. Item-family/exposure resolution path는 `evidence_assignment_item_exposures → assignment_id → evidence_assignments → evidence_assignment_snapshots`이며 exposure table 자체는 item-family identity를 중복 저장하지 않는다.
+
+**RAW_SOURCE root selection과 closure**
+
+모든 reference를 shape·type·duplicate·existence로 먼저 validate한 뒤, 같은 nonempty array 내부는 OR, nonempty인 서로 다른 dimension 사이는 physical ancestry에 의한 AND로 assignment branch를 선택한다. Secondary filter(condition/timepoint/node/item-family)는 root population 자체를 pruning하며 root 선택 후 outcome row만 trim하지 않는다.
+
+Enrollment root는 그 enrollment와 qualify하는 cutoff-bounded descendant assignment branch 전체를 반환한다. Assignment root는 owning enrollment·snapshot·모든 snapshot node·assignment-owned cutoff-eligible exposure와, `attemptIds`가 empty면 모든 cutoff-eligible attempt(및 그 descendant), nonempty면 그 assignment에 속하는 공급된 attempt(및 그 descendant)만 반환한다. Attempt root는 공급된 attempt, owning assignment/enrollment, snapshot, 모든 snapshot node, owning assignment의 cutoff-eligible exposure, 그 attempt의 finalization/evaluation/correction descendant를 반환한다.
+
+`attemptIds`가 nonempty이면 sibling attempt로 확장하지 않는다. 같은 participant라는 이유로 다른 enrollment로 확장하지 않는다. `nodeIds`/`itemFamilyReferences`는 assignment branch만 선택하며, 선택된 branch의 complete snapshot-node·evaluation collection을 요청 row 하나로 trim하지 않는다. Cutoff 이전 존재하는 assignment 없는 enrollment root는 모든 assignment-level secondary filter가 empty일 때만 반환될 수 있다. Assignment-level secondary predicate가 nonempty인데 qualify하는 assignment가 없으면 `empty_result`다.
+
+이 patch는 새로운 physical object나 column을 추가하지 않는다 — 기존 §5의 physical schema를 그대로 참조한다.
+
 **METRIC_RESULT** 최소 input(기존 계약 유지):
 
 * Formula ID/version
@@ -2213,6 +2235,9 @@ sourceRebuildReference
 * Matching root가 없으면 API `empty_result`를 반환한다(metric `INSUFFICIENT`가 아니다).
 * RAW_SOURCE bundle은 materialized authority가 아니다.
 * RAW_SOURCE bundle은 현재 invocation에만 존재하며 저장되지 않는다.
+* `enrollmentIds`/`assignmentIds`/`attemptIds`가 모두 빈 배열인 것은 valid한 bounded no-root request이며 `empty_result`를 반환한다 — `CONTRACT_VIOLATION`이 아니고 전체 Evidence row를 scan하지 않는다.
+* Primary reference가 valid·nonempty이더라도 physical ancestry AND, secondary predicate 또는 analysisCutoff가 qualify하는 root를 전부 제거하면 `empty_result`다 — 에러가 아니다.
+* Shape은 valid하지만 존재하지 않는 개별 reference는 `INVALID_ID`로 남는다.
 
 ### 12.3.1 Raw-source projection normalization
 
@@ -2248,7 +2273,25 @@ RAW_SOURCE collection ordering은 API §13.10.11.1과 정확히 동일하다:
 * `targetNodeEvaluations`: `attempt_id ASC, node_id ASC`
 * `correctionAggregates`: `attempt_id ASC, initiator ASC, feedback_phase ASC, correction_outcome ASC`
 
-`sourceRebuildReference`의 각 ID 목록은 대응하는 collection과 같은 ordering을 따른다.
+**sourceRebuildReference membership과 순서**
+
+각 list의 membership은 API §13.10.11.1과 정확히 같다.
+
+* `enrollmentIds` = 반환된 `rawFacts.enrollments`의 각 row마다 정확히 하나의 `enrollment_id`
+* `assignmentIds` = 반환된 `rawFacts.assignments`의 각 row마다 정확히 하나의 `assignment_id`
+* `attemptIds` = 반환된 `rawFacts.attempts`의 각 row마다 정확히 하나의 `attempt_id`. `attemptIds`는 반환된 attempt 전부를 포함하며 finalized-only가 아니다 — `attemptFinalizations`의 순서를 사용하지 않는다.
+* `exposureIds` = 반환된 `rawFacts.assignmentItemExposures`의 각 row마다 정확히 하나의 `exposure_id`
+* `evaluationIds` = 반환된 `rawFacts.targetNodeEvaluations`의 각 row마다 정확히 하나의 `evaluation_id`
+
+Identity를 소유하는 row collection 이상의 추가 filtering이나 독립적 dedup은 없다 — source row당 정확히 하나의 ID다.
+
+순서는 다음과 정확히 같다.
+
+* `enrollmentIds`: `enrollment_id ASC`
+* `assignmentIds`: `assignment_id ASC`
+* `attemptIds`: `rawFacts.attempts`와 동일 — `assignment_id ASC, attempt_series_id ASC, retry_ordinal ASC, attempt_id ASC`
+* `exposureIds`: `rawFacts.assignmentItemExposures`와 동일 — PostgreSQL numeric `exposure_ordinal ASC`, then `exposure_id ASC`
+* `evaluationIds`: `rawFacts.targetNodeEvaluations`와 동일 — `attempt_id ASC, node_id ASC`
 
 ### 12.3.3 Raw-source read snapshot
 
@@ -2260,6 +2303,29 @@ READ ONLY
 ```
 
 이 조항은 Runtime Foundation A의 기존 transaction/locking semantics를 변경하지 않는다.
+
+§13.10.11의 same committed source/cutoff/formula → equivalent result 보장은 동일 normalized filters 아래 analysisCutoff로 bounded된 immutable facts와 immutable column projections에 적용한다.
+
+evidence_enrollments 및 evidence_assignments에서 physical lifecycle contract가 read 사이 변경을 허용하는 lifecycle columns는 transaction-visible as-of-read projection이다.
+
+이 mutable lifecycle projection은 서로 다른 as-of-read lifecycle state를 관찰한 두 invocation 사이의 immutable-source equivalence claim에서 제외한다.
+
+동일한:
+
+* formula reference
+* analysisCutoff
+* normalized filters
+* cutoff-bounded immutable facts
+* transaction-visible lifecycle state
+
+를 관찰하면 전체 RAW_SOURCE bundle은 equivalent해야 한다.
+
+This rule does NOT authorize:
+
+* cutoff-time lifecycle reconstruction
+* historical row-version fabrication
+* watermark
+* settlement semantics
 
 ## 12.4 Eligibility authority
 
