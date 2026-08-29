@@ -2071,6 +2071,25 @@ Primary reference가 valid하고 nonempty이더라도, dimension 간 AND-across 
 
 개별 reference가 존재하지 않으면(shape은 valid하지만 미존재) 그 reference는 `INVALID_ID`로 남는다 — Empty semantics는 존재성 검증을 대체하지 않는다.
 
+이 operation의 `empty_result` payload는 정확히 다음과 같다:
+
+```text
+{ status: "empty", data: null }
+```
+
+`queryRawEvidenceForMetricRebuild(pool, input)`은 `{ status: "empty", data: [] }`를 반환하지 않는다.
+
+이 exact payload는 다음 네 normal-empty path에 동일하게 적용한다:
+
+- `enrollmentIds`/`assignmentIds`/`attemptIds`가 모두 empty인 bounded no-root request
+- individually valid한 primary references가 physical ancestry에서 disjoint하여 qualifying root가 없는 경우
+- secondary predicate가 qualifying root를 모두 제거한 경우
+- `analysisCutoff`가 qualifying root를 모두 제거한 경우
+
+Validly-shaped이지만 존재하지 않는 reference는 계속 `INVALID_ID`이며 `empty_result`로 변환하지 않는다.
+
+이 operation-specific exact payload clarification은 §11의 다른 API에 대한 generic `empty_result` 허용 shape를 변경하지 않는다.
+
 Metric status `INSUFFICIENT`는 사용하지 않는다 — `OK`/`INSUFFICIENT`는 METRIC_RESULT mode 전용이다.
 
 **Read consistency**
