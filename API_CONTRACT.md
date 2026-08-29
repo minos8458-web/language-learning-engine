@@ -1736,6 +1736,28 @@ Deferred:
 | Retry                   | Safe read retry                                                                   |
 | Prohibited side effects | Raw fact mutation, materialized authority creation, Progress write                |
 
+##### Unseen-transfer lineage rebuild source
+
+The existing §13.10.11 query contract is unchanged. For unseen-transfer rebuild, its committed source additionally includes:
+
+- assignment immutable snapshot
+- stored `exposure_history_cutoff_ordinal`
+- stored `resolved_item_lineage`
+- cutoff-bounded Assignment item first-exposure facts
+- exposed assignments' immutable item, item-family and target-node references
+- formula version reference
+- analysis cutoff
+
+The query uses only Assignment item exposure facts that belong to the same enrollment and whose `exposure_ordinal` is less than or equal to the assignment's stored cutoff.
+
+For each evaluated node, primary unseen eligibility additionally requires at least one cutoff-bounded target-relevant prior exposure containing that exact `node_id`. Absence of such exposure excludes the node evaluation from the unseen-transfer denominator; it does not create a fifth lineage value.
+
+Validation/rebuild recomputes assignment item lineage from the stored cutoff and committed exposure facts using the canonical priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`. If that recomputation disagrees with non-null stored `resolved_item_lineage`, the query fails with `CONTRACT_VIOLATION` and returns no normal metric result.
+
+Analysis-time latest exposure history must not replace the stored assignment cutoff and must not retroactively reclassify an earlier assignment.
+
+This clarification does not change the existing formula-version authority, analysis-cutoff authority, read-only consistent-snapshot rule, raw-fact immutability, materialized-authority prohibition or Progress non-interference rule.
+
 #### 13.10.11.1 Current bounded raw-source query contract
 
 Exact internal operation:
@@ -1773,10 +1795,10 @@ Exact filter 규칙:
 
 - 일곱 key 전부 required — 하나라도 omitted/undefined면 `MISSING_REQUIRED_FIELD`; explicit `null` 또는 배열이 아니면 `CONTRACT_VIOLATION`.
 - 빈 배열(`[]`)은 그 dimension에 restriction 없음을 뜻한다.
-- `enrollmentIds` / `assignmentIds` / `attemptIds` 중 적어도 하나는 nonempty여야 한다. 셋 다 empty면 primary root가 없으므로 아래 Empty semantics를 따른다.
-- 같은 array 내부는 OR, nonempty인 서로 다른 dimension 사이는 AND다.
+- 같은 array 내부는 OR, nonempty인 서로 다른 dimension 사이는 physical ancestry에 의한 AND다.
 - 각 배열 내부의 중복 값은 금지이며 `CONTRACT_VIOLATION`이다.
 - 배열은 query 실행 전에 deterministic canonical order로 normalize한다(각 원소 타입의 자연 정렬 — string ID는 codepoint 순서, 구조화 reference는 아래 필드 순서).
+- `enrollmentIds`/`assignmentIds`/`attemptIds`가 모두 빈 배열인 것은 valid한 bounded no-root request다 — 아래 Empty semantics를 따르며 `CONTRACT_VIOLATION`이 아니다.
 
 `conditionReferences` 원소는 exactly:
 
@@ -1798,7 +1820,96 @@ Exact filter 규칙:
 
 `targetTimepoints`는 §5.8/§13의 기존 assignment-timepoint vocabulary(`IMMEDIATE`, `DAY_7`, `DAY_30`, `NOT_APPLICABLE`)를 그대로 사용한다. Vocabulary 밖 값은 `CONTRACT_VIOLATION`이다.
 
-Validly-shaped이지만 존재하지 않는 ID/version reference(`enrollmentIds`, `assignmentIds`, `attemptIds`, `nodeIds`, `conditionReferences`, `itemFamilyReferences` 원소 포함)는 `INVALID_ID`다. 개별적으로는 valid한 reference들이 ownership/root composition에서 충돌하면(예: 다른 enrollment의 assignment ID를 같은 필터에 섞는 경우) `CONTRACT_VIOLATION`이다.
+Validly-shaped이지만 존재하지 않는 ID/version reference(`enrollmentIds`, `assignmentIds`, `attemptIds`, `nodeIds`, `conditionReferences`, `itemFamilyReferences` 원소 포함)는 `INVALID_ID`다.
+
+`enrollmentIds`에 여러 enrollment, `assignmentIds`에 서로 다른 enrollment에 속한 여러 assignment, `attemptIds`에 여러 attempt를 나열하는 것은 각 array 내부 OR로서 legal한 root 구성이다. Nonempty인 서로 다른 dimension은 실제 physical ancestry로 교차한다 — 이 필터는 caller-supplied explicit ownership assertion을 포함하지 않는다. 예: `enrollmentIds=[E1]`이고 `assignmentIds=[A2]`(A2는 E2 소속)이며 두 ID 모두 존재하면, 이는 valid empty intersection이며 `empty_result`다. 단지 disjoint한 valid primary reference라는 이유만으로 별도의 ownership-conflict `CONTRACT_VIOLATION`을 발생시키지 않는다. 이 patch는 향후 paired-ownership assertion 계약을 도입하지 않는다.
+
+**Physical filter authority**
+
+각 filter dimension은 다음 physical column에 정확히 bind한다.
+
+- `enrollmentIds` → `evidence_enrollments.enrollment_id`
+- `assignmentIds` → `evidence_assignments.assignment_id`
+- `attemptIds` → `evidence_attempts.attempt_id`
+- `conditionReferences` → owning `evidence_enrollments.(condition_id, condition_version)`
+- `targetTimepoints` → `evidence_assignments.target_timepoint`
+- `nodeIds` → `evidence_assignment_snapshot_nodes.node_id`
+- `itemFamilyReferences` → owning `evidence_assignment_snapshots.(item_family_id, item_family_version)`
+
+Existence authority는 별도다.
+
+- condition reference existence → `evidence_condition_versions(condition_id, version)`
+- node ID existence → `grammar_nodes.node_id`
+- item-family reference existence → `evidence_reference_versions`의 exact `reference_kind = ITEM_FAMILY`
+
+`conditionReferences`는 assignment snapshot이 아니라 그 assignment가 속한 enrollment의 condition version을 필터한다 — snapshot-vs-enrollment condition mismatch error는 이 operation에 존재하지 않는다.
+
+Item-family/exposure resolution path는 `evidence_assignment_item_exposures → assignment_id → evidence_assignments → evidence_assignment_snapshots`다. Exposure table 자체는 item-family identity를 별도로 중복 저장하지 않는다.
+
+**Root selection**
+
+Exact deterministic rule:
+
+1. 공급된 모든 reference를 shape·type·duplicate·existence 기준으로 먼저 validate한다.
+2. 같은 nonempty array 내부는 OR, nonempty인 서로 다른 dimension 사이는 physical ancestry에 의한 AND다.
+
+Assignment branch는 다음을 모두 만족할 때 qualify한다.
+
+```text
+(enrollmentIds가 empty이거나 assignment.enrollment_id가 enrollmentIds에 포함)
+AND
+(assignmentIds가 empty이거나 assignment.assignment_id가 assignmentIds에 포함)
+AND
+(attemptIds가 empty이거나 공급된 attempt 중 적어도 하나가 그 assignment에 속함)
+AND nonempty인 모든 secondary predicate:
+  - owning enrollment condition (conditionReferences)
+  - assignment target_timepoint (targetTimepoints)
+  - assignment snapshot-node membership (nodeIds)
+  - assignment snapshot item-family pair (itemFamilyReferences)
+AND applicable analysisCutoff boundary
+```
+
+Secondary filter(`conditionReferences`, `targetTimepoints`, `nodeIds`, `itemFamilyReferences`)는 assignment/root population 자체를 pruning한다 — root 선택 후 개별 outcome row만 trim하는 것이 아니다.
+
+**Closure**
+
+선택된 enrollment root:
+
+- 그 enrollment와, qualify하는 cutoff-bounded descendant assignment branch 및 그 raw descendant 전체를 반환한다.
+
+선택된 assignment root:
+
+- owning enrollment
+- 선택된 assignment
+- snapshot
+- 모든 snapshot node
+- assignment-owned cutoff-eligible exposure
+- `attemptIds`가 empty면: 그 assignment의 모든 cutoff-eligible attempt와 그 finalization/evaluation/correction descendant
+- `attemptIds`가 nonempty면: 그 assignment에 속하는 공급된 attempt만과 그 descendant
+
+를 반환한다.
+
+선택된 attempt root:
+
+- 공급된 정확한 attempt
+- owning assignment
+- owning enrollment
+- assignment snapshot
+- 모든 snapshot node
+- owning assignment의 cutoff-eligible exposure
+- 그 attempt의 finalization/evaluation/correction descendant
+
+를 반환한다.
+
+`attemptIds`가 nonempty이면 sibling attempt로 확장하지 않는다. Participant가 같다는 이유만으로 다른 enrollment로 확장하지 않는다. Exposure row는 선택된 assignment의 ownership 기준으로만 포함한다.
+
+`nodeIds`/`itemFamilyReferences`는 assignment branch를 선택하는 데만 쓰인다. Branch가 선택된 뒤에는 나머지 cutoff/root 규칙을 만족하는 complete snapshot-node·evaluation fact 전체를 반환하며, 요청된 node/family row 하나로만 collection을 trim하지 않는다.
+
+Cutoff 이전에 존재하는 enrollment root에 assignment가 하나도 없고 모든 assignment-level secondary filter가 empty이면, 그 enrollment의 raw fact를 반환할 수 있다.
+
+Assignment-level secondary predicate가 nonempty인데 qualify하는 assignment가 하나도 없으면 결과는 `empty_result`다.
+
+Unseen lineage 재구성을 위해 sibling assignment를 암묵적으로 포함하지 않는다 — 완전한 same-enrollment history가 필요한 caller는 enrollment root를 선택해야 한다.
 
 **`analysisCutoff`**
 
@@ -1835,6 +1946,28 @@ CORE는 FORMULA definition semantics를 explicitly 해석하지 않는다. Metri
 - correction aggregate → owning finalization `finalized_at`
 
 이 bounded raw-source operation은 mutable lifecycle column의 historical version을 fabricate하지 않는다. Read-only transaction snapshot에서 보이는 physical enrollment/assignment row를 그대로 반환한다. 향후 metric이 필요로 하는 historical lifecycle interpretation(예: cutoff 시점의 assignment status 재구성)은 이후 metric-specific contract의 소관이다.
+
+§13.10.11의 same committed source/cutoff/formula → equivalent result 보장은 동일 normalized filters 아래 analysisCutoff로 bounded된 immutable facts와 immutable column projections에 적용한다.
+
+evidence_enrollments 및 evidence_assignments에서 physical lifecycle contract가 read 사이 변경을 허용하는 lifecycle columns는 transaction-visible as-of-read projection이다.
+
+이 mutable lifecycle projection은 서로 다른 as-of-read lifecycle state를 관찰한 두 invocation 사이의 immutable-source equivalence claim에서 제외한다.
+
+동일한:
+- formula reference
+- analysisCutoff
+- normalized filters
+- cutoff-bounded immutable facts
+- transaction-visible lifecycle state
+
+를 관찰하면 전체 RAW_SOURCE bundle은 equivalent해야 한다.
+
+This rule does NOT authorize:
+
+- cutoff-time lifecycle reconstruction
+- historical row-version fabrication
+- watermark
+- settlement semantics
 
 **Exact success output**
 
@@ -1903,11 +2036,42 @@ CORE는 FORMULA definition semantics를 explicitly 해석하지 않는다. Metri
 - `targetNodeEvaluations`: `attempt_id ASC, node_id ASC`
 - `correctionAggregates`: `attempt_id ASC, initiator ASC, feedback_phase ASC, correction_outcome ASC`
 
-`sourceRebuildReference`의 각 ID 목록은 대응하는 raw-source collection과 같은 ordering을 따른다.
+**sourceRebuildReference membership과 순서**
+
+각 list의 membership은 다음과 정확히 같다.
+
+- `enrollmentIds` = 반환된 `rawFacts.enrollments`의 각 row마다 정확히 하나의 `enrollment_id`
+- `assignmentIds` = 반환된 `rawFacts.assignments`의 각 row마다 정확히 하나의 `assignment_id`
+- `attemptIds` = 반환된 `rawFacts.attempts`의 각 row마다 정확히 하나의 `attempt_id`. `attemptIds`는 반환된 attempt 전부를 포함하며 finalized-only가 아니다 — `attemptFinalizations`의 순서를 사용하지 않는다.
+- `exposureIds` = 반환된 `rawFacts.assignmentItemExposures`의 각 row마다 정확히 하나의 `exposure_id`
+- `evaluationIds` = 반환된 `rawFacts.targetNodeEvaluations`의 각 row마다 정확히 하나의 `evaluation_id`
+
+Identity를 소유하는 row collection 이상의 추가 filtering이나 독립적 dedup은 없다 — source row당 정확히 하나의 ID다.
+
+순서는 다음과 정확히 같다.
+
+- `enrollmentIds`: `enrollment_id ASC`
+- `assignmentIds`: `assignment_id ASC`
+- `attemptIds`: `rawFacts.attempts`와 동일 — `assignment_id ASC, attempt_series_id ASC, retry_ordinal ASC, attempt_id ASC`
+- `exposureIds`: `rawFacts.assignmentItemExposures`와 동일 — PostgreSQL numeric `exposure_ordinal ASC`, then `exposure_id ASC`
+- `evaluationIds`: `rawFacts.targetNodeEvaluations`와 동일 — `attempt_id ASC, node_id ASC`
 
 **Empty semantics**
 
-Normalized primary filter(`enrollmentIds`/`assignmentIds`/`attemptIds`)가 authoritative evidence root를 하나도 select하지 않으면 existing common `empty_result`를 반환한다. Metric status `INSUFFICIENT`는 사용하지 않는다 — `OK`/`INSUFFICIENT`는 METRIC_RESULT mode 전용이다.
+빈 배열은 원칙적으로 그 dimension에 restriction이 없음을 뜻한다.
+
+`enrollmentIds = []`, `assignmentIds = []`, `attemptIds = []`가 모두 동시에 성립하는 것은 valid한 bounded no-root request다. 이 경우:
+
+- existing common `empty_result`를 반환한다.
+- `CONTRACT_VIOLATION`을 반환하지 않는다.
+- 전체 Evidence row를 scan하지 않는다.
+- unrestricted whole-Evidence query를 의미하지 않는다.
+
+Primary reference가 valid하고 nonempty이더라도, dimension 간 AND-across physical ancestry, secondary predicate 또는 analysisCutoff가 qualify하는 root를 전부 제거하면 `empty_result`를 반환한다 — 이는 에러가 아니다.
+
+개별 reference가 존재하지 않으면(shape은 valid하지만 미존재) 그 reference는 `INVALID_ID`로 남는다 — Empty semantics는 존재성 검증을 대체하지 않는다.
+
+Metric status `INSUFFICIENT`는 사용하지 않는다 — `OK`/`INSUFFICIENT`는 METRIC_RESULT mode 전용이다.
 
 **Read consistency**
 
@@ -1952,28 +2116,6 @@ Exactly zero:
 - provider/audio
 - P1 activation
 - human data 수집
-
-##### Unseen-transfer lineage rebuild source
-
-The existing §13.10.11 query contract is unchanged. For unseen-transfer rebuild, its committed source additionally includes:
-
-- assignment immutable snapshot
-- stored `exposure_history_cutoff_ordinal`
-- stored `resolved_item_lineage`
-- cutoff-bounded Assignment item first-exposure facts
-- exposed assignments' immutable item, item-family and target-node references
-- formula version reference
-- analysis cutoff
-
-The query uses only Assignment item exposure facts that belong to the same enrollment and whose `exposure_ordinal` is less than or equal to the assignment's stored cutoff.
-
-For each evaluated node, primary unseen eligibility additionally requires at least one cutoff-bounded target-relevant prior exposure containing that exact `node_id`. Absence of such exposure excludes the node evaluation from the unseen-transfer denominator; it does not create a fifth lineage value.
-
-Validation/rebuild recomputes assignment item lineage from the stored cutoff and committed exposure facts using the canonical priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`. If that recomputation disagrees with non-null stored `resolved_item_lineage`, the query fails with `CONTRACT_VIOLATION` and returns no normal metric result.
-
-Analysis-time latest exposure history must not replace the stored assignment cutoff and must not retroactively reclassify an earlier assignment.
-
-This clarification does not change the existing formula-version authority, analysis-cutoff authority, read-only consistent-snapshot rule, raw-fact immutability, materialized-authority prohibition or Progress non-interference rule.
 
 ### 13.11 Production/evidence dual-write orchestration
 
