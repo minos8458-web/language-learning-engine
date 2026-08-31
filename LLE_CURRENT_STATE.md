@@ -72,37 +72,48 @@ duplicated here.
 - Canonical synchronization candidate: `CREATED AND PUSHED`
 - Review-eligible validation branch:
   `validation/vi-p1-raw-source-empty-result-contract-recovery-20260830`
-- Candidate SHA: `83192d866e091bc93a477408215bfa704477a555`
-- Candidate parent: `0205080a288b7ec077ed69a4ee0d1efe915b8cc8`
-- Candidate API: revision `1.26`,
-  blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22`
-- Candidate Schema: revision `1.6`,
+- Original reviewed candidate: `83192d866e091bc93a477408215bfa704477a555`
+- Original candidate parent: `0205080a288b7ec077ed69a4ee0d1efe915b8cc8`
+- Original candidate API: revision history ends at `1.25`,
+  blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22` (`1.26` row absent)
+- Original candidate Schema: revision `1.6`,
   blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
-- Independent Review: `REQUEST CORRECTION`
-- Correction required: `YES`
-- Owner value required: `NO`
-- Main integration: `NOT ELIGIBLE`
-- Finding totals: BLOCKER `0`; HIGH `1`; MEDIUM `0`; LOW `0`; NOTE `1`
-- `F-ER-01` (HIGH): candidate API blob
-  `2780cb1a22f5b6ce7ead62072e32202d2a047e22` revision history ends at `1.25`;
-  a `1.26` row is absent. The B1 `empty_result` payload body itself matches
-  the approved exact contract. Correction required: `YES`. Owner value
-  required: `NO`. Blocks main integration. Correction is an additive `1.26`
-  row in `API_CONTRACT.md` §14 on a separate correction commit; existing
-  candidate `83192d866e091bc93a477408215bfa704477a555` must not be amended.
-- `F-ER-02` (NOTE): this ledger's candidate API revision/blob assertion
-  above becomes stale once the `F-ER-01` correction produces a new candidate
-  tip/blob. Independent correction required: `NO`. Owner value required:
-  `NO`. This ledger will need a further update at that point.
+- Original Independent Review verdict: `REQUEST CORRECTION`
+- Finding totals at original review: BLOCKER `0`; HIGH `1`; MEDIUM `0`;
+  LOW `0`; NOTE `1`
+- `F-ER-01` (HIGH): `CORRECTION IMPLEMENTED / CLOSURE PENDING RE-REVIEW`.
+  Original candidate API blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22`
+  revision history ended at `1.25`; a `1.26` row was absent. The B1
+  `empty_result` payload body itself matched the approved exact contract.
+  Correction was implemented as a separate correction commit
+  `5a1cd99485c542f2d760056cad77297c03fe88a2` (parent
+  `83192d866e091bc93a477408215bfa704477a555`), additively adding exactly one
+  revision `1.26` row to `API_CONTRACT.md` §14; original candidate
+  `83192d866e091bc93a477408215bfa704477a555` was not amended. `F-ER-01` is
+  not yet closed; closure is pending fresh Independent Review of the
+  corrected tip.
+- Correction commit: `5a1cd99485c542f2d760056cad77297c03fe88a2`
+- Correction parent: `83192d866e091bc93a477408215bfa704477a555`
+- Current corrected validation tip: `5a1cd99485c542f2d760056cad77297c03fe88a2`
+- Corrected candidate tree: `d2dd797ced2b38a075e676375daa3a9eab9f0477`
+- Corrected API: revision `1.26`,
+  blob `0367eb3b6e526164012a1aef16b8ec3bbe4328fe`
+- Schema (unchanged by correction): revision `1.6`,
+  blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
+- Fresh re-review of corrected tip: `PENDING`
+- `F-ER-02` (NOTE): Current State stale candidate tip/API blob pin follow-up:
+  `UPDATED TO CORRECTED TIP/BLOB`. `F-ER-02` is not closed; reviewer
+  disposition: `PENDING FRESH RE-REVIEW`.
 - Candidate lifecycle:
-  `REVIEWED / REQUEST CORRECTION / NOT MAIN-INTEGRATION ELIGIBLE`
+  `CORRECTED VALIDATION TIP / RE-REVIEW REQUIRED`
+- Main integration: `NOT ELIGIBLE UNTIL FRESH RE-REVIEW`
 - Runtime Foundation B1: `NOT IMPLEMENTED`
 - Runtime implementation:
-  `BLOCKED UNTIL CANONICAL CLARIFICATION CORRECTION IS RE-REVIEWED AND INTEGRATED`
+  `BLOCKED UNTIL CORRECTED CANONICAL CLARIFICATION IS RE-REVIEWED AND INTEGRATED`
 - Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
-  - Status: `LOCAL-ONLY / NOT REVIEW-ELIGIBLE / NOT PUSHED`
-  - Review authority: recovery candidate
-    `83192d866e091bc93a477408215bfa704477a555` only
+  - Status: `LOCAL-ONLY / SUPERSEDED / NOT REVIEW-ELIGIBLE / NOT PUSHED`
+  - Review authority: corrected validation tip
+    `5a1cd99485c542f2d760056cad77297c03fe88a2` only
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -196,8 +207,15 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- On the current recovery validation branch
+- In a fresh Claude Opus 5 Independent Review session, re-review, read-only,
+  the corrected validation tip `5a1cd99485c542f2d760056cad77297c03fe88a2` on
   `validation/vi-p1-raw-source-empty-result-contract-recovery-20260830`,
-  create a separate correction commit that additively adds exactly one
-  revision `1.26` row to `API_CONTRACT.md` §14, without amending, rebasing,
-  or resetting existing candidate `83192d866e091bc93a477408215bfa704477a555`.
+  cross-checking it against the original reviewed candidate
+  `83192d866e091bc93a477408215bfa704477a555`, the correction diff
+  `83192d866e091bc93a477408215bfa704477a555..5a1cd99485c542f2d760056cad77297c03fe88a2`,
+  the cumulative candidate baseline
+  `0205080a288b7ec077ed69a4ee0d1efe915b8cc8..5a1cd99485c542f2d760056cad77297c03fe88a2`,
+  the `F-ER-01` correction, the `F-ER-02` ledger-pin follow-up, and the
+  user-approved exact `empty_result` contract; main integration and Runtime
+  Foundation B1 implementation remain prohibited before this re-review
+  completes.
