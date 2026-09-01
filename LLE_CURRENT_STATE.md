@@ -37,12 +37,16 @@ canonical authority or exact remote Git evidence, operational status is
 ## 3. Backlog Baseline
 
 - File: `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
-- Latest revision: `1.69`
-- Blob: `e8bccf7bdbc5476f606192debca9e3dffeb67f53`
+- Latest revision: `1.70`
+- Blob: `a798ba0c2acfa72375e5407ce4d5a265929a2ef9`
 - Revision `1.69`: present exactly once
-- Revision `1.70`: absent
+- Revision `1.70`: present exactly once
+- Revision `1.71`: absent
 
-The detailed revision 1.69 lifecycle record remains in the backlog and is not
+Revision `1.69` (prior B1 RAW SOURCE Rebuild CORE canonical documentation
+lifecycle) and revision `1.70` (B1 `empty_result` clarification lifecycle)
+are distinct lifecycle records; neither supersedes the other. The detailed
+revision 1.69 and 1.70 lifecycle records remain in the backlog and are not
 duplicated here.
 
 ## 4. Current Milestone
@@ -148,14 +152,30 @@ duplicated here.
     post-integration evidence for this `empty_result` clarification.
 - Runtime Foundation B1: `NOT IMPLEMENTED`
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime: `ABSENT`
-- Runtime implementation:
-  `BLOCKED UNTIL BACKLOG REVIEW-RECORD REVISION 1.70 IS RECORDED`
+- Runtime Foundation B1 development:
+  `READY FOR DEVELOPMENT PRE-FLIGHT / NOT STARTED`
 - Canonical clarification:
-  `INTEGRATED ON MAIN / REVIEW-RECORD PENDING`
+  `REVIEW-RECORDED / CANONICAL ON MAIN`
+- Review-record revision: `1.70`
+- Review-record commit: `1d76c6c8521b02d570e0db6e99fb2ed539fe4b85`
+- Review-record backlog blob: `a798ba0c2acfa72375e5407ce4d5a265929a2ef9`
 - Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
   - Status: `LOCAL-ONLY / SUPERSEDED / NOT REVIEW-ELIGIBLE / NOT PUSHED`
   - Review authority: corrected validation tip
     `5a1cd99485c542f2d760056cad77297c03fe88a2` only
+
+### Review-Record Commit Metadata Process Note
+
+Review-record commit `1d76c6c8521b02d570e0db6e99fb2ed539fe4b85` (subject
+`Record B1 empty result clarification review`) carries, after the exact
+required subject line, execution-environment attribution trailers
+(`Co-Authored-By` and `Claude-Session`) despite the task-local instruction
+that had required no separate trailers. Classification:
+`NON-BLOCKING PROCESS DEVIATION / COMMIT METADATA ONLY / NO FILE OR
+CANONICAL CONTENT IMPACT / NO HISTORY REWRITE`. This does not invalidate
+backlog revision `1.70`, does not resolve `F-ERR-01`, and does not create a
+new canonical finding. Commit `1d76c6c8521b02d570e0db6e99fb2ed539fe4b85` was
+not amended, rebased, reset, or force-pushed to remove the trailers.
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -253,24 +273,13 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- In a separate Windows Claude Validation/Integration session, record in
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` a new review-record revision
-  `1.70` documenting the full B1 `empty_result` clarification lifecycle —
-  Independent Review, correction, fresh re-review, and main integration —
-  preserving: the original candidate
-  `83192d866e091bc93a477408215bfa704477a555`; the original
-  `REQUEST CORRECTION` verdict; `F-ER-01` HIGH; the correction
-  `5a1cd99485c542f2d760056cad77297c03fe88a2`; the fresh re-review
-  `APPROVE WITH NON-BLOCKING NOTES`; `F-ER-01 CLOSED`; `F-ER-02 CLOSED`;
-  `F-ERR-01 OPEN NOTE / NON-BLOCKING`; MAIN_PICK_1
-  `337143445398f6a76dfc4c9bf40c9311613f5232`; MAIN_PICK_2
-  `adfab3ecb1958643be251fd4de7957738bb9d033`; the final canonical blobs
-  (`API_CONTRACT.md` revision `1.26` blob
-  `0367eb3b6e526164012a1aef16b8ec3bbe4328fe`;
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.6` blob
-  `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`); that PostgreSQL and tests
-  were `NOT RUN` for this documentation-only integration; that Runtime
-  Foundation B1 remains `NOT IMPLEMENTED`; and that no
-  P1/provider/audio/human-data/efficacy authorization is granted. Runtime
-  Foundation B1 implementation does not begin before this review-record is
-  recorded.
+- Start Runtime Foundation B1 Development in a fresh Windows Claude
+  Development session from the then-current exact `origin/main`, after full
+  Git/environment preflight, implementing
+  `queryRawEvidenceForMetricRebuild(pool, input)` against canonical
+  `API_CONTRACT.md` revision `1.26` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  revision `1.6`, using the already-completed Codex read-only runtime
+  pre-analysis as an implementation plan only, not as authority. The future
+  Development session must create/use a fresh validation branch only after
+  baseline verification and must use actual isolated PostgreSQL plus focused
+  and full regression before Independent Review.
