@@ -81,7 +81,7 @@ duplicated here.
 - Original Independent Review verdict: `REQUEST CORRECTION`
 - Finding totals at original review: BLOCKER `0`; HIGH `1`; MEDIUM `0`;
   LOW `0`; NOTE `1`
-- `F-ER-01` (HIGH): `CORRECTION IMPLEMENTED / CLOSURE PENDING RE-REVIEW`.
+- `F-ER-01` (HIGH): `CLOSED BY FRESH RE-REVIEW`.
   Original candidate API blob `2780cb1a22f5b6ce7ead62072e32202d2a047e22`
   revision history ended at `1.25`; a `1.26` row was absent. The B1
   `empty_result` payload body itself matched the approved exact contract.
@@ -89,9 +89,12 @@ duplicated here.
   `5a1cd99485c542f2d760056cad77297c03fe88a2` (parent
   `83192d866e091bc93a477408215bfa704477a555`), additively adding exactly one
   revision `1.26` row to `API_CONTRACT.md` §14; original candidate
-  `83192d866e091bc93a477408215bfa704477a555` was not amended. `F-ER-01` is
-  not yet closed; closure is pending fresh Independent Review of the
-  corrected tip.
+  `83192d866e091bc93a477408215bfa704477a555` was not amended. A fresh Claude
+  Opus 5 Independent Review of the corrected tip confirmed API revision
+  `1.25` present exactly once, `1.26` present exactly once immediately
+  following `1.25`, `1.27` absent, the correction exactly `+1/-0`, and no
+  amend/rewrite of the original candidate; approved `empty_result` contract
+  fidelity `PASS`. `F-ER-01` is `CLOSED`.
 - Correction commit: `5a1cd99485c542f2d760056cad77297c03fe88a2`
 - Correction parent: `83192d866e091bc93a477408215bfa704477a555`
 - Current corrected validation tip: `5a1cd99485c542f2d760056cad77297c03fe88a2`
@@ -100,16 +103,34 @@ duplicated here.
   blob `0367eb3b6e526164012a1aef16b8ec3bbe4328fe`
 - Schema (unchanged by correction): revision `1.6`,
   blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
-- Fresh re-review of corrected tip: `PENDING`
+- Fresh re-review of corrected tip: `APPROVE WITH NON-BLOCKING NOTES`
+- Re-review correction required: `NO`
+- Re-review owner value required: `NO`
 - `F-ER-02` (NOTE): Current State stale candidate tip/API blob pin follow-up:
-  `UPDATED TO CORRECTED TIP/BLOB`. `F-ER-02` is not closed; reviewer
-  disposition: `PENDING FRESH RE-REVIEW`.
+  `UPDATED TO CORRECTED TIP/BLOB`. A fresh Claude Opus 5 Independent Review
+  confirmed Current State was updated to the corrected tip/tree/API
+  revision/blob exactly, with no premature closure declaration made ahead of
+  re-review. `F-ER-02` is `CLOSED BY FRESH RE-REVIEW`, scoped exactly to this
+  ledger-pin follow-up finding; this closure does not mean the B1
+  `empty_result` clarification as a whole is `CLOSED`.
+- `F-ERR-01` (NOTE): pre-existing §7 (Provider, Mock, and Independent Review
+  Status) wording — `Original B1 review`, `Corrected-tip re-review`,
+  `Main-integration eligibility`, and `Final B1 documentation lifecycle` —
+  refers to the prior B1 RAW SOURCE CORE contract cycle without a qualifier
+  distinguishing it from this in-progress B1 `empty_result` clarification
+  cycle, creating a surface risk of confusion between the two. Pre-existing
+  wording issue, not introduced by this candidate. Correction required:
+  `NO`. Main-integration impact: `NON-BLOCKING`. Owner value required: `NO`.
+  This Current State update records `F-ERR-01` as `OPEN NOTE`; §7 wording
+  itself is not opportunistically edited in this update. A future dedicated
+  ledger clarification may add a qualifier identifying §7 as referring to
+  the CORE contract cycle.
 - Candidate lifecycle:
-  `CORRECTED VALIDATION TIP / RE-REVIEW REQUIRED`
-- Main integration: `NOT ELIGIBLE UNTIL FRESH RE-REVIEW`
+  `INDEPENDENTLY RE-REVIEWED / MAIN-INTEGRATION ELIGIBLE`
+- Main integration: `ELIGIBLE`
 - Runtime Foundation B1: `NOT IMPLEMENTED`
 - Runtime implementation:
-  `BLOCKED UNTIL CORRECTED CANONICAL CLARIFICATION IS RE-REVIEWED AND INTEGRATED`
+  `BLOCKED UNTIL CANONICAL CLARIFICATION IS INTEGRATED`
 - Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
   - Status: `LOCAL-ONLY / SUPERSEDED / NOT REVIEW-ELIGIBLE / NOT PUSHED`
   - Review authority: corrected validation tip
@@ -187,6 +208,10 @@ This bootstrap does not rerun PostgreSQL or tests.
 - Foundation A findings remain OPEN/non-blocking:
   `F-R02`, `F-N01`, and `F-R03–F-R13`.
 - Product activation dependency `B-3` remains `UNRESOLVED`.
+- `F-ERR-01` NOTE: §7's pre-existing unqualified B1 lifecycle wording may be
+  confused with the current `empty_result` clarification cycle. Correction
+  required `NO`; main-integration impact `NON-BLOCKING`; owner value
+  required `NO`.
 
 ## 9. Lifecycle Non-Claims
 
@@ -207,15 +232,12 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- In a fresh Claude Opus 5 Independent Review session, re-review, read-only,
-  the corrected validation tip `5a1cd99485c542f2d760056cad77297c03fe88a2` on
-  `validation/vi-p1-raw-source-empty-result-contract-recovery-20260830`,
-  cross-checking it against the original reviewed candidate
-  `83192d866e091bc93a477408215bfa704477a555`, the correction diff
-  `83192d866e091bc93a477408215bfa704477a555..5a1cd99485c542f2d760056cad77297c03fe88a2`,
-  the cumulative candidate baseline
-  `0205080a288b7ec077ed69a4ee0d1efe915b8cc8..5a1cd99485c542f2d760056cad77297c03fe88a2`,
-  the `F-ER-01` correction, the `F-ER-02` ledger-pin follow-up, and the
-  user-approved exact `empty_result` contract; main integration and Runtime
-  Foundation B1 implementation remain prohibited before this re-review
-  completes.
+- In the Windows Claude Validation/Integration role, reconfirm current
+  `origin/main`, then cherry-pick, in order, the two reviewed validation
+  commits `83192d866e091bc93a477408215bfa704477a555` and
+  `5a1cd99485c542f2d760056cad77297c03fe88a2` onto `main`, and after
+  integration verify the exact resulting main SHA and the canonical
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blobs; this
+  documentation-only clarification integration does not yet declare
+  PostgreSQL or tests `PASS`, and Runtime Foundation B1 implementation
+  remains prohibited before this integration completes.
