@@ -126,11 +126,32 @@ duplicated here.
   ledger clarification may add a qualifier identifying §7 as referring to
   the CORE contract cycle.
 - Candidate lifecycle:
-  `INDEPENDENTLY RE-REVIEWED / MAIN-INTEGRATION ELIGIBLE`
-- Main integration: `ELIGIBLE`
+  `INDEPENDENTLY RE-REVIEWED / INTEGRATED ON MAIN`
+- Main integration: `COMPLETE`
+- MAIN_PICK_1 (`Clarify B1 raw source empty result payload`):
+  `337143445398f6a76dfc4c9bf40c9311613f5232`
+- MAIN_PICK_1 parent: `cc07816207c693aeebacc4d4414635667d555691`
+- MAIN_PICK_2 (`Add B1 raw source empty result API revision record`):
+  `adfab3ecb1958643be251fd4de7957738bb9d033`
+- MAIN_PICK_2 parent: MAIN_PICK_1
+- Integrated main `API_CONTRACT.md`: revision `1.26`,
+  blob `0367eb3b6e526164012a1aef16b8ec3bbe4328fe`
+- Integrated main `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.6`,
+  blob `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`
+- This documentation-only main-integration step:
+  - PostgreSQL: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY
+    INTEGRATION STEP`
+  - Tests: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY INTEGRATION
+    STEP`
+  - The existing backlog revision `1.69` PostgreSQL/test evidence in
+    section 6 is prior CORE-contract evidence and is not restated here as
+    post-integration evidence for this `empty_result` clarification.
 - Runtime Foundation B1: `NOT IMPLEMENTED`
+- `queryRawEvidenceForMetricRebuild(pool, input)` runtime: `ABSENT`
 - Runtime implementation:
-  `BLOCKED UNTIL CANONICAL CLARIFICATION IS INTEGRATED`
+  `BLOCKED UNTIL BACKLOG REVIEW-RECORD REVISION 1.70 IS RECORDED`
+- Canonical clarification:
+  `INTEGRATED ON MAIN / REVIEW-RECORD PENDING`
 - Superseded local-only candidate: `98b6e412ccad6311d2dc22e070597a8b5edaa03d`
   - Status: `LOCAL-ONLY / SUPERSEDED / NOT REVIEW-ELIGIBLE / NOT PUSHED`
   - Review authority: corrected validation tip
@@ -232,12 +253,24 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- In the Windows Claude Validation/Integration role, reconfirm current
-  `origin/main`, then cherry-pick, in order, the two reviewed validation
-  commits `83192d866e091bc93a477408215bfa704477a555` and
-  `5a1cd99485c542f2d760056cad77297c03fe88a2` onto `main`, and after
-  integration verify the exact resulting main SHA and the canonical
-  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blobs; this
-  documentation-only clarification integration does not yet declare
-  PostgreSQL or tests `PASS`, and Runtime Foundation B1 implementation
-  remains prohibited before this integration completes.
+- In a separate Windows Claude Validation/Integration session, record in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` a new review-record revision
+  `1.70` documenting the full B1 `empty_result` clarification lifecycle —
+  Independent Review, correction, fresh re-review, and main integration —
+  preserving: the original candidate
+  `83192d866e091bc93a477408215bfa704477a555`; the original
+  `REQUEST CORRECTION` verdict; `F-ER-01` HIGH; the correction
+  `5a1cd99485c542f2d760056cad77297c03fe88a2`; the fresh re-review
+  `APPROVE WITH NON-BLOCKING NOTES`; `F-ER-01 CLOSED`; `F-ER-02 CLOSED`;
+  `F-ERR-01 OPEN NOTE / NON-BLOCKING`; MAIN_PICK_1
+  `337143445398f6a76dfc4c9bf40c9311613f5232`; MAIN_PICK_2
+  `adfab3ecb1958643be251fd4de7957738bb9d033`; the final canonical blobs
+  (`API_CONTRACT.md` revision `1.26` blob
+  `0367eb3b6e526164012a1aef16b8ec3bbe4328fe`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.6` blob
+  `7ceadd43a2ea37ba288ab0d348c5014a7eef8ac8`); that PostgreSQL and tests
+  were `NOT RUN` for this documentation-only integration; that Runtime
+  Foundation B1 remains `NOT IMPLEMENTED`; and that no
+  P1/provider/audio/human-data/efficacy authorization is granted. Runtime
+  Foundation B1 implementation does not begin before this review-record is
+  recorded.
