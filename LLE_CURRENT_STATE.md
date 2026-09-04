@@ -56,7 +56,8 @@ duplicated here.
 - State: `REVIEW-RECORDED / CANONICAL ON MAIN / POST-MERGE VERIFIED`
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
-  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW REQUEST
+  CORRECTION`
   (see "Runtime Foundation B1 Validation Candidate" below; not yet on main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
@@ -154,12 +155,14 @@ duplicated here.
     section 6 is prior CORE-contract evidence and is not restated here as
     post-integration evidence for this `empty_result` clarification.
 - Runtime Foundation B1:
-  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW REQUEST
+  CORRECTION`
   (see "Runtime Foundation B1 Validation Candidate" below; not yet on main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Runtime Foundation B1 development:
-  `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW PENDING`
+  `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW REQUEST CORRECTION /
+  ARCHITECTURE DECISION REQUIRED / NOT ELIGIBLE FOR MAIN INTEGRATION`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -186,7 +189,8 @@ not amended, rebased, reset, or force-pushed to remove the trailers.
 ### Runtime Foundation B1 Validation Candidate
 
 - Runtime Foundation B1:
-  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW REQUEST
+  CORRECTION`
 - Validation branch: `validation/vi-p1-raw-source-core-runtime-20260902`
 - Candidate SHA: `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`
 - Candidate parent: `4641956f50954ac59b39daa8119fbb4d3ebede95`
@@ -278,15 +282,120 @@ is one commit; candidate content/tree remains intact. However,
 instructions.
 
 Classification: `PROCESS DEVIATION / LOCAL BRANCH-LIFECYCLE RECOVERY /
-REMOTE MAIN UNAFFECTED / INDEPENDENT REVIEW MUST ASSESS ELIGIBILITY`. This
-Current State update does not silently normalize this away, does not
-declare it harmless, and does not declare it blocking — Independent Review
-must evaluate its governance impact.
+REMOTE MAIN UNAFFECTED / INDEPENDENTLY REVIEWED — GOVERNANCE DISPOSITION
+NON-BLOCKING`. This Current State update does not silently normalize this
+deviation away and does not claim it did not occur; it is preserved as a
+historical process deviation, and no history rewrite is required or was
+performed.
 
 - Candidate commit metadata: subject line followed by execution-environment
   attribution trailers (`Co-Authored-By`, `Claude-Session`), recorded here
   as execution metadata only, not as a product/runtime finding.
-- Independent Review: `PENDING`
+- Independent Review: `COMPLETE — REQUEST CORRECTION` (see "Fresh
+  Independent Review Result — Request Correction" immediately below)
+
+#### Fresh Independent Review Result — Request Correction
+
+- Reviewer: fresh Claude Opus 5 Independent Review
+- Repository mutation caused by this review: `0`
+- Independent PostgreSQL rerun: `NOT RUN`
+- Development-session PostgreSQL execution evidence remains classified:
+  `DEVELOPMENT-SESSION EXECUTION EVIDENCE ONLY` — not upgraded to
+  Independent Validation by this review.
+- Final verdict: `REQUEST CORRECTION`
+- Code/test correction required: `YES`
+- Architecture decision required: `YES`
+- Owner value required: `NO`
+- Process governance disposition: `NON-BLOCKING`
+- Main-integration eligibility: `NOT ELIGIBLE`
+- Integration: `PROHIBITED UNTIL ARCHITECTURE DECISION + CORRECTION +
+  FRESH RE-REVIEW`
+
+##### New Findings — Severity Totals
+
+BLOCKER `0`; HIGH `2`; MEDIUM `3`; LOW `1`; NOTE `2`. Total `8`.
+
+- `F-RB1-01` (HIGH) — `selectQualifyingAssignments()`: the `attemptIds`
+  root-qualification `EXISTS` query has no
+  `evidence_attempts.started_at <= analysisCutoff` predicate. A supplied
+  attempt that exists but falls after cutoff passes existence validation
+  yet can still qualify its owning assignment's root, producing a
+  non-empty RAW_SOURCE bundle where canonical expects
+  `{ status: "empty", data: null }`. Correction required: `YES`.
+  Architecture value required: `NO`. Main-integration impact: `BLOCKING`.
+- `F-RB1-02` (HIGH) — `fetchSnapshots()` / `fetchSnapshotNodes()`:
+  canonical source-time authority is snapshot `created_at` for a snapshot
+  and the owning snapshot's timestamp for a snapshot node, but the
+  candidate applies no cutoff predicate on the snapshot/node itself,
+  relying instead on the qualifying assignment's `created_at`. No
+  CHECK/trigger/generated-column in schema guarantees assignment
+  `created_at` and snapshot `created_at` coincide; the reviewer confirmed a
+  fixture with pre-cutoff assignment `created_at` and post-cutoff snapshot
+  `created_at` still passes green. Correction required: `YES`. Architecture
+  value required: `NO`. Main-integration impact: `BLOCKING`.
+- `F-RB1-03` (MEDIUM) — `selectAssignmentlessBonusEnrollmentIds()`: the
+  assignment-less `NOT EXISTS` check has no cutoff condition and looks at
+  all currently-existing assignments, so the same cutoff query can flip an
+  enrollment's raw fact from present to empty solely because an assignment
+  was created after cutoff. Canonical ambiguity: whether "assignment가
+  하나도 없고" is evaluated as-of `analysisCutoff` or as-of-read. Correction
+  required: `YES, or as Architecture clarification determines`.
+  Architecture decision: `RECOMMENDED`. Main-integration impact:
+  `BLOCKING until resolved/corrected`.
+- `F-RB1-04` (MEDIUM) — `runBounded()` / `assignmentLevelSecondaryEmpty`:
+  canonical wording does not explicitly decide whether
+  `conditionReferences` (an owning-enrollment-condition filter) counts as
+  an assignment-level secondary filter for the assignment-less enrollment
+  path. Example: enrollment `E1` with condition `C@1`, zero assignments,
+  and `conditionReferences = [C@1]` — canonical does not currently
+  determine whether the expected result is the enrollment fact or
+  `empty_result`. Correction required: `ARCHITECTURE DECISION DEPENDENT`.
+  Architecture decision required: `YES`. Owner value required: `NO`.
+  Main-integration impact: `BLOCKING`.
+- `F-RB1-05` (MEDIUM) — `validateAnalysisCutoff()`: `new Date(value)` can
+  interpret a datetime string with no timezone offset as server-local
+  time, where canonical requires a canonical UTC timestamp string
+  (`YYYY-MM-DDTHH:mm:ss.sssZ`); the same input could normalize to a
+  different cutoff on a UTC vs. a KST server. Correction required: `YES`.
+  Architecture value required: `NO`. Main-integration impact: `BLOCKING`.
+- `F-RB1-06` (LOW) — default `.sort()` uses UTF-16 code-unit ordering;
+  canonical requires codepoint ordering of string IDs. No practical effect
+  on current ASCII-only asset IDs; theoretical only for non-BMP stable
+  IDs. Correction required: `NO`. Main-integration impact:
+  `NONE / NON-BLOCKING`.
+- `F-RB1-07` (NOTE) — T48 `sourceRebuildReference` oracle re-derives the
+  implementation's own `.map()` computation for comparison, giving it weak
+  independent verification power. Correction required: `NO`. Improvement
+  recommended only.
+- `F-RB1-08` (NOTE) — the all-primary-empty unrestricted-scan guard
+  depends on a single JS early guard with no defense-in-depth backstop. No
+  current contract violation; flagged as a future-refactor fragility
+  observation only. Correction required: `NO`.
+
+##### Test Quality Findings
+
+Review confirmed exactly `49` candidate tests. Missing/weak predicates to
+address in the correction lifecycle as applicable:
+
+- Q13: post-cutoff supplied-attempt fixture absent.
+- Q14: snapshot / snapshot-node own-cutoff-authority fixture absent.
+- Q12-conditionReferences: assignment-less enrollment +
+  `conditionReferences` boundary fixture absent.
+- T48: `sourceRebuildReference` oracle weak/tautological (see `F-RB1-07`).
+
+##### Process Governance Assessment (G01–G08)
+
+Independent Review assessed the local-main-commit /
+`git reset --hard origin/main` process deviation described above against
+G01–G08. Disposition: `NON-BLOCKING`. Reviewer-recorded reasons: candidate
+bytes/tree unchanged; candidate parent unchanged; remote main unaffected;
+candidate history not rewritten; unauthorized files not mixed in; the
+final candidate remains a faithful one-commit child of the approved
+baseline; content-addressed Git objects preserve an auditable
+chain-of-custody; no clean re-materialization is required solely because
+of this deviation. This disposition does not mean the deviation did not
+occur — it remains recorded above as a historical process deviation, and
+no history rewrite is required or was performed.
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -364,6 +473,19 @@ This bootstrap does not rerun PostgreSQL or tests.
   confused with the current `empty_result` clarification cycle. Correction
   required `NO`; main-integration impact `NON-BLOCKING`; owner value
   required `NO`.
+- Runtime Foundation B1 fresh Independent Review new findings: BLOCKER `0`;
+  HIGH `2` (`F-RB1-01`, `F-RB1-02`); MEDIUM `3` (`F-RB1-03`, `F-RB1-04`,
+  `F-RB1-05`); LOW `1` (`F-RB1-06`); NOTE `2` (`F-RB1-07`, `F-RB1-08`).
+  Total `8`. All eight are `OPEN`; none are closed by this update.
+  `F-RB1-01`, `F-RB1-02`, `F-RB1-03` (until resolved/corrected), `F-RB1-04`,
+  and `F-RB1-05` are `BLOCKING` for main integration; `F-RB1-06`,
+  `F-RB1-07`, and `F-RB1-08` are `NON-BLOCKING`. `F-RB1-04`, and the
+  as-of-cutoff/as-of-read interpretation underlying `F-RB1-03`, require an
+  Architecture decision before correction.
+- Runtime Foundation B1 process deviation (local-main commit + forbidden
+  `git reset --hard origin/main` recovery): governance disposition
+  `NON-BLOCKING` per fresh Independent Review, preserved as a historical
+  process deviation, not marked as not having occurred.
 
 ## 9. Lifecycle Non-Claims
 
@@ -371,13 +493,19 @@ This ledger does not claim:
 
 - Runtime Foundation B1 validated, closed, canonical, or integrated on main
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime exists on main
-- the Runtime Foundation B1 validation candidate independently reviewed or
-  post-merge verified
+- the Runtime Foundation B1 validation candidate's fresh Independent Review
+  resulted in approval, main-integration eligibility, or post-merge
+  verification — the review completed with verdict `REQUEST CORRECTION`
 - the local-main-commit / forbidden-`git reset --hard` process deviation
-  resolved, ruled harmless, or ruled blocking — Independent Review must
-  assess it
+  erased, ruled to have not occurred, or requiring a history rewrite — it
+  is preserved as a historical process deviation with governance
+  disposition `NON-BLOCKING`
 - Development-session PostgreSQL execution evidence upgraded to Independent
   Validation
+- an Architecture decision made for `F-RB1-03` or `F-RB1-04` by this update
+- Runtime Foundation B1 correction implementation started
+- the Runtime Foundation B1 validation candidate SHA, tree, or history
+  changed by this update
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -391,9 +519,16 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Review of exact validation candidate
-  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` against parent/main baseline
-  `4641956f50954ac59b39daa8119fbb4d3ebede95` and canonical API revision
-  `1.26` / Schema revision `1.6`, assessing both (1) runtime/test contract
-  correctness and (2) governance impact of the local-main commit and
-  forbidden `git reset --hard` recovery. No integration before that review.
+- Fresh Architecture session to issue an exact canonical decision for
+  `F-RB1-04` and, in the same bounded Architecture clarification, resolve
+  the `F-RB1-03` as-of-cutoff vs. as-of-read interpretation, so Development
+  can produce one coherent correction candidate afterward. Architecture
+  must not implement code. Architecture must determine: (A) for
+  assignment-less enrollment behavior, whether `conditionReferences` counts
+  as an "assignment-level secondary filter"; and (B) for the phrase
+  "Cutoff 이전에 존재하는 enrollment root에 assignment가 하나도 없고", whether
+  assignment absence is evaluated as-of `analysisCutoff` or
+  transaction-visible as-of-read. The session must inspect current
+  canonical API revision `1.26` / Schema revision `1.6` and produce the
+  smallest exact Tier C clarification required. No Development correction
+  starts before this Architecture decision.
