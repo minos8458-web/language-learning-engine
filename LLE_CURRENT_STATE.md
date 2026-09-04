@@ -163,7 +163,8 @@ duplicated here.
 - Runtime Foundation B1 development:
   `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW REQUEST CORRECTION /
   ARCHITECTURE DECISION USER-APPROVED (A1/B1) / CANONICAL SYNCHRONIZATION
-  PENDING / NOT ELIGIBLE FOR MAIN INTEGRATION`
+  IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING / NOT
+  ELIGIBLE FOR MAIN INTEGRATION`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -433,28 +434,72 @@ no history rewrite is required or was performed.
   result of the same cutoff-bounded RAW_SOURCE query. Not historical
   reconstruction of mutable lifecycle columns.
 - Architecture decision status: `USER-APPROVED`.
-- Tier C canonical patch status: `USER-APPROVED / CANONICAL SYNCHRONIZATION
-  PENDING`. Canonical patch required: `YES`.
+- Tier C canonical patch status: `USER-APPROVED / IMPLEMENTED AS VALIDATION
+  CANDIDATE / INDEPENDENT REVIEW PENDING`. Canonical patch required: `YES`.
 - Approved target canonical files: `API_CONTRACT.md`,
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md`.
-- Current revisions before synchronization: `API_CONTRACT.md` `1.26`;
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.6`.
-- Approved proposed next revisions: `API_CONTRACT.md` `1.27`;
+- Current revisions on `main` (unchanged; candidate not yet integrated):
+  `API_CONTRACT.md` `1.26`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.6`.
+- Candidate proposed next revisions: `API_CONTRACT.md` `1.27`;
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.7`.
 - The exact patch content/placement is the Architecture DRAFT approved by
-  the user. This Current State update does not reproduce or alter
-  canonical text and does not itself apply the patch.
+  the user, now implemented verbatim as a validation candidate (see
+  "Canonical Synchronization Validation Candidate" below). This Current
+  State update does not itself modify canonical text and does not
+  integrate the candidate onto main.
 - Owner value required: `NO`. Tier A impact: `NO`. Database migration:
   `NO`. Schema DDL: `NO`. Migration `014`: `NOT AUTHORIZED / ABSENT`.
   Runtime correction implementation: `NOT STARTED`. P1 activation:
   `NOT AUTHORIZED`. Human-data authorization: `NO`. Provider/audio
   authorization: `NO`.
 - This user approval does not mean: the canonical patch is already
-  implemented, already reviewed, or already integrated on main;
-  `F-RB1-03` closed; `F-RB1-04` closed; Runtime Foundation B1 validated;
-  Runtime Foundation B1 correction implemented; or main-integration
-  eligibility restored. Main-integration eligibility remains
-  `NOT ELIGIBLE`.
+  independently reviewed or already integrated on main; `F-RB1-03` closed;
+  `F-RB1-04` closed; Runtime Foundation B1 validated; Runtime Foundation B1
+  correction implemented; or main-integration eligibility restored.
+  Main-integration eligibility remains `NOT ELIGIBLE`.
+
+#### Canonical Synchronization Validation Candidate
+
+- Canonical synchronization: `USER-APPROVED / IMPLEMENTED AS VALIDATION
+  CANDIDATE / INDEPENDENT REVIEW PENDING`.
+- Validation branch:
+  `validation/vi-p1-raw-source-closure-semantics-20260905`.
+- Candidate SHA: `a38db1fc05a260ad21564929d753345a2ef9c8f0`.
+- Candidate parent: `221710526bd354237c9e5b996bc260ca83b52682`.
+- Candidate tree: `cce25844617fe34de405b60cda595e88aae47b4b`.
+- Candidate subject: `Clarify Runtime B1 assignment-less closure semantics`.
+- Candidate scope: implements the already user-approved A1/B1 canonical
+  clarification only.
+- Exact changed files (two-file scope, no other file):
+  - `API_CONTRACT.md` — revision `1.27`,
+    blob `db38091928b0164a45c44c7ed10c28bc47b17b79`
+  - `EVIDENCE_FOUNDATION_P0_SCHEMA.md` — revision `1.7`,
+    blob `ea55989eba1c5441e0cea68257f718b80453e8fb`
+- Patch boundary: `API_CONTRACT.md` §13.10.11.1 Closure gains exactly two
+  additive A1/B1 clarification paragraphs plus exactly one new `1.27`
+  revision-history row; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.2 gains the
+  exact mirror clarification plus exactly one new `1.7` revision-history
+  row. No deletion or rewrite of existing approved canonical behavior.
+- Documentation-only candidate evidence:
+  - PostgreSQL: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY
+    CANDIDATE`
+  - Tests: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY CANDIDATE`
+- Main canonical state (unchanged by this candidate): `API_CONTRACT.md`
+  revision `1.26`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.6`.
+- Independent Review: `PENDING`. A fresh Claude Opus 5 Independent Review
+  of this exact candidate against its exact parent has not yet occurred.
+- Main-integration eligibility for this canonical patch: `NOT ELIGIBLE`
+  until independently reviewed and integrated through the approved
+  lifecycle.
+- Runtime Foundation B1 validation candidate
+  (`validation/vi-p1-raw-source-core-runtime-20260902`,
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`): unmodified by this update.
+  Runtime correction remains `NOT STARTED`.
+- This record does not mean: this candidate is independently reviewed,
+  approved, or integrated on main; `F-RB1-03` closed; `F-RB1-04` closed;
+  or Runtime B1 correction may begin. Runtime B1 correction does not begin
+  before this canonical synchronization candidate is independently
+  reviewed and then integrated through the approved lifecycle.
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -547,10 +592,13 @@ This bootstrap does not rerun PostgreSQL or tests.
   Independent Review.
 - Architecture decision for `F-RB1-03`/`F-RB1-04`: `USER-APPROVED`
   (Decision A = `A1`, Decision B = `B1`). Tier C canonical patch:
-  `USER-APPROVED / CANONICAL SYNCHRONIZATION PENDING`, proposed revisions
-  API `1.27` / Schema `1.7`. This does not close `F-RB1-03` or `F-RB1-04`
-  and does not by itself restore main-integration eligibility, which
-  remains `NOT ELIGIBLE`.
+  `USER-APPROVED / IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT
+  REVIEW PENDING`, candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0`
+  (see "Canonical Synchronization Validation Candidate" above), proposed
+  revisions API `1.27` / Schema `1.7`. This does not close `F-RB1-03` or
+  `F-RB1-04` and does not by itself restore main-integration eligibility,
+  which remains `NOT ELIGIBLE`. Main canonical remains API `1.26` / Schema
+  `1.6` because the candidate is not yet integrated.
 - Runtime Foundation B1 process deviation (local-main commit + forbidden
   `git reset --hard origin/main` recovery): governance disposition
   `NON-BLOCKING` per fresh Independent Review, preserved as a historical
@@ -574,8 +622,11 @@ This ledger does not claim:
 - Runtime Foundation B1 correction implementation started
 - the Runtime Foundation B1 validation candidate SHA, tree, or history
   changed by this update
-- the Tier C canonical patch (API `1.27` / Schema `1.7`) already
-  implemented, already reviewed, or already integrated on main
+- the Tier C canonical synchronization candidate (API `1.27` / Schema
+  `1.7`, `a38db1fc05a260ad21564929d753345a2ef9c8f0`) already independently
+  reviewed or already integrated on main
+- `main` canonical revisions already advanced past API `1.26` / Schema
+  `1.6`
 - `F-RB1-03` closed
 - `F-RB1-04` closed
 - Runtime Foundation B1 correction implemented
@@ -593,12 +644,13 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Create a fresh Windows Claude Architecture canonical-synchronization
-  validation candidate from the then-current exact `origin/main`, applying
-  only the user-approved A1/B1 Tier C patch to `API_CONTRACT.md` and
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, with proposed revisions API `1.27`
-  and Schema `1.7`, preserving all unrelated canonical text and making no
-  runtime, test, migration, backlog, or provider/P1 changes. The candidate
-  must be reviewed independently before main integration. Do not start
-  Runtime B1 correction before this canonical synchronization lifecycle is
-  completed.
+- Perform a fresh Claude Opus 5 Independent Review of the exact A1/B1
+  canonical synchronization candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0`
+  against its exact parent `221710526bd354237c9e5b996bc260ca83b52682`,
+  checking: exact user-approved A1 semantics; exact user-approved B1
+  semantics; API `1.27` / Schema `1.7` synchronization; exact two-file
+  additive scope; revision-history correctness; no unrelated canonical
+  drift; no runtime/migration authorization; and main-integration
+  eligibility for this canonical patch. No Runtime B1 correction begins
+  before this canonical synchronization candidate is independently
+  reviewed and then integrated through the approved lifecycle.
