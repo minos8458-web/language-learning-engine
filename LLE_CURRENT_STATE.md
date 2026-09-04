@@ -163,8 +163,9 @@ duplicated here.
 - Runtime Foundation B1 development:
   `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW REQUEST CORRECTION /
   ARCHITECTURE DECISION USER-APPROVED (A1/B1) / CANONICAL SYNCHRONIZATION
-  IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING / NOT
-  ELIGIBLE FOR MAIN INTEGRATION`
+  IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW APPROVE WITH
+  NON-BLOCKING NOTES / CANONICAL PATCH MAIN-INTEGRATION ELIGIBLE (NOT YET
+  INTEGRATED) / RUNTIME CODE NOT ELIGIBLE FOR MAIN INTEGRATION`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -461,7 +462,8 @@ no history rewrite is required or was performed.
 #### Canonical Synchronization Validation Candidate
 
 - Canonical synchronization: `USER-APPROVED / IMPLEMENTED AS VALIDATION
-  CANDIDATE / INDEPENDENT REVIEW PENDING`.
+  CANDIDATE / INDEPENDENT REVIEW APPROVE WITH NON-BLOCKING NOTES /
+  MAIN-INTEGRATION ELIGIBLE`.
 - Validation branch:
   `validation/vi-p1-raw-source-closure-semantics-20260905`.
 - Candidate SHA: `a38db1fc05a260ad21564929d753345a2ef9c8f0`.
@@ -481,25 +483,74 @@ no history rewrite is required or was performed.
   exact mirror clarification plus exactly one new `1.7` revision-history
   row. No deletion or rewrite of existing approved canonical behavior.
 - Documentation-only candidate evidence:
-  - PostgreSQL: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY
-    CANDIDATE`
-  - Tests: `NOT RUN — NOT REQUIRED FOR THIS DOCUMENTATION-ONLY CANDIDATE`
-- Main canonical state (unchanged by this candidate): `API_CONTRACT.md`
-  revision `1.26`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.6`.
-- Independent Review: `PENDING`. A fresh Claude Opus 5 Independent Review
-  of this exact candidate against its exact parent has not yet occurred.
-- Main-integration eligibility for this canonical patch: `NOT ELIGIBLE`
-  until independently reviewed and integrated through the approved
-  lifecycle.
+  - PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY REVIEW`
+  - Tests: `NOT RUN — DOCUMENTATION-ONLY REVIEW`
+- Main canonical state (unchanged by this candidate — integration has not
+  occurred yet): `API_CONTRACT.md` revision `1.26`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.6`.
+
+##### Fresh Independent Review Result — Approve With Non-Blocking Notes
+
+- Reviewer: fresh Claude Opus 5 Independent Review.
+- Repository mutation caused by this review: `0`.
+- Final verdict: `APPROVE WITH NON-BLOCKING NOTES`.
+- Summary judgments: CANDIDATE IDENTITY GATE `PASS`; USER-APPROVED A1
+  FIDELITY `PASS`; USER-APPROVED B1 FIDELITY `PASS`; API/SCHEMA
+  SYNCHRONIZATION `PASS`; REVISION-HISTORY GATE `PASS`; SCOPE/NON-CHANGE
+  GATE `PASS`; CODE/RUNTIME AUTHORIZATION LEAK `NO`.
+- Correction required: `NO`. Owner value required: `NO`.
+- Main-integration eligibility for this canonical patch: `ELIGIBLE` — not
+  yet integrated; integration is the recorded Next Action.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY REVIEW`.
+- Tests: `NOT RUN — DOCUMENTATION-ONLY REVIEW`. `NOT RUN` is not
+  reinterpreted as `PASS`.
+- Reviewed semantics confirmed exactly:
+  - A1: for assignment-less enrollment behavior, the four secondary
+    predicates are exactly `conditionReferences`, `targetTimepoints`,
+    `nodeIds`, `itemFamilyReferences`; `conditionReferences` is included
+    despite its owning-enrollment physical filter authority; nonempty
+    `conditionReferences` with no qualifying assignment yields
+    `{ status: "empty", data: null }`.
+  - B1: assignment existence/absence for the special closure rule is
+    evaluated by `evidence_assignments.created_at <= analysisCutoff`;
+    post-cutoff assignments do not alter the same cutoff-bounded result;
+    this remains separate from transaction-visible as-of-read mutable
+    lifecycle projection.
+- Cross-document/scope result confirmed: API revision `1.27` `PASS`;
+  Schema revision `1.7` `PASS`; API/Schema semantic identity `PASS`;
+  candidate changed exactly two files `PASS`; deletion `0`; runtime/test/
+  db/migration change `0`; migration `014` `ABSENT / NOT AUTHORIZED`;
+  Tier A impact `NO`; P1/human-data/provider/audio authorization `NO`.
+- Current-main drift confirmed exactly `LLE_CURRENT_STATE.md`; candidate
+  canonical files and current-main drift are disjoint; candidate assessed
+  eligible for a clean cherry-pick through the approved
+  Validation/Integration lifecycle (not performed by this review).
+- `F-CS-01` (NOTE) — `API_CONTRACT.md` §13.10.11.1 Closure, candidate-added
+  B1 paragraph: the phrase "위 Raw-source cutoff boundary와 동일하게" refers
+  directionally ("위" = "above") to the `Raw-source cutoff boundary` block,
+  which in fact appears later in the same section, making the directional
+  reference document-positionally inaccurate. Semantic impact: `NONE` —
+  the same sentence explicitly states the authoritative rule
+  `evidence_assignments.created_at <= analysisCutoff`, so A1/B1 semantics
+  and API/Schema runtime behavior remain unambiguous. Correction required:
+  `NO`. Owner value required: `NO`. Main-integration impact:
+  `NON-BLOCKING`. Status: `OPEN / NON-BLOCKING`. Not corrected in this
+  candidate and no correction commit was created for it. Future cleanup
+  recommendation only: change the directional reference to a
+  section-neutral reference (e.g. "Raw-source cutoff boundary와 동일하게")
+  or an exact section reference during a future dedicated canonical
+  cleanup.
 - Runtime Foundation B1 validation candidate
   (`validation/vi-p1-raw-source-core-runtime-20260902`,
-  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`): unmodified by this update.
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`): unmodified by this review.
   Runtime correction remains `NOT STARTED`.
-- This record does not mean: this candidate is independently reviewed,
-  approved, or integrated on main; `F-RB1-03` closed; `F-RB1-04` closed;
-  or Runtime B1 correction may begin. Runtime B1 correction does not begin
-  before this canonical synchronization candidate is independently
-  reviewed and then integrated through the approved lifecycle.
+- This record does not mean: this candidate is already integrated on main;
+  main canonical already advanced past API `1.26` / Schema `1.6`;
+  `F-RB1-03` closed; `F-RB1-04` closed; or Runtime B1 correction may begin.
+  Runtime B1 correction does not begin before this canonical
+  synchronization candidate is integrated on main through the approved
+  Validation/Integration lifecycle and its post-integration state is
+  recorded.
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -593,12 +644,24 @@ This bootstrap does not rerun PostgreSQL or tests.
 - Architecture decision for `F-RB1-03`/`F-RB1-04`: `USER-APPROVED`
   (Decision A = `A1`, Decision B = `B1`). Tier C canonical patch:
   `USER-APPROVED / IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT
-  REVIEW PENDING`, candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0`
-  (see "Canonical Synchronization Validation Candidate" above), proposed
-  revisions API `1.27` / Schema `1.7`. This does not close `F-RB1-03` or
-  `F-RB1-04` and does not by itself restore main-integration eligibility,
-  which remains `NOT ELIGIBLE`. Main canonical remains API `1.26` / Schema
-  `1.6` because the candidate is not yet integrated.
+  REVIEW APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION ELIGIBLE`,
+  candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0` (see "Canonical
+  Synchronization Validation Candidate" above), proposed revisions API
+  `1.27` / Schema `1.7`. The fresh Independent Review's `ELIGIBLE`
+  verdict applies to the canonical documentation patch only; it does not
+  close `F-RB1-03` or `F-RB1-04` (both remain `OPEN`) and does not by
+  itself integrate the patch onto main or restore Runtime Foundation B1
+  code main-integration eligibility, which remains `NOT ELIGIBLE`. Main
+  canonical remains API `1.26` / Schema `1.6` because the candidate is not
+  yet integrated.
+- `F-CS-01` (NOTE): `API_CONTRACT.md` §13.10.11.1 Closure candidate-added
+  B1 paragraph uses the directional reference "위 Raw-source cutoff
+  boundary와 동일하게" to point at a block that in fact appears later in
+  the same section. Semantic impact `NONE` (the authoritative rule
+  `evidence_assignments.created_at <= analysisCutoff` is stated explicitly
+  in the same sentence). Correction required `NO`; owner value required
+  `NO`; main-integration impact `NON-BLOCKING`. Status: `OPEN /
+  NON-BLOCKING`. Not corrected in this candidate.
 - Runtime Foundation B1 process deviation (local-main commit + forbidden
   `git reset --hard origin/main` recovery): governance disposition
   `NON-BLOCKING` per fresh Independent Review, preserved as a historical
@@ -623,13 +686,16 @@ This ledger does not claim:
 - the Runtime Foundation B1 validation candidate SHA, tree, or history
   changed by this update
 - the Tier C canonical synchronization candidate (API `1.27` / Schema
-  `1.7`, `a38db1fc05a260ad21564929d753345a2ef9c8f0`) already independently
-  reviewed or already integrated on main
+  `1.7`, `a38db1fc05a260ad21564929d753345a2ef9c8f0`) already integrated on
+  main, validated, closed, canonical on main, or post-merge verified —
+  the fresh Independent Review verdict is `APPROVE WITH NON-BLOCKING
+  NOTES` / `MAIN-INTEGRATION ELIGIBLE`, and integration has not occurred
 - `main` canonical revisions already advanced past API `1.26` / Schema
   `1.6`
 - `F-RB1-03` closed
 - `F-RB1-04` closed
-- Runtime Foundation B1 correction implemented
+- `F-CS-01` closed — it is `OPEN / NON-BLOCKING`
+- Runtime Foundation B1 correction implemented or started
 - Runtime Foundation B1 main-integration eligibility restored
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
@@ -644,13 +710,17 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Perform a fresh Claude Opus 5 Independent Review of the exact A1/B1
-  canonical synchronization candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0`
-  against its exact parent `221710526bd354237c9e5b996bc260ca83b52682`,
-  checking: exact user-approved A1 semantics; exact user-approved B1
-  semantics; API `1.27` / Schema `1.7` synchronization; exact two-file
-  additive scope; revision-history correctness; no unrelated canonical
-  drift; no runtime/migration authorization; and main-integration
-  eligibility for this canonical patch. No Runtime B1 correction begins
-  before this canonical synchronization candidate is independently
-  reviewed and then integrated through the approved lifecycle.
+- Fresh Windows Claude Validation/Integration session to integrate only
+  the independently reviewed canonical synchronization candidate
+  `a38db1fc05a260ad21564929d753345a2ef9c8f0` onto the then-current exact
+  `origin/main` using a normal cherry-pick, with no rebase/amend/squash/
+  force-push, then verify: only `API_CONTRACT.md` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` are integrated; API main advances to
+  `1.27`; Schema main advances to `1.7`; exact resulting candidate
+  semantics preserved; `F-CS-01` remains non-blocking/open; `F-RB1-03`/
+  `F-RB1-04` remain `OPEN`; Runtime B1 correction remains `NOT STARTED`;
+  no PostgreSQL/runtime test execution is required for this
+  documentation-only integration; and Current State is updated
+  immediately after successful integration. No Runtime B1 correction
+  begins before this canonical patch is integrated on main and its
+  post-integration state is recorded.
