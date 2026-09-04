@@ -162,7 +162,8 @@ duplicated here.
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Runtime Foundation B1 development:
   `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW REQUEST CORRECTION /
-  ARCHITECTURE DECISION REQUIRED / NOT ELIGIBLE FOR MAIN INTEGRATION`
+  ARCHITECTURE DECISION USER-APPROVED (A1/B1) / CANONICAL SYNCHRONIZATION
+  PENDING / NOT ELIGIBLE FOR MAIN INTEGRATION`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -342,6 +343,13 @@ BLOCKER `0`; HIGH `2`; MEDIUM `3`; LOW `1`; NOTE `2`. Total `8`.
   required: `YES, or as Architecture clarification determines`.
   Architecture decision: `RECOMMENDED`. Main-integration impact:
   `BLOCKING until resolved/corrected`.
+  Architecture ambiguity update: `RESOLVED BY USER-APPROVED DECISION B1`
+  (assignment absence for the assignment-less enrollment special case is
+  evaluated as-of `analysisCutoff`; only assignments whose authoritative
+  `evidence_assignments.created_at <= analysisCutoff` count). Finding
+  status remains `OPEN`: canonical synchronization, runtime/test
+  correction, and a fresh Independent Review are still required before
+  closure.
 - `F-RB1-04` (MEDIUM) — `runBounded()` / `assignmentLevelSecondaryEmpty`:
   canonical wording does not explicitly decide whether
   `conditionReferences` (an owning-enrollment-condition filter) counts as
@@ -352,6 +360,15 @@ BLOCKER `0`; HIGH `2`; MEDIUM `3`; LOW `1`; NOTE `2`. Total `8`.
   `empty_result`. Correction required: `ARCHITECTURE DECISION DEPENDENT`.
   Architecture decision required: `YES`. Owner value required: `NO`.
   Main-integration impact: `BLOCKING`.
+  Architecture ambiguity update: `RESOLVED BY USER-APPROVED DECISION A1`
+  (`conditionReferences` IS included in the assignment-level secondary
+  filter set for the assignment-less enrollment special case; if
+  `conditionReferences` is nonempty and no qualifying assignment exists,
+  the special case does not return the enrollment raw fact — result
+  `{ status: "empty", data: null }` — even when the selected enrollment
+  itself owns/matches the supplied condition reference). Finding status
+  remains `OPEN`: canonical synchronization, runtime/test correction, and
+  a fresh Independent Review are still required before closure.
 - `F-RB1-05` (MEDIUM) — `validateAnalysisCutoff()`: `new Date(value)` can
   interpret a datetime string with no timezone offset as server-local
   time, where canonical requires a canonical UTC timestamp string
@@ -396,6 +413,48 @@ chain-of-custody; no clean re-materialization is required solely because
 of this deviation. This disposition does not mean the deviation did not
 occur — it remains recorded above as a historical process deviation, and
 no history rewrite is required or was performed.
+
+#### Architecture Decision — User-Approved (A1 / B1) and Tier C Patch
+
+- Latest explicit user approval (highest-precedence per §1):
+  `A1/B1 및 제안된 Tier C canonical patch를 승인`.
+- Decision A = `A1`: for assignment-less enrollment special-case semantics,
+  `conditionReferences` IS included in the "assignment-level secondary
+  filter" set. Therefore, if `conditionReferences` is nonempty and no
+  qualifying assignment exists, the assignment-less enrollment special case
+  does not return the enrollment raw fact; result
+  `{ status: "empty", data: null }`. This remains true even when the
+  selected enrollment itself owns/matches the supplied condition reference.
+- Decision B = `B1`: assignment absence for the assignment-less enrollment
+  special case is evaluated as-of `analysisCutoff`. Only assignments whose
+  authoritative `evidence_assignments.created_at <= analysisCutoff` count
+  when deciding whether the enrollment has an assignment for that special
+  case. An assignment created after `analysisCutoff` must not change the
+  result of the same cutoff-bounded RAW_SOURCE query. Not historical
+  reconstruction of mutable lifecycle columns.
+- Architecture decision status: `USER-APPROVED`.
+- Tier C canonical patch status: `USER-APPROVED / CANONICAL SYNCHRONIZATION
+  PENDING`. Canonical patch required: `YES`.
+- Approved target canonical files: `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`.
+- Current revisions before synchronization: `API_CONTRACT.md` `1.26`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.6`.
+- Approved proposed next revisions: `API_CONTRACT.md` `1.27`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.7`.
+- The exact patch content/placement is the Architecture DRAFT approved by
+  the user. This Current State update does not reproduce or alter
+  canonical text and does not itself apply the patch.
+- Owner value required: `NO`. Tier A impact: `NO`. Database migration:
+  `NO`. Schema DDL: `NO`. Migration `014`: `NOT AUTHORIZED / ABSENT`.
+  Runtime correction implementation: `NOT STARTED`. P1 activation:
+  `NOT AUTHORIZED`. Human-data authorization: `NO`. Provider/audio
+  authorization: `NO`.
+- This user approval does not mean: the canonical patch is already
+  implemented, already reviewed, or already integrated on main;
+  `F-RB1-03` closed; `F-RB1-04` closed; Runtime Foundation B1 validated;
+  Runtime Foundation B1 correction implemented; or main-integration
+  eligibility restored. Main-integration eligibility remains
+  `NOT ELIGIBLE`.
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -479,9 +538,19 @@ This bootstrap does not rerun PostgreSQL or tests.
   Total `8`. All eight are `OPEN`; none are closed by this update.
   `F-RB1-01`, `F-RB1-02`, `F-RB1-03` (until resolved/corrected), `F-RB1-04`,
   and `F-RB1-05` are `BLOCKING` for main integration; `F-RB1-06`,
-  `F-RB1-07`, and `F-RB1-08` are `NON-BLOCKING`. `F-RB1-04`, and the
-  as-of-cutoff/as-of-read interpretation underlying `F-RB1-03`, require an
-  Architecture decision before correction.
+  `F-RB1-07`, and `F-RB1-08` are `NON-BLOCKING`. The Architecture decision
+  for `F-RB1-04` (Decision A = `A1`) and for the as-of-cutoff/as-of-read
+  interpretation underlying `F-RB1-03` (Decision B = `B1`) has now been
+  made and is `USER-APPROVED` (see "Architecture Decision — User-Approved
+  (A1 / B1) and Tier C Patch" above); both findings remain `OPEN` pending
+  canonical synchronization, runtime/test correction, and a fresh
+  Independent Review.
+- Architecture decision for `F-RB1-03`/`F-RB1-04`: `USER-APPROVED`
+  (Decision A = `A1`, Decision B = `B1`). Tier C canonical patch:
+  `USER-APPROVED / CANONICAL SYNCHRONIZATION PENDING`, proposed revisions
+  API `1.27` / Schema `1.7`. This does not close `F-RB1-03` or `F-RB1-04`
+  and does not by itself restore main-integration eligibility, which
+  remains `NOT ELIGIBLE`.
 - Runtime Foundation B1 process deviation (local-main commit + forbidden
   `git reset --hard origin/main` recovery): governance disposition
   `NON-BLOCKING` per fresh Independent Review, preserved as a historical
@@ -502,10 +571,15 @@ This ledger does not claim:
   disposition `NON-BLOCKING`
 - Development-session PostgreSQL execution evidence upgraded to Independent
   Validation
-- an Architecture decision made for `F-RB1-03` or `F-RB1-04` by this update
 - Runtime Foundation B1 correction implementation started
 - the Runtime Foundation B1 validation candidate SHA, tree, or history
   changed by this update
+- the Tier C canonical patch (API `1.27` / Schema `1.7`) already
+  implemented, already reviewed, or already integrated on main
+- `F-RB1-03` closed
+- `F-RB1-04` closed
+- Runtime Foundation B1 correction implemented
+- Runtime Foundation B1 main-integration eligibility restored
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -519,16 +593,12 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Architecture session to issue an exact canonical decision for
-  `F-RB1-04` and, in the same bounded Architecture clarification, resolve
-  the `F-RB1-03` as-of-cutoff vs. as-of-read interpretation, so Development
-  can produce one coherent correction candidate afterward. Architecture
-  must not implement code. Architecture must determine: (A) for
-  assignment-less enrollment behavior, whether `conditionReferences` counts
-  as an "assignment-level secondary filter"; and (B) for the phrase
-  "Cutoff 이전에 존재하는 enrollment root에 assignment가 하나도 없고", whether
-  assignment absence is evaluated as-of `analysisCutoff` or
-  transaction-visible as-of-read. The session must inspect current
-  canonical API revision `1.26` / Schema revision `1.6` and produce the
-  smallest exact Tier C clarification required. No Development correction
-  starts before this Architecture decision.
+- Create a fresh Windows Claude Architecture canonical-synchronization
+  validation candidate from the then-current exact `origin/main`, applying
+  only the user-approved A1/B1 Tier C patch to `API_CONTRACT.md` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, with proposed revisions API `1.27`
+  and Schema `1.7`, preserving all unrelated canonical text and making no
+  runtime, test, migration, backlog, or provider/P1 changes. The candidate
+  must be reviewed independently before main integration. Do not start
+  Runtime B1 correction before this canonical synchronization lifecycle is
+  completed.
