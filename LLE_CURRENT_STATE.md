@@ -55,8 +55,11 @@ duplicated here.
   Rebuild CORE canonical documentation contract
 - State: `REVIEW-RECORDED / CANONICAL ON MAIN / POST-MERGE VERIFIED`
 - Lifecycle scope: documentation only
-- Runtime Foundation B1 implementation: `NOT IMPLEMENTED`
-- `queryRawEvidenceForMetricRebuild(pool, input)` runtime: `ABSENT`
+- Runtime Foundation B1 implementation:
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+  (see "Runtime Foundation B1 Validation Candidate" below; not yet on main)
+- `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
+  `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
   `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE VERIFIED`
 - Foundation A backlog revision: `1.68`
@@ -150,10 +153,13 @@ duplicated here.
   - The existing backlog revision `1.69` PostgreSQL/test evidence in
     section 6 is prior CORE-contract evidence and is not restated here as
     post-integration evidence for this `empty_result` clarification.
-- Runtime Foundation B1: `NOT IMPLEMENTED`
-- `queryRawEvidenceForMetricRebuild(pool, input)` runtime: `ABSENT`
+- Runtime Foundation B1:
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+  (see "Runtime Foundation B1 Validation Candidate" below; not yet on main)
+- `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
+  `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Runtime Foundation B1 development:
-  `READY FOR DEVELOPMENT PRE-FLIGHT / NOT STARTED`
+  `CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW PENDING`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -176,6 +182,111 @@ CANONICAL CONTENT IMPACT / NO HISTORY REWRITE`. This does not invalidate
 backlog revision `1.70`, does not resolve `F-ERR-01`, and does not create a
 new canonical finding. Commit `1d76c6c8521b02d570e0db6e99fb2ed539fe4b85` was
 not amended, rebased, reset, or force-pushed to remove the trailers.
+
+### Runtime Foundation B1 Validation Candidate
+
+- Runtime Foundation B1:
+  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW PENDING`
+- Validation branch: `validation/vi-p1-raw-source-core-runtime-20260902`
+- Candidate SHA: `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`
+- Candidate parent: `4641956f50954ac59b39daa8119fbb4d3ebede95`
+- Candidate tree: `df2d2e38176cc09e41856f6a04a38bf6b65ab5d4`
+- Candidate subject: `Implement VI P1 raw source rebuild runtime`
+- Operation implemented: `queryRawEvidenceForMetricRebuild(pool, input)`
+- Runtime status: `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
+- Exact changed files (three-file scope):
+  - NEW `src/instrumentation/evidenceMetrics.js` —
+    blob `afa7f310a1845b891d59f653817c66c0d5b0f049`
+  - MODIFY `src/instrumentation/index.js` —
+    blob `14577b90cc19fe10de27d7c1afe0373679e105e9`
+  - NEW `tests/viP1RawSourceRuntime.test.js` —
+    blob `2ba38e44e3d9926e74d0c5b84a3a02ae72cfc5d4`
+- Migration: `001–013 unchanged / 014 absent`. No migration 014.
+- Main runtime: unchanged — candidate exists only on the validation branch;
+  `origin/main` does not contain the candidate commit.
+- Implemented against canonical: `API_CONTRACT.md` §13.10.11.1 revision
+  `1.26`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.3 revision `1.6`.
+- Key implemented boundaries reported by Development (implementation-session
+  claims pending fresh Independent Review, not independently confirmed by
+  this update):
+  - exact 4-key top-level input
+  - exact seven required filter arrays
+  - structured condition/item-family references
+  - canonical targetTimepoint vocabulary
+  - FORMULA existence-only boundary
+  - supplied-reference existence validation before empty determination
+  - physical ancestry root filtering
+  - secondary predicates prune assignment/root branches
+  - enrollment/assignment/attempt closure
+  - no sibling attempt expansion when attemptIds nonempty
+  - no same-participant cross-enrollment expansion
+  - analysisCutoff source-time filtering
+  - no fabricated historical lifecycle state
+  - exact `{ status: "empty", data: null }`
+  - unknown validly-shaped reference remains `INVALID_ID`
+  - nine rawFacts collections
+  - five sourceRebuildReference arrays
+  - exact snake_case physical projections
+  - BIGINT retained as exact decimal strings
+  - deterministic PostgreSQL ordering
+  - one REPEATABLE READ READ ONLY transaction
+  - zero intended write side effects
+  - no migration
+
+#### Development-Session PostgreSQL Execution Evidence
+
+Classification: `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
+Validation and not an Independent Review `PASS`.
+
+- PostgreSQL: `17.10 x86_64-windows`
+- Isolated database: `lle_test_vip1_b1_20260902`
+- `current_database()` confirmed exact isolated DB
+- Migrations: `001–013 applied`, `013` exactly once, `014` absent
+- New runtime test: `49` tests, `49` pass, `0` fail/cancelled/skipped/todo
+- Focused actual-PostgreSQL run: `193` tests, `193` pass,
+  `0` fail/cancelled/skipped/todo — dbPool healthcheck, migration
+  regression, Evidence Foundation migration, Evidence Foundation
+  repository, VI P1 item-lineage runtime, VI P1 raw-source runtime
+- Full regression: `423` tests, `55` suites, `423` pass,
+  `0` fail/cancelled/skipped/todo
+- Schema evidence: `schema_migrations` = `001–013` only, migration `013`
+  exactly once, migration `014` absent, Evidence tables = `17`, no Runtime
+  B1 schema mutation
+- Zero-side-effect Development evidence: read-only transaction checks;
+  relevant before/after row counts unchanged; empty-result path unchanged;
+  validation-error path unchanged
+- Temporary database cleanup: `DROP completed`, isolated DB absent
+  afterward; `lle_dev` not used as destructive test target
+- These Development results are not `VALIDATED` and are not an Independent
+  Review `PASS`.
+
+#### Process Deviation — Local-Main Commit + Forbidden Reset Recovery
+
+Development was instructed to create the fresh validation branch before the
+implementation commit. Instead, after implementation/testing it accidentally
+committed candidate `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` onto local
+`main`. It discovered the error before any push. Recovery performed:
+(1) created `validation/vi-p1-raw-source-core-runtime-20260902` pointing to
+the candidate commit; (2) used `git reset --hard origin/main` to restore
+local main to `4641956f50954ac59b39daa8119fbb4d3ebede95`; (3) switched to
+the validation branch; (4) pushed only the validation branch. Observed
+final facts: remote main was never modified by the candidate; final
+`origin/main` remains `4641956f50954ac59b39daa8119fbb4d3ebede95`; the
+validation candidate's parent is exactly that main SHA; candidate history
+is one commit; candidate content/tree remains intact. However,
+`git reset --hard` was explicitly forbidden by the Development task-local
+instructions.
+
+Classification: `PROCESS DEVIATION / LOCAL BRANCH-LIFECYCLE RECOVERY /
+REMOTE MAIN UNAFFECTED / INDEPENDENT REVIEW MUST ASSESS ELIGIBILITY`. This
+Current State update does not silently normalize this away, does not
+declare it harmless, and does not declare it blocking — Independent Review
+must evaluate its governance impact.
+
+- Candidate commit metadata: subject line followed by execution-environment
+  attribution trailers (`Co-Authored-By`, `Claude-Session`), recorded here
+  as execution metadata only, not as a product/runtime finding.
+- Independent Review: `PENDING`
 
 ## 5. Validation Branch and Canonical Artifacts
 
@@ -258,8 +369,15 @@ This bootstrap does not rerun PostgreSQL or tests.
 
 This ledger does not claim:
 
-- Runtime Foundation B1 implemented
-- `queryRawEvidenceForMetricRebuild(pool, input)` runtime exists
+- Runtime Foundation B1 validated, closed, canonical, or integrated on main
+- `queryRawEvidenceForMetricRebuild(pool, input)` runtime exists on main
+- the Runtime Foundation B1 validation candidate independently reviewed or
+  post-merge verified
+- the local-main-commit / forbidden-`git reset --hard` process deviation
+  resolved, ruled harmless, or ruled blocking — Independent Review must
+  assess it
+- Development-session PostgreSQL execution evidence upgraded to Independent
+  Validation
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -273,13 +391,9 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Start Runtime Foundation B1 Development in a fresh Windows Claude
-  Development session from the then-current exact `origin/main`, after full
-  Git/environment preflight, implementing
-  `queryRawEvidenceForMetricRebuild(pool, input)` against canonical
-  `API_CONTRACT.md` revision `1.26` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  revision `1.6`, using the already-completed Codex read-only runtime
-  pre-analysis as an implementation plan only, not as authority. The future
-  Development session must create/use a fresh validation branch only after
-  baseline verification and must use actual isolated PostgreSQL plus focused
-  and full regression before Independent Review.
+- Fresh Claude Opus 5 Independent Review of exact validation candidate
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` against parent/main baseline
+  `4641956f50954ac59b39daa8119fbb4d3ebede95` and canonical API revision
+  `1.26` / Schema revision `1.6`, assessing both (1) runtime/test contract
+  correctness and (2) governance impact of the local-main commit and
+  forbidden `git reset --hard` recovery. No integration before that review.
