@@ -59,12 +59,11 @@ in the backlog and are not duplicated here.
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
   `CORRECTION VALIDATION CANDIDATE PRESENT / F-RB1-01–04 CLOSED BY FRESH
-  RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN / API 1.28 R1 DOCUMENTATION
-  VALIDATION CANDIDATE INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
-  NOTES / CANONICAL MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL ON MAIN
-  / RUNTIME MAIN INTEGRATION NOT ELIGIBLE`
-  (see "API 1.28 R1 Documentation Validation Candidate" below; not yet on
-  main)
+  RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN / API 1.28 R1 TIER C PATCH
+  USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES
+  / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / RUNTIME MAIN
+  INTEGRATION NOT ELIGIBLE`
+  (see "API 1.28 Canonical Main Integration" below)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -1300,6 +1299,103 @@ verified); `lle_dev` destructive-use `NO`.
   this update only records its result. No Runtime B1 main integration
   before a fresh Runtime candidate re-review against canonical API 1.28.
 
+##### API 1.28 Canonical Main Integration
+
+- Windows-local session, repository
+  `C:\Users\atomy\Documents\GitHub\language-learning-engine`,
+  `minos8458-web/language-learning-engine`.
+- Preflight: exact starting `main` confirmed — `HEAD`/`origin/main`
+  `0743539f306000b5c6a6cd07b90bd645c723327b`, tree
+  `c456d6a09b8d87e26208f5e86300d74e11a557cb`, ahead/behind `0/0`, worktree
+  and index clean, no untracked files, Current State blob
+  `5ea3beb57ec7d9f9869d305e071adc237e27c6ed`, main `API_CONTRACT.md` blob
+  `db38091928b0164a45c44c7ed10c28bc47b17b79` (revision `1.27` latest),
+  Schema blob `ea55989eba1c5441e0cea68257f718b80453e8fb` (revision `1.7`
+  latest), Backlog blob `b3332d9601ff490a8271f48779acd29cf6798004`,
+  migration `014` absent, candidate branch tip
+  `2995ba806b1da9a4b0978f8c15222fd27e9620d3` with tree
+  `82f2d53da0e10226c4b8a7c2784407b75fd0bb5f` and candidate API blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`, Runtime correction branch tip
+  `357ac80058ce3feab0565d5ed995927ef2207a77`, original Runtime branch tip
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`. All preflight gates `PASS`.
+- Integration method: normal `git cherry-pick
+  2995ba806b1da9a4b0978f8c15222fd27e9620d3` onto exact current `main` —
+  planned integration, not a repair. Result: no conflict, one new `main`
+  commit, source commit preserved unchanged on the validation branch.
+- Main integration commit (`MAIN_API128_INTEGRATION_SHA`):
+  `2a5931eac80d9460b666fa0be767ea60cbc215e8`. Parent
+  `0743539f306000b5c6a6cd07b90bd645c723327b`. Tree
+  `4ab913b140ae074a4995d1f4330ec9371f65f5d4`. Subject: `Clarify Runtime B1
+  analysis cutoff canonical input` (preserved). Attribution trailers
+  preserved (`Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`,
+  `Claude-Session` URL).
+- Exact one-file integration scope confirmed: only `API_CONTRACT.md`
+  changed, `+9/-2`, matching the reviewed candidate diff exactly. Resulting
+  `API_CONTRACT.md` blob: `b70bda6cdf8896337c0a699b8810852bb466dace`. API
+  `1.28` row present exactly once; `1.29` absent; API `1.27` preserved
+  exactly once; §13.10.11.1 R1 block matches the reviewed candidate;
+  FORMULA boundary, later Raw-source cutoff authority, A1/B1, and the
+  five-code registry unchanged. `git diff --check HEAD^`: `PASS` (no
+  whitespace errors).
+- Verified unchanged by this integration commit:
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb` (revision `1.7`);
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` blob
+  `b3332d9601ff490a8271f48779acd29cf6798004`; `LLE_CURRENT_STATE.md` blob
+  `5ea3beb57ec7d9f9869d305e071adc237e27c6ed`; Runtime correction branch
+  `357ac80058ce3feab0565d5ed995927ef2207a77`; original Runtime branch
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`; migration `014` absent.
+  PostgreSQL and tests: `NOT RUN — DOCUMENTATION-ONLY` (not recorded as
+  `PASS`).
+- First push: `git fetch origin` confirmed `origin/main` unmoved at
+  `0743539f306000b5c6a6cd07b90bd645c723327b` immediately before push.
+  Normal push of `main` only, no force, no PR:
+  `0743539..2a5931e main -> main`.
+- Post-integration remote document verification (after `git fetch
+  origin`): `origin/main` = `2a5931eac80d9460b666fa0be767ea60cbc215e8` =
+  `MAIN_API128_INTEGRATION_SHA`. Remote `API_CONTRACT.md` blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`; API `1.28` row present
+  exactly once. Remote Schema blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb` (revision `1.7`, unchanged).
+  Remote Backlog blob `b3332d9601ff490a8271f48779acd29cf6798004`
+  (unchanged). Remote Current State blob
+  `5ea3beb57ec7d9f9869d305e071adc237e27c6ed` (unchanged at this moment).
+  Migration `014` absent on remote. Runtime branches unchanged. All checks
+  `PASS`. Only after these checks passed is this integration described as
+  API `1.28` = `CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED`.
+- Lifecycle status after this integration: API `1.28` R1 Tier C patch =
+  `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+  NOTES / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED`.
+  Integration source candidate `2995ba806b1da9a4b0978f8c15222fd27e9620d3`;
+  main integration commit `2a5931eac80d9460b666fa0be767ea60cbc215e8`;
+  canonical API blob `b70bda6cdf8896337c0a699b8810852bb466dace`. This is
+  not the same as `REVIEW-RECORDED`, which is a separate future lifecycle
+  step not performed by this update.
+- Finding lifecycle after this integration: `F-RB1-01`, `F-RB1-02`,
+  `F-RB1-03`, `F-RB1-04`: `CLOSED BY FRESH RE-REVIEW` (unchanged,
+  preserved). `F-RB1-05`: `OPEN / API 1.28 CANONICAL ON MAIN / FRESH
+  RUNTIME RE-REVIEW PENDING` — not closed by this integration. `F-RC-01`:
+  `OPEN / API 1.28 CANONICAL ON MAIN / FRESH RUNTIME RE-REVIEW PENDING` —
+  not closed by this integration. `F-API128-01`: `OPEN / NOTE /
+  NON-BLOCKING` — preserved, neither reopened nor silently closed.
+  Preserved unchanged: `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04`.
+- Runtime Foundation B1 main-integration eligibility remains `NOT
+  ELIGIBLE`. Runtime correction candidate remains on branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` at
+  exact tip `357ac80058ce3feab0565d5ed995927ef2207a77`, untouched by this
+  integration. No Runtime B1 code was integrated in this session.
+- This integration does not mean: API `1.28` `REVIEW-RECORDED`; `F-RB1-05`
+  closed; `F-RC-01` closed; Runtime Foundation B1 validated or closed;
+  Runtime Foundation B1 code main-integration eligible; runtime canonical
+  on `main`; runtime post-merge verified; `B-3` resolved; P1 eligible or
+  activated; human-data collection authorized; efficacy verified; GitHub
+  Actions `PASS`; Validation Level 3 §10 overall `PASS`; or provider/audio
+  authorized.
+- Next: a fresh Claude Opus 5 Independent Re-Review of the existing
+  Runtime Foundation B1 correction candidate against the newly integrated
+  canonical API `1.28` commit (see "Next Action" below).
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1525,6 +1621,25 @@ This bootstrap does not rerun PostgreSQL or tests.
   Runtime Foundation B1 main-integration eligibility remains `NOT
   ELIGIBLE`. See "Fresh Independent Review Result — Approve With
   Non-Blocking Notes" above for full detail.
+- API `1.28` canonical main integration (Windows-local Validation/
+  Integration session, normal cherry-pick, repository mutation limited to
+  one new `main` commit plus this status-sync commit): main integration
+  commit `2a5931eac80d9460b666fa0be767ea60cbc215e8` (parent
+  `0743539f306000b5c6a6cd07b90bd645c723327b`), resulting `API_CONTRACT.md`
+  blob `b70bda6cdf8896337c0a699b8810852bb466dace`, API `1.28` exactly
+  once, `1.29` absent. Post-integration remote document verification
+  `PASS`: Schema `1.7` / `ea55989eba1c5441e0cea68257f718b80453e8fb` and
+  Backlog `1.71` / `b3332d9601ff490a8271f48779acd29cf6798004` unchanged,
+  migration `014` absent, Runtime branches unchanged. PostgreSQL/tests
+  `NOT RUN — DOCUMENTATION-ONLY`. `F-RB1-01`–`F-RB1-04` remain `CLOSED BY
+  FRESH RE-REVIEW`. `F-RB1-05` and `F-RC-01` update to `OPEN / API 1.28
+  CANONICAL ON MAIN / FRESH RUNTIME RE-REVIEW PENDING` — neither is closed
+  by this integration. `F-API128-01` remains `OPEN / NOTE / NON-BLOCKING`,
+  neither reopened nor silently closed. `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04` remain `OPEN /
+  NON-BLOCKING`, preserved unchanged. Runtime Foundation B1
+  main-integration eligibility remains `NOT ELIGIBLE`. See "API 1.28
+  Canonical Main Integration" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -1642,25 +1757,37 @@ This ledger does not claim:
   PostgreSQL/test run — this update modifies only `LLE_CURRENT_STATE.md`,
   and the review it records was documentation-only with PostgreSQL/tests
   `NOT RUN`
+- API `1.28` is `REVIEW-RECORDED` — it is `CANONICAL ON MAIN /
+  POST-INTEGRATION DOCUMENT VERIFIED`; `REVIEW-RECORDED` is a distinct
+  future lifecycle step not performed by this status-sync
+- `F-RB1-05` or `F-RC-01` closed by the API `1.28` canonical main
+  integration — both remain `OPEN / API 1.28 CANONICAL ON MAIN / FRESH
+  RUNTIME RE-REVIEW PENDING`
+- `F-API128-01` closed, reopened, or escalated by this integration — it
+  remains `OPEN / NOTE / NON-BLOCKING`
+- Runtime Foundation B1 validated, closed, or canonical on `main` by this
+  integration
+- Runtime Foundation B1 main-integration eligible by this integration — it
+  remains `NOT ELIGIBLE`
+- Runtime post-merge verified by this integration
+- `B-3` resolved, P1 eligible/activated, human-data authorized, efficacy
+  verified, GitHub Actions PASS, Validation Level 3 §10 overall PASS, or
+  provider/audio authorized, by this integration
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration session to integrate the
-  exact reviewed API 1.28 R1 documentation candidate commit
-  `2995ba806b1da9a4b0978f8c15222fd27e9620d3` onto the then-current exact
-  `origin/main`, preserving reviewed history with a normal cherry-pick,
-  with no rebase/squash/amend, then verify: the integrated commit changes
-  only `API_CONTRACT.md`; the resulting `API_CONTRACT.md` blob is exactly
-  `b70bda6cdf8896337c0a699b8810852bb466dace`; API revision 1.28 exists
-  exactly once; Schema remains revision 1.7 and byte-unchanged; Backlog
-  remains byte-unchanged; Runtime branches remain unchanged; migration
-  014 remains absent; PostgreSQL/tests remain `NOT RUN` because this
-  integration is docs-only; and API 1.28 becomes canonical on `main` only
-  after actual successful integration and post-integration document
-  verification. The integration session must also update
-  `LLE_CURRENT_STATE.md` immediately after successful canonical
-  integration in a separate status-sync commit, without modifying
-  `API_CONTRACT.md` again. After that lifecycle step, the next future
-  milestone is a fresh Runtime candidate re-review against canonical API
-  1.28; no Runtime B1 main integration occurs before that fresh Runtime
-  re-review.
+- Fresh Claude Opus 5 Independent Re-Review of the existing Runtime
+  Foundation B1 correction candidate
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` at
+  exact tip `357ac80058ce3feab0565d5ed995927ef2207a77` against the newly
+  integrated canonical API `1.28` commit
+  `2a5931eac80d9460b666fa0be767ea60cbc215e8`, while treating the
+  subsequent Current State status-sync commit as status-only main drift.
+  The re-review must focus on: `F-RB1-05` exact R1 fidelity; `F-RC-01`
+  canonical ambiguity resolution against API `1.28` on `main`;
+  preservation of previously closed `F-RB1-01`–`04`; preservation of
+  `F-RB1-06`/`07`/`08` and `F-CS-01`; `F-RC-02`/`03`/`04` preservation;
+  `F-API128-01` as a non-blocking documentation observation; runtime
+  candidate identity/replay/correction isolation; and whether fresh
+  Runtime main-integration eligibility can now become `ELIGIBLE`. No
+  Runtime B1 main integration occurs before that fresh re-review.
