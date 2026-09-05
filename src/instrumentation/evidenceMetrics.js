@@ -48,13 +48,30 @@ const FILTER_KEYS = [
 // Pure (no-DB) input validation/normalization.
 // ---------------------------------------------------------------------------
 
+// Exact canonical lexical form only: YYYY-MM-DDTHH:mm:ss.sssZ. This is
+// stricter than ISO 8601 in general -- no non-Z offset, no missing
+// milliseconds, no missing 'Z' -- because analysisCutoff is a single
+// unambiguous UTC instant used as a physical cutoff boundary, not a
+// general-purpose timestamp input.
+const ANALYSIS_CUTOFF_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
 function validateAnalysisCutoff(value) {
   if (value === null || typeof value !== 'string') {
     throw new ContractViolationError('analysisCutoff must be a canonical UTC timestamp string');
   }
+  if (!ANALYSIS_CUTOFF_PATTERN.test(value)) {
+    throw new OutOfRangeValueError(
+      `analysisCutoff is not in canonical YYYY-MM-DDTHH:mm:ss.sssZ form: ${value}`
+    );
+  }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
     throw new OutOfRangeValueError(`analysisCutoff is not a valid/normalizable timestamp: ${value}`);
+  }
+  if (parsed.toISOString() !== value) {
+    // Catches calendar-impossible dates (e.g. 2023-02-29) that Date rolls
+    // over into a different, still-valid instant rather than rejecting.
+    throw new OutOfRangeValueError(`analysisCutoff is not a normalized canonical timestamp: ${value}`);
   }
   return parsed.toISOString();
 }
@@ -328,6 +345,7 @@ async function selectQualifyingAssignments(client, filters, analysisCutoff) {
             SELECT 1 FROM evidence_attempts att
              WHERE att.assignment_id = a.assignment_id
                AND att.attempt_id = ANY($3::uuid[])
+               AND att.started_at <= $10::timestamptz
           )
         )
         AND (
@@ -344,9 +362,13 @@ async function selectQualifyingAssignments(client, filters, analysisCutoff) {
         AND (
           cardinality($7::text[]) = 0
           OR EXISTS (
-            SELECT 1 FROM evidence_assignment_snapshot_nodes n
+            SELECT 1
+              FROM evidence_assignment_snapshot_nodes n
+              JOIN evidence_assignment_snapshots s
+                ON s.assignment_id = n.assignment_id
              WHERE n.assignment_id = a.assignment_id
                AND n.node_id = ANY($7::text[])
+               AND s.created_at <= $10::timestamptz
           )
         )
         AND (
@@ -358,6 +380,7 @@ async function selectQualifyingAssignments(client, filters, analysisCutoff) {
              WHERE s.assignment_id = a.assignment_id
                AND s.item_family_id = fam.item_family_id
                AND s.item_family_version = fam.item_family_version
+               AND s.created_at <= $10::timestamptz
           )
         )
         AND a.created_at <= $10::timestamptz
@@ -390,7 +413,9 @@ async function selectAssignmentlessBonusEnrollmentIds(client, enrollmentIds, ana
       WHERE e.enrollment_id = ANY($1::uuid[])
         AND e.created_at <= $2::timestamptz
         AND NOT EXISTS (
-          SELECT 1 FROM evidence_assignments a WHERE a.enrollment_id = e.enrollment_id
+          SELECT 1 FROM evidence_assignments a
+           WHERE a.enrollment_id = e.enrollment_id
+             AND a.created_at <= $2::timestamptz
         )`,
     [enrollmentIds, analysisCutoff]
   );
@@ -408,24 +433,34 @@ async function fetchEnrollments(client, enrollmentIds) {
   return rows;
 }
 
-async function fetchSnapshots(client, assignmentIds) {
+async function fetchSnapshots(client, assignmentIds, analysisCutoff) {
   if (assignmentIds.length === 0) return [];
   const { rows } = await client.query(
     `SELECT * FROM evidence_assignment_snapshots
       WHERE assignment_id = ANY($1::uuid[])
+        AND created_at <= $2::timestamptz
       ORDER BY assignment_id ASC`,
-    [assignmentIds]
+    [assignmentIds, analysisCutoff]
   );
   return rows;
 }
 
-async function fetchSnapshotNodes(client, assignmentIds) {
+// A snapshot-node row carries no own timestamp; its authoritative cutoff
+// time is the owning snapshot's created_at (evidence_assignment_snapshots).
+// `SELECT n.*` preserves the physical node-column projection unchanged --
+// the join is used only to source the cutoff authority, not to widen the
+// projected shape.
+async function fetchSnapshotNodes(client, assignmentIds, analysisCutoff) {
   if (assignmentIds.length === 0) return [];
   const { rows } = await client.query(
-    `SELECT * FROM evidence_assignment_snapshot_nodes
-      WHERE assignment_id = ANY($1::uuid[])
-      ORDER BY assignment_id ASC, ordinal ASC`,
-    [assignmentIds]
+    `SELECT n.*
+       FROM evidence_assignment_snapshot_nodes n
+       JOIN evidence_assignment_snapshots s
+         ON s.assignment_id = n.assignment_id
+      WHERE n.assignment_id = ANY($1::uuid[])
+        AND s.created_at <= $2::timestamptz
+      ORDER BY n.assignment_id ASC, n.ordinal ASC`,
+    [assignmentIds, analysisCutoff]
   );
   return rows;
 }
@@ -595,8 +630,8 @@ async function runBounded(client, { formulaId, formulaVersion, analysisCutoff, f
 
   const enrollments = await fetchEnrollments(client, [...enrollmentIdSet]);
   const assignments = qualifyingAssignments; // already ORDER BY assignment_id ASC
-  const assignmentSnapshots = await fetchSnapshots(client, qualifyingAssignmentIds);
-  const assignmentSnapshotNodes = await fetchSnapshotNodes(client, qualifyingAssignmentIds);
+  const assignmentSnapshots = await fetchSnapshots(client, qualifyingAssignmentIds, analysisCutoff);
+  const assignmentSnapshotNodes = await fetchSnapshotNodes(client, qualifyingAssignmentIds, analysisCutoff);
   const assignmentItemExposures = await fetchExposures(client, qualifyingAssignmentIds, analysisCutoff);
   const attempts = await fetchAttempts(client, {
     attemptIds: filters.attemptIds,
