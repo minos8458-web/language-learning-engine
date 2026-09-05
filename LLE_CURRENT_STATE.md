@@ -37,17 +37,19 @@ canonical authority or exact remote Git evidence, operational status is
 ## 3. Backlog Baseline
 
 - File: `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
-- Latest revision: `1.70`
-- Blob: `a798ba0c2acfa72375e5407ce4d5a265929a2ef9`
+- Latest revision: `1.71`
+- Blob: `b3332d9601ff490a8271f48779acd29cf6798004`
 - Revision `1.69`: present exactly once
 - Revision `1.70`: present exactly once
-- Revision `1.71`: absent
+- Revision `1.71`: present exactly once
+- Revision `1.72`: absent
 
 Revision `1.69` (prior B1 RAW SOURCE Rebuild CORE canonical documentation
-lifecycle) and revision `1.70` (B1 `empty_result` clarification lifecycle)
-are distinct lifecycle records; neither supersedes the other. The detailed
-revision 1.69 and 1.70 lifecycle records remain in the backlog and are not
-duplicated here.
+lifecycle), revision `1.70` (B1 `empty_result` clarification lifecycle),
+and revision `1.71` (A1/B1 assignment-less closure canonical synchronization
+review-record lifecycle) are distinct lifecycle records; none supersedes
+another. The detailed revision 1.69, 1.70, and 1.71 lifecycle records remain
+in the backlog and are not duplicated here.
 
 ## 4. Current Milestone
 
@@ -165,8 +167,13 @@ duplicated here.
   ARCHITECTURE DECISION USER-APPROVED (A1/B1) / CANONICAL SYNCHRONIZATION
   IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW APPROVE WITH
   NON-BLOCKING NOTES / INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT
-  VERIFICATION PASS / REVIEW-RECORD PENDING / RUNTIME CODE NOT ELIGIBLE
+  VERIFICATION PASS / REVIEW-RECORDED / RUNTIME CODE NOT ELIGIBLE
   FOR MAIN INTEGRATION`
+- A1/B1 canonical synchronization review-record revision: `1.71`
+- A1/B1 canonical synchronization review-record commit:
+  `2499d63a316268bd1f1463a5bafd9a8dc5c02925`
+- A1/B1 canonical synchronization review-record backlog blob:
+  `b3332d9601ff490a8271f48779acd29cf6798004`
 - Canonical clarification:
   `REVIEW-RECORDED / CANONICAL ON MAIN`
 - Review-record revision: `1.70`
@@ -439,8 +446,11 @@ no history rewrite is required or was performed.
 - Tier C canonical patch status: `USER-APPROVED / IMPLEMENTED AS VALIDATION
   CANDIDATE / INDEPENDENT REVIEW APPROVE WITH NON-BLOCKING NOTES /
   INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT VERIFICATION PASS /
-  REVIEW-RECORD PENDING`. Canonical patch required: `YES` (satisfied by
+  REVIEW-RECORDED`. Canonical patch required: `YES` (satisfied by
   main-integration commit below).
+- Review-record revision: `1.71`.
+- Review-record commit: `2499d63a316268bd1f1463a5bafd9a8dc5c02925`.
+- Review-record backlog blob: `b3332d9601ff490a8271f48779acd29cf6798004`.
 - Approved target canonical files: `API_CONTRACT.md`,
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md`.
 - Current revisions on `main` (post-integration): `API_CONTRACT.md` `1.27`,
@@ -465,17 +475,20 @@ no history rewrite is required or was performed.
   `F-RB1-04` closed; `F-CS-01` closed; Runtime Foundation B1 validated;
   Runtime Foundation B1 correction started or implemented; or Runtime B1
   code main-integration eligibility restored. Runtime B1 code
-  main-integration eligibility remains `NOT ELIGIBLE`. A dedicated
+  main-integration eligibility remains `NOT ELIGIBLE`. The dedicated
   review-record step (appending this lifecycle to
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`) remains `PENDING` and precedes
-  any Runtime B1 correction.
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` as revision `1.71`, commit
+  `2499d63a316268bd1f1463a5bafd9a8dc5c02925`) is now `COMPLETE`. Runtime B1
+  correction remains `NOT STARTED` and does not begin before a fresh Codex
+  read-only pre-analysis returns to Control Tower (see Next Action).
 
 #### Canonical Synchronization Validation Candidate
 
 - Canonical synchronization: `USER-APPROVED / IMPLEMENTED AS VALIDATION
   CANDIDATE / INDEPENDENT REVIEW APPROVE WITH NON-BLOCKING NOTES /
   INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT VERIFICATION PASS /
-  REVIEW-RECORD PENDING`.
+  REVIEW-RECORDED` (review-record revision `1.71`, commit
+  `2499d63a316268bd1f1463a5bafd9a8dc5c02925`).
 - Validation branch:
   `validation/vi-p1-raw-source-closure-semantics-20260905`.
 - Candidate SHA: `a38db1fc05a260ad21564929d753345a2ef9c8f0`.
@@ -683,7 +696,10 @@ This bootstrap does not rerun PostgreSQL or tests.
   (Decision A = `A1`, Decision B = `B1`). Tier C canonical patch:
   `USER-APPROVED / IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT
   REVIEW APPROVE WITH NON-BLOCKING NOTES / INTEGRATED ON MAIN /
-  POST-INTEGRATION DOCUMENT VERIFICATION PASS / REVIEW-RECORD PENDING`,
+  POST-INTEGRATION DOCUMENT VERIFICATION PASS / REVIEW-RECORDED`
+  (review-record revision `1.71`, commit
+  `2499d63a316268bd1f1463a5bafd9a8dc5c02925`, backlog blob
+  `b3332d9601ff490a8271f48779acd29cf6798004`),
   candidate `a38db1fc05a260ad21564929d753345a2ef9c8f0`, integrated as main
   commit `87084ff90cbf38e4cb6a9df8146a7b7030c3eba6` (parent
   `ac65bfaab5093d903a8d3a968f47af970849eee1`) (see "Canonical
@@ -737,9 +753,10 @@ This ledger does not claim:
   `1.7`) means Runtime Foundation B1 code is validated, closed, or
   canonical, or that Runtime Foundation B1 code main-integration
   eligibility is restored — it remains `NOT ELIGIBLE`
-- the required review-record step (appending this lifecycle to
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`) has already been performed —
-  it is `PENDING`
+- the completed review-record step (backlog revision `1.71`, commit
+  `2499d63a316268bd1f1463a5bafd9a8dc5c02925`) means Runtime Foundation B1
+  code is validated, closed, or canonical, or that any of `F-RB1-03`,
+  `F-RB1-04`, or `F-CS-01` is closed
 - `F-RB1-03` closed — it is `OPEN`
 - `F-RB1-04` closed — it is `OPEN`
 - `F-CS-01` closed — it is `OPEN / NON-BLOCKING`
@@ -758,16 +775,12 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration review-record session to
-  append the A1/B1 canonical synchronization lifecycle to
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` as the next revision after
-  `1.70`, recording: user-approved A1/B1; canonical candidate
-  `a38db1fc05a260ad21564929d753345a2ef9c8f0`; fresh Independent Review
-  `APPROVE WITH NON-BLOCKING NOTES`; `F-CS-01` NOTE / OPEN / NON-BLOCKING;
-  main integration commit `87084ff90cbf38e4cb6a9df8146a7b7030c3eba6`; API
-  main `1.27` / blob `db38091928b0164a45c44c7ed10c28bc47b17b79`; Schema
-  main `1.7` / blob `ea55989eba1c5441e0cea68257f718b80453e8fb`;
-  PostgreSQL/tests `NOT RUN` because documentation-only;
-  `F-RB1-03`/`F-RB1-04` remain `OPEN` pending runtime/test correction;
-  Runtime correction `NOT STARTED`. No Runtime B1 correction begins
-  before this review-record step.
+- Fresh Codex read-only pre-analysis of the Runtime Foundation B1 correction
+  against the then-current exact `origin/main`, the reviewed Runtime candidate
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`, canonical API `1.27` /
+  Schema `1.7`, and open findings `F-RB1-01` through `F-RB1-08`, to produce
+  the smallest correction implementation/test plan for the correction-required
+  findings `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`
+  without repository mutation. Codex must preserve `F-RB1-06`/`07`/`08` and
+  `F-CS-01` as non-blocking unless fresh evidence proves otherwise. No Runtime
+  write begins before that pre-analysis result returns to Control Tower.
