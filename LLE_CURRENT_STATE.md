@@ -59,8 +59,10 @@ in the backlog and are not duplicated here.
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
   `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW REQUEST
-  CORRECTION`
-  (see "Runtime Foundation B1 Validation Candidate" below; not yet on main)
+  CORRECTION / CORRECTION PRE-ANALYSIS COMPLETE / DEVELOPMENT CORRECTION
+  READY / NOT ELIGIBLE FOR MAIN INTEGRATION`
+  (see "Runtime Foundation B1 Correction Pre-Analysis — Fresh Codex
+  Read-Only" below; not yet on main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -603,6 +605,166 @@ no history rewrite is required or was performed.
   post-integration document verification `PASS`; Runtime B1 correction
   does not begin before the review-record step above is completed.
 
+#### Runtime Foundation B1 Correction Pre-Analysis — Fresh Codex Read-Only
+
+- Role: fresh Codex read-only correction pre-analysis (not Independent
+  Review, not Development, not code/test authorship).
+- Repository mutation caused by this pre-analysis: `0`.
+- Final verdict: `READY FOR DEVELOPMENT CORRECTION`.
+- Drift record: TARGET CODE DRIFT `NONE`; TARGET TEST DRIFT `NONE`;
+  DEPENDENCY DRIFT `NONE`; CANONICAL DRIFT `EXPECTED — API 1.27 /
+  Schema 1.7` (canonical advanced from `1.26`/`1.6`, the revisions the
+  original candidate was implemented against, to `1.27`/`1.7` via the
+  user-approved A1/B1 canonical synchronization; this is expected drift,
+  not an unplanned regression).
+- Architecture decision required: `NO`. Owner value required: `NO`.
+  Migration required: `NO`. Schema DDL required: `NO`. Canonical doc
+  change required: `NO`.
+- Runtime correction required: `YES`. Test correction/addition required:
+  `YES`.
+- `F-RB1-04` runtime code change required: `NO` — the candidate's
+  `assignmentLevelSecondaryEmpty` already includes all four predicates
+  (`conditionReferences`, `targetTimepoints`, `nodeIds`,
+  `itemFamilyReferences`); the required correction is an independent
+  fixture/oracle only, not a runtime code delta.
+- `F-RB1-06`, `F-RB1-07`, `F-RB1-08` (LOW/NOTE): not included in the
+  approved correction scope; preserved non-blocking, unchanged by this
+  pre-analysis.
+- `F-CS-01` (NOTE): not included in the approved correction scope;
+  preserved non-blocking, unchanged by this pre-analysis.
+- No finding is closed by this pre-analysis. `F-RB1-01` through
+  `F-RB1-05` remain `OPEN`; `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, and
+  `F-CS-01` remain `OPEN / NON-BLOCKING`.
+
+##### Approved Correction Scope
+
+Correction-required findings: `F-RB1-01` (HIGH), `F-RB1-02` (HIGH),
+`F-RB1-03` (MEDIUM), `F-RB1-04` (MEDIUM, test-only), `F-RB1-05` (MEDIUM).
+
+- `F-RB1-01`: `selectQualifyingAssignments()` supplied-attempt root
+  qualification must additionally apply
+  `att.started_at <= analysisCutoff`; global supplied-reference existence
+  validation is unchanged. A valid, existing, post-cutoff supplied attempt
+  must pass existence validation, qualify zero roots, and yield exactly
+  `{ status: "empty", data: null }`.
+- `F-RB1-02`: required boundaries — (1) `fetchSnapshots()`:
+  `snapshot.created_at <= analysisCutoff`; (2) `fetchSnapshotNodes()`:
+  owning snapshot timestamp `<= analysisCutoff`; (3) `nodeIds` root
+  qualification: the matching node's owning snapshot must be
+  cutoff-eligible; (4) `itemFamilyReferences` root qualification: the
+  matching snapshot must be cutoff-eligible. Not fetch-only.
+  `assignment.created_at` must not be assumed equivalent to
+  `snapshot.created_at`.
+- `F-RB1-03`: `selectAssignmentlessBonusEnrollmentIds()`
+  assignment-existence test uses
+  `evidence_assignments.created_at <= analysisCutoff`; a strictly
+  post-cutoff assignment must not suppress the assignment-less enrollment
+  raw fact.
+- `F-RB1-04`: runtime code delta `NONE` (see above). Required correction
+  evidence is an independent fixture/oracle proving zero-assignment
+  enrollment plus matching nonempty `conditionReferences` yields exactly
+  `{ status: "empty", data: null }`.
+- `F-RB1-05`: `analysisCutoff` accepted lexical form must be exactly
+  `YYYY-MM-DDTHH:mm:ss.sssZ`. Required behavior: omitted/undefined →
+  `MISSING_REQUIRED_FIELD`; null/non-string → `CONTRACT_VIOLATION`;
+  timezone-less string → `OUT_OF_RANGE_VALUE`; timezone-offset string
+  (e.g. `+09:00`) → `OUT_OF_RANGE_VALUE`; `Z` string without milliseconds
+  → `OUT_OF_RANGE_VALUE`; malformed/impossible/non-normalizable timestamp
+  → `OUT_OF_RANGE_VALUE`. Implementation direction: operation-local strict
+  canonical pattern, plus a valid-`Date` check, plus an exact
+  `parsed.toISOString() === value` round-trip. No new error code.
+
+Preserved non-blocking (not in correction scope): `F-RB1-06` (LOW),
+`F-RB1-07` (NOTE), `F-RB1-08` (NOTE), `F-CS-01` (NOTE).
+
+##### Branch Strategy
+
+- Recommended branch strategy: `A`.
+- Required future Development branch:
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`,
+  created from the then-current exact `main`
+  (`e586eaf32e5af9a5cd46d1f94c86bdb957429b72`) if `main` remains unchanged
+  at Development preflight.
+  Confirmed at this pre-analysis update: the target branch name is absent
+  both locally and on `origin` (verified via `git ls-remote`).
+- Commit sequence: COMMIT 1 = exact replay of the original reviewed
+  Runtime candidate `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` onto
+  current canonical `main`, reproducing the exact original three-file
+  runtime/test content. COMMIT 2 = a separate correction commit. No
+  amend, rebase, squash, fixup, or history rewrite of either commit or of
+  the original validation branch, which remains untouched. Current API
+  `1.27` / Schema `1.7` authority is inherited from the new branch's
+  parent.
+- Expected file scope — replay/baseline commit:
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/index.js`, `tests/viP1RawSourceRuntime.test.js`.
+  Correction commit (two files only):
+  `src/instrumentation/evidenceMetrics.js`,
+  `tests/viP1RawSourceRuntime.test.js`. `src/instrumentation/index.js`
+  correction change: `NO`. The correction commit must not touch
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `LLE_CURRENT_STATE.md`, `db/**`,
+  migration `014`, `package*.json`, or `.github/**`.
+
+##### Minimum Test Plan — Planned, Not Executed
+
+Codex proposed exactly seven new test blocks plus modification of existing
+timestamp validation tests. Recorded as `PLANNED / NOT EXECUTED`:
+
+- `T-C01`: post-cutoff supplied attempt → existence valid → exact
+  `empty_result`.
+- `T-C02`: pre-cutoff assignment + post-cutoff snapshot → snapshot
+  excluded.
+- `T-C03`: post-cutoff owning snapshot → snapshot nodes excluded.
+- `T-C03N`: `nodeIds` root matching only a post-cutoff snapshot → exact
+  `empty_result`.
+- `T-C03F`: `itemFamilyReferences` root matching only a post-cutoff
+  snapshot → exact `empty_result`.
+- `T-C04`: assignment-less enrollment + matching nonempty
+  `conditionReferences` → exact `empty_result`.
+- `T-C05`: assignment exists strictly after cutoff → does not suppress
+  the cutoff-time assignment-less enrollment fact.
+- Timestamp validation (modification of existing tests): exact canonical
+  `.sssZ` accepted; no-millisecond `Z` rejected; timezone-less rejected;
+  offset form rejected; impossible date rejected; malformed rejected;
+  omitted/null/non-string existing errors preserved; validation happens
+  before DB connection where applicable.
+- Independent oracles must use fixed fixture values / direct fixture
+  facts, not values derived from returned bundle transformations.
+
+Expected counts if implemented exactly (expected only, `NOT EXECUTION
+EVIDENCE`, not recorded as `PASS`): Runtime suite `56`; focused six-suite
+regression `200`; full repository regression `430`.
+
+##### Future Execution Requirements
+
+Development must use actual Windows-local PostgreSQL `17.10`, an isolated
+synthetic test DB only, migrations `001–013` (`014` absent/prohibited),
+and must run, after the correction commit: the corrected Runtime B1
+suite; dbPool healthcheck; migrations regression; Evidence Foundation
+migration regression; Evidence Foundation repository regression; VI P1
+item-lineage runtime regression; full repository regression;
+zero-side-effect checks; and temp DB cleanup confirmation. `lle_dev` must
+not be used as a destructive test target. No expected test count may be
+recorded as `PASS` before execution.
+
+##### Current Lifecycle After Pre-Analysis
+
+- Runtime Foundation B1: `IMPLEMENTED AS VALIDATION CANDIDATE /
+  INDEPENDENT REVIEW REQUEST CORRECTION / CORRECTION PRE-ANALYSIS
+  COMPLETE / DEVELOPMENT CORRECTION READY / NOT ELIGIBLE FOR MAIN
+  INTEGRATION`.
+- Runtime correction: `NOT STARTED`.
+- Original Runtime candidate: `PRESERVED` (unmodified; not amended,
+  rebased, or rewritten).
+- Canonical: `API 1.27 / Schema 1.7 / REVIEW-RECORDED ON MAIN`.
+- This pre-analysis does not mean: Runtime correction implemented;
+  Runtime B1 validated or closed; `F-RB1-01`/`02`/`03`/`04`/`05` closed;
+  `F-RB1-06`/`07`/`08` closed; `F-CS-01` closed; `B-3` resolved; P1
+  eligible or activated; human-data collection authorized; efficacy
+  verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
+  or actual provider/audio authorized.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -729,6 +891,16 @@ This bootstrap does not rerun PostgreSQL or tests.
   `git reset --hard origin/main` recovery): governance disposition
   `NON-BLOCKING` per fresh Independent Review, preserved as a historical
   process deviation, not marked as not having occurred.
+- Runtime Foundation B1 correction pre-analysis (fresh Codex read-only,
+  repository mutation `0`): verdict `READY FOR DEVELOPMENT CORRECTION`.
+  Correction-required findings `F-RB1-01`, `F-RB1-02`, `F-RB1-03`,
+  `F-RB1-04` (test-only, no runtime code delta), `F-RB1-05` remain `OPEN`;
+  none is closed by this pre-analysis. `F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  and `F-CS-01` remain `OPEN / NON-BLOCKING` and are excluded from the
+  approved correction scope. See "Runtime Foundation B1 Correction
+  Pre-Analysis — Fresh Codex Read-Only" above for the full drift record,
+  approved correction scope, branch strategy, minimum test plan, and
+  future execution requirements. Runtime correction remains `NOT STARTED`.
 
 ## 9. Lifecycle Non-Claims
 
@@ -762,6 +934,20 @@ This ledger does not claim:
 - `F-CS-01` closed — it is `OPEN / NON-BLOCKING`
 - Runtime Foundation B1 correction implemented or started
 - Runtime Foundation B1 main-integration eligibility restored
+- the fresh Codex read-only correction pre-analysis (repository mutation
+  `0`) is an Independent Review, a code/test implementation, or execution
+  evidence of any kind
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, or `F-RB1-05` closed by
+  the correction pre-analysis — all remain `OPEN`
+- `F-RB1-06`, `F-RB1-07`, or `F-RB1-08` closed — all remain
+  `OPEN / NON-BLOCKING`
+- the correction pre-analysis's planned minimum test plan (`T-C01`
+  through `T-C05`, `T-C03N`, `T-C03F`) or its expected test counts
+  (`56` / `200` / `430`) were executed or are `PASS` — they are `PLANNED /
+  NOT EXECUTED` and expected counts only
+- the future Development correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` exists
+  — it was confirmed absent both locally and on `origin` at this update
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -775,12 +961,16 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Codex read-only pre-analysis of the Runtime Foundation B1 correction
-  against the then-current exact `origin/main`, the reviewed Runtime candidate
-  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`, canonical API `1.27` /
-  Schema `1.7`, and open findings `F-RB1-01` through `F-RB1-08`, to produce
-  the smallest correction implementation/test plan for the correction-required
-  findings `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`
-  without repository mutation. Codex must preserve `F-RB1-06`/`07`/`08` and
-  `F-CS-01` as non-blocking unless fresh evidence proves otherwise. No Runtime
-  write begins before that pre-analysis result returns to Control Tower.
+- Fresh Windows Claude Development session to create
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` from
+  the then-current exact `origin/main`, replay exact reviewed candidate
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` as the first commit,
+  implement the correction-required Runtime B1 findings `F-RB1-01`,
+  `F-RB1-02`, `F-RB1-03`, test-only `F-RB1-04`, and `F-RB1-05` in a
+  separate correction commit limited to
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1RawSourceRuntime.test.js`, run actual isolated PostgreSQL
+  17.10 focused/full regression and zero-side-effect checks, push only
+  the validation branch, and return exact SHA/tree/blob/test evidence for
+  fresh Independent Review. Do not modify the original validation branch
+  or main.
