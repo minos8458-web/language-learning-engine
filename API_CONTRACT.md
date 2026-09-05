@@ -1917,11 +1917,17 @@ Unseen lineage 재구성을 위해 sibling assignment를 암묵적으로 포함�
 
 **`analysisCutoff`**
 
-Required canonical UTC timestamp string이다. Normalized representation: `YYYY-MM-DDTHH:mm:ss.sssZ`.
+Required canonical UTC timestamp string이다. Supplied input string 자체가 이미 정확히 `YYYY-MM-DDTHH:mm:ss.sssZ`여야 한다. 전체 문자열은 ASCII 숫자와 표시된 separator로 구성된 24문자이며, `YYYY`는 네 자리, `MM`/`DD`/`HH`/`mm`/`ss`는 각각 두 자리, `sss`는 정확히 세 자리이고 `T`와 `Z`는 대문자다.
+
+입력은 실제 존재하는 calendar date와 유효한 UTC 시각을 표현해야 한다. `MM`은 `01`–`12`, `DD`는 해당 연도·월의 유효한 날짜(윤년 적용), `HH`는 `00`–`23`, `mm`/`ss`는 `00`–`59`, `sss`는 `000`–`999`다. 동일 instant를 위 canonical form으로 재직렬화한 값은 입력 문자열과 문자 단위로 정확히 같아야 한다. Invalid date의 rollover나 precision의 절삭·반올림으로 입력을 수선하지 않는다.
+
+이 operation은 대체 timestamp 표기를 입력으로 받아 normalize하지 않는다. Milliseconds 생략, 세 자리가 아닌 fractional seconds, numeric UTC offset(`+00:00` 포함), timezone-less datetime, date-only, 소문자 `t`/`z`, `T` 대신 공백, 앞뒤 whitespace는 같은 instant로 변환 가능하더라도 허용하지 않는다. 성공 RAW_SOURCE bundle의 `analysisCutoff`는 허용된 입력 문자열과 동일하다.
 
 - Omitted/explicit `undefined` → `MISSING_REQUIRED_FIELD`
 - Explicit `null` 또는 non-string → `CONTRACT_VIOLATION`
-- Invalid 또는 non-normalizable timestamp → `OUT_OF_RANGE_VALUE`
+- 위 exact canonical form과 불일치하거나, invalid/impossible/out-of-range timestamp이거나, exact canonical round-trip이 불가능한 string → `OUT_OF_RANGE_VALUE`
+
+예: `2030-05-06T07:08:09.000Z`는 그대로 허용한다. `2030-05-06T07:08:09Z`, `2030-05-06T16:08:09.000+09:00`, `2030-05-06T07:08:09`, `2023-02-29T00:00:00.000Z`는 모두 `OUT_OF_RANGE_VALUE`다.
 
 **FORMULA boundary**
 
@@ -2283,3 +2289,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.25 | 2026-08-29 | VI P1 Measurement Readiness Runtime Foundation B1 Raw Source Rebuild CORE — 기존 §13.10.11 generic category를 보존하고 §13.10.11.1에 bounded `queryRawEvidenceForMetricRebuild(pool, input)` raw-source contract(exact input/seven filter key/analysisCutoff/FORMULA reference-only boundary/exact rawFacts 9종·sourceRebuildReference 5종 output/BIGINT decimal-string projection/deterministic ordering/`empty_result` semantics/REPEATABLE READ READ ONLY 단일 transaction/zero side effect)를 정의. 기존 five-code registry·API count·§13.10.11 unseen-transfer lineage rebuild source는 불변이며 metric reducer·FORMULA semantic interpretation·migration 014·materialized metric·provider/audio·P1 activation·human data는 승인하지 않음 |
 | 1.26 | 2026-08-30 | B1 RAW_SOURCE `empty_result` exact payload 사용자 승인 반영 — §13.10.11.1에 `queryRawEvidenceForMetricRebuild(pool, input)` 전용 exact payload `{ status: "empty", data: null }`를 명시하고 `{ status: "empty", data: [] }`는 이 operation에서 허용하지 않음을 확정. All-primary-empty·valid disjoint ancestry·secondary-filter zero-root·analysisCutoff zero-root 네 normal-empty path 전부에 동일 적용하며, validly-shaped unknown reference는 계속 `INVALID_ID`로 남고 `empty_result`로 변환하지 않음을 명시. §11의 다른 API에 대한 generic `empty_result` 허용 shape는 불변. Owner value 불요, Tier A 영향 없음, schema/migration/runtime/test/provider/P1 activation/human-data authorization 없음. |
 | 1.27 | 2026-09-05 | F-RB1-03/F-RB1-04 Architecture disambiguation — §13.10.11.1 Closure에 두 개 additive 문장을 추가해 "assignment-level secondary filter"/"secondary predicate"가 `conditionReferences`를 포함한 기존 네 predicate 전부를 가리킴을 명시(F-RB1-04)하고, 해당 closure 판정의 assignment 존재/부재를 `analysisCutoff` 이하 `evidence_assignments.created_at` 기준으로 판정함을 명시(F-RB1-03, mutable lifecycle column as-of-read projection과 무관)한다. Root selection·Physical filter authority·Raw-source cutoff boundary·exact `empty_result` payload·five-code registry·API count는 불변이며 신규 filter dimension이나 paired-ownership assertion을 도입하지 않는다. Owner value 불요, Tier A 영향 없음, migration/schema/runtime/test/provider/P1 activation/human-data authorization 없음. |
+| 1.28 | 2026-09-05 | F-RB1-05/F-RC-01 `analysisCutoff` contract adjudication — §13.10.11.1의 입력 문자열 자체가 정확히 `YYYY-MM-DDTHH:mm:ss.sssZ`인 valid canonical UTC timestamp여야 하는 R1을 명시하고, 대체 표기의 normalization acceptance를 허용하지 않으며 invalid/impossible/noncanonical input은 기존 `OUT_OF_RANGE_VALUE`로 거부함을 확정. Required/type error mapping, five-code registry, RAW_SOURCE input/output와 exact `empty_result`, source-time cutoff authority, A1/B1 closure, equivalence, FORMULA reference-only boundary, read-only transaction 및 zero-side-effect 계약은 유지한다. API 단독 clarification으로 Schema revision 1.7·Tier A·API count는 불변이다. Owner value 불요; schema DDL·migration 014·runtime/test 변경·provider/audio·P1 activation·human-data collection을 승인하지 않으며 Runtime B1 validation/closure 또는 main-integration eligibility를 선언하지 않는다. |
