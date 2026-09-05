@@ -422,17 +422,43 @@ describe('VI P1 raw source rebuild runtime (queryRawEvidenceForMetricRebuild)', 
     );
   });
 
-  test('T05 analysisCutoff invalid/non-normalizable timestamp is OUT_OF_RANGE_VALUE', async () => {
+  test('T05 analysisCutoff not in canonical YYYY-MM-DDTHH:mm:ss.sssZ form is OUT_OF_RANGE_VALUE', async () => {
+    // Non-canonical lexical shapes (missing milliseconds, missing 'Z',
+    // non-Z offset), a calendar-impossible date that Date would otherwise
+    // silently roll over, and a plain malformed string all reject the same
+    // way -- exact canonical form only, no alternate ISO 8601 shape.
+    const rejects = [
+      '2030-05-06T07:08:09Z',
+      '2030-05-06T07:08:09',
+      '2030-05-06T16:08:09.000+09:00',
+      '2023-02-29T00:00:00.000Z',
+      'not-a-timestamp',
+    ];
+    for (const analysisCutoff of rejects) {
+      await rejectsWithCode(
+        () => queryRawEvidenceForMetricRebuild(pool, baseInput({ analysisCutoff })),
+        'OUT_OF_RANGE_VALUE'
+      );
+    }
+
+    // Canonical-shape rejection happens before any DB connection: a pool
+    // whose connect() throws must never actually be reached for a
+    // shape-invalid input.
+    const poisonedPool = {
+      connect: async () => {
+        throw new Error('pool.connect must not be called for a shape-invalid analysisCutoff');
+      },
+    };
     await rejectsWithCode(
-      () => queryRawEvidenceForMetricRebuild(pool, baseInput({ analysisCutoff: 'not-a-timestamp' })),
+      () => queryRawEvidenceForMetricRebuild(poisonedPool, baseInput({ analysisCutoff: rejects[0] })),
       'OUT_OF_RANGE_VALUE'
     );
   });
 
-  test('T06 analysisCutoff normalizes to canonical YYYY-MM-DDTHH:mm:ss.sssZ', async () => {
+  test('T06 analysisCutoff accepts and echoes back the exact canonical form', async () => {
     const enrollment = await newEnrollment();
     const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
-      analysisCutoff: '2030-05-06T07:08:09Z',
+      analysisCutoff: '2030-05-06T07:08:09.000Z',
       filters: emptyFilters({ enrollmentIds: [enrollment.enrollment_id] }),
     }));
     assert.equal(result.analysisCutoff, '2030-05-06T07:08:09.000Z');
@@ -1290,5 +1316,201 @@ describe('VI P1 raw source rebuild runtime (queryRawEvidenceForMetricRebuild)', 
     assert.equal(result.sourceRebuildReference.attemptIds.length, 1);
     assert.equal(result.rawFacts.targetNodeEvaluations.length, 2);
     assert.equal(result.sourceRebuildReference.evaluationIds.length, 2);
+  });
+
+  // -- 16. Runtime B1 correction evidence (F-RB1-01/02/03/04) ------------------
+
+  test('T-C01 post-cutoff supplied attempt does not qualify its assignment root (F-RB1-01)', async () => {
+    const enrollment = await newEnrollment();
+    const created = await newAssignment(enrollment.enrollment_id);
+    const assignmentId = created.assignment.assignment_id;
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2020-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await pool.query(
+      `UPDATE evidence_attempts SET started_at = '2025-01-01T00:00:00.000Z' WHERE attempt_id = $1`,
+      [attempt.attemptId]
+    );
+    // Establish the source fact directly rather than trusting the runtime
+    // under test: the attempt physically exists and its started_at is
+    // strictly after the cutoff used below.
+    const { rows: attemptRows } = await pool.query(
+      `SELECT started_at FROM evidence_attempts WHERE attempt_id = $1`,
+      [attempt.attemptId]
+    );
+    assert.ok(attemptRows[0].started_at > new Date('2022-01-01T00:00:00.000Z'));
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      filters: emptyFilters({ attemptIds: [attempt.attemptId] }),
+    }));
+
+    assert.deepEqual(result, { status: 'empty', data: null });
+  });
+
+  test('T-C02 pre-cutoff assignment with a post-cutoff snapshot excludes only the snapshot (F-RB1-02 snapshot cutoff)', async () => {
+    const enrollment = await newEnrollment();
+    const created = await newAssignment(enrollment.enrollment_id);
+    const assignmentId = created.assignment.assignment_id;
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2020-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    // evidence_assignment_snapshots PRIMARY KEY is assignment_id itself, so
+    // the owning snapshot row is addressed directly -- no independent
+    // snapshot_id lookup is needed.
+    await pool.query(
+      `UPDATE evidence_assignment_snapshots SET created_at = '2025-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      filters: emptyFilters({ assignmentIds: [assignmentId] }),
+    }));
+
+    assert.equal(result.rawFacts.assignments.length, 1);
+    assert.equal(result.rawFacts.assignments[0].assignment_id, assignmentId);
+    assert.deepEqual(result.rawFacts.assignmentSnapshots, []);
+  });
+
+  test('T-C03 post-cutoff owning snapshot excludes its snapshot-node rows too (F-RB1-02 node fetch authority)', async () => {
+    const enrollment = await newEnrollment();
+    const created = await newAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A, NODE_B] });
+    const assignmentId = created.assignment.assignment_id;
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2020-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    await pool.query(
+      `UPDATE evidence_assignment_snapshots SET created_at = '2025-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    // Confirm the node rows physically exist under that (now post-cutoff)
+    // snapshot before asserting they are excluded from the fetch.
+    const { rows: nodeCountRows } = await pool.query(
+      `SELECT count(*) AS n FROM evidence_assignment_snapshot_nodes WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    assert.equal(Number(nodeCountRows[0].n), 2);
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      // Assignment root selected via assignmentIds directly -- no nodeIds
+      // filter is used here, so this exercises fetchSnapshotNodes' own
+      // owning-snapshot cutoff authority, not root selection.
+      filters: emptyFilters({ assignmentIds: [assignmentId] }),
+    }));
+
+    assert.equal(result.rawFacts.assignments.length, 1);
+    assert.deepEqual(result.rawFacts.assignmentSnapshots, []);
+    assert.deepEqual(result.rawFacts.assignmentSnapshotNodes, []);
+  });
+
+  test('T-C03N nodeIds root qualification requires the owning snapshot to be cutoff-eligible (F-RB1-02 root node path)', async () => {
+    const enrollment = await newEnrollment();
+    const created = await newAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A] });
+    const assignmentId = created.assignment.assignment_id;
+    // The assignment itself is pre-cutoff, so only its node-membership
+    // qualification (via the post-cutoff snapshot) is under test here.
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2020-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    await pool.query(
+      `UPDATE evidence_assignment_snapshots SET created_at = '2025-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      // enrollmentIds is a nonempty primary root so this is not the
+      // all-primary-empty path; NODE_A exists globally (insertGrammarNodes)
+      // so its only membership under this branch is the post-cutoff
+      // snapshot.
+      filters: emptyFilters({
+        enrollmentIds: [enrollment.enrollment_id],
+        nodeIds: [NODE_A],
+      }),
+    }));
+
+    assert.deepEqual(result, { status: 'empty', data: null });
+  });
+
+  test('T-C03F itemFamilyReferences root qualification requires the owning snapshot to be cutoff-eligible (F-RB1-02 root family path)', async () => {
+    const enrollment = await newEnrollment();
+    const created = await newAssignment(enrollment.enrollment_id, { itemFamilyId: FAMILY_1 });
+    const assignmentId = created.assignment.assignment_id;
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2020-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+    await pool.query(
+      `UPDATE evidence_assignment_snapshots SET created_at = '2025-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [assignmentId]
+    );
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      // FAMILY_1 exists globally (registerAuthorityFixture); only the
+      // post-cutoff snapshot pairs it with this assignment.
+      filters: emptyFilters({
+        enrollmentIds: [enrollment.enrollment_id],
+        itemFamilyReferences: [{ itemFamilyId: FAMILY_1, itemFamilyVersion: 1 }],
+      }),
+    }));
+
+    assert.deepEqual(result, { status: 'empty', data: null });
+  });
+
+  test('T-C04 A1: assignment-less enrollment with a matching conditionReferences filter still closes to empty_result', async () => {
+    const enrollment = await newEnrollment(CONDITION_1);
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      // Explicit enrollment root; the enrollment has zero assignments; its
+      // own condition matches the supplied conditionReferences exactly;
+      // every other secondary filter (assignmentIds/attemptIds already
+      // empty via emptyFilters()) stays empty. conditionReferences is one
+      // of the four assignment-level secondary predicates (API_CONTRACT.md
+      // §13.10.11.1), so its nonempty presence here still yields
+      // empty_result rather than fabricating a root from the enrollment's
+      // own condition.
+      filters: emptyFilters({
+        enrollmentIds: [enrollment.enrollment_id],
+        conditionReferences: [{ conditionId: CONDITION_1, conditionVersion: 1 }],
+      }),
+    }));
+    assert.deepEqual(result, { status: 'empty', data: null });
+  });
+
+  test('T-C05 B1: a post-cutoff assignment does not suppress the assignment-less enrollment closure path (F-RB1-03)', async () => {
+    const enrollment = await newEnrollment();
+    await pool.query(
+      `UPDATE evidence_enrollments SET created_at = '2020-01-01T00:00:00.000Z' WHERE enrollment_id = $1`,
+      [enrollment.enrollment_id]
+    );
+    const created = await newAssignment(enrollment.enrollment_id);
+    const postCutoffAssignmentId = created.assignment.assignment_id;
+    await pool.query(
+      `UPDATE evidence_assignments SET created_at = '2025-01-01T00:00:00.000Z' WHERE assignment_id = $1`,
+      [postCutoffAssignmentId]
+    );
+
+    const result = await queryRawEvidenceForMetricRebuild(pool, baseInput({
+      analysisCutoff: '2022-01-01T00:00:00.000Z',
+      filters: emptyFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+
+    assert.equal(result.status, undefined);
+    assert.equal(result.rawFacts.enrollments.length, 1);
+    assert.equal(result.rawFacts.enrollments[0].enrollment_id, enrollment.enrollment_id);
+    assert.deepEqual(result.rawFacts.assignments, []);
+    assert.deepEqual(result.rawFacts.assignmentSnapshots, []);
+    assert.deepEqual(result.rawFacts.assignmentSnapshotNodes, []);
+    assert.deepEqual(result.rawFacts.attempts, []);
+    assert.deepEqual(result.sourceRebuildReference.enrollmentIds, [enrollment.enrollment_id]);
+    assert.ok(!result.rawFacts.assignments.some((row) => row.assignment_id === postCutoffAssignmentId));
   });
 });
