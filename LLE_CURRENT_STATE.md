@@ -1020,6 +1020,91 @@ verified); `lle_dev` destructive-use `NO`.
   fresh Architecture read-only adjudication of `F-RB1-05` / `F-RC-01`
   returns to Control Tower and receives any required user approval.
 
+#### Architecture Adjudication — GPT-6 Astra Read-Only, R1 Recommended
+
+- Role: GPT-6 Astra read-only adjudication (not Independent Review, not
+  Development, not code/test authorship).
+- Repository mutation caused by this adjudication: `0`.
+- Timestamp contract precedent consulted: `NONE`.
+- Verdict: `RECOMMEND R1 — USER APPROVAL REQUIRED`.
+- Recommendation `R1`: the supplied `analysisCutoff` input string itself
+  must already be exactly `YYYY-MM-DDTHH:mm:ss.sssZ` — exact 24-character
+  canonical representation, ASCII digits, uppercase `T`, uppercase `Z`,
+  exact three-digit milliseconds, valid calendar date, valid UTC time,
+  exact canonical round-trip, no whitespace trimming, no timezone
+  completion, no offset conversion, no fractional-second
+  filling/truncation/rounding, no invalid-date rollover repair.
+  - `2030-05-06T07:08:09.000Z` → accepted unchanged.
+  - `2030-05-06T07:08:09Z` → `OUT_OF_RANGE_VALUE`.
+  - `2030-05-06T16:08:09.000+09:00` → `OUT_OF_RANGE_VALUE`.
+  - `2030-05-06T07:08:09` → `OUT_OF_RANGE_VALUE`.
+  - `2023-02-29T00:00:00.000Z` → `OUT_OF_RANGE_VALUE`.
+
+##### Latest User Approval — R1 and API 1.28 Tier C Patch
+
+- Latest explicit user approval (highest-precedence per §1): `R1 및 제안된
+  API 1.28 Tier C canonical patch를 승인`.
+- `R1` = `USER-APPROVED` (selected over `R2`).
+- Proposed API `1.28` Tier C canonical patch = `USER-APPROVED`.
+- Approval scope: patch `API_CONTRACT.md` only; revision `1.27 → 1.28`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` remains revision `1.7`, no Schema
+  mirror patch required; Tier A impact `NO`; owner value required `NO`;
+  migration required `NO`; schema DDL required `NO`; migration `014`
+  remains absent/not authorized; current Runtime correction candidate code
+  change required `NO`; current Runtime correction candidate test change
+  required `NO`.
+- This user approval resolves the R1/R2 owner-facing decision. It does
+  NOT itself make API `1.28` canonical on `main`.
+
+##### Approved API 1.28 Patch Specification — Not Yet Implemented
+
+- Target file: `API_CONTRACT.md`. Current canonical revision on `main`:
+  `1.27`, blob `db38091928b0164a45c44c7ed10c28bc47b17b79`. Approved
+  proposed revision: `1.28`. Target section: §13.10.11.1 (`analysisCutoff`).
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md` target: unchanged, remains revision
+  `1.7`, blob `ea55989eba1c5441e0cea68257f718b80453e8fb`.
+- Approved proposed `1.28` revision-history row (specification only; not
+  added to `API_CONTRACT.md` in this update):
+
+  | 1.28 | 2026-09-05 | F-RB1-05/F-RC-01 `analysisCutoff` contract adjudication — §13.10.11.1의 입력 문자열 자체가 정확히 `YYYY-MM-DDTHH:mm:ss.sssZ`인 valid canonical UTC timestamp여야 하는 R1을 명시하고, 대체 표기의 normalization acceptance를 허용하지 않으며 invalid/impossible/noncanonical input은 기존 `OUT_OF_RANGE_VALUE`로 거부함을 확정. Required/type error mapping, five-code registry, RAW_SOURCE input/output와 exact `empty_result`, source-time cutoff authority, A1/B1 closure, equivalence, FORMULA reference-only boundary, read-only transaction 및 zero-side-effect 계약은 유지한다. API 단독 clarification으로 Schema revision 1.7·Tier A·API count는 불변이다. Owner value 불요; schema DDL·migration 014·runtime/test 변경·provider/audio·P1 activation·human-data collection을 승인하지 않으며 Runtime B1 validation/closure 또는 main-integration eligibility를 선언하지 않는다. |
+
+  This row is approved specification only; `API_CONTRACT.md` is not
+  modified by this update.
+- `API_CONTRACT.md` is not modified by this update; current canonical
+  remains API `1.27` / Schema `1.7`.
+
+##### Runtime Candidate Implication
+
+- Correction branch:
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`.
+- Correction tip: `357ac80058ce3feab0565d5ed995927ef2207a77`.
+- Correction tree: `e15479e510d8da2daf236c3c3be6dce421f718d5`.
+- Architecture fresh-read determined: current correction candidate code
+  change required `NO`; current correction candidate test change required
+  `NO`. The current candidate already implements `R1`.
+- `F-RB1-05` and `F-RC-01` are NOT called `CLOSED` by this update.
+
+##### Current Lifecycle After R1 / API 1.28 User Approval
+
+- Runtime Foundation B1: `CORRECTION VALIDATION CANDIDATE PRESENT /
+  F-RB1-01–04 CLOSED BY FRESH RE-REVIEW / R1 USER-APPROVED / API 1.28
+  TIER C PATCH USER-APPROVED / CANONICAL PATCH NOT YET IMPLEMENTED /
+  F-RB1-05 AND F-RC-01 REMAIN OPEN / MAIN INTEGRATION NOT ELIGIBLE`.
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`: remain `CLOSED BY FRESH
+  RE-REVIEW` (unchanged by this update).
+- `F-RB1-05`: `OPEN / R1 USER-APPROVED / CANONICAL PATCH PENDING`.
+- `F-RC-01`: `OPEN / R1 USER-APPROVED / CANONICAL PATCH PENDING`.
+- `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`,
+  `F-RC-04`: preserved unchanged, `OPEN / NON-BLOCKING`.
+- Current canonical on `main`: API `1.27` / Schema `1.7`. Approved next
+  canonical target: API `1.28` / Schema remains `1.7`.
+- This update does not mean: API `1.28` canonical on `main`; `F-RB1-05`
+  closed; `F-RC-01` closed; Runtime Foundation B1 validated or closed;
+  runtime canonical on `main`; post-merge verified; `B-3` resolved; P1
+  eligible or activated; human-data collection authorized; efficacy
+  verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
+  or provider/audio authorized.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1287,15 +1372,18 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Architecture read-only adjudication of the Runtime Foundation B1
-  `analysisCutoff` input contract ambiguity (`F-RB1-05` / `F-RC-01`)
-  against current canonical API `1.27` / Schema `1.7`, choosing exactly
-  one semantic model: R1 = input itself must already be exact
-  `YYYY-MM-DDTHH:mm:ss.sssZ`, or R2 = any unambiguous valid
-  deterministically-normalizable timestamp may be accepted and normalized
-  to `YYYY-MM-DDTHH:mm:ss.sssZ`. The Architecture session must determine
-  whether a Tier C canonical patch is required, provide the smallest
-  exact patch specification if required, state runtime/test implications
-  for either choice, and cause repository mutation `0`. No Runtime
-  correction or main integration begins before the Architecture decision
-  returns to Control Tower and receives any required user approval.
+- Fresh Windows Claude Architecture documentation session to create a new
+  validation branch from the then-current exact `origin/main`, modify
+  exactly `API_CONTRACT.md` to implement the user-approved R1/API 1.28
+  Tier C canonical patch in §13.10.11.1 plus the exact approved 1.28
+  revision-history row, leave `EVIDENCE_FOUNDATION_P0_SCHEMA.md` at
+  revision 1.7 and byte-unchanged, make no runtime/test/backlog/Current
+  State/db/package/workflow changes, commit and push only the validation
+  branch, and return exact SHA/tree/blob/diff evidence for fresh
+  Independent Review. No Runtime correction or Runtime main integration
+  before the API 1.28 canonical patch lifecycle completes and the Runtime
+  candidate is freshly re-reviewed against canonical API 1.28. Suggested
+  future branch:
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`. The
+  future Architecture documentation session MUST first verify this branch
+  is absent locally and remotely before creating it.
