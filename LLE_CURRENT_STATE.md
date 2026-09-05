@@ -58,11 +58,11 @@ in the backlog and are not duplicated here.
 - State: `REVIEW-RECORDED / CANONICAL ON MAIN / POST-MERGE VERIFIED`
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
-  `IMPLEMENTED AS VALIDATION CANDIDATE / INDEPENDENT REVIEW REQUEST
-  CORRECTION / CORRECTION PRE-ANALYSIS COMPLETE / DEVELOPMENT CORRECTION
-  READY / NOT ELIGIBLE FOR MAIN INTEGRATION`
-  (see "Runtime Foundation B1 Correction Pre-Analysis — Fresh Codex
-  Read-Only" below; not yet on main)
+  `IMPLEMENTED AS CORRECTION VALIDATION CANDIDATE / DEVELOPMENT-SESSION
+  POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT REVIEW PENDING / NOT
+  ELIGIBLE FOR MAIN INTEGRATION`
+  (see "Runtime Foundation B1 Correction Candidate — Development Session"
+  below; not yet on main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -765,6 +765,123 @@ recorded as `PASS` before execution.
   verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
   or actual provider/audio authorized.
 
+#### Runtime Foundation B1 Correction Candidate — Development Session
+
+- Role: Development-session correction implementation and PostgreSQL
+  execution (not Independent Review, not Independent Validation).
+- Classification: `DEVELOPMENT CORRECTION VALIDATION CANDIDATE` /
+  `DEVELOPMENT-SESSION EXECUTION EVIDENCE` only.
+- Correction branch:
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`.
+- Branch base: `ea22d6f8276dba6d27843bbf2fa34171fe9ab941`.
+
+##### Replay Commit
+
+- `RUNTIME_B1_REPLAY_SHA`: `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`.
+- Parent: `ea22d6f8276dba6d27843bbf2fa34171fe9ab941`.
+- Tree: `5a97e917e85eeecc25022ea414e37a9b7a06bd32`.
+- Subject: `Implement VI P1 raw source rebuild runtime`.
+- Replay exact files/blobs (byte-faithful to the original reviewed
+  candidate `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`):
+  - `src/instrumentation/evidenceMetrics.js` —
+    blob `afa7f310a1845b891d59f653817c66c0d5b0f049`
+  - `src/instrumentation/index.js` —
+    blob `14577b90cc19fe10de27d7c1afe0373679e105e9`
+  - `tests/viP1RawSourceRuntime.test.js` —
+    blob `2ba38e44e3d9926e74d0c5b84a3a02ae72cfc5d4`
+
+##### Correction Commit
+
+- `RUNTIME_B1_CORRECTION_SHA`: `357ac80058ce3feab0565d5ed995927ef2207a77`.
+- Parent: `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`.
+- Tree: `e15479e510d8da2daf236c3c3be6dce421f718d5`.
+- Subject: `Correct Runtime B1 cutoff semantics`.
+- Exact changed files (two-file scope, no other file):
+  - `src/instrumentation/evidenceMetrics.js` —
+    blob `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`
+  - `tests/viP1RawSourceRuntime.test.js` —
+    blob `aa7da66c4a812c8d30d45823dbc69f466a739f6d`
+- `src/instrumentation/index.js` remains unchanged by the correction —
+  blob `14577b90cc19fe10de27d7c1afe0373679e105e9`. No correction change to
+  `index.js`.
+
+##### Implemented Correction Scope
+
+- `F-RB1-01`: `IMPLEMENTED AS CORRECTION CANDIDATE`.
+  `selectQualifyingAssignments()` supplied-attempt root qualification now
+  additionally requires `att.started_at <= analysisCutoff`; global
+  supplied-reference existence validation is unchanged.
+- `F-RB1-02`: `IMPLEMENTED AS CORRECTION CANDIDATE`. Correction includes
+  `nodeIds` root-qualification owning-snapshot cutoff, `itemFamilyReferences`
+  root-qualification snapshot cutoff, `fetchSnapshots()` snapshot
+  `created_at` cutoff, `fetchSnapshotNodes()` owning-snapshot-timestamp
+  cutoff, and `runBounded()` `analysisCutoff` plumbing to all of the above.
+  Snapshot-node projection remains node-only.
+- `F-RB1-03`: `IMPLEMENTED AS CORRECTION CANDIDATE`.
+  `selectAssignmentlessBonusEnrollmentIds()` now evaluates assignment
+  existence as-of `evidence_assignments.created_at <= analysisCutoff`.
+- `F-RB1-04`: `TEST EVIDENCE ADDED`. Runtime code change: `NONE`. An
+  independent A1 fixture was added; runtime code was not changed for this
+  finding.
+- `F-RB1-05`: `IMPLEMENTED AS CORRECTION CANDIDATE`. `analysisCutoff` now
+  requires the exact canonical form `YYYY-MM-DDTHH:mm:ss.sssZ`, enforced by
+  strict lexical validation plus a valid-`Date` check plus an exact
+  `parsed.toISOString() === value` round-trip. No new error code.
+
+Preserved non-blocking, not touched by this correction: `F-RB1-06`
+(OPEN / NON-BLOCKING), `F-RB1-07` (OPEN / NON-BLOCKING), `F-RB1-08`
+(OPEN / NON-BLOCKING), `F-CS-01` (OPEN / NON-BLOCKING). None is marked
+`CLOSED` by this update.
+
+##### Development-Session PostgreSQL Execution Evidence
+
+Classification: `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
+Validation and not an Independent Review `PASS`.
+
+- Execution environment: Windows 11, Windows-local repository, PostgreSQL
+  `17.10`, Windows `npm`.
+- Isolated database: `lle_test_vip1_b1_correction_20260905_91640`.
+- Migrations: `001–013 applied`, `013` exactly once, `014` absent.
+- Evidence tables: `17`.
+- Runtime B1 suite: `56` tests, `56` pass, `0` fail/cancelled/skipped/todo.
+  Command: `npm.cmd test -- tests/viP1RawSourceRuntime.test.js`.
+- Focused regression: `200` tests, `200` pass, `0` fail. Command:
+  `npm.cmd test -- tests/dbPool.healthcheck.test.js
+  tests/migrations.test.js tests/evidenceFoundationMigration.test.js
+  tests/evidenceFoundationRepository.test.js
+  tests/viP1ItemLineageRuntime.test.js tests/viP1RawSourceRuntime.test.js`.
+- Full repository regression: `430` tests, `55` suites, `430` pass, `0`
+  fail/cancelled/skipped/todo, duration `16809.7ms`. Command:
+  `npm.cmd test`.
+- Zero-side-effect evidence: T44 `REPEATABLE READ READ ONLY` / zero write
+  statement `PASS`; T45–T47 nonempty/empty/validation-error row-count
+  invariance `PASS`; `progress`/`attempt_records` counts remained `0` after
+  query tests.
+- Temporary database: `DROPPED`; drop-absence verification `PASS`.
+- `lle_dev` destructive-use: `NO`.
+- These Development-session results are not `VALIDATED`, are not
+  `Independent Validation`, and are not an Independent Review `PASS`.
+
+##### Current Lifecycle After Development Correction
+
+- Runtime Foundation B1: `IMPLEMENTED AS CORRECTION VALIDATION CANDIDATE /
+  DEVELOPMENT-SESSION POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT
+  REVIEW PENDING / NOT ELIGIBLE FOR MAIN INTEGRATION`.
+- Correction branch:
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`.
+- Replay: `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`.
+- Correction: `357ac80058ce3feab0565d5ed995927ef2207a77`.
+- Correction tree: `e15479e510d8da2daf236c3c3be6dce421f718d5`.
+- Runtime on main: `ABSENT`.
+- Main integration: `NOT ELIGIBLE`.
+- Independent Review: `PENDING`.
+- This update does not mean: Runtime Foundation B1 `VALIDATED`, `CLOSED`,
+  `CANONICAL RUNTIME ON MAIN`, or `POST-MERGE VERIFIED`; any of
+  `F-RB1-01`–`F-RB1-05` closed; `F-RB1-06`/`07`/`08` or `F-CS-01` closed;
+  `B-3` resolved; P1 eligible or activated; human-data collection
+  authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
+  §10 overall `PASS`; or actual provider/audio authorized.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -901,6 +1018,23 @@ This bootstrap does not rerun PostgreSQL or tests.
   Pre-Analysis — Fresh Codex Read-Only" above for the full drift record,
   approved correction scope, branch strategy, minimum test plan, and
   future execution requirements. Runtime correction remains `NOT STARTED`.
+- Runtime Foundation B1 correction candidate (Development session,
+  correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`,
+  replay `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, correction
+  `357ac80058ce3feab0565d5ed995927ef2207a77`): `F-RB1-01`, `F-RB1-02`,
+  `F-RB1-03`, and `F-RB1-05` `IMPLEMENTED AS CORRECTION CANDIDATE`;
+  `F-RB1-04` `TEST EVIDENCE ADDED / RUNTIME CODE CHANGE NONE`. All five
+  remain `OPEN` — none is closed by this update. Development-session
+  PostgreSQL execution evidence (Runtime suite `56/56`, focused regression
+  `200/200`, full regression `430/430`) is recorded as `DEVELOPMENT-SESSION
+  EXECUTION EVIDENCE` only, not Independent Validation and not an
+  Independent Review `PASS`. `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, and
+  `F-CS-01` remain `OPEN / NON-BLOCKING` and were not touched by this
+  correction. See "Runtime Foundation B1 Correction Candidate —
+  Development Session" above for full detail. Runtime Foundation B1
+  main-integration eligibility remains `NOT ELIGIBLE`; Independent Review
+  of this correction candidate is `PENDING`.
 
 ## 9. Lifecycle Non-Claims
 
@@ -945,9 +1079,23 @@ This ledger does not claim:
   through `T-C05`, `T-C03N`, `T-C03F`) or its expected test counts
   (`56` / `200` / `430`) were executed or are `PASS` — they are `PLANNED /
   NOT EXECUTED` and expected counts only
-- the future Development correction branch
-  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` exists
-  — it was confirmed absent both locally and on `origin` at this update
+- the Development correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`
+  (replay `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, correction
+  `357ac80058ce3feab0565d5ed995927ef2207a77`) is validated, closed,
+  canonical, or integrated on main — Runtime Foundation B1 main-integration
+  eligibility remains `NOT ELIGIBLE`
+- the Development-session PostgreSQL execution evidence for the correction
+  candidate (Runtime suite `56/56`, focused regression `200/200`, full
+  regression `430/430`) is Independent Validation or an Independent Review
+  `PASS`
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, or `F-RB1-05` closed by
+  the correction candidate or its Development-session execution evidence
+  — all remain `OPEN`
+- `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, or `F-CS-01` closed by this
+  correction candidate — all remain `OPEN / NON-BLOCKING`
+- Independent Review of the correction candidate occurred or produced any
+  verdict — it is `PENDING`
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -961,16 +1109,18 @@ This ledger does not claim:
 
 ## 10. Next Action
 
-- Fresh Windows Claude Development session to create
-  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` from
-  the then-current exact `origin/main`, replay exact reviewed candidate
-  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` as the first commit,
-  implement the correction-required Runtime B1 findings `F-RB1-01`,
-  `F-RB1-02`, `F-RB1-03`, test-only `F-RB1-04`, and `F-RB1-05` in a
-  separate correction commit limited to
-  `src/instrumentation/evidenceMetrics.js` and
-  `tests/viP1RawSourceRuntime.test.js`, run actual isolated PostgreSQL
-  17.10 focused/full regression and zero-side-effect checks, push only
-  the validation branch, and return exact SHA/tree/blob/test evidence for
-  fresh Independent Review. Do not modify the original validation branch
-  or main.
+- Fresh Claude Opus 5 Independent Review of Runtime Foundation B1
+  correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` at
+  exact correction tip `357ac80058ce3feab0565d5ed995927ef2207a77` against
+  exact replay parent `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7` and
+  current canonical `main` `ea22d6f8276dba6d27843bbf2fa34171fe9ab941`,
+  checking: replay fidelity to the original reviewed candidate; the
+  correction's exact two-file scope; `F-RB1-01` through `F-RB1-05`
+  correction fidelity; that the `F-RB1-04` runtime code delta remains
+  `NONE`; the seven new correction tests and timestamp-test changes; exact
+  canonical API `1.27` / Schema `1.7` compliance; transaction /
+  zero-side-effect semantics; the Development PostgreSQL evidence
+  classification boundary; preservation of `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, and `F-CS-01`; and main-integration eligibility. No Runtime
+  B1 main integration before this fresh review.
