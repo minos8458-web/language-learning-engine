@@ -58,11 +58,12 @@ in the backlog and are not duplicated here.
 - State: `REVIEW-RECORDED / CANONICAL ON MAIN / POST-MERGE VERIFIED`
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
-  `IMPLEMENTED AS CORRECTION VALIDATION CANDIDATE / DEVELOPMENT-SESSION
-  POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT REVIEW BLOCKED —
-  CANONICAL DECISION REQUIRED / MAIN INTEGRATION NOT ELIGIBLE`
-  (see "Fresh Independent Review Result — Blocked, Canonical Decision
-  Required" below; not yet on main)
+  `CORRECTION VALIDATION CANDIDATE PRESENT / F-RB1-01–04 CLOSED BY FRESH
+  RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN / API 1.28 R1 DOCUMENTATION
+  VALIDATION CANDIDATE PRESENT / FRESH CANONICAL INDEPENDENT REVIEW
+  PENDING / RUNTIME MAIN INTEGRATION NOT ELIGIBLE`
+  (see "API 1.28 R1 Documentation Validation Candidate" below; not yet on
+  main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -1105,6 +1106,92 @@ verified); `lle_dev` destructive-use `NO`.
   verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
   or provider/audio authorized.
 
+#### API 1.28 R1 Documentation Validation Candidate
+
+- Role: Architecture documentation validation-candidate creation
+  (documentation-only; not Independent Review, not Development, not
+  code/test authorship).
+- Repository mutation scope: `API_CONTRACT.md` only, on a new validation
+  branch; `main` unmodified.
+- Validation branch:
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`.
+- Candidate tip: `2995ba806b1da9a4b0978f8c15222fd27e9620d3`.
+- Candidate parent (then-current exact `main`):
+  `a959d96c6530bea82dcf71ec0081053ed1d5d725`.
+- Candidate tree: `82f2d53da0e10226c4b8a7c2784407b75fd0bb5f`.
+- Candidate subject: `Clarify Runtime B1 analysis cutoff canonical input`.
+- Exact changed file (one-file scope, no other file): `API_CONTRACT.md` —
+  candidate blob `b70bda6cdf8896337c0a699b8810852bb466dace`. Diff stat:
+  `1 file changed, 9 insertions(+), 2 deletions(-)`.
+- Exact modification scope: (1) §13.10.11.1 `analysisCutoff` block
+  replaced with the user-approved `R1` exact-canonical-input contract;
+  (2) API revision-history row `1.28` added exactly once, immediately
+  after `1.27`.
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md` on the candidate branch: unchanged —
+  blob `ea55989eba1c5441e0cea68257f718b80453e8fb`, revision `1.7`. No
+  Schema mirror candidate exists or is required.
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md` on the candidate branch:
+  unchanged — blob `b3332d9601ff490a8271f48779acd29cf6798004`.
+- `LLE_CURRENT_STATE.md` at the candidate branch base: unchanged — blob
+  `72f8a6073ef4346087aa5d47889e2fa8150f62a1`.
+- Candidate content specifies `R1`: the supplied `analysisCutoff` input
+  string itself must already be exactly `YYYY-MM-DDTHH:mm:ss.sssZ` — exact
+  24-character canonical form, ASCII digits, uppercase `T`/`Z`, exactly
+  three fractional-second digits, valid calendar date, valid UTC time,
+  exact canonical round-trip; no whitespace normalization, no timezone
+  completion, no numeric-offset conversion, no fractional-precision
+  filling/truncation/rounding, and no invalid-date rollover repair.
+  - `2030-05-06T07:08:09.000Z` → accepted unchanged.
+  - `2030-05-06T07:08:09Z` → `OUT_OF_RANGE_VALUE`.
+  - `2030-05-06T16:08:09.000+09:00` → `OUT_OF_RANGE_VALUE`.
+  - `2030-05-06T07:08:09` → `OUT_OF_RANGE_VALUE`.
+  - `2023-02-29T00:00:00.000Z` → `OUT_OF_RANGE_VALUE`.
+  - Existing mappings preserved: omitted/explicit-undefined →
+    `MISSING_REQUIRED_FIELD`; null/non-string → `CONTRACT_VIOLATION`;
+    noncanonical/invalid/impossible/out-of-range/non-round-trippable
+    string → `OUT_OF_RANGE_VALUE`.
+- Revision history on the candidate: API `1.27` preserved; API `1.28` row
+  present exactly once; API `1.29` absent. Schema remains revision `1.7`.
+- Non-change evidence preserved: Runtime correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` tip
+  `357ac80058ce3feab0565d5ed995927ef2207a77` unchanged; original Runtime
+  branch `validation/vi-p1-raw-source-core-runtime-20260902` tip
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb` unchanged; migration `014`
+  remains absent.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY CANDIDATE`. Tests:
+  `NOT RUN — DOCUMENTATION-ONLY CANDIDATE`. Neither is recorded as `PASS`.
+  Previous Runtime Development-session PostgreSQL evidence remains
+  separate Development-session evidence only, not re-used as evidence for
+  this documentation-only candidate.
+- Candidate lifecycle: `USER-APPROVED / IMPLEMENTED AS DOCUMENTATION
+  VALIDATION CANDIDATE / FRESH INDEPENDENT REVIEW PENDING / NOT CANONICAL
+  ON MAIN`.
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`: remain `CLOSED BY FRESH
+  RE-REVIEW` (unchanged by this update). `F-RB1-04` runtime code delta:
+  `NONE` (unchanged).
+- `F-RB1-05`: `OPEN / R1 USER-APPROVED / API 1.28 CANONICAL PATCH
+  CANDIDATE PRESENT / FRESH CANONICAL INDEPENDENT REVIEW PENDING`.
+- `F-RC-01`: `OPEN / R1 USER-APPROVED / API 1.28 CANONICAL PATCH
+  CANDIDATE PRESENT / FRESH CANONICAL INDEPENDENT REVIEW PENDING`.
+- Preserved unchanged, non-blocking: `F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`.
+- Runtime Foundation B1: `CORRECTION VALIDATION CANDIDATE PRESENT /
+  F-RB1-01–04 CLOSED BY FRESH RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN /
+  API 1.28 CANONICAL REVIEW PENDING / RUNTIME MAIN INTEGRATION NOT
+  ELIGIBLE`.
+- Current canonical on `main` remains: API `1.27`, blob
+  `db38091928b0164a45c44c7ed10c28bc47b17b79`; Schema `1.7`, blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`.
+- This update does not mean: API `1.28` canonical on `main`; `F-RB1-05`
+  closed; `F-RC-01` closed; Runtime Foundation B1 validated or closed;
+  Runtime Foundation B1 code main-integration eligible; runtime canonical
+  on `main`; post-merge verified; `B-3` resolved; P1 eligible or
+  activated; human-data collection authorized; efficacy verified; GitHub
+  Actions `PASS`; Validation Level 3 §10 overall `PASS`; or provider/audio
+  authorized. No Runtime correction or Runtime main integration before a
+  fresh Claude Opus 5 canonical Independent Review of this API `1.28` R1
+  documentation validation candidate returns to Control Tower.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1283,6 +1370,25 @@ This bootstrap does not rerun PostgreSQL or tests.
   mechanically `CLEANLY ELIGIBLE`, which does not mean main-integration
   eligibility. See "Fresh Independent Review Result — Blocked, Canonical
   Decision Required" above for full detail.
+- API `1.28` R1 documentation validation candidate (branch
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`, tip
+  `2995ba806b1da9a4b0978f8c15222fd27e9620d3`, parent
+  `a959d96c6530bea82dcf71ec0081053ed1d5d725`, candidate API blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`, exactly one file changed,
+  `+9/-2`): `USER-APPROVED / IMPLEMENTED AS DOCUMENTATION VALIDATION
+  CANDIDATE / FRESH INDEPENDENT REVIEW PENDING / NOT CANONICAL ON MAIN`.
+  Schema `1.7`, backlog, and Current State remain byte-unchanged on the
+  candidate branch. PostgreSQL and tests: `NOT RUN — DOCUMENTATION-ONLY`,
+  not recorded as `PASS`. `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`
+  remain `CLOSED BY FRESH RE-REVIEW`. `F-RB1-05` and `F-RC-01` are updated
+  to `OPEN / R1 USER-APPROVED / API 1.28 CANONICAL PATCH CANDIDATE
+  PRESENT / FRESH CANONICAL INDEPENDENT REVIEW PENDING` — neither is
+  closed by this update. `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04` remain `OPEN / NON-BLOCKING`, preserved
+  unchanged. Current canonical on `main` remains API `1.27` / Schema
+  `1.7`; API `1.28` is not canonical on `main`. Runtime Foundation B1
+  main-integration eligibility remains `NOT ELIGIBLE`. See "API 1.28 R1
+  Documentation Validation Candidate" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -1369,21 +1475,38 @@ This ledger does not claim:
 - `B-3` resolved, P1 eligible/activated, human-data authorized, efficacy
   verified, GitHub Actions PASS, Validation Level 3 §10 overall PASS, or
   provider/audio authorized, by this update
+- API `1.28` canonical on `main` — it is `NOT CANONICAL ON MAIN`; only a
+  documentation validation candidate exists, on branch
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`
+  (tip `2995ba806b1da9a4b0978f8c15222fd27e9620d3`)
+- `F-RB1-05` or `F-RC-01` closed by the creation of the API `1.28` R1
+  documentation validation candidate — both remain `OPEN / R1
+  USER-APPROVED / API 1.28 CANONICAL PATCH CANDIDATE PRESENT / FRESH
+  CANONICAL INDEPENDENT REVIEW PENDING`
+- Runtime Foundation B1 validated or closed, or runtime canonical on
+  `main`, or post-merge verified, by this update
+- this update performed an Independent Review of the API `1.28` R1
+  documentation validation candidate — none was performed; a fresh Claude
+  Opus 5 canonical Independent Review of that candidate is the recorded
+  Next Action
+- this update integrated API `1.28` onto `main`, integrated Runtime
+  Foundation B1 onto `main`, modified `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+  runtime/test/db sources, or any validation branch — this update modifies
+  only `LLE_CURRENT_STATE.md`
 
 ## 10. Next Action
 
-- Fresh Windows Claude Architecture documentation session to create a new
-  validation branch from the then-current exact `origin/main`, modify
-  exactly `API_CONTRACT.md` to implement the user-approved R1/API 1.28
-  Tier C canonical patch in §13.10.11.1 plus the exact approved 1.28
-  revision-history row, leave `EVIDENCE_FOUNDATION_P0_SCHEMA.md` at
-  revision 1.7 and byte-unchanged, make no runtime/test/backlog/Current
-  State/db/package/workflow changes, commit and push only the validation
-  branch, and return exact SHA/tree/blob/diff evidence for fresh
-  Independent Review. No Runtime correction or Runtime main integration
-  before the API 1.28 canonical patch lifecycle completes and the Runtime
-  candidate is freshly re-reviewed against canonical API 1.28. Suggested
-  future branch:
-  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`. The
-  future Architecture documentation session MUST first verify this branch
-  is absent locally and remotely before creating it.
+- Fresh Claude Opus 5 Independent Review of the user-approved API 1.28 R1
+  documentation validation candidate on branch
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`
+  at exact tip
+  `2995ba806b1da9a4b0978f8c15222fd27e9620d3`,
+  against parent/current-main baseline
+  `a959d96c6530bea82dcf71ec0081053ed1d5d725`,
+  checking exact fidelity to the approved R1 §13.10.11.1 patch and approved
+  1.28 revision-history row, exact one-file scope, Schema 1.7/backlog/Current
+  State non-change, no Tier A/schema/migration/runtime/test authorization leak,
+  F-RB1-05/F-RC-01 canonical ambiguity resolution, and canonical
+  main-integration eligibility. No API 1.28 main integration and no Runtime
+  B1 integration before this review.
