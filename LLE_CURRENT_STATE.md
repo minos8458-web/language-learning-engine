@@ -59,10 +59,10 @@ in the backlog and are not duplicated here.
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
   `IMPLEMENTED AS CORRECTION VALIDATION CANDIDATE / DEVELOPMENT-SESSION
-  POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT REVIEW PENDING / NOT
-  ELIGIBLE FOR MAIN INTEGRATION`
-  (see "Runtime Foundation B1 Correction Candidate — Development Session"
-  below; not yet on main)
+  POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT REVIEW BLOCKED —
+  CANONICAL DECISION REQUIRED / MAIN INTEGRATION NOT ELIGIBLE`
+  (see "Fresh Independent Review Result — Blocked, Canonical Decision
+  Required" below; not yet on main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -882,6 +882,144 @@ Validation and not an Independent Review `PASS`.
   authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
   §10 overall `PASS`; or actual provider/audio authorized.
 
+#### Fresh Independent Review Result — Blocked, Canonical Decision Required
+
+- Reviewer: fresh Claude Opus 5 Independent Review.
+- Repository mutation caused by this review: `0`.
+- Independent PostgreSQL rerun: `NOT RUN` — the review environment had no
+  PostgreSQL server/client tooling. Development-session PostgreSQL
+  execution evidence remains classified `DEVELOPMENT-SESSION EXECUTION
+  EVIDENCE` only; not upgraded to Independent Validation by this review.
+- Final verdict: `BLOCKED — CANONICAL DECISION REQUIRED`.
+- Main-integration eligibility: `NOT ELIGIBLE`.
+- Architecture decision required: `YES`. Owner value required: `NO`.
+  Migration required: `NO`. Code/test correction required: `NO — pending
+  canonical decision`.
+- Process governance disposition: `NON-BLOCKING`.
+- Future two-commit integration: `CLEANLY ELIGIBLE` — mechanical Git
+  applicability only. This does not mean main-integration eligibility;
+  main integration remains blocked by the unresolved canonical decision.
+
+##### Review Gates
+
+- Current-main baseline gate: `PASS`.
+- Current-main drift gate: `PASS`.
+- Correction branch identity: `PASS`.
+- Replay fidelity: `PASS`.
+- Correction isolation: `PASS`.
+- Test quality gate: `PASS`.
+- Transaction / zero-side-effect gate: `PASS`.
+- Output/projection/ordering regression: `NONE`.
+- `F-RB1-04` runtime code delta: `NONE`.
+- `F-RB1-06`/`07`/`08` preserved: `YES`.
+- `F-CS-01` preserved: `YES`.
+
+##### Finding Dispositions
+
+- `F-RB1-01`: `CLOSED BY FRESH RE-REVIEW`. The supplied-attempt root
+  qualification now applies `att.started_at <= analysisCutoff`, while
+  global existence validation remains unchanged. `T-C01` independently
+  verifies the post-cutoff supplied-attempt boundary.
+- `F-RB1-02`: `CLOSED BY FRESH RE-REVIEW`. All four required
+  snapshot/snapshot-node cutoff surfaces are corrected: `nodeIds` root
+  qualification, `itemFamilyReferences` root qualification,
+  `fetchSnapshots()`, and `fetchSnapshotNodes()`. Owning snapshot
+  `created_at` authority and node-only projection were confirmed.
+  `T-C02` / `T-C03` / `T-C03N` / `T-C03F` were independently reviewed.
+- `F-RB1-03`: `CLOSED BY FRESH RE-REVIEW`. User-approved B1 is
+  implemented: `evidence_assignments.created_at <= analysisCutoff`
+  governs assignment existence for assignment-less closure. `T-C05`
+  reviewed.
+- `F-RB1-04`: `CLOSED BY FRESH RE-REVIEW`. Runtime code delta: `NONE`.
+  The replayed original candidate already had A1-consistent
+  `assignmentLevelSecondaryEmpty` behavior; correction added only
+  `T-C04` independent evidence.
+- `F-RB1-05`: `OPEN / CANONICAL DECISION REQUIRED`. Not closed by this
+  review.
+
+##### F-RB1-05 Canonical Ambiguity — R1 vs. R2
+
+Fresh review determined current API `1.27` text does not uniquely decide
+between two plausible interpretations of the required canonical UTC
+timestamp string (`YYYY-MM-DDTHH:mm:ss.sssZ`, `OUT_OF_RANGE_VALUE` for
+invalid/non-normalizable input):
+
+- `R1` — strict canonical input: the input itself must already be
+  exactly `YYYY-MM-DDTHH:mm:ss.sssZ`. `2030-05-06T07:08:09.000Z` is
+  accepted; `2030-05-06T07:08:09Z`, `2030-05-06T16:08:09.000+09:00`, and
+  timezone-less input are all `OUT_OF_RANGE_VALUE`. The current
+  correction candidate implements `R1`.
+- `R2` — normalizable input: any unambiguous valid timestamp string that
+  can be deterministically normalized to the required canonical
+  representation is accepted (e.g. `2030-05-06T07:08:09Z` →
+  `2030-05-06T07:08:09.000Z`; `2030-05-06T16:08:09.000+09:00` →
+  `2030-05-06T07:08:09.000Z`); timezone-less/environment-dependent input
+  is still rejected. The current correction candidate does not implement
+  `R2`.
+
+##### New Findings
+
+- `F-RC-01` (MEDIUM / BLOCKING) — `OPEN`. Current canonical does not
+  uniquely authorize `R1` versus `R2` for `analysisCutoff`. Location:
+  `src/instrumentation/evidenceMetrics.js` `validateAnalysisCutoff()`
+  `ANALYSIS_CUTOFF_PATTERN`; `tests/viP1RawSourceRuntime.test.js` `T05` /
+  `T06`. Correction required: `NO — canonical decision first`.
+  Architecture decision required: `YES`. Owner value required: `NO`.
+  Main-integration impact: `BLOCKING`.
+- `F-RC-02` (NOTE / NON-BLOCKING) — `OPEN`. `T-C02` and `T-C05` do not
+  independently `SELECT` the exact target row before asserting
+  exclusion/presence behavior, producing a theoretical false-pass
+  possibility. Correction required: `NO`. Architecture decision: `NO`.
+  Owner value: `NO`. Main-integration impact: `NON-BLOCKING`.
+- `F-RC-03` (NOTE / NON-BLOCKING) — `OPEN`. No dedicated test for an
+  assignment whose `created_at` is exactly equal to `analysisCutoff`.
+  Implementation uses correct `<=`, but the equality boundary has no
+  dedicated fixture. Correction required: `NO`. Architecture decision:
+  `NO`. Owner value: `NO`. Main-integration impact: `NON-BLOCKING`.
+- `F-RC-04` (NOTE / NON-BLOCKING) — `OPEN`. `fetchEnrollments()` does not
+  independently apply enrollment `created_at` cutoff when the enrollment
+  is reached through a qualifying assignment. Pre-existing in the
+  replayed original candidate; only observable under physically
+  inconsistent chronology (pre-cutoff assignment / post-cutoff owning
+  enrollment). Correction required: `NO`. Architecture decision: `NO`.
+  Owner value: `NO`. Main-integration impact: `NON-BLOCKING`.
+
+Preserved unchanged, not silently closed or escalated: `F-RB1-06`
+(`OPEN / LOW / NON-BLOCKING`), `F-RB1-07` (`OPEN / NOTE / NON-BLOCKING`),
+`F-RB1-08` (`OPEN / NOTE / NON-BLOCKING`), `F-CS-01` (`OPEN / NOTE /
+NON-BLOCKING`).
+
+##### Development-Session PostgreSQL Execution Evidence (Preserved Reference)
+
+Preserved as `DEVELOPMENT-SESSION EXECUTION EVIDENCE` only, not
+independently rerun by this review: Runtime suite `56/56`; focused
+regression `200/200`; full regression `430/430`, `55` suites; PostgreSQL
+`17.10`; isolated database
+`lle_test_vip1_b1_correction_20260905_91640` (dropped, absence
+verified); `lle_dev` destructive-use `NO`.
+
+##### Current Lifecycle After Fresh Independent Review
+
+- Runtime Foundation B1: `IMPLEMENTED AS CORRECTION VALIDATION CANDIDATE /
+  DEVELOPMENT-SESSION POSTGRESQL EVIDENCE COMPLETE / FRESH INDEPENDENT
+  REVIEW BLOCKED — CANONICAL DECISION REQUIRED / MAIN INTEGRATION NOT
+  ELIGIBLE`.
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`: `CLOSED BY FRESH
+  RE-REVIEW`.
+- `F-RB1-05`: `OPEN / CANONICAL DECISION REQUIRED`.
+- `F-RC-01`: `OPEN / MEDIUM / BLOCKING`. `F-RC-02`, `F-RC-03`, `F-RC-04`:
+  `OPEN / NOTE / NON-BLOCKING`.
+- `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`: preserved
+  `OPEN / NON-BLOCKING`.
+- This update does not mean: Runtime Foundation B1 `VALIDATED`, `CLOSED`,
+  `CANONICAL RUNTIME ON MAIN`, or `POST-MERGE VERIFIED`; `F-RB1-05`
+  closed; `F-RC-01` closed; `B-3` resolved; P1 eligible or activated;
+  human-data collection authorized; efficacy verified; GitHub Actions
+  `PASS`; Validation Level 3 §10 overall `PASS`; or actual provider/audio
+  authorized. No Runtime correction or main integration begins before a
+  fresh Architecture read-only adjudication of `F-RB1-05` / `F-RC-01`
+  returns to Control Tower and receives any required user approval.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1033,8 +1171,33 @@ This bootstrap does not rerun PostgreSQL or tests.
   `F-CS-01` remain `OPEN / NON-BLOCKING` and were not touched by this
   correction. See "Runtime Foundation B1 Correction Candidate —
   Development Session" above for full detail. Runtime Foundation B1
-  main-integration eligibility remains `NOT ELIGIBLE`; Independent Review
-  of this correction candidate is `PENDING`.
+  main-integration eligibility remains `NOT ELIGIBLE`.
+- Fresh Independent Review of the Runtime Foundation B1 correction
+  candidate (correction branch
+  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`,
+  correction tip `357ac80058ce3feab0565d5ed995927ef2207a77`, replay
+  `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, repository mutation `0`,
+  independent PostgreSQL rerun `NOT RUN`): verdict `BLOCKED — CANONICAL
+  DECISION REQUIRED`. `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, and `F-RB1-04`
+  are `CLOSED BY FRESH RE-REVIEW`; the `F-RB1-04` runtime code delta is
+  confirmed `NONE`. `F-RB1-05` remains `OPEN / CANONICAL DECISION
+  REQUIRED` — current API `1.27` does not uniquely decide between
+  strict-canonical-input interpretation `R1` (implemented by this
+  candidate) and normalizable-input interpretation `R2` (not
+  implemented). New findings: `F-RC-01` (MEDIUM, `OPEN`, `BLOCKING` —
+  canonical does not uniquely authorize `R1` vs. `R2`); `F-RC-02` (NOTE,
+  `OPEN`, non-blocking — `T-C02`/`T-C05` do not `SELECT` the exact target
+  row first); `F-RC-03` (NOTE, `OPEN`, non-blocking — no dedicated
+  equality-boundary fixture); `F-RC-04` (NOTE, `OPEN`, non-blocking —
+  pre-existing `fetchEnrollments()` enrollment-cutoff gap, only
+  observable under inconsistent chronology). `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, and `F-CS-01` remain `OPEN / NON-BLOCKING`, preserved
+  unchanged — none silently closed or escalated. Architecture decision
+  required: `YES`. Owner value required: `NO`. Main-integration
+  eligibility: `NOT ELIGIBLE`. Future two-commit Git integration is
+  mechanically `CLEANLY ELIGIBLE`, which does not mean main-integration
+  eligibility. See "Fresh Independent Review Result — Blocked, Canonical
+  Decision Required" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -1063,8 +1226,6 @@ This ledger does not claim:
   `2499d63a316268bd1f1463a5bafd9a8dc5c02925`) means Runtime Foundation B1
   code is validated, closed, or canonical, or that any of `F-RB1-03`,
   `F-RB1-04`, or `F-CS-01` is closed
-- `F-RB1-03` closed — it is `OPEN`
-- `F-RB1-04` closed — it is `OPEN`
 - `F-CS-01` closed — it is `OPEN / NON-BLOCKING`
 - Runtime Foundation B1 correction implemented or started
 - Runtime Foundation B1 main-integration eligibility restored
@@ -1072,7 +1233,9 @@ This ledger does not claim:
   `0`) is an Independent Review, a code/test implementation, or execution
   evidence of any kind
 - `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, or `F-RB1-05` closed by
-  the correction pre-analysis — all remain `OPEN`
+  the correction pre-analysis itself — none was; all five were still
+  `OPEN` immediately after the pre-analysis (current status after the
+  later fresh Independent Review is recorded below)
 - `F-RB1-06`, `F-RB1-07`, or `F-RB1-08` closed — all remain
   `OPEN / NON-BLOCKING`
 - the correction pre-analysis's planned minimum test plan (`T-C01`
@@ -1089,13 +1252,22 @@ This ledger does not claim:
   candidate (Runtime suite `56/56`, focused regression `200/200`, full
   regression `430/430`) is Independent Validation or an Independent Review
   `PASS`
-- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, or `F-RB1-05` closed by
-  the correction candidate or its Development-session execution evidence
-  — all remain `OPEN`
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, or `F-RB1-04` closed by the
+  correction candidate or its Development-session execution evidence
+  themselves — none was; these four were closed only by the subsequent
+  fresh Independent Review (`CLOSED BY FRESH RE-REVIEW`, see above), not
+  by the candidate or the Development evidence directly
+- `F-RB1-05` closed — it is `OPEN / CANONICAL DECISION REQUIRED`
+- `F-RC-01` closed — it is `OPEN / MEDIUM / BLOCKING`
 - `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, or `F-CS-01` closed by this
-  correction candidate — all remain `OPEN / NON-BLOCKING`
-- Independent Review of the correction candidate occurred or produced any
-  verdict — it is `PENDING`
+  correction candidate or by the fresh Independent Review — all remain
+  `OPEN / NON-BLOCKING`
+- Independent Review of the correction candidate did not occur, remains
+  `PENDING`, or resulted in main-integration eligibility, canonical
+  decision resolution, or Runtime Foundation B1 validated/closed — it
+  occurred, caused repository mutation `0`, and resulted in verdict
+  `BLOCKED — CANONICAL DECISION REQUIRED`, with main integration
+  remaining `NOT ELIGIBLE`
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -1105,22 +1277,25 @@ This ledger does not claim:
 - Validation Level 3 §10 overall PASS
 - Evidence Foundation overall complete
 - actual provider or audio authorized
-- any open finding resolved
+- any open finding resolved by this update other than `F-RB1-01`,
+  `F-RB1-02`, `F-RB1-03`, and `F-RB1-04` (closed by the fresh Independent
+  Review recorded above)
+- `F-RB1-05` or `F-RC-01` closed
+- `B-3` resolved, P1 eligible/activated, human-data authorized, efficacy
+  verified, GitHub Actions PASS, Validation Level 3 §10 overall PASS, or
+  provider/audio authorized, by this update
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Review of Runtime Foundation B1
-  correction branch
-  `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905` at
-  exact correction tip `357ac80058ce3feab0565d5ed995927ef2207a77` against
-  exact replay parent `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7` and
-  current canonical `main` `ea22d6f8276dba6d27843bbf2fa34171fe9ab941`,
-  checking: replay fidelity to the original reviewed candidate; the
-  correction's exact two-file scope; `F-RB1-01` through `F-RB1-05`
-  correction fidelity; that the `F-RB1-04` runtime code delta remains
-  `NONE`; the seven new correction tests and timestamp-test changes; exact
-  canonical API `1.27` / Schema `1.7` compliance; transaction /
-  zero-side-effect semantics; the Development PostgreSQL evidence
-  classification boundary; preservation of `F-RB1-06`, `F-RB1-07`,
-  `F-RB1-08`, and `F-CS-01`; and main-integration eligibility. No Runtime
-  B1 main integration before this fresh review.
+- Fresh Architecture read-only adjudication of the Runtime Foundation B1
+  `analysisCutoff` input contract ambiguity (`F-RB1-05` / `F-RC-01`)
+  against current canonical API `1.27` / Schema `1.7`, choosing exactly
+  one semantic model: R1 = input itself must already be exact
+  `YYYY-MM-DDTHH:mm:ss.sssZ`, or R2 = any unambiguous valid
+  deterministically-normalizable timestamp may be accepted and normalized
+  to `YYYY-MM-DDTHH:mm:ss.sssZ`. The Architecture session must determine
+  whether a Tier C canonical patch is required, provide the smallest
+  exact patch specification if required, state runtime/test implications
+  for either choice, and cause repository mutation `0`. No Runtime
+  correction or main integration begins before the Architecture decision
+  returns to Control Tower and receives any required user approval.
