@@ -60,8 +60,9 @@ in the backlog and are not duplicated here.
 - Runtime Foundation B1 implementation:
   `CORRECTION VALIDATION CANDIDATE PRESENT / F-RB1-01–04 CLOSED BY FRESH
   RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN / API 1.28 R1 DOCUMENTATION
-  VALIDATION CANDIDATE PRESENT / FRESH CANONICAL INDEPENDENT REVIEW
-  PENDING / RUNTIME MAIN INTEGRATION NOT ELIGIBLE`
+  VALIDATION CANDIDATE INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+  NOTES / CANONICAL MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL ON MAIN
+  / RUNTIME MAIN INTEGRATION NOT ELIGIBLE`
   (see "API 1.28 R1 Documentation Validation Candidate" below; not yet on
   main)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
@@ -1192,6 +1193,113 @@ verified); `lle_dev` destructive-use `NO`.
   fresh Claude Opus 5 canonical Independent Review of this API `1.28` R1
   documentation validation candidate returns to Control Tower.
 
+##### Fresh Independent Review Result — Approve With Non-Blocking Notes
+
+- Reviewer: fresh Claude Opus 5 Independent Review.
+- Repository mutation caused by this review: `0`.
+- Independent PostgreSQL rerun: `NOT RUN — DOCUMENTATION-ONLY`.
+- Independent test rerun: `NOT RUN — DOCUMENTATION-ONLY`.
+- Final verdict: `APPROVE WITH NON-BLOCKING NOTES`.
+
+###### Review Gates
+
+- Current-main baseline gate: `PASS`.
+- Current-main drift gate: `PASS`.
+- Current State gate: `PASS`.
+- Candidate identity: `PASS`.
+- One-file scope: `PASS`.
+- R1 patch fidelity: `PASS`.
+- Revision-history fidelity: `PASS`.
+- R1 error semantics: `PASS`.
+- Non-change contract: `PASS`.
+- Schema mirror required: `NO`.
+- Schema 1.7 non-change: `PASS`.
+- Tier A impact: `NO`.
+- Migration required: `NO`.
+- Schema DDL required: `NO`.
+- Runtime/test authorization leak: `NO`.
+- `F-RB1-05` canonical ambiguity: `RESOLVED BY CANDIDATE`.
+- `F-RC-01` canonical ambiguity: `RESOLVED BY CANDIDATE`.
+- PostgreSQL required for this canonical review: `NO`.
+- Test execution required for this canonical review: `NO`.
+- Future canonical integration: `CLEANLY ELIGIBLE`.
+- Canonical main-integration eligibility: `ELIGIBLE` — not yet integrated;
+  integration is the recorded Next Action.
+- Runtime main-integration eligibility: `NOT ELIGIBLE`.
+
+###### Approved Review Evidence
+
+- R1 patch content was compared against the approved specification and
+  found byte/content faithful.
+- The approved `1.28` revision-history row was also faithful.
+- API `1.27` remained preserved.
+- API `1.28` appears exactly once in the candidate; `1.29` absent.
+- The candidate modifies exactly `API_CONTRACT.md`.
+- Schema `1.7` contains no competing independent `analysisCutoff` lexical
+  acceptance contract; Schema mirror remains unnecessary.
+- No Tier A/schema/migration/runtime/test/provider/audio/P1/human-data
+  authorization leak was found.
+- The candidate fully resolves the R1-vs-R2 canonical ambiguity at
+  candidate level.
+- Current-main drift from the candidate parent to current main was
+  confirmed as `LLE_CURRENT_STATE.md` only.
+- Future canonical cherry-pick was assessed mechanically clean.
+- These documentation-review findings are not Runtime validation.
+
+###### New Finding — F-API128-01
+
+- `F-API128-01` (NOTE) — `OPEN / NON-BLOCKING`. Location:
+  `API_CONTRACT.md` §13.10.11.1 Raw row projection normalization; mirror
+  reference `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.3.1. Issue: the
+  `rawFacts` row projection's `TIMESTAMPTZ → canonical UTC ISO string`
+  expression does not independently define an exact lexical form. After
+  the R1 patch, `analysisCutoff` input lexical form is exact, while row
+  `TIMESTAMPTZ` output remains expressed only as "canonical UTC ISO
+  string". Disposition: pre-existing expression, not introduced by this
+  candidate; approved R1 authority violated `NO`; correction required
+  `NO`; Architecture decision required `NO` for this candidate; owner
+  value required `NO`; canonical main-integration impact `NON-BLOCKING`.
+  Not silently closed.
+
+###### Finding Lifecycle After This Review
+
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`: preserved `CLOSED BY
+  FRESH RE-REVIEW` (unchanged by this review; `F-RB1-04` runtime code
+  delta remains `NONE`).
+- `F-RB1-05`: `OPEN / CANONICAL CANDIDATE REVIEWED / MAIN INTEGRATION
+  PENDING / FRESH RUNTIME RE-REVIEW PENDING`.
+- `F-RC-01`: `OPEN / CANONICAL CANDIDATE REVIEWED / MAIN INTEGRATION
+  PENDING / FRESH RUNTIME RE-REVIEW PENDING`.
+- Preserved unchanged, non-blocking: `F-RB1-06` (`OPEN / LOW /
+  NON-BLOCKING`), `F-RB1-07` (`OPEN / NOTE / NON-BLOCKING`), `F-RB1-08`
+  (`OPEN / NOTE / NON-BLOCKING`), `F-CS-01` (`OPEN / NOTE /
+  NON-BLOCKING`), `F-RC-02` (`OPEN / NOTE / NON-BLOCKING`), `F-RC-03`
+  (`OPEN / NOTE / NON-BLOCKING`), `F-RC-04` (`OPEN / NOTE /
+  NON-BLOCKING`).
+- Added: `F-API128-01` (`OPEN / NOTE / NON-BLOCKING`).
+
+###### Lifecycle After This Review
+
+- API 1.28 R1 Tier C patch: `USER-APPROVED / IMPLEMENTED AS DOCUMENTATION
+  VALIDATION CANDIDATE / INDEPENDENTLY REVIEWED — APPROVE WITH
+  NON-BLOCKING NOTES / CANONICAL MAIN-INTEGRATION ELIGIBLE / NOT YET
+  CANONICAL ON MAIN`.
+- Runtime Foundation B1: `CORRECTION VALIDATION CANDIDATE PRESENT /
+  F-RB1-01–04 CLOSED BY FRESH RE-REVIEW / F-RB1-05 AND F-RC-01 OPEN /
+  API 1.28 CANONICAL MAIN INTEGRATION PENDING / RUNTIME MAIN INTEGRATION
+  NOT ELIGIBLE`.
+- Current canonical on `main` remains: API `1.27` / Schema `1.7`.
+- This update does not mean: API `1.28` canonical on `main`; `F-RB1-05`
+  closed; `F-RC-01` closed; Runtime Foundation B1 validated or closed;
+  runtime canonical on `main`; post-merge verified; `B-3` resolved; P1
+  eligible or activated; human-data collection authorized; efficacy
+  verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
+  or provider/audio authorized. This update did not itself perform the
+  Independent Review — that review was performed separately by a fresh
+  Claude Opus 5 Independent Review session with repository mutation `0`;
+  this update only records its result. No Runtime B1 main integration
+  before a fresh Runtime candidate re-review against canonical API 1.28.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1389,6 +1497,34 @@ This bootstrap does not rerun PostgreSQL or tests.
   `1.7`; API `1.28` is not canonical on `main`. Runtime Foundation B1
   main-integration eligibility remains `NOT ELIGIBLE`. See "API 1.28 R1
   Documentation Validation Candidate" above for full detail.
+- Fresh Independent Review of the API `1.28` R1 documentation validation
+  candidate (branch
+  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`, tip
+  `2995ba806b1da9a4b0978f8c15222fd27e9620d3`, repository mutation `0`,
+  independent PostgreSQL/test rerun `NOT RUN — DOCUMENTATION-ONLY`):
+  verdict `APPROVE WITH NON-BLOCKING NOTES`. All recorded review gates
+  `PASS` (current-main baseline, current-main drift, Current State,
+  candidate identity, one-file scope, R1 patch fidelity, revision-history
+  fidelity, R1 error semantics, non-change contract, Schema 1.7
+  non-change); Tier A impact, migration, schema DDL, and runtime/test
+  authorization leak all `NO`; `F-RB1-05` and `F-RC-01` canonical
+  ambiguity `RESOLVED BY CANDIDATE` at candidate level. Canonical
+  main-integration eligibility: `ELIGIBLE` — not yet integrated. Runtime
+  main-integration eligibility: `NOT ELIGIBLE`. New finding `F-API128-01`
+  (NOTE, `OPEN / NON-BLOCKING`) — `API_CONTRACT.md` §13.10.11.1 raw row
+  projection's `TIMESTAMPTZ → canonical UTC ISO string` expression does
+  not independently define an exact lexical form; pre-existing, not
+  introduced by this candidate, correction not required. `F-RB1-01`,
+  `F-RB1-02`, `F-RB1-03`, `F-RB1-04` remain `CLOSED BY FRESH RE-REVIEW`.
+  `F-RB1-05` and `F-RC-01` update to `OPEN / CANONICAL CANDIDATE
+  REVIEWED / MAIN INTEGRATION PENDING / FRESH RUNTIME RE-REVIEW
+  PENDING` — neither is closed by this update. `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04` remain `OPEN /
+  NON-BLOCKING`, preserved unchanged. Current canonical on `main` remains
+  API `1.27` / Schema `1.7`; API `1.28` is not canonical on `main`.
+  Runtime Foundation B1 main-integration eligibility remains `NOT
+  ELIGIBLE`. See "Fresh Independent Review Result — Approve With
+  Non-Blocking Notes" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -1485,28 +1621,46 @@ This ledger does not claim:
   CANONICAL INDEPENDENT REVIEW PENDING`
 - Runtime Foundation B1 validated or closed, or runtime canonical on
   `main`, or post-merge verified, by this update
-- this update performed an Independent Review of the API `1.28` R1
-  documentation validation candidate — none was performed; a fresh Claude
-  Opus 5 canonical Independent Review of that candidate is the recorded
-  Next Action
+- this update itself performed the Independent Review of the API `1.28`
+  R1 documentation validation candidate — it did not; a fresh Claude
+  Opus 5 canonical Independent Review of that candidate was performed
+  separately, with repository mutation `0`, and this update only records
+  its result (verdict `APPROVE WITH NON-BLOCKING NOTES`)
+- the API `1.28` R1 documentation validation candidate's fresh
+  Independent Review result means the candidate is canonical on `main`,
+  that `F-RB1-05` or `F-RC-01` is closed, or that Runtime Foundation B1
+  main-integration eligibility changed — canonical main-integration
+  eligibility is `ELIGIBLE` and Runtime main-integration eligibility
+  remains `NOT ELIGIBLE`; actual integration has not yet occurred
+- `F-API128-01` is resolved, closed, or requires correction, an
+  Architecture decision, or an owner value — it is `OPEN / NOTE /
+  NON-BLOCKING` and is not silently closed
 - this update integrated API `1.28` onto `main`, integrated Runtime
   Foundation B1 onto `main`, modified `API_CONTRACT.md`,
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
-  runtime/test/db sources, or any validation branch — this update modifies
-  only `LLE_CURRENT_STATE.md`
+  runtime/test/db sources, or any validation branch, or performed a fresh
+  PostgreSQL/test run — this update modifies only `LLE_CURRENT_STATE.md`,
+  and the review it records was documentation-only with PostgreSQL/tests
+  `NOT RUN`
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Review of the user-approved API 1.28 R1
-  documentation validation candidate on branch
-  `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`
-  at exact tip
-  `2995ba806b1da9a4b0978f8c15222fd27e9620d3`,
-  against parent/current-main baseline
-  `a959d96c6530bea82dcf71ec0081053ed1d5d725`,
-  checking exact fidelity to the approved R1 §13.10.11.1 patch and approved
-  1.28 revision-history row, exact one-file scope, Schema 1.7/backlog/Current
-  State non-change, no Tier A/schema/migration/runtime/test authorization leak,
-  F-RB1-05/F-RC-01 canonical ambiguity resolution, and canonical
-  main-integration eligibility. No API 1.28 main integration and no Runtime
-  B1 integration before this review.
+- Fresh Windows Claude Validation/Integration session to integrate the
+  exact reviewed API 1.28 R1 documentation candidate commit
+  `2995ba806b1da9a4b0978f8c15222fd27e9620d3` onto the then-current exact
+  `origin/main`, preserving reviewed history with a normal cherry-pick,
+  with no rebase/squash/amend, then verify: the integrated commit changes
+  only `API_CONTRACT.md`; the resulting `API_CONTRACT.md` blob is exactly
+  `b70bda6cdf8896337c0a699b8810852bb466dace`; API revision 1.28 exists
+  exactly once; Schema remains revision 1.7 and byte-unchanged; Backlog
+  remains byte-unchanged; Runtime branches remain unchanged; migration
+  014 remains absent; PostgreSQL/tests remain `NOT RUN` because this
+  integration is docs-only; and API 1.28 becomes canonical on `main` only
+  after actual successful integration and post-integration document
+  verification. The integration session must also update
+  `LLE_CURRENT_STATE.md` immediately after successful canonical
+  integration in a separate status-sync commit, without modifying
+  `API_CONTRACT.md` again. After that lifecycle step, the next future
+  milestone is a fresh Runtime candidate re-review against canonical API
+  1.28; no Runtime B1 main integration occurs before that fresh Runtime
+  re-review.
