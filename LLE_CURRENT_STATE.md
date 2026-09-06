@@ -37,19 +37,21 @@ canonical authority or exact remote Git evidence, operational status is
 ## 3. Backlog Baseline
 
 - File: `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
-- Latest revision: `1.71`
-- Blob: `b3332d9601ff490a8271f48779acd29cf6798004`
+- Latest revision: `1.72`
+- Blob: `1ce3d13562e8467fad0a52112dc73257cc9e7890`
 - Revision `1.69`: present exactly once
 - Revision `1.70`: present exactly once
 - Revision `1.71`: present exactly once
-- Revision `1.72`: absent
+- Revision `1.72`: present exactly once
 
 Revision `1.69` (prior B1 RAW SOURCE Rebuild CORE canonical documentation
 lifecycle), revision `1.70` (B1 `empty_result` clarification lifecycle),
-and revision `1.71` (A1/B1 assignment-less closure canonical synchronization
-review-record lifecycle) are distinct lifecycle records; none supersedes
-another. The detailed revision 1.69, 1.70, and 1.71 lifecycle records remain
-in the backlog and are not duplicated here.
+revision `1.71` (A1/B1 assignment-less closure canonical synchronization
+review-record lifecycle), and revision `1.72` (API `1.28` R1 Tier C
+canonical documentation review-record lifecycle) are distinct lifecycle
+records; none supersedes another. The detailed revision 1.69, 1.70, 1.71,
+and 1.72 lifecycle records remain in the backlog and are not duplicated
+here.
 
 ## 4. Current Milestone
 
@@ -61,11 +63,11 @@ in the backlog and are not duplicated here.
   `CORRECTION VALIDATION CANDIDATE PRESENT / F-RB1-01–05 CLOSED BY FRESH
   RE-REVIEW / F-RC-01 CLOSED BY FRESH RE-REVIEW / API 1.28 R1 TIER C PATCH
   USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES
-  / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / NOT YET
+  / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED /
   REVIEW-RECORDED / RUNTIME MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL
   ON MAIN / NOT VALIDATED / NOT CLOSED`
-  (see "API 1.28 Canonical Main Integration" and "Fresh Runtime Re-Review
-  Against Canonical API 1.28" below)
+  (see "API 1.28 Canonical Main Integration", "Fresh Runtime Re-Review
+  Against Canonical API 1.28", and "API 1.28 Review-Record" below)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
   `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
@@ -1513,6 +1515,57 @@ by this review.
   verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
   or provider/audio authorized.
 
+###### API 1.28 Review-Record
+
+- Windows-local Validation/Integration review-record session (repository
+  mutation limited to one new `main` commit): appended an additive
+  review-record entry to `ARCHITECTURE_CLARIFICATION_BACKLOG.md` for the
+  completed API `1.28` R1 Tier C canonical documentation lifecycle
+  (user-approved R1 decision → exact one-file documentation validation
+  candidate → fresh Claude Opus 5 Independent Review `APPROVE WITH
+  NON-BLOCKING NOTES` → reviewed canonical main integration →
+  post-integration document verification → subsequent Runtime correction
+  candidate re-review against canonical API `1.28`).
+- Review-record revision: `1.72`.
+- Review-record commit: `b94c9eb2a416e9c205e39270d7fb721225d96d40` (parent
+  `20aadf47a1d5939c4da9f56ab23de914be64fabd`, subject `Record API 1.28 R1
+  canonical review-record`).
+- Review-record backlog blob: `1ce3d13562e8467fad0a52112dc73257cc9e7890`.
+- Changed file: `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, `+1/-0` (one
+  additive revision-history row). No other file was modified by the
+  review-record commit.
+- Remote post-push verification `PASS`: `origin/main` =
+  `b94c9eb2a416e9c205e39270d7fb721225d96d40`; backlog revision `1.72`
+  present exactly once; `API_CONTRACT.md` blob unchanged
+  `b70bda6cdf8896337c0a699b8810852bb466dace`; Schema `1.7` blob unchanged
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`; `LLE_CURRENT_STATE.md`
+  unchanged at that moment (`a2401c8b382144902b558b5862815089b412203e`);
+  Runtime branches unchanged (`357ac80058ce3feab0565d5ed995927ef2207a77`,
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`); migration `014` absent.
+- PostgreSQL/tests: `NOT RUN — DOCUMENTATION-ONLY REVIEW-RECORD`.
+- API `1.28` R1 Tier C canonical documentation lifecycle is now:
+  `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+  NOTES / REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+  VERIFIED`.
+- `F-API128-01` remains `OPEN / NOTE / NON-BLOCKING`, preserved unchanged.
+- `F-RB1-05` and `F-RC-01` remain `CLOSED BY FRESH RE-REVIEW AGAINST
+  CANONICAL API 1.28` (unchanged by this review-record; this review-record
+  did not itself close them). `F-RB1-01`–`F-RB1-04`, `F-RB1-06`,
+  `F-RB1-07`, `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`,
+  `F-RR128-01`, `F-RR128-02` all remain `OPEN / NON-BLOCKING`, preserved
+  unchanged.
+- This review-record does not mean: Runtime Foundation B1 integrated,
+  validated, or closed; Runtime post-merge verified; `B-3` resolved; P1
+  eligible or activated; human-data collection authorized; efficacy
+  verified; GitHub Actions `PASS`; Validation Level 3 §10 overall `PASS`;
+  Evidence Foundation overall complete; provider/audio authorized; or any
+  open non-blocking finding resolved.
+- This review-record session performed no Runtime Foundation B1
+  integration. The reviewed Runtime Foundation B1 two-commit history
+  (`6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`,
+  `357ac80058ce3feab0565d5ed995927ef2207a77`) remains on its validation
+  branch only, not on `main`. See "Next Action" below.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1780,6 +1833,19 @@ This bootstrap does not rerun PostgreSQL or tests.
   rerun by this review. Current canonical on `main` remains API `1.28` /
   Schema `1.7`; API `1.28` remains `NOT YET REVIEW-RECORDED`. See "Fresh
   Runtime Re-Review Against Canonical API 1.28" above for full detail.
+- API `1.28` R1 Tier C canonical documentation review-record (backlog
+  revision `1.72`, commit `b94c9eb2a416e9c205e39270d7fb721225d96d40`,
+  backlog blob `1ce3d13562e8467fad0a52112dc73257cc9e7890`, remote
+  verification `PASS`, PostgreSQL/tests `NOT RUN — DOCUMENTATION-ONLY
+  REVIEW-RECORD`): API `1.28` R1 Tier C canonical documentation lifecycle
+  is now `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+  VERIFIED`. `F-RB1-05` and `F-RC-01` remain `CLOSED BY FRESH RE-REVIEW
+  AGAINST CANONICAL API 1.28` (unchanged by this review-record).
+  `F-API128-01`, `F-RR128-01`, `F-RR128-02`, `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04` remain `OPEN /
+  NON-BLOCKING`, preserved unchanged. Runtime Foundation B1
+  main-integration eligibility remains `ELIGIBLE` — not yet integrated.
+  See "API 1.28 Review-Record" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -1942,29 +2008,40 @@ This ledger does not claim:
   human-data authorized, efficacy verified, GitHub Actions PASS,
   Validation Level 3 §10 overall PASS, or provider/audio authorized, by
   this update
+- this review-record status-sync integrated Runtime Foundation B1 onto
+  `main`, modified `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, or any runtime/test/db source,
+  or performed a fresh PostgreSQL/test run — this status-sync modifies
+  only `LLE_CURRENT_STATE.md`; the backlog review-record it records
+  (revision `1.72`) was committed and pushed separately, and was itself
+  documentation-only with PostgreSQL/tests `NOT RUN`
+- Runtime Foundation B1 `VALIDATED`, `CLOSED`, integrated on `main`, or
+  post-merge verified, by the completed API `1.28` review-record — it
+  remains `NOT YET ON MAIN / NOT VALIDATED / NOT CLOSED`
+- `B-3` resolved; P1 eligible or activated; human-data collection
+  authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
+  §10 overall `PASS`; Evidence Foundation overall complete; or
+  provider/audio authorized, by this review-record
+- any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
+  `F-RR128-01`, `F-RR128-02`) resolved by this review-record — all remain
+  `OPEN / NON-BLOCKING`
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration review-record session to
-  append an additive review-record entry to
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` for the completed API `1.28` R1
-  canonical documentation lifecycle. The review-record must: start from
-  then-current exact `origin/main`; modify exactly
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`; advance backlog revision
-  `1.71` → `1.72`; record the R1/API `1.28` lifecycle (user approval →
-  documentation validation candidate → fresh Independent Review `APPROVE
-  WITH NON-BLOCKING NOTES` → main integration → post-integration document
-  verification); record candidate `2995ba806b1da9a4b0978f8c15222fd27e9620d3`;
-  record main integration `2a5931eac80d9460b666fa0be767ea60cbc215e8`;
-  record canonical API blob `b70bda6cdf8896337c0a699b8810852bb466dace`;
-  record Schema `1.7` unchanged; record Tier A/migration/DDL/runtime/test
-  authorization boundaries; preserve `F-API128-01` as `OPEN / NOTE /
-  NON-BLOCKING`; may record that the subsequent fresh Runtime re-review
-  against canonical API `1.28` closed `F-RB1-05`/`F-RC-01` and found
-  Runtime main integration `ELIGIBLE`, but must NOT claim Runtime
-  integration/validation/closure; must cause no Runtime/source/test/
-  schema/API changes; and, after successful backlog integration, must
-  update `LLE_CURRENT_STATE.md` in a separate status-sync commit to mark
-  API `1.28` `REVIEW-RECORDED` and set the next future action to reviewed
-  Runtime two-commit main integration. No Runtime main integration occurs
-  before this review-record lifecycle completes.
+- Fresh Windows Claude Validation/Integration session to integrate the
+  reviewed Runtime Foundation B1 two-commit history onto the
+  then-current exact `origin/main`, in this order: (1)
+  `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, subject `Implement VI P1 raw
+  source rebuild runtime`; (2)
+  `357ac80058ce3feab0565d5ed995927ef2207a77`, subject `Correct Runtime B1
+  cutoff semantics`. The integration must preserve the reviewed two-commit
+  history with two normal cherry-picks, no squash/amend/rebase, and must
+  not silently resolve conflicts. The future integration session must
+  perform the required Windows-local post-merge actual PostgreSQL `17.10`
+  validation on an isolated synthetic verification database, including
+  focused Runtime B1 regression, relevant Evidence/Foundation regression,
+  full configured regression, zero-side-effect checks, migration 001–013
+  / 014-absent verification, temp DB cleanup, and `lle_dev`
+  non-destructive-use proof before any Runtime `VALIDATED`/`CLOSED` claim.
+  This review-record session itself does NOT perform Runtime integration.
