@@ -1566,6 +1566,181 @@ by this review.
   `357ac80058ce3feab0565d5ed995927ef2207a77`) remains on its validation
   branch only, not on `main`. See "Next Action" below.
 
+#### Runtime Foundation B1 Main Integration and Post-Merge Validation
+
+- Windows-local Validation/Integration session, repository
+  `C:\Users\atomy\Documents\GitHub\language-learning-engine`,
+  `minos8458-web/language-learning-engine`, PostgreSQL binaries
+  `C:\Program Files\PostgreSQL\17\bin`. No product/contract edit in this
+  session.
+- Preflight: exact starting `main` confirmed — `HEAD`/`origin/main`
+  `4987ffc8dc9b3ac344f130003aaa063f610fc2ba`, tree
+  `579aad6199ca8cef1bded733efc77fac2858e37a`, parent
+  `b94c9eb2a416e9c205e39270d7fb721225d96d40`, ahead/behind `0/0`, worktree
+  and index clean, no untracked files, Current State blob
+  `918ef2287ccf315fb318a8c00525932f5c194c54`, `API_CONTRACT.md` blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace` (revision `1.28`), Schema
+  blob `ea55989eba1c5441e0cea68257f718b80453e8fb` (revision `1.7`),
+  Backlog blob `1ce3d13562e8467fad0a52112dc73257cc9e7890` (revision
+  `1.72`), replay commit `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7` present,
+  correction branch tip `357ac80058ce3feab0565d5ed995927ef2207a77`,
+  original branch tip `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`, current
+  main `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1RawSourceRuntime.test.js` absent, current main
+  `src/instrumentation/index.js` blob `d1955eaeeacaa9fbeeec661effe2549a0777fe99`,
+  migration files exactly `001`–`013`, `014` absent, Current State Next
+  Action matched this exact two-commit integration. `node` `v24.18.0`,
+  `npm` `11.16.0`, PostgreSQL server `17.10`. All preflight gates `PASS`.
+- Integration method: two normal cherry-picks onto exact current `main`,
+  no squash/amend/rebase/merge, no manual conflict resolution needed
+  (neither cherry-pick conflicted).
+- First cherry-pick — replay (`MAIN_RUNTIME_B1_REPLAY_SHA`):
+  `f3f7fc1fb2d1128a18be0a239ff8eb9f623bdeba`. Source
+  `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`. Parent
+  `4987ffc8dc9b3ac344f130003aaa063f610fc2ba`. Subject: `Implement VI P1 raw
+  source rebuild runtime` (preserved).
+- Second cherry-pick — correction (`MAIN_RUNTIME_B1_CORRECTION_SHA`):
+  `6bb2bccd5abef2d10839706ffdd000285b59512d`. Source
+  `357ac80058ce3feab0565d5ed995927ef2207a77`. Parent
+  `f3f7fc1fb2d1128a18be0a239ff8eb9f623bdeba`
+  (`MAIN_RUNTIME_B1_REPLAY_SHA`). Subject: `Correct Runtime B1 cutoff
+  semantics` (preserved). Modifies exactly
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1RawSourceRuntime.test.js`.
+- Effective integration scope, `4987ffc8dc9b3ac344f130003aaa063f610fc2ba`
+  → `MAIN_RUNTIME_B1_CORRECTION_SHA`: touches exactly
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/index.js`, `tests/viP1RawSourceRuntime.test.js`, no
+  other effective file change. `git diff --check` `PASS`. Final blobs:
+  `evidenceMetrics.js` `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`,
+  `index.js` `14577b90cc19fe10de27d7c1afe0373679e105e9`,
+  `viP1RawSourceRuntime.test.js`
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`. Unchanged: `API_CONTRACT.md`
+  `b70bda6cdf8896337c0a699b8810852bb466dace`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+  `1ce3d13562e8467fad0a52112dc73257cc9e7890`, `LLE_CURRENT_STATE.md`
+  `918ef2287ccf315fb318a8c00525932f5c194c54` (at that moment), `db/migrations/**`
+  unchanged, migration `014` absent. Worktree/index clean after both
+  cherry-picks.
+- Push gate: `git fetch origin` immediately before push confirmed
+  `origin/main` still `4987ffc8dc9b3ac344f130003aaa063f610fc2ba` (main had
+  not moved). Pushed `main` once, normal push, no force, no PR, containing
+  both commits (replay not pushed separately).
+- Post-push remote identity gate `PASS`: `origin/main` =
+  `MAIN_RUNTIME_B1_CORRECTION_SHA` = `6bb2bccd5abef2d10839706ffdd000285b59512d`.
+  Ancestry confirmed: `MAIN_RUNTIME_B1_CORRECTION_SHA` parent =
+  `MAIN_RUNTIME_B1_REPLAY_SHA`; `MAIN_RUNTIME_B1_REPLAY_SHA` parent =
+  `4987ffc8dc9b3ac344f130003aaa063f610fc2ba`. Remote final blobs
+  re-verified identical to the effective-scope blobs above. Runtime
+  validation branches unchanged (`357ac80058ce3feab0565d5ed995927ef2207a77`,
+  `acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`).
+
+##### Post-Merge Actual PostgreSQL Validation
+
+- Executed on exact merged SHA `MAIN_RUNTIME_B1_CORRECTION_SHA`
+  (`6bb2bccd5abef2d10839706ffdd000285b59512d`), actual Windows-local
+  PostgreSQL `17.10` (`SELECT version()` confirmed
+  `PostgreSQL 17.10 on x86_64-windows`).
+- Isolated synthetic verification database:
+  `lle_pm_runtime_b1_20260907064803_988`, created on management database
+  `postgres`, not `lle_dev`.
+- Database-routing proof, both required probes, before any test run:
+  (1) `psql` `SELECT current_database()` = `lle_pm_runtime_b1_20260907064803_988`;
+  (2) Node using the repository's actual `db/pool.js` (`new Pool()` /
+  `pg`) with `PGDATABASE` overridden, `SELECT current_database()` =
+  `lle_pm_runtime_b1_20260907064803_988`. Neither probe pointed to
+  `lle_dev` or any unexpected database; tests proceeded.
+- Migrations applied via `npm run migrate` against the isolated database:
+  `13` applied (`001_create_users.sql` … `013_add_vi_p1_item_lineage.sql`),
+  `0` skipped.
+- Runtime B1 suite —
+  `node --test --test-concurrency=1 tests/viP1RawSourceRuntime.test.js`:
+  `56` tests, `56` pass, `0` fail, `0` cancelled, `0` skipped, `0` todo.
+  `T44`–`T47` all `PASS` (single `REPEATABLE READ READ ONLY` transaction,
+  no write statement; zero side effects on nonempty, `empty_result`, and
+  validation-failure paths).
+- Focused Evidence/Foundation + Runtime set —
+  `dbPool.healthcheck.test.js`, `migrations.test.js`,
+  `evidenceFoundationMigration.test.js`,
+  `evidenceFoundationRepository.test.js`,
+  `viP1ItemLineageRuntime.test.js`, `viP1RawSourceRuntime.test.js`: `200`
+  tests, `200` pass, `0` fail, `0` cancelled, `0` skipped, `0` todo, `8`
+  suites.
+- Full configured regression — `npm test`: `430` tests, `430` pass, `0`
+  fail, `0` cancelled, `0` skipped, `0` todo, `55` suites.
+- Post-run database/schema evidence on the isolated database: PostgreSQL
+  server `17.10`; `schema_migrations` exactly `13` applied rows,
+  `001`–`013` only, `013` exactly once, `014` absent from both the
+  repository and `schema_migrations`; Evidence tables `17`
+  (`evidence_assignment_item_exposures`, `evidence_assignment_snapshot_nodes`,
+  `evidence_assignment_snapshots`, `evidence_assignments`,
+  `evidence_attempt_finalizations`, `evidence_attempt_series`,
+  `evidence_attempts`, `evidence_condition_versions`, `evidence_conditions`,
+  `evidence_correction_aggregates`, `evidence_enrollments`,
+  `evidence_experiment_versions`, `evidence_experiments`,
+  `evidence_participants`, `evidence_reference_versions`,
+  `evidence_sessions`, `evidence_target_node_evaluations`); Runtime
+  Foundation A item-lineage object `evidence_assignment_item_exposures`
+  (migration `013`) confirmed intact with its ordinal sequence default.
+  Runtime B1 read-only/zero-side-effect operation confirmed by the `T44`–
+  `T47` test evidence above, not by mistaking test-fixture writes for
+  `queryRawEvidenceForMetricRebuild()` writes (it issues none).
+- `lle_dev` non-destructive-use proof: original `PGDATABASE` value was
+  `lle_dev` (unexposed elsewhere); every migration/test command in this
+  validation was run with `PGDATABASE` explicitly overridden to
+  `lle_pm_runtime_b1_20260907064803_988`; no migration/test/fixture
+  command in this session targeted `PGDATABASE=lle_dev`. `lle_dev`
+  destructive-use = `NO`.
+- Temp DB cleanup: Node pools/connections closed, original `PG*`
+  environment restored (unmodified — overrides were session-scoped only),
+  isolated database dropped (`DROP DATABASE lle_pm_runtime_b1_20260907064803_988`),
+  post-drop absence confirmed (`SELECT count(*) FROM pg_database WHERE
+  datname = 'lle_pm_runtime_b1_20260907064803_988'` = `0`). No unrelated
+  file removed; final worktree clean.
+- Classification: `POST-MERGE VALIDATION/INTEGRATION EXECUTION EVIDENCE`
+  on exact main SHA `6bb2bccd5abef2d10839706ffdd000285b59512d` — not
+  Development-session evidence. This is distinct from, and does not
+  supersede or duplicate, the earlier Development-session execution
+  evidence on correction tip `357ac80058ce3feab0565d5ed995927ef2207a77`
+  (isolated database `lle_test_vip1_b1_correction_20260905_91640`,
+  preserved above under "Development-Session Execution Evidence
+  (Preserved Reference)"); both are preserved separately.
+
+##### Current Lifecycle After Main Integration and Post-Merge Validation
+
+- Runtime Foundation B1: `INDEPENDENTLY REVIEWED — APPROVE WITH
+  NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE
+  POSTGRESQL VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED`.
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`, `F-RC-01`
+  remain `CLOSED` (closed previously by the fresh Independent Re-Review
+  against canonical API `1.28`; unchanged by this integration/validation
+  session). `F-RB1-06` (`OPEN / LOW / NON-BLOCKING`), `F-RB1-07` (`OPEN /
+  NOTE / NON-BLOCKING`), `F-RB1-08` (`OPEN / NOTE / NON-BLOCKING`),
+  `F-CS-01` (`OPEN / NOTE / NON-BLOCKING`), `F-RC-02` (`OPEN / NOTE /
+  NON-BLOCKING`), `F-RC-03` (`OPEN / NOTE / NON-BLOCKING`), `F-RC-04`
+  (`OPEN / NOTE / NON-BLOCKING`), `F-API128-01` (`OPEN / NOTE /
+  NON-BLOCKING`), `F-RR128-01` (`OPEN / NOTE / NON-BLOCKING`), `F-RR128-02`
+  (`OPEN / NOTE / NON-BLOCKING`) all remain open, preserved unchanged —
+  none silently closed or escalated by this integration/validation.
+- API `1.28` R1 Tier C canonical documentation lifecycle is preserved
+  unchanged: `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH
+  NON-BLOCKING NOTES / REVIEW-RECORDED / CANONICAL ON MAIN /
+  POST-INTEGRATION DOCUMENT VERIFIED`. Backlog remains revision `1.72`;
+  this session did not append a new backlog revision.
+- This session does not claim: Runtime Foundation B1 `CLOSED`; `B-3`
+  resolved; P1 eligible or activated; human-data collection authorized;
+  efficacy verified; GitHub Actions `PASS`; Validation Level 3 §10 overall
+  `PASS`; Evidence Foundation overall complete; actual-provider/audio
+  authorized; or any open non-blocking finding resolved.
+- Next: a fresh Windows Claude Validation/Integration review-record
+  session for the completed Runtime Foundation B1 implementation
+  lifecycle, appending the next additive
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` review-record after revision
+  `1.72` (see "Next Action" below). This integration/validation session
+  does not perform that review-record.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -1846,6 +2021,32 @@ This bootstrap does not rerun PostgreSQL or tests.
   NON-BLOCKING`, preserved unchanged. Runtime Foundation B1
   main-integration eligibility remains `ELIGIBLE` — not yet integrated.
   See "API 1.28 Review-Record" above for full detail.
+- Runtime Foundation B1 main integration and post-merge validation
+  (Windows-local Validation/Integration session; two normal cherry-picks,
+  no squash/amend/rebase/merge; repository mutation limited to the two
+  integration commits on `main` plus this status-sync commit): replay
+  main commit `f3f7fc1fb2d1128a18be0a239ff8eb9f623bdeba`, correction main
+  commit `6bb2bccd5abef2d10839706ffdd000285b59512d`, effective scope
+  exactly `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/index.js`, `tests/viP1RawSourceRuntime.test.js`,
+  remote ancestry/blob verification `PASS`. Actual Windows-local
+  PostgreSQL `17.10` post-merge validation on isolated database
+  `lle_pm_runtime_b1_20260907064803_988` (database-routing dual-proof
+  `PASS`, neither pointing to `lle_dev`): Runtime B1 `56/56`, focused
+  `200/200`, full regression `430/430`/`55` suites, `T44`–`T47` `PASS`,
+  migrations `001`–`013`/`013` exactly once/`014` absent, Evidence tables
+  `17`, temp database dropped and post-drop absence confirmed, `lle_dev`
+  destructive-use `NO`. `F-RB1-01`–`F-RB1-05` and `F-RC-01` remain
+  `CLOSED` (unchanged by this session). `F-RB1-06`, `F-RB1-07`,
+  `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
+  `F-RR128-01`, `F-RR128-02` remain `OPEN / NON-BLOCKING`, preserved
+  unchanged. Runtime Foundation B1 is now `INDEPENDENTLY REVIEWED —
+  APPROVE WITH NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN /
+  POST-MERGE POSTGRESQL VERIFIED / VALIDATED / REVIEW-RECORD PENDING /
+  NOT CLOSED`. API `1.28` lifecycle unchanged (`REVIEW-RECORDED /
+  CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED`), Backlog
+  remains revision `1.72`. See "Runtime Foundation B1 Main Integration
+  and Post-Merge Validation" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2026,22 +2227,43 @@ This ledger does not claim:
   `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
   `F-RR128-01`, `F-RR128-02`) resolved by this review-record — all remain
   `OPEN / NON-BLOCKING`
+- Runtime Foundation B1 `CLOSED` by the main integration and post-merge
+  validation recorded above — it is `VALIDATED` and `NOT CLOSED`;
+  `CLOSED` is a distinct future lifecycle step gated on the pending
+  review-record
+- `B-3` resolved; P1 eligible or activated; human-data collection
+  authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
+  §10 overall `PASS`; Evidence Foundation overall complete; actual-provider
+  or audio authorized, by the main integration and post-merge validation
+- any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
+  `F-RR128-01`, `F-RR128-02`) resolved by the main integration and
+  post-merge validation — all remain `OPEN / NON-BLOCKING`
+- this session modified `src/**`, `tests/**`, `db/**`, `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `package*.json`, `.github/**`,
+  or either Runtime validation branch — it modified only
+  `LLE_CURRENT_STATE.md` in this status-sync commit; the two integration
+  commits were normal cherry-picks of already-reviewed, unmodified source
+  commits, not new product edits
+- the post-merge PostgreSQL `430/430`/`55`-suite full regression means
+  GitHub Actions `PASS`, Validation Level 3 §10 overall `PASS`, or
+  Evidence Foundation overall complete — none of these is claimed by this
+  session
+- the Development-session execution evidence on correction tip
+  `357ac80058ce3feab0565d5ed995927ef2207a77` (isolated database
+  `lle_test_vip1_b1_correction_20260905_91640`) is the same evidence as,
+  or is superseded by, the post-merge validation/integration execution
+  evidence on main SHA `6bb2bccd5abef2d10839706ffdd000285b59512d`
+  (isolated database `lle_pm_runtime_b1_20260907064803_988`) — both are
+  preserved separately with distinct classifications
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration session to integrate the
-  reviewed Runtime Foundation B1 two-commit history onto the
-  then-current exact `origin/main`, in this order: (1)
-  `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, subject `Implement VI P1 raw
-  source rebuild runtime`; (2)
-  `357ac80058ce3feab0565d5ed995927ef2207a77`, subject `Correct Runtime B1
-  cutoff semantics`. The integration must preserve the reviewed two-commit
-  history with two normal cherry-picks, no squash/amend/rebase, and must
-  not silently resolve conflicts. The future integration session must
-  perform the required Windows-local post-merge actual PostgreSQL `17.10`
-  validation on an isolated synthetic verification database, including
-  focused Runtime B1 regression, relevant Evidence/Foundation regression,
-  full configured regression, zero-side-effect checks, migration 001–013
-  / 014-absent verification, temp DB cleanup, and `lle_dev`
-  non-destructive-use proof before any Runtime `VALIDATED`/`CLOSED` claim.
-  This review-record session itself does NOT perform Runtime integration.
+- Fresh Windows Claude Validation/Integration review-record session for
+  the completed Runtime Foundation B1 implementation lifecycle, appending
+  the next additive `ARCHITECTURE_CLARIFICATION_BACKLOG.md` review-record
+  after revision `1.72`, recording reviewed two-commit integration and
+  exact post-merge PostgreSQL validation evidence, followed by a separate
+  Current State sync. This integration/validation session does NOT
+  perform that review-record.
