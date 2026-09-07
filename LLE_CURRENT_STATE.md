@@ -1791,6 +1791,84 @@ by this review.
   authorized; or any open non-blocking finding resolved. PostgreSQL/tests:
   `NOT RUN — DOCUMENTATION-ONLY REVIEW-RECORD SESSION`.
 
+##### Control Tower Selection — METRIC_RESULT Architecture Gap Review
+
+- Role: Control Tower milestone-transition reconciliation (status-only;
+  this Current State update itself, subject `Record METRIC_RESULT
+  architecture gap review as next action`, parent
+  `fa07c70749ffd379b2218cca8a1aa918f950489a`). Repository mutation caused
+  by this update: limited to `LLE_CURRENT_STATE.md` only. No Architecture
+  review, canonical patch, or runtime implementation was performed by this
+  update.
+- Preflight confirmed exact baseline unchanged before this update: `main` /
+  `origin/main` `fa07c70749ffd379b2218cca8a1aa918f950489a`, tree
+  `ca57f04c23715908dbc6e16db29705e88f32d7cb`, prior Current State blob
+  `b6048d16875041c658bc0e141c4cd2d405129eed`, Backlog revision `1.73` blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157`, API revision `1.28` blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`, Schema revision `1.7` blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`, Runtime blobs
+  `src/instrumentation/evidenceMetrics.js`
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`,
+  `src/instrumentation/index.js`
+  `14577b90cc19fe10de27d7c1afe0373679e105e9`,
+  `tests/viP1RawSourceRuntime.test.js`
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`; worktree/index clean, no
+  untracked files.
+- Selected next approved VI P1 Measurement Readiness / P0 roadmap action:
+  a fresh read-only Architecture exact-contract gap review of the
+  `METRIC_RESULT` / metric-reducer path.
+- Rationale recorded for this selection:
+  1. measurement precedes intervention;
+  2. the bounded `RAW_SOURCE` runtime foundation (Runtime Foundation B1) is
+     now `CLOSED`;
+  3. current Schema §12.2/§12.3 retains a distinct `METRIC_RESULT` mode;
+  4. Schema §12.4/§12.5 retains formula authority and metric-specific
+     invariants;
+  5. the current Runtime implementation exports
+     `queryRawEvidenceForMetricRebuild(pool, input)` only;
+  6. therefore exact metric-result/reducer runtime authority must be
+     assessed before proceeding to later modality/intervention roadmap
+     work.
+- Scope boundary: this is selection of an Architecture gap review only. It
+  is NOT approval of a new runtime implementation and NOT approval of a
+  canonical patch. The Architecture review must independently determine,
+  without assuming its answer in advance:
+  - whether existing canonical authority is already sufficient
+  - whether a Tier C canonical patch is required
+  - exact operation signature/input/output if missing
+  - FORMULA definition/interpretation boundary
+  - aggregation grain/filter semantics
+  - `OK` / `INSUFFICIENT` semantics
+  - numerator/denominator/count semantics
+  - deterministic output/source reference requirements
+  - transaction/read-only/zero-side-effect boundary
+  - the smallest implementation-ready P0 metric slice
+  - whether Retention + Unseen transfer should be first slice
+- Retention and Unseen transfer are recorded as priority candidates to
+  inspect (core efficacy measures) but are explicitly NOT pre-approved
+  implementation scope by this Current State update.
+- Preserved roadmap order/boundaries — this update does NOT advance to:
+  modality state, Lexico-Construction, mixed scheduler, bounded
+  conversation, or AI audit, ahead of the selected measurement gap review.
+- Preserved owner-value/activation boundaries (none resolved by this
+  update): `B-3` remains `UNRESOLVED`; P1 remains
+  `NOT ELIGIBLE / NOT ACTIVATED`; human-data collection remains
+  `NOT AUTHORIZED`; actual provider remains `NOT AUTHORIZED`; audio
+  remains `NOT AUTHORIZED`; efficacy remains `NOT VERIFIED`.
+- Findings: all existing findings are preserved exactly as recorded in §8,
+  unchanged by this update. Preserved `CLOSED`: `F-RB1-01`, `F-RB1-02`,
+  `F-RB1-03`, `F-RB1-04`, `F-RB1-05`, `F-RC-01`. Preserved
+  `OPEN / NON-BLOCKING`: `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02`. No finding is opened, closed, or escalated by this update.
+- Recommended review model: `GPT-6 Astra`. Reasoning: `high`.
+- Current status after this selection: Runtime Foundation B1 remains
+  `CLOSED`; the METRIC_RESULT/metric-reducer Architecture gap review is
+  `SELECTED / NOT YET PERFORMED` (recorded as the sole Next Action, §10);
+  canonical patch requirement is `NOT YET DECIDED`; runtime implementation
+  is `NOT STARTED`; P1 remains `NOT ACTIVATED`. PostgreSQL/tests:
+  `NOT RUN — STATUS-ONLY UPDATE`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2120,6 +2198,21 @@ This bootstrap does not rerun PostgreSQL or tests.
   Foundation overall complete, actual-provider/audio authorized, or any
   open non-blocking finding resolved. See "Runtime B1 Review-Record and
   Closure" above for full detail.
+- Control Tower milestone-transition reconciliation (status-only, this
+  update, repository mutation limited to `LLE_CURRENT_STATE.md`): selected
+  the next approved VI P1 Measurement Readiness / P0 roadmap action as a
+  fresh read-only Architecture exact-contract gap review of the
+  `METRIC_RESULT` / metric-reducer path, against exact current main
+  `fa07c70749ffd379b2218cca8a1aa918f950489a`, API `1.28`, Schema `1.7`, and
+  the current Runtime Foundation B1 implementation. `F-RB1-01`–`F-RB1-05`
+  and `F-RC-01` remain `CLOSED`; `F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02` remain `OPEN / NON-BLOCKING`, preserved unchanged — none
+  closed, opened, or escalated by this selection. This selection does NOT
+  mean a canonical patch is required, an Architecture review was
+  performed, or any runtime implementation was started. See "Control Tower
+  Selection — METRIC_RESULT Architecture Gap Review" above for full
+  detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2152,6 +2245,26 @@ VERIFIED`), this ledger does not claim:
 - a new product milestone was selected or implemented by this update —
   the recorded Next Action (§10) is a Control Tower reconciliation step
   only
+- a fresh Architecture exact-contract gap review of the `METRIC_RESULT` /
+  metric-reducer path was performed by this update — NOT CLAIMED; it is
+  `SELECTED / NOT YET PERFORMED`, recorded as the sole Next Action (§10)
+- whether existing canonical authority (API `1.28`, Schema `1.7`) is
+  already sufficient for `METRIC_RESULT` / metric-reducer runtime, or
+  whether a Tier C canonical patch is required — NOT DECIDED by this
+  update; that determination is reserved to the selected Architecture
+  review
+- Retention and/or Unseen transfer are approved as the first
+  implementation slice — NOT CLAIMED; both are recorded only as priority
+  candidates for the Architecture review to evaluate
+- any `METRIC_RESULT` / metric-reducer runtime operation, signature, or
+  code was implemented, started, or authorized by this update — NOT
+  CLAIMED; runtime implementation remains `NOT STARTED`
+- this update resolved `B-3`, activated P1, authorized human-data
+  collection, authorized actual provider or audio, or verified efficacy —
+  NOT CLAIMED; all remain as recorded above
+- this update advanced the roadmap to modality state, Lexico-Construction,
+  mixed scheduler, bounded conversation, or AI audit — NOT CLAIMED; roadmap
+  order is preserved and none of these was advanced
 
 This ledger does NOT negate the following current positive facts, which
 remain true and are established in §4/§8 and elsewhere in this document:
@@ -2164,6 +2277,9 @@ remain true and are established in §4/§8 and elsewhere in this document:
   `F-RC-01` are `CLOSED`
 - API `1.28` is `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION
   DOCUMENT VERIFIED`
+- the next approved VI P1 Measurement Readiness / P0 roadmap action is
+  selected: a fresh read-only Architecture exact-contract gap review of
+  the `METRIC_RESULT` / metric-reducer path (see §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -2415,11 +2531,32 @@ historical ledger does not.
 - a new product milestone was selected or implemented by any session
   recorded in this ledger — each recorded Next Action was a Control Tower
   read-only milestone-transition reconciliation step only
+- the prior recorded Next Action ("Control Tower milestone-transition
+  reconciliation resumed after Current State consistency repair: verify
+  the repaired Current State against exact remote Git/canonical evidence,
+  then select exactly one next approved VI P1 Measurement Readiness / P0
+  roadmap action before any new product repository mutation") remains the
+  governing Next Action — it has been superseded by this update's
+  selection and completed reconciliation; the selected roadmap action, a
+  fresh read-only Architecture exact-contract gap review of the
+  `METRIC_RESULT` / metric-reducer path, is now recorded in §10, and this
+  selection itself performed no Architecture review, canonical patch, or
+  runtime implementation
 
 ## 10. Next Action
 
-- Control Tower milestone-transition reconciliation resumed after Current
-  State consistency repair: verify the repaired Current State against
-  exact remote Git/canonical evidence, then select exactly one next
-  approved VI P1 Measurement Readiness / P0 roadmap action before any new
-  product repository mutation.
+- Fresh Architecture read-only exact-contract gap review of the current
+  `METRIC_RESULT` / metric-reducer path against exact current main
+  `fa07c70749ffd379b2218cca8a1aa918f950489a`, API `1.28`, Schema `1.7`, VI
+  Empirical Evidence Contract, VI Empirical Pilot Spec, and current
+  Runtime Foundation B1 implementation. The review must: cause repository
+  mutation `0`; not implement code; not activate P1; not authorize human
+  data; not assume a Tier C patch is required; determine canonical
+  sufficiency/gaps; determine whether owner value is required; determine
+  Tier A impact; determine migration/schema impact; recommend the
+  smallest exact next contract/implementation slice; evaluate Retention +
+  Unseen transfer as priority candidates without pre-approving them; and
+  end with one of: `CANONICAL SUFFICIENT — READY FOR IMPLEMENTATION
+  CONTRACT`, `NEEDS TIER C CANONICAL PATCH — USER APPROVAL REQUIRED`, or
+  `BLOCKED — OWNER/ARCHITECTURE DECISION REQUIRED`. Recommended review
+  model: `GPT-6 Astra`. Reasoning: `high`.
