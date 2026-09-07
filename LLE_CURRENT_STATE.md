@@ -1869,6 +1869,124 @@ by this review.
   is `NOT STARTED`; P1 remains `NOT ACTIVATED`. PostgreSQL/tests:
   `NOT RUN — STATUS-ONLY UPDATE`.
 
+##### Fresh Architecture Gap Review Result — METRIC_RESULT / Metric-Reducer
+
+- Role: fresh GPT-6 Astra Architecture read-only exact-contract gap review
+  of the `METRIC_RESULT` / metric-reducer path, performed as the Next
+  Action recorded by the prior Current State update (subject `Record
+  METRIC_RESULT architecture gap review as next action`, commit
+  `62162369b17e81fdc8d6886030ae91e465233512`). Repository mutation caused
+  by this review: `0`. PostgreSQL: `NOT RUN`. Tests: `NOT RUN`.
+- Final verdict: `NEEDS TIER C CANONICAL PATCH — USER APPROVAL REQUIRED`.
+- Summary judgments:
+  - CURRENT-MAIN BASELINE GATE = `PASS`
+  - STATUS-ONLY DRIFT GATE = `PASS`
+  - CURRENT RUNTIME RAW_SOURCE STATUS = `CLOSED`
+  - METRIC_RESULT OPERATION AUTHORITY = `GAP`
+  - FORMULA SEMANTIC AUTHORITY = `GAP`
+  - METRIC_RESULT OUTPUT AUTHORITY = `GAP`
+  - EMPTY / INSUFFICIENT / ERROR AUTHORITY = `GAP`
+  - TRANSACTION / SNAPSHOT AUTHORITY = `GAP`
+  - ZERO-SIDE-EFFECT AUTHORITY = `SUFFICIENT`
+  - RETENTION FIRST-SLICE READINESS = `NEEDS CANONICAL PATCH`
+  - UNSEEN-TRANSFER FIRST-SLICE READINESS = `NEEDS CANONICAL PATCH`
+  - SMALLEST RECOMMENDED SLICE (Architecture recommendation only, NOT
+    user-approved) = common `METRIC_RESULT` exact contract + Retention
+    first reducer, synthetic P0 query-time only
+  - TIER C CANONICAL PATCH REQUIRED = `YES`
+  - OWNER VALUE REQUIRED = `NO`
+  - TIER A IMPACT = `NO`
+  - MIGRATION REQUIRED = `NO`
+  - SCHEMA DDL REQUIRED = `NO`
+  - RUNTIME IMPLEMENTATION AUTHORIZED BY CURRENT STATE = `NO`
+  - P1 ACTIVATION IMPACT = `NONE`
+  - HUMAN-DATA AUTHORIZATION IMPACT = `NONE`
+- New findings (all `OPEN`; none closed by this review; none merged with
+  any pre-existing finding ID):
+  - `F-MR-ARCH-01` (BLOCKER, `OPEN`) — exact `METRIC_RESULT` operation
+    name/signature/input/filter/grain/cardinality/group identity/ordering/
+    `RAW_SOURCE` relationship missing from canonical. Canonical patch
+    required: `YES`. Owner value: `NO`.
+  - `F-MR-ARCH-02` (BLOCKER, `OPEN`) — closed FORMULA semantic schema
+    missing, including metric kind, grain, minimum sample, timeliness,
+    value projection, and compatibility. Canonical patch required: `YES`.
+    Owner value: `NO`.
+  - `F-MR-ARCH-03` (BLOCKER, `OPEN`) — exact output envelope, required/
+    nullability, numeric projection, status predicates, count partition,
+    group identity, source-reference membership/order missing. Canonical
+    patch required: `YES`. Owner value: `NO`.
+  - `F-MR-ARCH-04` (BLOCKER, `OPEN`) — FORMULA-definition-read / Evidence-
+    read snapshot relation, pure-reducer input, and transaction boundary
+    missing. Canonical patch required: `YES`. Owner value: `NO`.
+  - `F-MR-ARCH-05` (HIGH, `OPEN`) — Retention exact timing window/
+    inclusivity/timestamp source, minimum sample, and cutoff/lifecycle
+    projection semantics missing. Canonical patch required: `YES`. Owner
+    value: `NO`.
+  - `F-MR-ARCH-06` (HIGH, `OPEN`) — Unseen transfer complete same-
+    enrollment history, secondary-filter interaction, future
+    `SURFACE_VARIANT` authority, source reference, and per-node lineage
+    reducer contract missing. Canonical patch required: `YES`. Owner
+    value: `NO`.
+  - Finding totals: BLOCKER `4` (`F-MR-ARCH-01`–`F-MR-ARCH-04`); HIGH `2`
+    (`F-MR-ARCH-05`, `F-MR-ARCH-06`). Total `6`. All six are `OPEN`; none
+    is closed by this review.
+- Preserved existing findings, unchanged by this review:
+  - `CLOSED`: `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`,
+    `F-RC-01`.
+  - `OPEN / NON-BLOCKING`: `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+    `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+    `F-RR128-02`.
+  - `F-MR-ARCH-01` through `F-MR-ARCH-06` are recorded as new, distinct
+    findings; none is merged with any of the above.
+- Architecture recommendation — `NOT YET USER-APPROVED`:
+  - Smallest proposed implementation direction: common `METRIC_RESULT`
+    exact contract + Retention first reducer + synthetic P0 query-time
+    only.
+  - Unseen transfer: `DEFER TO SUBSEQUENT METRIC SLICE`, pending its
+    additional canonical dependencies (see `F-MR-ARCH-06`).
+  - Proposed canonical patch surface (recommendation only):
+    `API_CONTRACT.md` — patch required `YES`, proposed next revision
+    `1.29`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` — patch required `YES`,
+    proposed next revision `1.8`; `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` —
+    patch required `NO`; `VI_EMPIRICAL_PILOT_SPEC.md` — patch required
+    `NO`; `ARCHITECTURE_CLARIFICATION_BACKLOG.md` — a future lifecycle/
+    status record is expected after user approval, proposed next revision
+    `1.74`.
+  - These are Architecture recommendations only. They are NOT recorded as
+    `USER-APPROVED`, `APPROVED`, `IMPLEMENTED`, or `CANONICAL`.
+- Control Tower interpretation: the Architecture review establishes that a
+  Tier C patch is required, but it is NOT yet an approval-ready exact
+  canonical proposal. The following exact values still need to be
+  proposed explicitly before user approval: exact `METRIC_RESULT`
+  operation name/signature; exact closed top-level input; exact filters;
+  exact aggregation grain vocabulary/serialization; exact cardinality/
+  group identity/order; exact FORMULA closed definition schema; exact
+  supported first metric kind; exact Formula/source-snapshot
+  compatibility; exact output casing/envelope; exact numeric
+  representation and rounding; exact `OK` predicate; exact `INSUFFICIENT`
+  predicate; denominator-zero behavior; exact count partition; exact
+  `sourceRebuildReference` membership/order; exact empty/insufficient/
+  error mappings; exact transaction/snapshot architecture; exact
+  Retention timing/minimum-sample mechanics; explicit synthetic-P0 vs.
+  actual-P1 calibration boundary. User approval is NOT requested by this
+  status-only update; the next Architecture step must produce the exact
+  approval-ready proposal (see §10).
+- Preserved boundaries (unchanged by this review): Runtime implementation
+  `NOT STARTED / NOT AUTHORIZED`; `METRIC_RESULT` `NOT IMPLEMENTED`;
+  Retention reducer `NOT IMPLEMENTED`; Unseen transfer reducer `NOT
+  IMPLEMENTED`; `B-3` `UNRESOLVED`; P1 `NOT ELIGIBLE / NOT ACTIVATED`;
+  human-data collection `NOT AUTHORIZED`; efficacy `NOT VERIFIED`; actual
+  provider `NOT AUTHORIZED`; audio `NOT AUTHORIZED`. This review does not
+  advance the roadmap to modality state, Lexico-Construction, mixed
+  scheduler, bounded conversation, or AI audit.
+- This record does not mean: the Tier C canonical patch is user-approved;
+  the recommended smallest slice is approved implementation scope;
+  `F-MR-ARCH-01` through `F-MR-ARCH-06` are closed; an exact canonical
+  proposal text already exists; Runtime implementation started; or
+  Retention/Unseen transfer authorized as first implementation scope. The
+  exact Tier C canonical proposal drafting is recorded as the sole Next
+  Action (§10).
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2213,6 +2331,32 @@ This bootstrap does not rerun PostgreSQL or tests.
   performed, or any runtime implementation was started. See "Control Tower
   Selection — METRIC_RESULT Architecture Gap Review" above for full
   detail.
+- Fresh Architecture gap review of `METRIC_RESULT` / metric-reducer
+  (reviewer: fresh GPT-6 Astra Architecture read-only review; repository
+  mutation `0`; PostgreSQL `NOT RUN`; tests `NOT RUN`): verdict `NEEDS
+  TIER C CANONICAL PATCH — USER APPROVAL REQUIRED`. `F-RB1-01`–`F-RB1-05`
+  and `F-RC-01` remain `CLOSED`; `F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02` remain `OPEN / NON-BLOCKING`, preserved unchanged. Six new
+  findings added, all `OPEN`, none merged with any pre-existing finding:
+  `F-MR-ARCH-01` (BLOCKER — exact `METRIC_RESULT` operation authority
+  missing), `F-MR-ARCH-02` (BLOCKER — closed FORMULA semantic schema
+  missing), `F-MR-ARCH-03` (BLOCKER — exact output authority missing),
+  `F-MR-ARCH-04` (BLOCKER — transaction/snapshot authority missing),
+  `F-MR-ARCH-05` (HIGH — Retention first-kind semantics missing),
+  `F-MR-ARCH-06` (HIGH — Unseen transfer reducer contract missing).
+  Recommended smallest slice (Architecture recommendation only, `NOT
+  USER-APPROVED`): common `METRIC_RESULT` exact contract + Retention
+  first reducer, synthetic P0 query-time only; Unseen transfer deferred
+  to a subsequent metric slice. Tier C canonical patch required: `YES`.
+  Owner value required: `NO`. Tier A impact: `NO`. Migration/schema DDL
+  required: `NO`. Runtime implementation authorized by current status:
+  `NO`. This review does not mean: the Tier C patch is user-approved; an
+  exact approval-ready canonical proposal already exists;
+  `F-MR-ARCH-01`–`F-MR-ARCH-06` are closed; Retention/Unseen transfer are
+  approved implementation scope; or Runtime implementation started. See
+  "Fresh Architecture Gap Review Result — METRIC_RESULT / Metric-Reducer"
+  above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2245,17 +2389,35 @@ VERIFIED`), this ledger does not claim:
 - a new product milestone was selected or implemented by this update —
   the recorded Next Action (§10) is a Control Tower reconciliation step
   only
-- a fresh Architecture exact-contract gap review of the `METRIC_RESULT` /
-  metric-reducer path was performed by this update — NOT CLAIMED; it is
-  `SELECTED / NOT YET PERFORMED`, recorded as the sole Next Action (§10)
-- whether existing canonical authority (API `1.28`, Schema `1.7`) is
-  already sufficient for `METRIC_RESULT` / metric-reducer runtime, or
-  whether a Tier C canonical patch is required — NOT DECIDED by this
-  update; that determination is reserved to the selected Architecture
-  review
+- this update itself performed the `METRIC_RESULT` / metric-reducer
+  Architecture gap review — it did not; that review was performed
+  separately by a fresh GPT-6 Astra Architecture read-only review, with
+  repository mutation `0`, PostgreSQL `NOT RUN`, and tests `NOT RUN`; this
+  update only records its result (§4/§8)
+- existing canonical authority (API `1.28`, Schema `1.7`) is already
+  sufficient for `METRIC_RESULT` / metric-reducer runtime — NOT CLAIMED;
+  the completed Architecture review determined a Tier C canonical patch
+  is required, verdict `NEEDS TIER C CANONICAL PATCH — USER APPROVAL
+  REQUIRED`, with new findings `F-MR-ARCH-01`–`F-MR-ARCH-06`
 - Retention and/or Unseen transfer are approved as the first
-  implementation slice — NOT CLAIMED; both are recorded only as priority
-  candidates for the Architecture review to evaluate
+  implementation slice — NOT CLAIMED; the Architecture review recommends
+  common `METRIC_RESULT` exact contract + Retention first reducer
+  (synthetic P0 query-time only) as the smallest slice and defers Unseen
+  transfer to a subsequent metric slice, but this is an Architecture
+  recommendation only, not user-approved
+- an exact approval-ready `METRIC_RESULT` canonical proposal (operation
+  signature, input/filter/grain, FORMULA schema, output envelope, `OK`/
+  `INSUFFICIENT` predicates, error mappings, transaction boundary, exact
+  API `1.29` / Schema `1.8` patch text, etc.) has been drafted — NOT
+  CLAIMED; that drafting is the recorded Next Action (§10)
+- the Tier C canonical patch, the recommended smallest slice, or the
+  proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `1.8` patch surface is user-approved — NOT CLAIMED; these remain
+  Architecture recommendations only
+- `F-MR-ARCH-01`, `F-MR-ARCH-02`, `F-MR-ARCH-03`, `F-MR-ARCH-04`
+  (BLOCKER), or `F-MR-ARCH-05`, `F-MR-ARCH-06` (HIGH) are resolved,
+  closed, non-blocking, or require no further canonical patch — NOT
+  CLAIMED; all six remain `OPEN` and canonical-patch-required
 - any `METRIC_RESULT` / metric-reducer runtime operation, signature, or
   code was implemented, started, or authorized by this update — NOT
   CLAIMED; runtime implementation remains `NOT STARTED`
@@ -2265,6 +2427,10 @@ VERIFIED`), this ledger does not claim:
 - this update advanced the roadmap to modality state, Lexico-Construction,
   mixed scheduler, bounded conversation, or AI audit — NOT CLAIMED; roadmap
   order is preserved and none of these was advanced
+- this update modified any file other than `LLE_CURRENT_STATE.md`, or ran
+  PostgreSQL or tests — NOT CLAIMED; repository mutation by this update is
+  limited to `LLE_CURRENT_STATE.md`, and PostgreSQL/tests are `NOT RUN —
+  STATUS-ONLY UPDATE`
 
 This ledger does NOT negate the following current positive facts, which
 remain true and are established in §4/§8 and elsewhere in this document:
@@ -2277,9 +2443,14 @@ remain true and are established in §4/§8 and elsewhere in this document:
   `F-RC-01` are `CLOSED`
 - API `1.28` is `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION
   DOCUMENT VERIFIED`
-- the next approved VI P1 Measurement Readiness / P0 roadmap action is
-  selected: a fresh read-only Architecture exact-contract gap review of
-  the `METRIC_RESULT` / metric-reducer path (see §10)
+- the `METRIC_RESULT` / metric-reducer Architecture gap review is
+  `COMPLETE`, verdict `NEEDS TIER C CANONICAL PATCH — USER APPROVAL
+  REQUIRED` (see §4/§8)
+- `F-MR-ARCH-01` through `F-MR-ARCH-06` are recorded as new `OPEN`
+  findings (§8)
+- the next approved step is exact Tier C canonical proposal drafting for
+  the `METRIC_RESULT` common contract + Retention first reducer,
+  synthetic P0 query-time only (see §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -2542,21 +2713,48 @@ historical ledger does not.
   `METRIC_RESULT` / metric-reducer path, is now recorded in §10, and this
   selection itself performed no Architecture review, canonical patch, or
   runtime implementation
+- the prior recorded Next Action ("Fresh Architecture read-only exact-
+  contract gap review of the current `METRIC_RESULT` / metric-reducer
+  path...") remained `NOT YET PERFORMED` — it has since been performed by
+  a separate fresh GPT-6 Astra Architecture read-only review (repository
+  mutation `0`, PostgreSQL `NOT RUN`, tests `NOT RUN`), which returned
+  verdict `NEEDS TIER C CANONICAL PATCH — USER APPROVAL REQUIRED`; that
+  result, together with new findings `F-MR-ARCH-01`–`F-MR-ARCH-06`, is now
+  recorded in §4/§8, and the Architecture review itself did not modify any
+  file, run PostgreSQL/tests, implement runtime code, or obtain user
+  approval of its recommended Tier C patch or smallest slice
+- the completed `METRIC_RESULT` Architecture gap review's verdict means
+  existing canonical authority (API `1.28`/Schema `1.7`) was found
+  sufficient, or that its recommended smallest slice or proposed API
+  `1.29`/Schema `1.8` patch surface is user-approved — neither is
+  `CLAIMED`; the verdict was `NEEDS TIER C CANONICAL PATCH — USER
+  APPROVAL REQUIRED`, and the recommended slice/patch surface remain
+  Architecture recommendations only, pending an exact approval-ready
+  proposal (recorded as the sole Next Action in §10)
 
 ## 10. Next Action
 
-- Fresh Architecture read-only exact-contract gap review of the current
-  `METRIC_RESULT` / metric-reducer path against exact current main
-  `fa07c70749ffd379b2218cca8a1aa918f950489a`, API `1.28`, Schema `1.7`, VI
-  Empirical Evidence Contract, VI Empirical Pilot Spec, and current
-  Runtime Foundation B1 implementation. The review must: cause repository
-  mutation `0`; not implement code; not activate P1; not authorize human
-  data; not assume a Tier C patch is required; determine canonical
-  sufficiency/gaps; determine whether owner value is required; determine
-  Tier A impact; determine migration/schema impact; recommend the
-  smallest exact next contract/implementation slice; evaluate Retention +
-  Unseen transfer as priority candidates without pre-approving them; and
-  end with one of: `CANONICAL SUFFICIENT — READY FOR IMPLEMENTATION
-  CONTRACT`, `NEEDS TIER C CANONICAL PATCH — USER APPROVAL REQUIRED`, or
-  `BLOCKED — OWNER/ARCHITECTURE DECISION REQUIRED`. Recommended review
-  model: `GPT-6 Astra`. Reasoning: `high`.
+- Fresh Architecture exact Tier C canonical proposal drafting for
+  `METRIC_RESULT` common contract + Retention first reducer, synthetic P0
+  query-time only. Use a fresh `[LLE] 10 Architecture & Canonical
+  Contracts` session. Recommended model: `GPT-6 Pro (Astra)`. Reasoning:
+  `high`. Repository mutation: `0`. The Architecture proposal must produce
+  an approval-ready exact contract, not modify files. It must specify at
+  minimum: exact operation name and signature; exact input closed object
+  and filter vocabulary; exact aggregation grain serialization/
+  cardinality/order; exact versioned closed FORMULA definition schema;
+  exact `RETENTION` first-kind semantics; exact Formula/source snapshot
+  compatibility; exact output object/envelope/casing; exact numeric/
+  count/value projection and rounding; exact `OK` / `INSUFFICIENT`
+  predicates; denominator-zero and minimum-sample behavior; exact
+  missing/technical/withdrawn/unscorable/normal-empty partition; exact
+  source-rebuild-reference membership/order; exact existing error-code
+  mapping; exact one-snapshot transaction/read-only boundary; exact
+  synthetic-P0 timeliness/minimum-sample fixture boundary; exact proposed
+  API `1.29` / Schema `1.8` patch text or section-level replacement;
+  explicit no-change boundaries for Evidence Contract / Pilot Spec / Tier
+  A / migration / DDL; and acceptance criteria for a future documentation
+  validation candidate. It must end with one of: `ARCHITECTURE PROPOSAL =
+  READY FOR USER APPROVAL` or `ARCHITECTURE PROPOSAL = BLOCKED — DECISION
+  REQUIRED`. Do NOT create a documentation candidate before explicit user
+  approval.
