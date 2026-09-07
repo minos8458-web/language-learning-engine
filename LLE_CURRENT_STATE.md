@@ -2123,13 +2123,66 @@ This bootstrap does not rerun PostgreSQL or tests.
 
 ## 9. Lifecycle Non-Claims
 
-This ledger does not claim:
+### 9.1 Current Non-Claims (governing; as of this update)
+
+As of the current authoritative status recorded in §4 and §8 (Runtime
+Foundation B1 `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN /
+POST-MERGE POSTGRESQL VERIFIED / VALIDATED / CLOSED`; API `1.28`
+`REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+VERIFIED`), this ledger does not claim:
+
+- VI P1 Measurement Readiness complete — NOT CLAIMED
+- `B-3` resolved — NOT CLAIMED
+- P1 eligible or activated — NOT CLAIMED
+- human-data collection authorized — NOT CLAIMED
+- efficacy verified — NOT CLAIMED
+- GitHub Actions PASS — NOT CLAIMED
+- Validation Level 3 §10 overall PASS — NOT CLAIMED
+- Evidence Foundation overall complete — NOT CLAIMED
+- actual-provider or audio authorized — NOT CLAIMED
+- any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
+  `F-RR128-01`, `F-RR128-02`) resolved — NOT CLAIMED; all remain
+  `OPEN / NON-BLOCKING`
+- Runtime Foundation B1 being `VALIDATED / CLOSED` implies any of the
+  above (VI P1 Measurement Readiness, `B-3`, P1 eligibility/activation,
+  human-data authorization, efficacy, GitHub Actions, Validation Level 3
+  §10 overall, Evidence Foundation completeness, or provider/audio
+  authorization) — NOT CLAIMED
+- a new product milestone was selected or implemented by this update —
+  the recorded Next Action (§10) is a Control Tower reconciliation step
+  only
+
+This ledger does NOT negate the following current positive facts, which
+remain true and are established in §4/§8 and elsewhere in this document:
+
+- Runtime Foundation B1 is `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON
+  MAIN / POST-MERGE POSTGRESQL VERIFIED / VALIDATED / CLOSED`
+- `queryRawEvidenceForMetricRebuild(pool, input)` runtime is present on
+  `main`
+- `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`, and
+  `F-RC-01` are `CLOSED`
+- API `1.28` is `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENT VERIFIED`
+
+### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
+
+Each entry below was recorded at an earlier lifecycle stage as an accurate
+non-claim AT THAT TIME, in the order those stages occurred. They are
+preserved verbatim as historical record and are NOT restated as current
+status — several were superseded by later events also recorded in this
+document (the Runtime Foundation B1 correction implementation, main
+integration, post-merge validation, review-record, and closure; the API
+`1.28` canonical integration and review-record). Where any entry below
+appears to conflict with current status, §4/§8/§9.1 govern and this
+historical ledger does not.
 
 - Runtime Foundation B1 validated, closed, canonical, or integrated on main
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime exists on main
-- the Runtime Foundation B1 validation candidate's fresh Independent Review
-  resulted in approval, main-integration eligibility, or post-merge
-  verification — the review completed with verdict `REQUEST CORRECTION`
+- the Runtime Foundation B1 validation candidate's original fresh
+  Independent Review (pre-correction) resulted in approval,
+  main-integration eligibility, or post-merge verification — that review
+  completed with verdict `REQUEST CORRECTION`
 - the local-main-commit / forbidden-`git reset --hard` process deviation
   erased, ruled to have not occurred, or requiring a history rewrite — it
   is preserved as a historical process deviation with governance
@@ -2143,12 +2196,13 @@ This ledger does not claim:
   (commit `87084ff90cbf38e4cb6a9df8146a7b7030c3eba6`, API `1.27` / Schema
   `1.7`) means Runtime Foundation B1 code is validated, closed, or
   canonical, or that Runtime Foundation B1 code main-integration
-  eligibility is restored — it remains `NOT ELIGIBLE`
+  eligibility is restored — at that time it remained `NOT ELIGIBLE`
 - the completed review-record step (backlog revision `1.71`, commit
   `2499d63a316268bd1f1463a5bafd9a8dc5c02925`) means Runtime Foundation B1
   code is validated, closed, or canonical, or that any of `F-RB1-03`,
   `F-RB1-04`, or `F-CS-01` is closed
-- `F-CS-01` closed — it is `OPEN / NON-BLOCKING`
+- `F-CS-01` closed — it is `OPEN / NON-BLOCKING` (unchanged through this
+  update; see §8)
 - Runtime Foundation B1 correction implemented or started
 - Runtime Foundation B1 main-integration eligibility restored
 - the fresh Codex read-only correction pre-analysis (repository mutation
@@ -2157,19 +2211,19 @@ This ledger does not claim:
 - `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, or `F-RB1-05` closed by
   the correction pre-analysis itself — none was; all five were still
   `OPEN` immediately after the pre-analysis (current status after the
-  later fresh Independent Review is recorded below)
+  later fresh Independent Review is recorded in §8)
 - `F-RB1-06`, `F-RB1-07`, or `F-RB1-08` closed — all remain
   `OPEN / NON-BLOCKING`
 - the correction pre-analysis's planned minimum test plan (`T-C01`
   through `T-C05`, `T-C03N`, `T-C03F`) or its expected test counts
-  (`56` / `200` / `430`) were executed or are `PASS` — they are `PLANNED /
-  NOT EXECUTED` and expected counts only
+  (`56` / `200` / `430`) were executed or are `PASS` — they were `PLANNED /
+  NOT EXECUTED` and expected counts only at that stage
 - the Development correction branch
   `validation/vi-p1-raw-source-core-runtime-b1-correction-20260905`
   (replay `6f7911bdc4bc6a5f6e4ecd1cdf376d61f5ab5af7`, correction
   `357ac80058ce3feab0565d5ed995927ef2207a77`) is validated, closed,
-  canonical, or integrated on main — Runtime Foundation B1 main-integration
-  eligibility remains `NOT ELIGIBLE`
+  canonical, or integrated on main — at that time Runtime Foundation B1
+  main-integration eligibility remained `NOT ELIGIBLE`
 - the Development-session PostgreSQL execution evidence for the correction
   candidate (Runtime suite `56/56`, focused regression `200/200`, full
   regression `430/430`) is Independent Validation or an Independent Review
@@ -2177,19 +2231,21 @@ This ledger does not claim:
 - `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, or `F-RB1-04` closed by the
   correction candidate or its Development-session execution evidence
   themselves — none was; these four were closed only by the subsequent
-  fresh Independent Review (`CLOSED BY FRESH RE-REVIEW`, see above), not
+  fresh Independent Review (`CLOSED BY FRESH RE-REVIEW`, see §8), not
   by the candidate or the Development evidence directly
-- `F-RB1-05` closed — it is `OPEN / CANONICAL DECISION REQUIRED`
-- `F-RC-01` closed — it is `OPEN / MEDIUM / BLOCKING`
+- `F-RB1-05` closed — at that stage it was `OPEN / CANONICAL DECISION
+  REQUIRED` (subsequently closed; see §8/§9.1 for current status)
+- `F-RC-01` closed — at that stage it was `OPEN / MEDIUM / BLOCKING`
+  (subsequently closed; see §8/§9.1 for current status)
 - `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, or `F-CS-01` closed by this
-  correction candidate or by the fresh Independent Review — all remain
+  correction candidate or by the fresh Independent Review — all remained
   `OPEN / NON-BLOCKING`
 - Independent Review of the correction candidate did not occur, remains
   `PENDING`, or resulted in main-integration eligibility, canonical
   decision resolution, or Runtime Foundation B1 validated/closed — it
   occurred, caused repository mutation `0`, and resulted in verdict
   `BLOCKED — CANONICAL DECISION REQUIRED`, with main integration
-  remaining `NOT ELIGIBLE`
+  remaining `NOT ELIGIBLE` at that stage
 - VI P1 Measurement Readiness complete
 - `B-3` resolved
 - P1 eligible or activated
@@ -2199,111 +2255,118 @@ This ledger does not claim:
 - Validation Level 3 §10 overall PASS
 - Evidence Foundation overall complete
 - actual provider or audio authorized
-- any open finding resolved by this update other than `F-RB1-01`,
+- any open finding resolved by that update other than `F-RB1-01`,
   `F-RB1-02`, `F-RB1-03`, and `F-RB1-04` (closed by the fresh Independent
-  Review recorded above)
-- `F-RB1-05` or `F-RC-01` closed
+  Review recorded in §8)
+- `F-RB1-05` or `F-RC-01` closed, as of that update
 - `B-3` resolved, P1 eligible/activated, human-data authorized, efficacy
   verified, GitHub Actions PASS, Validation Level 3 §10 overall PASS, or
-  provider/audio authorized, by this update
-- API `1.28` canonical on `main` — it is `NOT CANONICAL ON MAIN`; only a
-  documentation validation candidate exists, on branch
+  provider/audio authorized, by that update
+- API `1.28` canonical on `main` — at that stage it was `NOT CANONICAL ON
+  MAIN`; only a documentation validation candidate existed, on branch
   `validation/vi-p1-raw-source-analysis-cutoff-r1-api128-20260905`
   (tip `2995ba806b1da9a4b0978f8c15222fd27e9620d3`)
 - `F-RB1-05` or `F-RC-01` closed by the creation of the API `1.28` R1
-  documentation validation candidate — both remain `OPEN / R1
+  documentation validation candidate — both remained `OPEN / R1
   USER-APPROVED / API 1.28 CANONICAL PATCH CANDIDATE PRESENT / FRESH
-  CANONICAL INDEPENDENT REVIEW PENDING`
+  CANONICAL INDEPENDENT REVIEW PENDING` at that stage
 - Runtime Foundation B1 validated or closed, or runtime canonical on
-  `main`, or post-merge verified, by this update
-- this update itself performed the Independent Review of the API `1.28`
+  `main`, or post-merge verified, by that update
+- that update itself performed the Independent Review of the API `1.28`
   R1 documentation validation candidate — it did not; a fresh Claude
   Opus 5 canonical Independent Review of that candidate was performed
-  separately, with repository mutation `0`, and this update only records
+  separately, with repository mutation `0`, and that update only recorded
   its result (verdict `APPROVE WITH NON-BLOCKING NOTES`)
 - the API `1.28` R1 documentation validation candidate's fresh
   Independent Review result means the candidate is canonical on `main`,
   that `F-RB1-05` or `F-RC-01` is closed, or that Runtime Foundation B1
-  main-integration eligibility changed — canonical main-integration
-  eligibility is `ELIGIBLE` and Runtime main-integration eligibility
-  remains `NOT ELIGIBLE`; actual integration has not yet occurred
+  main-integration eligibility changed — at that stage canonical
+  main-integration eligibility was `ELIGIBLE` and Runtime main-integration
+  eligibility remained `NOT ELIGIBLE`; actual integration had not yet
+  occurred
 - `F-API128-01` is resolved, closed, or requires correction, an
   Architecture decision, or an owner value — it is `OPEN / NOTE /
-  NON-BLOCKING` and is not silently closed
-- this update integrated API `1.28` onto `main`, integrated Runtime
+  NON-BLOCKING` and was not silently closed
+- that update integrated API `1.28` onto `main`, integrated Runtime
   Foundation B1 onto `main`, modified `API_CONTRACT.md`,
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
   runtime/test/db sources, or any validation branch, or performed a fresh
-  PostgreSQL/test run — this update modifies only `LLE_CURRENT_STATE.md`,
-  and the review it records was documentation-only with PostgreSQL/tests
-  `NOT RUN`
-- API `1.28` is `REVIEW-RECORDED` — it is `CANONICAL ON MAIN /
-  POST-INTEGRATION DOCUMENT VERIFIED`; `REVIEW-RECORDED` is a distinct
-  future lifecycle step not performed by this status-sync
+  PostgreSQL/test run — that update modified only
+  `LLE_CURRENT_STATE.md`, and the review it recorded was documentation-only
+  with PostgreSQL/tests `NOT RUN`
+- API `1.28` is `REVIEW-RECORDED` — at that stage it was `CANONICAL ON
+  MAIN / POST-INTEGRATION DOCUMENT VERIFIED`; `REVIEW-RECORDED` was a
+  distinct future lifecycle step not yet performed by that status-sync
+  (it has since been performed; see §9.1 for current status)
 - `F-RB1-05` or `F-RC-01` closed by the API `1.28` canonical main
-  integration — both remain `OPEN / API 1.28 CANONICAL ON MAIN / FRESH
-  RUNTIME RE-REVIEW PENDING`
-- `F-API128-01` closed, reopened, or escalated by this integration — it
-  remains `OPEN / NOTE / NON-BLOCKING`
-- Runtime Foundation B1 validated, closed, or canonical on `main` by this
+  integration — both remained `OPEN / API 1.28 CANONICAL ON MAIN / FRESH
+  RUNTIME RE-REVIEW PENDING` at that stage
+- `F-API128-01` closed, reopened, or escalated by that integration — it
+  remained `OPEN / NOTE / NON-BLOCKING`
+- Runtime Foundation B1 validated, closed, or canonical on `main` by that
   integration
-- Runtime Foundation B1 main-integration eligible by this integration — it
-  remains `NOT ELIGIBLE`
-- Runtime post-merge verified by this integration
+- Runtime Foundation B1 main-integration eligible by that integration — at
+  that stage it remained `NOT ELIGIBLE`
+- Runtime post-merge verified by that integration
 - `B-3` resolved, P1 eligible/activated, human-data authorized, efficacy
   verified, GitHub Actions PASS, Validation Level 3 §10 overall PASS, or
-  provider/audio authorized, by this integration
-- this update performed, or resulted in, Runtime Foundation B1 main
+  provider/audio authorized, by that integration
+- that update performed, or resulted in, Runtime Foundation B1 main
   integration — it did not; Runtime main-integration eligibility became
-  `ELIGIBLE` by the fresh Runtime re-review recorded above, but no Runtime
-  code was integrated onto `main` by this update
-- API `1.28` is `REVIEW-RECORDED` by this update — it remains `CANONICAL
-  ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / NOT YET REVIEW-RECORDED`;
-  the review-record step is the recorded Next Action, not yet performed
-- this update itself performed the fresh Runtime Independent Re-Review
+  `ELIGIBLE` by the fresh Runtime re-review recorded in §8, but no Runtime
+  code was integrated onto `main` by that update
+- API `1.28` is `REVIEW-RECORDED` by that update — at that stage it
+  remained `CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / NOT
+  YET REVIEW-RECORDED`; the review-record step was the then-recorded Next
+  Action, not yet performed
+- that update itself performed the fresh Runtime Independent Re-Review
   against canonical API `1.28` — it did not; that re-review was performed
   separately by a fresh Claude Opus 5 Independent Re-Review session with
   repository mutation `0`, an independent PostgreSQL/test rerun `NOT RUN`,
-  and this update only records its result (verdict `APPROVE WITH
+  and that update only recorded its result (verdict `APPROVE WITH
   NON-BLOCKING NOTES`)
-- Runtime Foundation B1 validated, closed, or canonical on `main` by this
-  update — it remains `NOT VALIDATED / NOT CLOSED / NOT YET CANONICAL ON
-  MAIN`, notwithstanding Runtime main-integration eligibility now being
-  `ELIGIBLE`
+- Runtime Foundation B1 validated, closed, or canonical on `main` by that
+  update — at that stage it remained `NOT VALIDATED / NOT CLOSED / NOT YET
+  CANONICAL ON MAIN`, notwithstanding Runtime main-integration eligibility
+  then being `ELIGIBLE` (it has since been validated, integrated, and
+  closed; see §9.1 for current status)
 - `F-RR128-01` or `F-RR128-02` require correction, an Architecture
   decision, or an owner value — both are `OPEN / NOTE / NON-BLOCKING`
 - `F-RR128-02` is the same finding as `F-RC-04` — the two IDs are
   preserved separately and neither is merged into the other
 - any previously open non-blocking finding (`F-RB1-06`, `F-RB1-07`,
   `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`)
-  was closed or escalated by this update — all remain `OPEN /
+  was closed or escalated by that update — all remained `OPEN /
   NON-BLOCKING`
 - Runtime post-merge verified, `B-3` resolved, P1 eligible/activated,
   human-data authorized, efficacy verified, GitHub Actions PASS,
   Validation Level 3 §10 overall PASS, or provider/audio authorized, by
-  this update
-- this review-record status-sync integrated Runtime Foundation B1 onto
+  that update
+- that review-record status-sync integrated Runtime Foundation B1 onto
   `main`, modified `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
   `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, or any runtime/test/db source,
-  or performed a fresh PostgreSQL/test run — this status-sync modifies
-  only `LLE_CURRENT_STATE.md`; the backlog review-record it records
+  or performed a fresh PostgreSQL/test run — that status-sync modified
+  only `LLE_CURRENT_STATE.md`; the backlog review-record it recorded
   (revision `1.72`) was committed and pushed separately, and was itself
   documentation-only with PostgreSQL/tests `NOT RUN`
 - Runtime Foundation B1 `VALIDATED`, `CLOSED`, integrated on `main`, or
-  post-merge verified, by the completed API `1.28` review-record — it
-  remains `NOT YET ON MAIN / NOT VALIDATED / NOT CLOSED`
+  post-merge verified, by the completed API `1.28` review-record — at
+  that stage it remained `NOT YET ON MAIN / NOT VALIDATED / NOT CLOSED`
+  (it has since been integrated, validated, and closed; see §9.1 for
+  current status)
 - `B-3` resolved; P1 eligible or activated; human-data collection
   authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
   §10 overall `PASS`; Evidence Foundation overall complete; or
-  provider/audio authorized, by this review-record
+  provider/audio authorized, by that review-record
 - any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
   `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
-  `F-RR128-01`, `F-RR128-02`) resolved by this review-record — all remain
-  `OPEN / NON-BLOCKING`
+  `F-RR128-01`, `F-RR128-02`) resolved by that review-record — all
+  remained `OPEN / NON-BLOCKING`
 - Runtime Foundation B1 `CLOSED` by the main integration and post-merge
-  validation recorded above — it is `VALIDATED` and `NOT CLOSED`;
-  `CLOSED` is a distinct future lifecycle step gated on the pending
-  review-record
+  validation recorded in §8 — at that stage it was `VALIDATED` and `NOT
+  CLOSED`; `CLOSED` was a distinct future lifecycle step gated on the
+  then-pending review-record (the review-record has since been completed
+  and Runtime Foundation B1 is now `CLOSED`; see §9.1 for current status)
 - `B-3` resolved; P1 eligible or activated; human-data collection
   authorized; efficacy verified; GitHub Actions `PASS`; Validation Level 3
   §10 overall `PASS`; Evidence Foundation overall complete; actual-provider
@@ -2311,17 +2374,17 @@ This ledger does not claim:
 - any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
   `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
   `F-RR128-01`, `F-RR128-02`) resolved by the main integration and
-  post-merge validation — all remain `OPEN / NON-BLOCKING`
-- this session modified `src/**`, `tests/**`, `db/**`, `API_CONTRACT.md`,
+  post-merge validation — all remained `OPEN / NON-BLOCKING`
+- that session modified `src/**`, `tests/**`, `db/**`, `API_CONTRACT.md`,
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
   `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `package*.json`, `.github/**`,
   or either Runtime validation branch — it modified only
-  `LLE_CURRENT_STATE.md` in this status-sync commit; the two integration
+  `LLE_CURRENT_STATE.md` in that status-sync commit; the two integration
   commits were normal cherry-picks of already-reviewed, unmodified source
   commits, not new product edits
 - the post-merge PostgreSQL `430/430`/`55`-suite full regression means
   GitHub Actions `PASS`, Validation Level 3 §10 overall `PASS`, or
-  Evidence Foundation overall complete — none of these is claimed by this
+  Evidence Foundation overall complete — none of these was claimed by that
   session
 - the Development-session execution evidence on correction tip
   `357ac80058ce3feab0565d5ed995927ef2207a77` (isolated database
@@ -2340,24 +2403,23 @@ This ledger does not claim:
   eligible/activated, human-data collection authorized, efficacy
   verified, GitHub Actions `PASS`, Validation Level 3 §10 overall `PASS`,
   Evidence Foundation overall complete, or actual-provider/audio
-  authorized — none of these is claimed by this closure
+  authorized — none of these is claimed by this closure (see §9.1)
 - any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
   `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
   `F-RR128-01`, `F-RR128-02`) resolved by the Runtime Foundation B1
   review-record or closure-sync — all remain `OPEN / NON-BLOCKING`
-- API `1.28` R1 Tier C canonical documentation lifecycle changed by this
+- API `1.28` R1 Tier C canonical documentation lifecycle changed by the
   Runtime Foundation B1 review-record/closure — it remains
   `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
   VERIFIED`, unaltered
-- a new product milestone was selected or implemented by this session —
-  the recorded Next Action is a Control Tower read-only
-  milestone-transition reconciliation only
+- a new product milestone was selected or implemented by any session
+  recorded in this ledger — each recorded Next Action was a Control Tower
+  read-only milestone-transition reconciliation step only
 
 ## 10. Next Action
 
-- Control Tower milestone-transition reconciliation: verify the exact
-  Runtime Foundation B1 revision `1.73` review-record commit, final
-  Current State closure-sync SHA, canonical/runtime blobs, and preserved
-  open findings; then select exactly one next approved VI P1 Measurement
-  Readiness / P0 roadmap action from the current authoritative state
-  before any new repository mutation.
+- Control Tower milestone-transition reconciliation resumed after Current
+  State consistency repair: verify the repaired Current State against
+  exact remote Git/canonical evidence, then select exactly one next
+  approved VI P1 Measurement Readiness / P0 roadmap action before any new
+  product repository mutation.
