@@ -37,21 +37,25 @@ canonical authority or exact remote Git evidence, operational status is
 ## 3. Backlog Baseline
 
 - File: `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
-- Latest revision: `1.72`
-- Blob: `1ce3d13562e8467fad0a52112dc73257cc9e7890`
+- Latest revision: `1.73`
+- Blob: `b99825ecf611d8cdd9e962ce66b16f2a41da1157`
 - Revision `1.69`: present exactly once
 - Revision `1.70`: present exactly once
 - Revision `1.71`: present exactly once
 - Revision `1.72`: present exactly once
+- Revision `1.73`: present exactly once
 
 Revision `1.69` (prior B1 RAW SOURCE Rebuild CORE canonical documentation
 lifecycle), revision `1.70` (B1 `empty_result` clarification lifecycle),
 revision `1.71` (A1/B1 assignment-less closure canonical synchronization
-review-record lifecycle), and revision `1.72` (API `1.28` R1 Tier C
-canonical documentation review-record lifecycle) are distinct lifecycle
+review-record lifecycle), revision `1.72` (API `1.28` R1 Tier C
+canonical documentation review-record lifecycle), and revision `1.73`
+(Runtime Foundation B1 Raw Source Rebuild CORE implementation review-record
+lifecycle, commit `c224ff9cca5b28f96febca0e11a89608ef746a1d`, parent
+`ffcdca99e124fd6df2b6e1bce75e1207de47de52`) are distinct lifecycle
 records; none supersedes another. The detailed revision 1.69, 1.70, 1.71,
-and 1.72 lifecycle records remain in the backlog and are not duplicated
-here.
+1.72, and 1.73 lifecycle records remain in the backlog and are not
+duplicated here.
 
 ## 4. Current Milestone
 
@@ -60,16 +64,12 @@ here.
 - State: `REVIEW-RECORDED / CANONICAL ON MAIN / POST-MERGE VERIFIED`
 - Lifecycle scope: documentation only
 - Runtime Foundation B1 implementation:
-  `CORRECTION VALIDATION CANDIDATE PRESENT / F-RB1-01–05 CLOSED BY FRESH
-  RE-REVIEW / F-RC-01 CLOSED BY FRESH RE-REVIEW / API 1.28 R1 TIER C PATCH
-  USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES
-  / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED /
-  REVIEW-RECORDED / RUNTIME MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL
-  ON MAIN / NOT VALIDATED / NOT CLOSED`
-  (see "API 1.28 Canonical Main Integration", "Fresh Runtime Re-Review
-  Against Canonical API 1.28", and "API 1.28 Review-Record" below)
+  `INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES /
+  REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE
+  POSTGRESQL VERIFIED / VALIDATED / CLOSED`
+  (see "Runtime B1 Review-Record and Closure" below)
 - `queryRawEvidenceForMetricRebuild(pool, input)` runtime:
-  `PRESENT ON VALIDATION BRANCH / ABSENT ON MAIN`
+  `PRESENT ON MAIN`
 - Previous Foundation A item-exposure/item-lineage state:
   `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE VERIFIED`
 - Foundation A backlog revision: `1.68`
@@ -1741,6 +1741,56 @@ by this review.
   `1.72` (see "Next Action" below). This integration/validation session
   does not perform that review-record.
 
+##### Runtime B1 Review-Record and Closure
+
+- Backlog review-record (Windows-local Validation/Integration review-record
+  session; modified only `ARCHITECTURE_CLARIFICATION_BACKLOG.md`;
+  PostgreSQL/tests `NOT RUN — DOCUMENTATION-ONLY REVIEW-RECORD SESSION`):
+  revision `1.73`, commit `c224ff9cca5b28f96febca0e11a89608ef746a1d` (tree
+  `0200c3c9c3c886bc69f3bab62a31af9bae3363a9`, parent
+  `ffcdca99e124fd6df2b6e1bce75e1207de47de52`, subject `Record Runtime B1
+  implementation review-record`), backlog blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157`. Remote verification `PASS`:
+  revision `1.73` present exactly once, revision `1.72` preserved
+  byte-unchanged, API `1.28` blob `b70bda6cdf8896337c0a699b8810852bb466dace`
+  unchanged, Schema `1.7` blob `ea55989eba1c5441e0cea68257f718b80453e8fb`
+  unchanged, Runtime blobs (`evidenceMetrics.js`
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`, `index.js`
+  `14577b90cc19fe10de27d7c1afe0373679e105e9`, test file
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`) unchanged, migration `014`
+  absent, both validation branch tips
+  (`acc8cca8b879e74c8f8dd02b1bf091fb601e1fdb`,
+  `357ac80058ce3feab0565d5ed995927ef2207a77`) unchanged. This review-record
+  is additive documentation recording the already-completed Runtime
+  Foundation B1 implementation lifecycle (original candidate, fresh
+  Independent Review `REQUEST CORRECTION`, A1/B1 and R1/API `1.28`
+  canonical clarification lifecycle, correction candidate, Development-
+  session PostgreSQL evidence, fresh Runtime re-review `APPROVE WITH
+  NON-BLOCKING NOTES`, two-commit main integration, and exact-SHA
+  post-merge PostgreSQL validation) — it performed no code/test/schema/API
+  change and no new PostgreSQL/test run.
+- Following this Current State closure-sync commit (subject `Record
+  Runtime B1 review-record closure`, parent
+  `c224ff9cca5b28f96febca0e11a89608ef746a1d`, modified only
+  `LLE_CURRENT_STATE.md`): Runtime
+  Foundation B1 is now `INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+  NOTES / REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE
+  POSTGRESQL VERIFIED / VALIDATED / CLOSED`. `F-RB1-01`, `F-RB1-02`,
+  `F-RB1-03`, `F-RB1-04`, `F-RB1-05`, `F-RC-01` remain `CLOSED` (unchanged
+  by this closure sync). `F-RB1-06` (`OPEN / LOW / NON-BLOCKING`),
+  `F-RB1-07`, `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`,
+  `F-API128-01`, `F-RR128-01`, `F-RR128-02` (all `OPEN / NOTE /
+  NON-BLOCKING`) remain open, preserved unchanged — none silently closed
+  or escalated. API `1.28` R1 Tier C canonical documentation lifecycle is
+  preserved unchanged: `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE
+  WITH NON-BLOCKING NOTES / REVIEW-RECORDED / CANONICAL ON MAIN /
+  POST-INTEGRATION DOCUMENT VERIFIED`. This closure does NOT mean: `B-3`
+  resolved; P1 eligible or activated; human-data collection authorized;
+  efficacy verified; GitHub Actions `PASS`; Validation Level 3 §10 overall
+  `PASS`; Evidence Foundation overall complete; actual-provider/audio
+  authorized; or any open non-blocking finding resolved. PostgreSQL/tests:
+  `NOT RUN — DOCUMENTATION-ONLY REVIEW-RECORD SESSION`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2047,6 +2097,29 @@ This bootstrap does not rerun PostgreSQL or tests.
   CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED`), Backlog
   remains revision `1.72`. See "Runtime Foundation B1 Main Integration
   and Post-Merge Validation" above for full detail.
+- Runtime Foundation B1 implementation review-record (Windows-local
+  Validation/Integration review-record session; backlog revision `1.73`,
+  commit `c224ff9cca5b28f96febca0e11a89608ef746a1d`, backlog blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157`, remote verification `PASS`,
+  PostgreSQL/tests `NOT RUN — DOCUMENTATION-ONLY REVIEW-RECORD SESSION`;
+  followed by a separate Current State closure-sync commit modifying only
+  `LLE_CURRENT_STATE.md`): Runtime Foundation B1 is now `INDEPENDENTLY
+  REVIEWED — APPROVE WITH NON-BLOCKING NOTES / REVIEW-RECORDED /
+  CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE POSTGRESQL VERIFIED /
+  VALIDATED / CLOSED`. `F-RB1-01`–`F-RB1-05` and `F-RC-01` remain
+  `CLOSED` (unchanged). `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02` remain `OPEN / NON-BLOCKING`, preserved unchanged — none
+  silently closed or escalated by this review-record/closure. API `1.28`
+  R1 Tier C canonical documentation lifecycle is preserved unchanged
+  (`USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+  NOTES / REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+  VERIFIED`). This closure does not mean `B-3` resolved, P1
+  eligible/activated, human-data authorized, efficacy verified, GitHub
+  Actions `PASS`, Validation Level 3 §10 overall `PASS`, Evidence
+  Foundation overall complete, actual-provider/audio authorized, or any
+  open non-blocking finding resolved. See "Runtime B1 Review-Record and
+  Closure" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2257,13 +2330,34 @@ This ledger does not claim:
   evidence on main SHA `6bb2bccd5abef2d10839706ffdd000285b59512d`
   (isolated database `lle_pm_runtime_b1_20260907064803_988`) — both are
   preserved separately with distinct classifications
+- this review-record and closure-sync modified `src/**`, `tests/**`,
+  `db/**`, `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  either Runtime validation branch, or performed a fresh PostgreSQL/test
+  run — Phase 1 modified only `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+  (revision `1.73`) and Phase 2 modified only `LLE_CURRENT_STATE.md`; both
+  phases were documentation-only with PostgreSQL/tests `NOT RUN`
+- Runtime Foundation B1 `CLOSED` means `B-3` resolved, P1
+  eligible/activated, human-data collection authorized, efficacy
+  verified, GitHub Actions `PASS`, Validation Level 3 §10 overall `PASS`,
+  Evidence Foundation overall complete, or actual-provider/audio
+  authorized — none of these is claimed by this closure
+- any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
+  `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
+  `F-RR128-01`, `F-RR128-02`) resolved by the Runtime Foundation B1
+  review-record or closure-sync — all remain `OPEN / NON-BLOCKING`
+- API `1.28` R1 Tier C canonical documentation lifecycle changed by this
+  Runtime Foundation B1 review-record/closure — it remains
+  `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+  VERIFIED`, unaltered
+- a new product milestone was selected or implemented by this session —
+  the recorded Next Action is a Control Tower read-only
+  milestone-transition reconciliation only
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration review-record session for
-  the completed Runtime Foundation B1 implementation lifecycle, appending
-  the next additive `ARCHITECTURE_CLARIFICATION_BACKLOG.md` review-record
-  after revision `1.72`, recording reviewed two-commit integration and
-  exact post-merge PostgreSQL validation evidence, followed by a separate
-  Current State sync. This integration/validation session does NOT
-  perform that review-record.
+- Control Tower milestone-transition reconciliation: verify the exact
+  Runtime Foundation B1 revision `1.73` review-record commit, final
+  Current State closure-sync SHA, canonical/runtime blobs, and preserved
+  open findings; then select exactly one next approved VI P1 Measurement
+  Readiness / P0 roadmap action from the current authoritative state
+  before any new repository mutation.
