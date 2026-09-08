@@ -2317,6 +2317,117 @@ observations only.
   the then-current exact `main`, recorded as the sole Next Action (§10).
   PostgreSQL/tests: `NOT RUN — STATUS-ONLY UPDATE`.
 
+##### METRIC_RESULT Tier C Main Integration
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record METRIC_RESULT Tier C main integration`, parent
+  `b946fb8201c58ef70ac5b911a0dbf38e10403ce7`) of a completed Windows-local
+  Validation/Integration session that cherry-picked the reviewed
+  METRIC_RESULT Tier C documentation candidate onto `main` and ran
+  post-integration document/static verification. Repository mutation
+  caused by this Current State update itself: limited to
+  `LLE_CURRENT_STATE.md` only.
+- Starting `main`: `20d0180da3ae5efd021f15e393ad42103c40051c` (equal to the
+  reviewed candidate's parent). Status-only drift gate before integration:
+  `PASS` — the only commits between the candidate parent and integration
+  time were approved status-only Current State commits.
+- Integration method: normal `git cherry-pick
+  ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75` onto exact current `main` —
+  clean, no conflict, no manual correction.
+- Main integration commit: `b946fb8201c58ef70ac5b911a0dbf38e10403ce7`.
+  Parent: `20d0180da3ae5efd021f15e393ad42103c40051c`. Tree:
+  `a41f8722372ac48df658c3032b7ca8f6d7ad4e60`. Subject: `Add METRIC_RESULT
+  Retention Tier C contract` (preserved).
+- Exact changed files (two-file scope, no third file): `API_CONTRACT.md`
+  (`+715/-0`), `EVIDENCE_FOUNDATION_P0_SCHEMA.md` (`+321/-11`). Total
+  `1036` insertions / `11` deletions.
+
+###### Byte-Identity / No-Change Gates
+
+- Integrated `API_CONTRACT.md` blob `a498d5536ea1d228d133610780ff06d77a9d403f`
+  = reviewed candidate blob `a498d5536ea1d228d133610780ff06d77a9d403f` —
+  `PASS — BYTE-IDENTICAL`.
+- Integrated `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb` = reviewed candidate blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb` — `PASS — BYTE-IDENTICAL`.
+- Unchanged during integration: Current State blob
+  `420e96674e50e60ffeb029cf3e07ca524b2bd84d`; Backlog blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157` (revision `1.73`); Evidence
+  Contract blob `4bec3687e7a6f352330ba878a93f3055837aaf5d`; Pilot Spec
+  blob `7ae5812bc59233525ed9c2d9b2a6798123d000ca`.
+
+###### Post-Integration Document/Static Verification
+
+- `git diff --check`: `PASS`.
+- API `1.28` preserved exactly once; API `1.29` present exactly once;
+  API `1.30` absent.
+- Schema `1.7` preserved exactly once; Schema `1.8` present exactly once;
+  Schema `1.9` absent.
+- Headings `§13.10.11.2`, `§12.3.4`, `§12.4.1` each present exactly once.
+- `RAW_SOURCE` / `queryRawEvidenceForMetricRebuild(pool, input)` contract
+  text: `SEMANTICALLY UNCHANGED`.
+- Required `METRIC_RESULT` contract markers confirmed `PASS`, including:
+  `queryMetricResult(pool, input)`; exact five-key input; exact five-filter
+  object; `assignmentIds`/`attemptIds` prohibited on this operation;
+  `candidateAdmissionPolicy`; `denominatorEligibilityPolicy`;
+  `populationPolicy` not a valid FORMULA schema key; `metricKind =
+  RETENTION` only; `executionScope = SYNTHETIC_P0`; 14-step `FIRST_MATCH`
+  rule order; 10-bucket count partition; six-decimal `HALF_UP` ratio;
+  `REPEATABLE READ`; `READ ONLY`; zero-side-effect boundary;
+  `minimumSample = 2` synthetic fixture; `earlyToleranceMs = 3600000`
+  synthetic fixture; `lateToleranceMs = 3600000` synthetic fixture; actual
+  P1 calibration not authorized; Unseen transfer deferred.
+- Markdown/static: fence balance `PASS`; new heading uniqueness `PASS`;
+  revision row uniqueness `PASS`; no unresolved semantic alternatives in
+  the new sections.
+
+###### Evidence Classification
+
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`.
+- Runtime tests: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`.
+- The prior Runtime Foundation B1 PostgreSQL/test evidence recorded
+  elsewhere in this document is not reinterpreted as new evidence for API
+  `1.29` / Schema `1.8`.
+- This integration establishes documentation integration evidence plus
+  post-integration document/static verification evidence only. It does
+  NOT establish Runtime implementation, Runtime validation, learning
+  efficacy, or actual-provider validation.
+
+###### Lifecycle Status After This Update
+
+- METRIC_RESULT Tier C docs: `USER-APPROVED / INDEPENDENTLY REVIEWED —
+  APPROVE WITH NON-BLOCKING NOTES / INTEGRATED ON MAIN / POST-INTEGRATION
+  DOCUMENT VERIFICATION PASS / REVIEW-RECORD PENDING / RUNTIME NOT
+  AUTHORIZED`.
+- API `1.29`: `USER-APPROVED / INDEPENDENTLY REVIEWED / INTEGRATED ON
+  MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORD PENDING`.
+- Schema `1.8`: `USER-APPROVED / INDEPENDENTLY REVIEWED / INTEGRATED ON
+  MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORD PENDING`.
+- Current canonical on `main` is now API `1.29` / Schema `1.8`.
+- `F-MR-ARCH-01` through `F-MR-ARCH-05`: `OPEN / CANONICAL GAP ADDRESSED
+  AND REVIEWED CONTENT INTEGRATED ON MAIN / REVIEW-RECORD PENDING` — none
+  is closed by this update.
+- `F-MR-ARCH-06`: `OPEN / DEFERRED`, unaffected by this update.
+- `F-MR-IR-01` through `F-MR-IR-04`: `LOW / OPEN / NON-BLOCKING`,
+  preserved unchanged.
+- Runtime implementation: `NOT AUTHORIZED / NOT STARTED`. `METRIC_RESULT`
+  runtime: `NOT IMPLEMENTED`. Retention Runtime reducer: `NOT
+  IMPLEMENTED`. Unseen transfer: `NOT IMPLEMENTED / DEFERRED`. `B-3`:
+  `UNRESOLVED`. P1: `NOT ELIGIBLE / NOT ACTIVATED`. Human-data collection:
+  `NOT AUTHORIZED`. Actual provider: `NOT AUTHORIZED`. Audio: `NOT
+  AUTHORIZED`. Efficacy: `NOT VERIFIED`.
+- This record does not mean: the review-record step complete; any
+  `F-MR-ARCH` finding closed; any `F-MR-IR` finding closed;
+  `METRIC_RESULT` implemented; Retention implemented; Unseen transfer
+  implemented; `B-3` resolved; P1 eligible; P1 activated; human-data
+  authorized; actual-provider authorized; audio authorized; efficacy
+  verified; PostgreSQL `PASS`; runtime test `PASS`; GitHub Actions `PASS`;
+  Validation Level 3 §10 overall `PASS`; or Evidence Foundation overall
+  complete. The sole remaining step is a fresh Windows Claude review-record
+  writer session to record this completed lifecycle in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, recorded as the sole Next
+  Action (§10). PostgreSQL/tests: `NOT RUN — STATUS-ONLY UPDATE`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2744,6 +2855,30 @@ This bootstrap does not rerun PostgreSQL or tests.
   Main-integration eligibility: `ELIGIBLE`. See "METRIC_RESULT Tier C
   Documentation Candidate — Created / Pushed / Independently Reviewed"
   above for full detail.
+- METRIC_RESULT Tier C main integration (Windows-local Validation/
+  Integration session, normal cherry-pick of candidate
+  `ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75`, no conflict, no manual
+  correction, no rebase/amend/squash/force-push; repository mutation
+  limited to one new `main` commit plus this status-sync commit): main
+  integration commit `b946fb8201c58ef70ac5b911a0dbf38e10403ce7` (parent
+  `20d0180da3ae5efd021f15e393ad42103c40051c`), exactly two files changed
+  (`API_CONTRACT.md` `+715/-0`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `+321/-11`), integrated blobs `a498d5536ea1d228d133610780ff06d77a9d403f`
+  and `a0e4037db07f7416109e53ed72c10a12b7c433bb` byte-identical to the
+  reviewed candidate. Post-integration document/static verification
+  `PASS`: `git diff --check` `PASS`; API `1.28` exactly once, `1.29`
+  exactly once, `1.30` absent; Schema `1.7` exactly once, `1.8` exactly
+  once, `1.9` absent; `§13.10.11.2`/`§12.3.4`/`§12.4.1` each exactly once;
+  `RAW_SOURCE`/`queryRawEvidenceForMetricRebuild` semantically unchanged;
+  all required `METRIC_RESULT` contract markers present. PostgreSQL/tests:
+  `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. `F-MR-ARCH-01`–`F-MR-ARCH-05`
+  are now `OPEN / CANONICAL GAP ADDRESSED AND REVIEWED CONTENT INTEGRATED
+  ON MAIN / REVIEW-RECORD PENDING`; `F-MR-ARCH-06` remains `OPEN /
+  DEFERRED`; `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`.
+  No finding is closed by this integration. Current canonical on `main` is
+  now API `1.29` / Schema `1.8`. Runtime implementation remains `NOT
+  AUTHORIZED / NOT STARTED`. See "METRIC_RESULT Tier C Main Integration"
+  above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2751,9 +2886,12 @@ This bootstrap does not rerun PostgreSQL or tests.
 
 As of the current authoritative status recorded in §4 and §8 (Runtime
 Foundation B1 `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN /
-POST-MERGE POSTGRESQL VERIFIED / VALIDATED / CLOSED`; API `1.28`
-`REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
-VERIFIED`), this ledger does not claim:
+POST-MERGE POSTGRESQL VERIFIED / VALIDATED / CLOSED`; METRIC_RESULT Tier C
+docs `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING
+NOTES / INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT VERIFICATION PASS /
+REVIEW-RECORD PENDING / RUNTIME NOT AUTHORIZED`; API `1.29` and Schema
+`1.8` `INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED /
+REVIEW-RECORD PENDING`), this ledger does not claim:
 
 - VI P1 Measurement Readiness complete — NOT CLAIMED
 - `B-3` resolved — NOT CLAIMED
@@ -2766,94 +2904,50 @@ VERIFIED`), this ledger does not claim:
 - actual-provider or audio authorized — NOT CLAIMED
 - any open non-blocking finding (`F-RB1-06`, `F-RB1-07`, `F-RB1-08`,
   `F-CS-01`, `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`,
-  `F-RR128-01`, `F-RR128-02`) resolved — NOT CLAIMED; all remain
-  `OPEN / NON-BLOCKING`
-- Runtime Foundation B1 being `VALIDATED / CLOSED` implies any of the
-  above (VI P1 Measurement Readiness, `B-3`, P1 eligibility/activation,
-  human-data authorization, efficacy, GitHub Actions, Validation Level 3
-  §10 overall, Evidence Foundation completeness, or provider/audio
-  authorization) — NOT CLAIMED
+  `F-RR128-01`, `F-RR128-02`, `F-MR-IR-01`–`F-MR-IR-04`) resolved — NOT
+  CLAIMED; all remain `OPEN / NON-BLOCKING`
 - a new product milestone was selected or implemented by this update —
   the recorded Next Action (§10) is a Control Tower reconciliation step
   only
-- this update itself performed the `METRIC_RESULT` / metric-reducer
-  Architecture gap review — it did not; that review was performed
-  separately by a fresh GPT-6 Astra Architecture read-only review, with
-  repository mutation `0`, PostgreSQL `NOT RUN`, and tests `NOT RUN`; this
-  update only records its result (§4/§8)
-- existing canonical authority (API `1.28`, Schema `1.7`) is already
-  sufficient for `METRIC_RESULT` / metric-reducer runtime — NOT CLAIMED;
-  the completed Architecture review determined a Tier C canonical patch
-  is required, verdict `NEEDS TIER C CANONICAL PATCH — USER APPROVAL
-  REQUIRED`, with new findings `F-MR-ARCH-01`–`F-MR-ARCH-06`
-- Retention and/or Unseen transfer are approved as the first
-  implementation slice — NOT CLAIMED; the Architecture review recommends
-  common `METRIC_RESULT` exact contract + Retention first reducer
-  (synthetic P0 query-time only) as the smallest slice and defers Unseen
-  transfer to a subsequent metric slice, but this is an Architecture
-  recommendation only, not user-approved
-- an exact approval-ready `METRIC_RESULT` canonical proposal (operation
-  signature, input/filter/grain, FORMULA schema, output envelope, `OK`/
-  `INSUFFICIENT` predicates, error mappings, transaction boundary, exact
-  API `1.29` / Schema `1.8` patch text, etc.) has been drafted — NOT
-  CLAIMED; that drafting is the recorded Next Action (§10)
-- the Tier C canonical patch, the recommended smallest slice, or the
-  proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  `1.8` patch surface being user-approved, or the documentation candidate
-  having been created and independently reviewed, means API `1.29`/
-  Schema `1.8` are canonical on `main`, that main integration is complete,
-  or that Runtime implementation is authorized — NOT CLAIMED; the
-  candidate is `INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES /
-  MAIN-INTEGRATION ELIGIBLE / NOT CANONICAL ON MAIN` (see "METRIC_RESULT
-  Tier C Documentation Candidate — Created / Pushed / Independently
-  Reviewed" above) and Runtime implementation remains `NOT AUTHORIZED /
-  NOT STARTED`
-- `F-MR-ARCH-01`, `F-MR-ARCH-02`, `F-MR-ARCH-03`, `F-MR-ARCH-04`
-  (BLOCKER), or `F-MR-ARCH-05`, `F-MR-ARCH-06` (HIGH) are resolved,
-  closed, non-blocking, or require no further canonical patch — NOT
-  CLAIMED; all six remain `OPEN` and canonical-patch-required
-- any `METRIC_RESULT` / metric-reducer runtime operation, signature, or
-  code was implemented, started, or authorized by this update — NOT
-  CLAIMED; runtime implementation remains `NOT STARTED`
-- this update resolved `B-3`, activated P1, authorized human-data
-  collection, authorized actual provider or audio, or verified efficacy —
-  NOT CLAIMED; all remain as recorded above
-- this update advanced the roadmap to modality state, Lexico-Construction,
-  mixed scheduler, bounded conversation, or AI audit — NOT CLAIMED; roadmap
-  order is preserved and none of these was advanced
-- this update modified any file other than `LLE_CURRENT_STATE.md`, or ran
-  PostgreSQL or tests — NOT CLAIMED; repository mutation by this update is
-  limited to `LLE_CURRENT_STATE.md`, and PostgreSQL/tests are `NOT RUN —
-  STATUS-ONLY UPDATE`
-- the corrected `METRIC_RESULT` Tier C proposal remains undecided — NOT
-  CLAIMED; `USER APPROVAL = APPROVED` (see "Control Tower User Approval
-  Record — METRIC_RESULT Tier C Proposal" above)
-- `API_CONTRACT.md` `1.29` or `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8` is
-  canonical, integrated, or present on `main` — NOT CLAIMED; both remain
-  `PROPOSED / NOT APPROVED / NOT CANONICAL`; current canonical on `main`
-  remains API `1.28` / Schema `1.7`
-- a documentation validation candidate for the corrected proposal has been
-  created, pushed, and independently reviewed — NOT restated as undecided;
-  it has (`ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75`, verdict `APPROVE WITH
-  NON-BLOCKING NOTES`) — but this does NOT mean it is integrated onto
-  `main`, canonical, or that any `F-MR-ARCH`/`F-MR-IR` finding is closed
-- Runtime implementation of `METRIC_RESULT` or the Retention reducer has
-  been authorized or started — NOT CLAIMED; `NOT AUTHORIZED / NOT STARTED`
+- this update itself performed the cherry-pick integration or the
+  post-integration document/static verification — it did not; those were
+  performed by a separate Windows-local Validation/Integration session,
+  repository mutation limited to one new `main` commit; this update only
+  records the result (§4/§8)
+- API `1.29` or Schema `1.8` are `REVIEW-RECORDED` — NOT CLAIMED; both are
+  `INTEGRATED ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORD
+  PENDING` only
 - `F-MR-ARCH-01` through `F-MR-ARCH-05` are closed, non-blocking, or no
-  longer require a canonical patch — NOT CLAIMED; all five remain `OPEN /
-  CANONICAL GAP ADDRESSED BY REVIEWED CANDIDATE`; closure requires later
-  integration/review-record lifecycle evidence
+  longer require a review-record — NOT CLAIMED; all five remain `OPEN /
+  CANONICAL GAP ADDRESSED AND REVIEWED CONTENT INTEGRATED ON MAIN /
+  REVIEW-RECORD PENDING`; closure requires the review-record step, not
+  this integration alone
 - `F-MR-ARCH-06` (Unseen transfer) is resolved, closed, or in scope — NOT
   CLAIMED; it remains `OPEN / DEFERRED`
 - `F-MR-IR-01`, `F-MR-IR-02`, `F-MR-IR-03`, or `F-MR-IR-04` (all LOW) is
   closed or escalated into a correction requirement — NOT CLAIMED; all
   four remain `OPEN / NON-BLOCKING`
-- approving the proposal, or the candidate's Independent Review pass,
-  itself authorizes Runtime implementation or main integration — NOT
-  CLAIMED; a fresh Windows Claude Validation/Integration session
-  performing a normal cherry-pick of the reviewed candidate onto the
-  then-current exact `main` is required before any main integration, and
-  that step is not performed by this update (see §10)
+- any `METRIC_RESULT` / metric-reducer runtime operation, signature, or
+  code was implemented, started, or authorized by this integration — NOT
+  CLAIMED; runtime implementation remains `NOT STARTED / NOT AUTHORIZED`
+- this integration resolved `B-3`, activated P1, authorized human-data
+  collection, authorized actual provider or audio, or verified efficacy —
+  NOT CLAIMED; all remain as recorded above
+- this integration modified any file on `main` other than
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or ran
+  PostgreSQL or tests — NOT CLAIMED; PostgreSQL/tests are `NOT RUN —
+  DOCUMENTATION-ONLY INTEGRATION`
+- this Current State update itself modified any file other than
+  `LLE_CURRENT_STATE.md` — NOT CLAIMED; repository mutation by this update
+  is limited to `LLE_CURRENT_STATE.md`
+- the review-record step (appending this completed lifecycle to
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`) has been performed — NOT
+  CLAIMED; it is the recorded Next Action (§10), not yet performed in this
+  or any prior update
+- Runtime Foundation B1's own findings or lifecycle state were changed by
+  this integration — NOT CLAIMED; Runtime Foundation B1 remains
+  `REVIEW-RECORDED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE
+  POSTGRESQL VERIFIED / VALIDATED / CLOSED`, unaltered
 
 This ledger does NOT negate the following current positive facts, which
 remain true and are established in §4/§8 and elsewhere in this document:
@@ -2864,29 +2958,28 @@ remain true and are established in §4/§8 and elsewhere in this document:
   `main`
 - `F-RB1-01`, `F-RB1-02`, `F-RB1-03`, `F-RB1-04`, `F-RB1-05`, and
   `F-RC-01` are `CLOSED`
-- API `1.28` is `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION
-  DOCUMENT VERIFIED`
-- the `METRIC_RESULT` / metric-reducer Architecture gap review is
-  `COMPLETE`, verdict `NEEDS TIER C CANONICAL PATCH — USER APPROVAL
-  REQUIRED` (see §4/§8)
-- `F-MR-ARCH-01` through `F-MR-ARCH-06` are recorded as new `OPEN`
-  findings (§8)
-- the corrected `METRIC_RESULT` Tier C proposal (common `METRIC_RESULT`
-  exact contract + Retention first reducer, synthetic P0 query-time only;
-  proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  `1.8`) is `USER-APPROVED` (`USER APPROVAL = APPROVED`), with
-  `F-MR-ARCH-01`–`F-MR-ARCH-05` `OPEN / TARGETED BY USER-APPROVED
-  PROPOSAL` and `F-MR-ARCH-06` `OPEN / DEFERRED` (see §4/§8)
-- the docs-only canonical documentation validation candidate for API
-  `1.29` / Schema `1.8` was created on validation branch
-  `validation/vi-p1-metric-result-retention-tierc-api129-schema18-20260908`
-  (`ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75`), and a fresh Claude Opus 5
-  Independent Review returned verdict `APPROVE WITH NON-BLOCKING NOTES`,
-  main-integration eligibility `ELIGIBLE`, with four new `LOW` findings
-  `F-MR-IR-01`–`F-MR-IR-04` (`OPEN / NON-BLOCKING`) (see §4/§8)
-- the next step is a fresh Windows Claude Validation/Integration session to
-  cherry-pick exactly the reviewed candidate onto the then-current exact
-  `main` (see §10)
+- API `1.28` R1 Tier C canonical documentation lifecycle was
+  `REVIEW-RECORDED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT
+  VERIFIED`, and remains so as unaltered history — API `1.28` has since
+  been superseded on `main` by API `1.29` (see below)
+- the reviewed METRIC_RESULT Tier C documentation candidate
+  `ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75` was cherry-picked cleanly
+  (no conflict, no manual correction) onto `main` as commit
+  `b946fb8201c58ef70ac5b911a0dbf38e10403ce7`, with integrated
+  `API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md` blobs
+  byte-identical to the reviewed candidate, and post-integration
+  document/static verification `PASS` (see §4/§8)
+- current canonical on `main` is now API `1.29`
+  (blob `a498d5536ea1d228d133610780ff06d77a9d403f`) and Schema `1.8`
+  (blob `a0e4037db07f7416109e53ed72c10a12b7c433bb`)
+- `F-MR-ARCH-01` through `F-MR-ARCH-05` are `OPEN / CANONICAL GAP
+  ADDRESSED AND REVIEWED CONTENT INTEGRATED ON MAIN / REVIEW-RECORD
+  PENDING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-IR-01`–
+  `F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING` (see §4/§8)
+- the next step is a fresh Windows Claude review-record writer session to
+  record this completed lifecycle in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, not to modify Backlog/API/
+  Schema/Runtime/test/DB content (see §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -3216,24 +3309,49 @@ historical ledger does not.
   Runtime implementation, or close any `F-MR-ARCH` finding — the sole
   remaining step, cherry-picking exactly the reviewed candidate onto the
   then-current exact `main`, is now recorded in §10
+- the prior recorded Next Action ("Fresh Windows Claude Validation/
+  Integration session to integrate exactly the reviewed candidate
+  `ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75`...") remained not yet
+  performed — it has since been performed: a Windows-local Validation/
+  Integration session cherry-picked the reviewed candidate cleanly (no
+  conflict, no manual correction) onto exact starting `main`
+  `20d0180da3ae5efd021f15e393ad42103c40051c` as main integration commit
+  `b946fb8201c58ef70ac5b911a0dbf38e10403ce7`, with integrated API/Schema
+  blobs byte-identical to the reviewed candidate and post-integration
+  document/static verification `PASS`; that integration did not perform
+  the review-record step, did not close any `F-MR-ARCH`/`F-MR-IR`
+  finding, and did not authorize Runtime implementation — the sole
+  remaining step, a fresh Windows Claude review-record writer session to
+  record this completed lifecycle in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, is now recorded in §10
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration session to integrate exactly
-  the reviewed candidate: `ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75` from
-  `validation/vi-p1-metric-result-retention-tierc-api129-schema18-20260908`
-  onto the then-current exact `main` using a normal cherry-pick of the
-  reviewed candidate commit only. The future integration session must:
-  fresh-fetch `origin`; verify the candidate branch tip and candidate blobs
-  unchanged; verify `main` drift since the candidate parent consists only
-  of approved status-only Current State commits; stop on any unexpected
-  canonical/runtime drift; cherry-pick exactly candidate
-  `ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75`; preserve commit provenance
-  and content; make no correction in the integration session; push `main`
-  normally, no force; verify integrated API/Schema blobs byte-identical to
-  the reviewed candidate; perform post-integration document/static
-  verification; keep PostgreSQL/tests
-  `NOT RUN — DOCUMENTATION-ONLY INTEGRATION` unless separately authorized;
-  not claim Runtime validation; not close any `F-MR` finding; and not
-  perform the review-record step in the same integration session. Do not
-  integrate that candidate in this status-only updater session.
+- Fresh Windows Claude review-record writer to record the completed
+  METRIC_RESULT Tier C documentation lifecycle in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only. Expected review-record
+  scope: user approval; candidate SHA/tree/parent/branch
+  (`ed7b3f12a7d6b03c7fd1f268c3f207dc283eff75` /
+  `ed438152bc67661575a8fd94a0d94a9855c7ab73` /
+  `8d92699760468eb5976d7ac884dc85bbff7b801a` /
+  `validation/vi-p1-metric-result-retention-tierc-api129-schema18-20260908`);
+  API `1.29` / Schema `1.8` candidate blobs
+  (`a498d5536ea1d228d133610780ff06d77a9d403f` /
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`); Independent Review verdict
+  `APPROVE WITH NON-BLOCKING NOTES`, correction required `NO`, owner value
+  required `NO`, main-integration eligibility `ELIGIBLE`; integration
+  SHA/tree/parent (`b946fb8201c58ef70ac5b911a0dbf38e10403ce7` /
+  `a41f8722372ac48df658c3032b7ca8f6d7ad4e60` /
+  `20d0180da3ae5efd021f15e393ad42103c40051c`); integrated blobs
+  byte-identical to the reviewed candidate; post-integration document/
+  static verification `PASS`; PostgreSQL/tests `NOT RUN —
+  DOCUMENTATION-ONLY`; `F-MR-ARCH-01` through `F-MR-ARCH-05` canonical gap
+  addressed/integrated, with closure disposition to be recorded only
+  according to the review-record lifecycle; `F-MR-ARCH-06` `OPEN /
+  DEFERRED`; `F-MR-IR-01` through `F-MR-IR-04` `LOW / OPEN /
+  NON-BLOCKING`; Runtime implementation remains `NOT AUTHORIZED`. Current
+  Backlog is revision `1.73`; if it remains revision `1.73` at
+  review-record execution time, the expected next additive review-record
+  revision is `1.74`. If Backlog or `main` changes before that session:
+  `BLOCKED`, and re-establish baseline rather than guessing. Do not write
+  the review-record in this Current State updater session.
