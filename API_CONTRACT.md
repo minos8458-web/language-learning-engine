@@ -2146,6 +2146,720 @@ Exactly zero:
 - P1 activation
 - human data 수집
 
+#### 13.10.11.2 Current bounded METRIC_RESULT query contract — Retention v1
+
+**Operation classification**
+
+Exact internal operation:
+
+```text
+queryMetricResult(pool, input)
+```
+
+| 항목 | 계약 |
+| --- | --- |
+| Classification | internal Pilot Evidence Instrumentation Component query operation |
+| Public HTTP API 여부 | 아님 |
+| Engine 여부 | 신규 Engine 아님, 기존 canonical Engine API도 아님 |
+| Engine API count | 변경 없음 |
+| Future runtime location | `src/instrumentation/evidenceMetrics.js` (이 patch는 Runtime을 수정하지 않는다 — 위치는 참조용 기록일 뿐이다) |
+
+**§13.10.11.1과의 관계**
+
+`queryMetricResult`는 `queryRawEvidenceForMetricRebuild(pool, input)`와 완전히 분리된 DB-backed operation이다.
+
+- `queryMetricResult`는 `queryRawEvidenceForMetricRebuild()`를 호출하지 않는다.
+- `queryMetricResult`는 RAW_SOURCE의 input/output shape를 overload하지 않는다 — 별도의 exact input/output을 갖는다.
+- 두 operation은 private source-selection/projection logic을 공유할 수 있다.
+- 공유되는 private helper는 이미 열려 있는 DB client를 인자로 받는다 — helper 자신은 transaction을 begin/commit/rollback하지 않는다.
+- `queryMetricResult`는 정확히 하나의 transaction을 소유한다. Reduction은 그 같은 transaction 안에서 frozen source로부터 수행한다.
+- §13.10.11.1의 `queryRawEvidenceForMetricRebuild` contract(exact input/output, seven filter key, `empty_result` semantics 포함)는 이 patch로 semantically 변경되지 않는다.
+
+**Exact input**
+
+```text
+{
+  formulaId,
+  formulaVersion,
+  analysisCutoff,
+  aggregationGrain,
+  filters
+}
+```
+
+Exactly 다섯 key, 전부 required.
+
+- Top-level에 이 다섯 key 외 key가 있으면 `CONTRACT_VIOLATION`이다.
+- 다섯 key 중 하나라도 omitted/explicit `undefined`면 `MISSING_REQUIRED_FIELD`다.
+- Explicit `null` 또는 wrong type이면 `CONTRACT_VIOLATION`이다.
+
+**`formulaId`**
+
+- Primitive JavaScript string이어야 한다.
+- `String.prototype.trim()`만 적용한다 — trim 후 empty면 `CONTRACT_VIOLATION`이다.
+- Case folding, NFC/Unicode normalization, 다른 coercion은 하지 않는다.
+- Canonical value는 trim된 string이다.
+
+**`formulaVersion`**
+
+- Primitive JavaScript number이며 `Number.isInteger`를 만족해야 한다.
+- Valid range는 1..2147483647(양쪽 포함)이다.
+- Non-number, fraction, `NaN`, `Infinity`는 `CONTRACT_VIOLATION`이다.
+- Integer이지만 0 이하거나 2147483647 초과면 `OUT_OF_RANGE_VALUE`다.
+- Numeric-string coercion, BigInt coercion은 하지 않는다.
+
+**`analysisCutoff`**
+
+§13.10.11.1의 exact R1 canonical UTC timestamp contract(`YYYY-MM-DDTHH:mm:ss.sssZ`)를 그대로 보존한다. Supplied string 자체가 이미 canonical이어야 하며, 대체 표기의 normalization acceptance는 허용하지 않는다. Error mapping은 §13.10.11.1과 동일하다(`MISSING_REQUIRED_FIELD`/`CONTRACT_VIOLATION`/`OUT_OF_RANGE_VALUE`).
+
+**Exact `filters`**
+
+```text
+{
+  enrollmentIds,
+  conditionReferences,
+  targetTimepoints,
+  nodeIds,
+  itemFamilyReferences
+}
+```
+
+Exactly 다섯 required array key.
+
+- `assignmentIds`는 허용하지 않는다 — 존재하면 `CONTRACT_VIOLATION`이다.
+- `attemptIds`는 허용하지 않는다 — 존재하면 `CONTRACT_VIOLATION`이다.
+- `enrollmentIds` 또는 `conditionReferences` 중 적어도 하나는 nonempty여야 한다. 둘 다 empty면 `CONTRACT_VIOLATION`이다.
+- 같은 nonempty dimension 내부는 OR, nonempty인 서로 다른 dimension 사이는 AND다.
+- Valid하게 bounded된 intersection에 candidate가 하나도 없는 경우는 정상적인 `INSUFFICIENT` 결과다 — §13.10.11.1의 RAW_SOURCE `empty_result`(`{ status: "empty", data: null }`)를 반환하지 않는다.
+
+**Physical filter authority**
+
+| Filter dimension | Physical authority |
+| --- | --- |
+| `enrollmentIds` | `evidence_enrollments.enrollment_id` |
+| `conditionReferences` | owning enrollment `condition_id`/`condition_version` |
+| `targetTimepoints` | assignment `target_timepoint` |
+| `nodeIds` | candidate `node_id` |
+| `itemFamilyReferences` | assignment snapshot `item_family_id`/`item_family_version` |
+
+**Structured reference exactness**
+
+`conditionReferences` 원소는 exactly:
+
+```text
+{
+  conditionId,
+  conditionVersion
+}
+```
+
+`itemFamilyReferences` 원소는 exactly:
+
+```text
+{
+  itemFamilyId,
+  itemFamilyVersion
+}
+```
+
+각 원소는 exactly 두 key만 가진다.
+
+- 원소 자체가 `undefined`면 `MISSING_REQUIRED_FIELD`다.
+- 원소가 `null`, array, primitive, non-plain-object면 `CONTRACT_VIOLATION`이다.
+- 원소에 위 두 key 외 unknown key가 있으면 `CONTRACT_VIOLATION`이다.
+- Unknown key 검사를 먼저 수행하고, 그 다음 missing required key를 검사한다.
+- Required key 자체가 omitted면 `MISSING_REQUIRED_FIELD`, 존재하지만 explicit `undefined`면 `CONTRACT_VIOLATION`이다.
+- Required key 검사 순서는 ID 먼저, 그 다음 version이다(`conditionId`→`conditionVersion`, `itemFamilyId`→`itemFamilyVersion`).
+
+ID semantics(`conditionId`, `itemFamilyId`):
+
+- Primitive string이어야 한다. `trim()`만 적용한다.
+- Trim 후 empty면 `CONTRACT_VIOLATION`이다.
+- `null` 또는 non-string이면 `CONTRACT_VIOLATION`이다.
+- Case folding, Unicode normalization, prefix 생성은 하지 않는다.
+- Canonical echo는 trim된 값이다.
+
+Version semantics(`conditionVersion`, `itemFamilyVersion`):
+
+- Primitive JavaScript number이며 `Number.isInteger`를 만족해야 한다.
+- Valid range는 1..2147483647(양쪽 포함)이다.
+- `null`, non-number, fraction, `NaN`, `Infinity`는 `CONTRACT_VIOLATION`이다.
+- Integer이지만 0 이하거나 2147483647 초과면 `OUT_OF_RANGE_VALUE`다.
+- Coercion은 하지 않는다.
+
+Existence authority:
+
+- Condition → `evidence_condition_versions(condition_id, version)`
+- Item family → `evidence_reference_versions`의 exact `reference_kind = 'ITEM_FAMILY'`이고 `reference_id`/`version`이 정확히 일치
+
+Valid shape/range이지만 존재하지 않는 pair는 `INVALID_ID`다.
+
+ID normalization과 numeric version 기준으로 중복이면 `CONTRACT_VIOLATION`이다. 같은 ID의 서로 다른 version은 중복이 아니다.
+
+String ordering은 locale-independent ECMAScript `<` 순서, 즉 UTF-16 code-unit lexicographic order다.
+
+구조화 reference의 정렬 순서는 normalized ID ASC, 그 다음 version numeric ASC다.
+
+반환되는 key 순서는 ID 먼저, 그 다음 version이다.
+
+**기타 filter normalization**
+
+`enrollmentIds`:
+
+- Primitive string이어야 한다. `trim()` 후 현재 canonical UUID regex를 만족해야 한다.
+- 반환값은 lowercase다.
+- Non-string이면 `CONTRACT_VIOLATION`이다.
+- Malformed UUID면 `INVALID_ID`다.
+- Shape는 valid하지만 존재하지 않는 UUID면 `INVALID_ID`다.
+- Lowercase normalization 후 중복이면 `CONTRACT_VIOLATION`이다.
+
+`nodeIds`:
+
+- Primitive string이어야 한다. Stable-ID 규칙에 따라 `trim()`만 적용한다.
+- Trim 후 empty면 `CONTRACT_VIOLATION`이다.
+- 존재하지 않는 node면 `INVALID_ID`다.
+- 정렬은 위와 같은 JS string ordering을 사용한다.
+
+`targetTimepoints`:
+
+- Exact vocabulary는 `DAY_7`, `DAY_30`뿐이다.
+- 빈 배열은 두 값 전부를 의미한다.
+- `IMMEDIATE`는 `CONTRACT_VIOLATION`이다.
+- `NOT_APPLICABLE`는 `CONTRACT_VIOLATION`이다.
+- 그 외 값도 `CONTRACT_VIOLATION`이다.
+- 중복 값은 `CONTRACT_VIOLATION`이다.
+- Canonical order는 `DAY_7` 다음 `DAY_30`이다.
+
+성공 output은 normalize된 filters만 echo한다.
+
+**Aggregation grain**
+
+Caller가 제공해야 하는 exact 값(정확히 이 순서):
+
+```text
+[
+  "PARTICIPANT",
+  "TARGET_NODE",
+  "ASSESSMENT_TIMEPOINT",
+  "CONDITION",
+  "FORMULA_VERSION"
+]
+```
+
+Pinned FORMULA도 정확히 같은 목록을 포함해야 한다. Caller 입력과 pinned FORMULA 중 어느 쪽이든 mismatch면 `CONTRACT_VIOLATION`이다.
+
+Exact group key:
+
+```text
+{
+  participantId,
+  nodeId,
+  targetTimepoint,
+  conditionId,
+  conditionVersion,
+  formulaId,
+  formulaVersion
+}
+```
+
+Group은 candidate admission 이후, eligibility/exclusion classification 이전에 생성한다 — 따라서 all-excluded group도 그대로 남는다. 같은 group key로 귀속되는 선택된 enrollment들은 함께 aggregate된다. `enrollment`나 `experiment`를 aggregation grain에 암묵적으로 추가하지 않는다.
+
+Group ordering:
+
+1. `participantId` ASC
+2. `nodeId` ASC
+3. `DAY_7` before `DAY_30`
+4. `conditionId` ASC
+5. `conditionVersion` numeric ASC
+6. `formulaId` ASC
+7. `formulaVersion` numeric ASC
+
+**Closed FORMULA definition v1**
+
+기존(미승인) `populationPolicy` 형태는 허용하지 않는다. Exact top-level key는 14개이며 전부 required, closed object, optional/nullable field 없음:
+
+```text
+{
+  definitionType,
+  definitionVersion,
+  executionScope,
+  metricKind,
+  aggregationGrain,
+  minimumSample,
+  candidateAdmissionPolicy,
+  denominatorEligibilityPolicy,
+  numeratorRule,
+  denominatorRule,
+  timeliness,
+  sourceCompatibility,
+  exclusionPolicy,
+  valueProjection
+}
+```
+
+Exact constants:
+
+- `definitionType = "EVIDENCE_METRIC_FORMULA"`
+- `definitionVersion = 1`
+- `executionScope = "SYNTHETIC_P0"`
+- `metricKind = "RETENTION"`
+- `definitionVersion 1`은 `RETENTION`만 지원한다. `UNSEEN_TRANSFER`는 지원하지 않는다(F-MR-ARCH-06, deferred).
+
+Exact `candidateAdmissionPolicy`:
+
+```text
+{
+  observationUnit: "ASSIGNMENT_NODE",
+  assignmentType: "ASSESSMENT",
+  targetTimepoints: ["DAY_7", "DAY_30"],
+  sourceCutoffRule: "ENROLLMENT_ASSIGNMENT_SNAPSHOT_AT_OR_BEFORE_CUTOFF",
+  dueAtRule: "REQUIRED_AND_AT_OR_BEFORE_CUTOFF"
+}
+```
+
+Exact `denominatorEligibilityPolicy`:
+
+```text
+{
+  completionRequirement: "COMPLETED",
+  requireNonSuperseded: true,
+  attemptSelection: "ASSIGNMENT_COMPLETION_ATTEMPT_ONLY",
+  completionCutoffRule: "COMPLETED_AT_AND_FINALIZED_AT_AT_OR_BEFORE_CUTOFF",
+  timelinessRequirement: "ON_TIME",
+  requireScorableAttempt: true,
+  requireScorableNodeEvaluation: true,
+  correctnessRequirement: "BOOLEAN",
+  excludeTechnicalInvalid: true,
+  excludeNormalEmpty: true
+}
+```
+
+`numeratorRule = "CORRECT_ELIGIBLE_NODE_EVALUATIONS"`
+
+`denominatorRule = "ALL_ELIGIBLE_SCORABLE_NODE_EVALUATIONS"`
+
+Exact `timeliness`:
+
+```text
+{
+  basis: "ASSIGNMENT_DUE_AT",
+  observationTimestamp: "FINALIZATION_FINALIZED_AT",
+  earlyToleranceMs,
+  lateToleranceMs,
+  lowerBoundInclusive: true,
+  upperBoundInclusive: true
+}
+```
+
+Exact `sourceCompatibility`:
+
+```text
+{
+  assignmentFormulaRequirement: "EXACT_MATCH",
+  mismatchedAssignmentTreatment: "EXCLUDE_FROM_CANDIDATE_POPULATION",
+  latestVersionReinterpretation: "PROHIBITED",
+  mutableLifecycleProjection: "TRANSACTION_VISIBLE_AS_OF_READ",
+  historicalLifecycleFabrication: "PROHIBITED"
+}
+```
+
+Exact `exclusionPolicy`:
+
+```text
+{
+  classificationRule: "FIRST_MATCH",
+  matchedCandidateTreatment: "EXCLUDE_AND_COUNT",
+  ruleOrder: [
+    "ASSIGNMENT_SUPERSEDED",
+    "ASSIGNMENT_WITHDRAWN",
+    "ASSIGNMENT_TECHNICAL_FAILURE",
+    "ASSIGNMENT_MISSING",
+    "ASSIGNMENT_UNSCORABLE",
+    "ASSIGNMENT_NORMAL_EMPTY",
+    "ASSIGNMENT_NONTERMINAL",
+    "POST_CUTOFF_COMPLETION",
+    "COMPLETION_EARLY",
+    "COMPLETION_LATE",
+    "ON_TIME_TECHNICAL_INVALID_ATTEMPT",
+    "ON_TIME_NORMAL_EMPTY_RESPONSE",
+    "ON_TIME_UNSCORABLE_ATTEMPT",
+    "ON_TIME_UNSCORABLE_NODE_EVALUATION"
+  ]
+}
+```
+
+Exact `valueProjection`:
+
+```text
+{
+  representation: "FIXED_DECIMAL_STRING",
+  scale: "RATIO_0_TO_1",
+  decimalPlaces: 6,
+  roundingMode: "HALF_UP"
+}
+```
+
+v1에서 유일한 variable field:
+
+- `minimumSample`: safe integer, 1..9007199254740991
+- `earlyToleranceMs`: safe integer, 0..9007199254740991
+- `lateToleranceMs`: safe integer, 0..9007199254740991
+
+Default 값은 없다.
+
+저장된 FORMULA에서 unknown/missing/`undefined`/`null`/wrong-type/out-of-range/unsupported constant/fixed-array mismatch는 전부 `CONTRACT_VIOLATION`이다.
+
+`registerReferenceVersion`은 여전히 generic이다 — kind-specific validation은 `queryMetricResult`가 FORMULA를 consume할 때 발생한다.
+
+Executable expression language나 arbitrary DSL은 없다.
+
+**FORMULA / source compatibility**
+
+Exact reference read:
+
+```text
+reference_kind = FORMULA
+reference_id = normalized formulaId
+version = formulaVersion
+```
+
+같은 transaction에서 `definition`, `definition_digest`, `digest_algorithm`, `normalization_version`을 함께 읽는다.
+
+`formulaReference` output:
+
+```text
+{
+  formulaId,
+  formulaVersion,
+  definitionDigest,
+  digestAlgorithm,
+  normalizationVersion
+}
+```
+
+Assignment snapshot의 exact formula pair가 request pair와 같아야 candidate population에 진입한다.
+
+Formula mismatch는 candidate population 밖이다 — `candidateCount`, `excludedCount`, group, `sourceRebuildReference`를 증가시키지 않는다.
+
+Mixed-formula enrollment는 legal하다. Mismatch된 assignment가 reducer로 leak되면 `CONTRACT_VIOLATION`이다.
+
+Latest-version reinterpretation은 `PROHIBITED`다.
+
+**Retention candidate admission**
+
+Candidate identity는 `(assignment_id, node_id)`다. Candidate set은 eligibility 이전에 구성한다.
+
+Required sequence:
+
+1. 모든 input/reference의 shape/normalization/duplicate/existence를 validate한다.
+2. Enrollment/condition filter와 일치하고 `enrollment.created_at <= analysisCutoff`인 enrollment를 선택한다.
+3. 그 enrollment에 속하고 `assignment.created_at <= analysisCutoff`, `assignment_type = ASSESSMENT`, `target_timepoint`가 `DAY_7` 또는 `DAY_30`이며 timepoint filter를 통과하는 assignment를 선택한다.
+4. Assignment snapshot이 존재해야 한다 — 없으면 `CONTRACT_VIOLATION`이다. `snapshot.created_at > analysisCutoff`면 candidate population 밖이다.
+5. Snapshot formula pair가 mismatch면 candidate population 밖이다.
+6. Item-family filter와 snapshot-node filter를 적용한다.
+7. 나머지로 선택된 assignment는 valid non-null `due_at`을 가져야 한다 — 아니면 `CONTRACT_VIOLATION`이다.
+8. `due_at > analysisCutoff`면 candidate population 밖이다.
+9. 남은 각 selected snapshot node는 하나의 candidate를 만든다.
+
+Candidate admission은 다음을 사용하지 않는다:
+
+- `terminal_outcome`
+- `superseded_by`
+- `completion_attempt_id`
+- `completed_at`
+- `attempt_outcome`
+- `response_kind`
+- `evaluation.scorable`
+- `evaluation.is_correct`
+- timeliness
+
+Exclusion candidate를 제거하는 completion/evaluation fact에 대한 `INNER JOIN`/`WHERE`는 사용하지 않는다.
+
+**Denominator eligibility**
+
+Candidate는 다음을 모두 만족할 때만 eligible이다:
+
+- `superseded_by == null`
+- `terminal_outcome == COMPLETED`
+- valid `completion_attempt_id`
+- valid `completed_at`
+- completion attempt가 같은 assignment 소유
+- `attempt.started_at <= analysisCutoff`
+- completion finalization 존재
+- `completed_at == finalized_at`
+- `finalized_at <= analysisCutoff`
+- timeliness `== ON_TIME`
+- `attempt_outcome == SCORABLE`
+- `response_kind != NORMAL_EMPTY`
+- exact target-node evaluation 존재
+- `evaluation.scorable == true`
+- `evaluation.is_correct`가 boolean
+
+`TECHNICAL_INVALID`는 eligible이 아니다. Incorrect한 eligible candidate는 denominator에 남는다.
+
+**Attempt / completion integrity**
+
+`evidence_assignments.completion_attempt_id`만 사용한다 — sibling/retry attempt를 독립적으로 선택하지 않는다. Sibling/retry/replay는 추가 observation이 아니다.
+
+Completed branch:
+
+- `completed_at > analysisCutoff`면 post-cutoff-completion bucket이다 — post-cutoff completion을 historical evidence로 dereference하지 않는다.
+- `completed_at <= analysisCutoff`면 completion pointer required, same-assignment attempt required, `attempt.start <= cutoff`, 하나의 finalization required, `finalized_at <= cutoff`, `completed_at = finalized_at`.
+- Source inconsistency는 `CONTRACT_VIOLATION`이다.
+
+Required target-node evaluation은 정확히 선택된 attempt/node이며 snapshot node/rubric과 compatible해야 한다. Missing/duplicate/ownership/timestamp contradiction은 `CONTRACT_VIOLATION`이다. Scorable evaluation인데 `is_correct`가 non-boolean이면 `CONTRACT_VIOLATION`이다.
+
+**FIRST_MATCH exclusion**
+
+모든 candidate는 eligible이거나 정확히 하나의 exclusion 결과를 갖는다. Exact precedence:
+
+1. `superseded_by != null` → `supersededCount`
+2. `terminal_outcome = WITHDRAWN` → `withdrawnCount`
+3. `terminal_outcome = TECHNICAL_FAILURE` → `technicalFailureCount`
+4. `terminal_outcome = MISSING` → `missingCount`
+5. `terminal_outcome = UNSCORABLE` → `unscorableCount`
+6. `terminal_outcome = NORMAL_EMPTY` → `normalEmptyCount`
+7. `terminal_outcome = null` → `nonterminalCount`
+8. 남은 COMPLETED이고 `completed_at > cutoff` → `postCutoffCompletionCount`
+9. Completed cutoff-valid EARLY → `earlyCount`
+10. Completed cutoff-valid LATE → `lateCount`
+11. ON_TIME이고 `attempt_outcome = TECHNICAL_INVALID` → `technicalFailureCount`
+12. ON_TIME이고 `response_kind = NORMAL_EMPTY` → `normalEmptyCount`
+13. ON_TIME이고 `attempt_outcome = UNSCORABLE` → `unscorableCount`
+14. ON_TIME SCORABLE attempt이고 `evaluation.scorable=false` → `unscorableCount`
+
+First match가 이긴다. 이후 excluded도 아니고 완전히 eligible도 아닌 candidate가 있으면 `CONTRACT_VIOLATION`이다.
+
+Missing/technical failure는 절대 learner incorrect가 아니다. `NORMAL_EMPTY` v1은 별도 outcome이며 eligible incorrect가 아니다.
+
+**Retention numerator / denominator**
+
+`denominator` = 모든 eligible candidate 수.
+
+`numerator` = 선택된 evaluation의 `is_correct == true`인 eligible candidate 수.
+
+Eligible incorrect: `denominator +1`, `numerator +0`, `excluded +0`.
+
+**Timeliness**
+
+`D = assignment.due_at`, `F = completion finalization.finalized_at`, `E = earlyToleranceMs`, `L = lateToleranceMs`.
+
+- EARLY iff `F < D - E` milliseconds
+- ON_TIME iff `D - E <= F <= D + L` milliseconds(양쪽 경계 포함)
+- LATE iff `F > D + L` milliseconds
+
+PostgreSQL timestamp precision/exact time arithmetic을 사용한다. JS `Date` millisecond truncation이 경계를 바꾸지 않도록 한다. Overflow하는 timestamp arithmetic은 사용하지 않는다.
+
+FORMULA v1은 `anchor_strategy`를 선택하거나, `due_at`을 `anchor_at`에서 유도하거나, 실제 P1 anchor를 결정하지 않는다. 저장된 `due_at`이 authority다.
+
+Synthetic conformance value(고정 fixture 값):
+
+- `minimumSample = 2`
+- `earlyToleranceMs = 3600000`
+- `lateToleranceMs = 3600000`
+
+이 값들은 synthetic P0 fixture 값일 뿐이며, 실제 P1 timing calibration, 실제 P1 early/late policy, 실제 P1 anchor approval이 아니다.
+
+**Mutable lifecycle / cutoff**
+
+Cutoff-bound source fact: enrollment creation, assignment creation, snapshot creation, attempt start, finalization, node evaluation.
+
+`terminal_outcome`, `superseded_by` 같은 mutable lifecycle value는 `TRANSACTION_VISIBLE_AS_OF_READ`다. Historical lifecycle state를 fabricate하지 않는다. `completed_at`이 explicit completion cutoff guard를 제공한다.
+
+다음을 추론하지 않는다:
+
+- due 경과 ⇒ MISSING
+- technical/unscorable finalization ⇒ terminal outcome
+- enrollment state ⇒ assignment outcome
+- latest protocol ⇒ past due 재계산
+
+Equivalent result 보장은 다음이 모두 같을 때만 성립한다: FORMULA ID/version/digest metadata, `analysisCutoff`, normalized filters, cutoff-bounded immutable fact, consumed transaction-visible lifecycle/source projection.
+
+**Exact output**
+
+Exact envelope:
+
+```text
+{
+  formulaReference,
+  analysisCutoff,
+  aggregationGrain,
+  filters,
+  status,
+  groups,
+  sourceRebuildReference
+}
+```
+
+일곱 key 전부 required.
+
+`formulaReference`:
+
+```text
+{
+  formulaId,
+  formulaVersion,
+  definitionDigest,
+  digestAlgorithm,
+  normalizationVersion
+}
+```
+
+`groups`는 항상 0..N 길이 배열이다.
+
+Exact group row:
+
+```text
+{
+  groupKey,
+  status,
+  numerator,
+  denominator,
+  value,
+  candidateCount,
+  eligibleCount,
+  excludedCount,
+  missingCount,
+  technicalFailureCount,
+  withdrawnCount,
+  unscorableCount,
+  normalEmptyCount,
+  earlyCount,
+  lateCount,
+  supersededCount,
+  nonterminalCount,
+  postCutoffCompletionCount,
+  sourceRebuildReference
+}
+```
+
+전부 required key다. Nullable한 유일한 group field는 `value`다. camelCase exact runtime field name을 사용하며 중복 snake_case alias는 반환하지 않는다.
+
+**Numeric contract**
+
+모든 count/`numerator`/`denominator`는 JavaScript safe-integer number(0..9007199254740991)다. Overflow는 `OUT_OF_RANGE_VALUE`다.
+
+`eligibleCount = denominator`.
+
+`0 <= numerator <= denominator`.
+
+`candidateCount = eligibleCount + excludedCount`.
+
+`excludedCount = supersededCount + withdrawnCount + technicalFailureCount + missingCount + unscorableCount + normalEmptyCount + nonterminalCount + postCutoffCompletionCount + earlyCount + lateCount`.
+
+Bucket은 mutually exclusive다.
+
+OK value는 percent가 아니라 ratio이며, 정확히 `0.000000`부터 `1.000000`까지 six-decimal-place fixed string이고 HALF_UP이다. Exact integer/rational arithmetic을 사용한다 — binary floating point를 rounding authority로 사용하지 않는다.
+
+INSUFFICIENT value는 `null`이다. Negative zero는 없다.
+
+**Status contract**
+
+Group: `denominator >= minimumSample`이면 `OK`, 아니면 `INSUFFICIENT`.
+
+Top-level: `groups.length > 0`이고 모든 `group.status == OK`이면 `OK`, 아니면 `INSUFFICIENT`.
+
+Zero candidate: 정상 METRIC_RESULT envelope, `groups=[]`, `status=INSUFFICIENT`다. RAW_SOURCE `{ status: "empty", data: null }`를 반환하지 않는다.
+
+Top-level `INSUFFICIENT`는 개별적으로 `OK`인 group의 value를 지우지 않는다.
+
+**Source rebuild reference**
+
+Per-group과 response-wide 둘 다 존재한다. Exact shape:
+
+```text
+{
+  enrollmentIds,
+  assignmentIds,
+  attemptIds,
+  exposureIds,
+  evaluationIds
+}
+```
+
+ID는 고유하며 canonical JS string ordering이다.
+
+Per-group membership:
+
+- `enrollmentIds` = 그 group의 모든 candidate가 속한 owning enrollment
+- `assignmentIds` = 모든 eligible + excluded candidate의 assignment
+- `attemptIds` = cutoff-valid completed branch에서 logically dereference된 completion attempt
+- `evaluationIds` = ON_TIME SCORABLE branch에서 logically dereference된 evaluation
+- `exposureIds` = Retention v1에서는 항상 `[]`
+
+Formula/filter 밖의 candidate row는 포함하지 않는다. Eager SQL prefetch가 provenance membership을 바꾸지 않도록 한다. Post-cutoff completion은 post-cutoff attempt/evaluation을 포함하지 않는다.
+
+Response-wide reference는 group reference들의 set-union을 canonicalize/sort한 것이다.
+
+Formula provenance는 `formulaReference`에 남는다.
+
+**Error contract**
+
+기존 다섯 code만 사용한다: `MISSING_REQUIRED_FIELD`, `CONTRACT_VIOLATION`, `INVALID_ID`, `OUT_OF_RANGE_VALUE`, `UNAUTHORIZED_CALLER`. 위 exact mapping이 이 승인된 proposal과 일치해야 한다.
+
+일반적인 insufficiency는 정상 결과이지 error가 아니다. 신규 error code는 없다.
+
+이 operation 자체는 caller identity input을 갖지 않는다 — authorization은 static composition으로 유지한다.
+
+**Transaction contract**
+
+정확히 하나의 PostgreSQL transaction:
+
+```text
+REPEATABLE READ
+READ ONLY
+```
+
+같은 transaction 안에서:
+
+1. Exact FORMULA definition + digest metadata read
+2. Closed FORMULA validation
+3. Grain compatibility
+4. Filter existence validation
+5. Candidate source selection
+6. Complete frozen eligibility/exclusion source projection
+7. In-memory Retention reduction
+8. Count/status/source invariant validation
+9. 성공적인 transaction 완료 후 반환
+
+Nested RAW_SOURCE transaction은 없다. 두 번째 DB transaction도 없다.
+
+Pure reducer helper는 complete frozen input을 consume하는 implementation detail로서만 허용한다.
+
+**Zero side effect**
+
+명시적으로 금지:
+
+- Evidence mutation
+- Progress mutation
+- `attempt_records` mutation
+- `next_review_at` mutation
+- Scheduler mutation
+- Sequence advance
+- Metric materialization
+- Learner-state transition
+- Formula/reference write
+- Provider call
+- Audio collection
+- Lineage write/reclassification
+- Human-data authorization
+
+결과는 rebuildable analysis artifact일 뿐이다.
+
+**Explicit non-authorizations**
+
+이 §13.10.11.2 contract는 다음을 승인하지 않는다:
+
+- Runtime 구현(`src/instrumentation/evidenceMetrics.js` 포함) 착수
+- Unseen-transfer metric(`UNSEEN_TRANSFER`, F-MR-ARCH-06) — 계속 OPEN/DEFERRED
+- Migration/DDL/physical schema 변경
+- Tier A 문서 변경
+- Runtime/test 변경
+- 실제 P1 timing calibration/anchor 확정
+- Human-data 수집/authorization
+- Finding closure(F-MR-ARCH-01~05는 계속 OPEN/targeted by this proposal)
+- §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract 변경
+
 ### 13.11 Production/evidence dual-write orchestration
 
 P0는 production/evidence dual-write를 요구하지 않는다.
@@ -2290,3 +3004,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.26 | 2026-08-30 | B1 RAW_SOURCE `empty_result` exact payload 사용자 승인 반영 — §13.10.11.1에 `queryRawEvidenceForMetricRebuild(pool, input)` 전용 exact payload `{ status: "empty", data: null }`를 명시하고 `{ status: "empty", data: [] }`는 이 operation에서 허용하지 않음을 확정. All-primary-empty·valid disjoint ancestry·secondary-filter zero-root·analysisCutoff zero-root 네 normal-empty path 전부에 동일 적용하며, validly-shaped unknown reference는 계속 `INVALID_ID`로 남고 `empty_result`로 변환하지 않음을 명시. §11의 다른 API에 대한 generic `empty_result` 허용 shape는 불변. Owner value 불요, Tier A 영향 없음, schema/migration/runtime/test/provider/P1 activation/human-data authorization 없음. |
 | 1.27 | 2026-09-05 | F-RB1-03/F-RB1-04 Architecture disambiguation — §13.10.11.1 Closure에 두 개 additive 문장을 추가해 "assignment-level secondary filter"/"secondary predicate"가 `conditionReferences`를 포함한 기존 네 predicate 전부를 가리킴을 명시(F-RB1-04)하고, 해당 closure 판정의 assignment 존재/부재를 `analysisCutoff` 이하 `evidence_assignments.created_at` 기준으로 판정함을 명시(F-RB1-03, mutable lifecycle column as-of-read projection과 무관)한다. Root selection·Physical filter authority·Raw-source cutoff boundary·exact `empty_result` payload·five-code registry·API count는 불변이며 신규 filter dimension이나 paired-ownership assertion을 도입하지 않는다. Owner value 불요, Tier A 영향 없음, migration/schema/runtime/test/provider/P1 activation/human-data authorization 없음. |
 | 1.28 | 2026-09-05 | F-RB1-05/F-RC-01 `analysisCutoff` contract adjudication — §13.10.11.1의 입력 문자열 자체가 정확히 `YYYY-MM-DDTHH:mm:ss.sssZ`인 valid canonical UTC timestamp여야 하는 R1을 명시하고, 대체 표기의 normalization acceptance를 허용하지 않으며 invalid/impossible/noncanonical input은 기존 `OUT_OF_RANGE_VALUE`로 거부함을 확정. Required/type error mapping, five-code registry, RAW_SOURCE input/output와 exact `empty_result`, source-time cutoff authority, A1/B1 closure, equivalence, FORMULA reference-only boundary, read-only transaction 및 zero-side-effect 계약은 유지한다. API 단독 clarification으로 Schema revision 1.7·Tier A·API count는 불변이다. Owner value 불요; schema DDL·migration 014·runtime/test 변경·provider/audio·P1 activation·human-data collection을 승인하지 않으며 Runtime B1 validation/closure 또는 main-integration eligibility를 선언하지 않는다. |
+| 1.29 | 2026-09-08 | VI P1 Measurement Readiness METRIC_RESULT Common Contract + Retention First Reducer Tier C 사용자 승인 반영 — §13.10.11.1 직후 §13.10.11.2에 internal `queryMetricResult(pool, input)`(synthetic P0 Retention v1 전용, `queryRawEvidenceForMetricRebuild()`를 호출하지 않는 별도 DB-backed operation)를 정의. Exact 5-key input(`formulaId`/`formulaVersion`/`analysisCutoff`/`aggregationGrain`/`filters`)과 exact 5-key filters(`assignmentIds`/`attemptIds` 금지, `enrollmentIds`/`conditionReferences` 중 하나 이상 nonempty 필수), 구조화 `conditionReferences`/`itemFamilyReferences` reference exactness, 고정 aggregation grain·group key·group ordering, 14-key closed FORMULA definition v1(`populationPolicy` 미허용), candidate admission·denominator eligibility·attempt/completion integrity를 FIRST_MATCH exclusion(14-step precedence, 10-bucket 상호배타 partition)과 명시적으로 분리해 정의한다. Retention numerator/denominator, timeliness(EARLY/ON_TIME/LATE 경계 포함) 규칙과 synthetic fixture 값(`minimumSample=2`, `earlyToleranceMs=lateToleranceMs=3600000`, 실제 P1 calibration 아님을 명시)을 확정하고, exact 7-key output envelope·19-key group row·fixed 6-decimal HALF_UP ratio·group/top-level OK·INSUFFICIENT status contract·per-group/response-wide `sourceRebuildReference`(`exposureIds=[]` 고정)를 정의한다. 정확히 하나의 `REPEATABLE READ`/`READ ONLY` transaction에서 frozen source로부터 reduction하며 zero side effect다. 기존 five-code registry만 사용, 신규 error code 없음. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract·RAW_SOURCE input/output/`empty_result`는 semantically 불변이다. Unseen-transfer metric(F-MR-ARCH-06)은 계속 OPEN/DEFERRED다. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)·test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection을 승인하지 않으며 F-MR-ARCH-01~05를 포함한 어떤 finding도 이 patch로 close하지 않는다. |

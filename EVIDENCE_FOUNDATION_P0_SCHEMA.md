@@ -2178,13 +2178,19 @@ Enrollment root는 그 enrollment와 qualify하는 cutoff-bounded descendant ass
 
 이 patch는 새로운 physical object나 column을 추가하지 않는다 — 기존 §5의 physical schema를 그대로 참조한다.
 
-**METRIC_RESULT** 최소 input(기존 계약 유지):
+**METRIC_RESULT** exact input(Retention v1, API §13.10.11.2 `queryMetricResult(pool, input)`와 정확히 동일):
 
-* Formula ID/version
-* Analysis cutoff
-* Aggregation grain
-* Condition/enrollment/timepoint filters
-* Optional node/item-family filters
+```text
+{
+  formulaId,
+  formulaVersion,
+  analysisCutoff,
+  aggregationGrain,
+  filters
+}
+```
+
+Exactly 다섯 key, 전부 required이며 unknown top-level key는 `CONTRACT_VIOLATION`이다. `filters`는 exactly 다섯 required array key(`enrollmentIds`, `conditionReferences`, `targetTimepoints`, `nodeIds`, `itemFamilyReferences`)만 가진다. `assignmentIds`/`attemptIds`는 METRIC_RESULT에서 허용하지 않는다 — 존재하면 `CONTRACT_VIOLATION`이다. `enrollmentIds` 또는 `conditionReferences` 중 적어도 하나는 nonempty여야 하며, 둘 다 empty면 `CONTRACT_VIOLATION`이다. Aggregation grain은 고정된 다섯 값 `["PARTICIPANT","TARGET_NODE","ASSESSMENT_TIMEPOINT","CONDITION","FORMULA_VERSION"]`을 정확히 이 순서로 요구하며 pinned FORMULA와 mismatch면 `CONTRACT_VIOLATION`이다. Field-level normalization과 error mapping(`MISSING_REQUIRED_FIELD`/`CONTRACT_VIOLATION`/`INVALID_ID`/`OUT_OF_RANGE_VALUE`)의 authority는 API §13.10.11.2다.
 
 Metric-specific semantic authority(§12.4/§12.5)는 변경하지 않는다.
 
@@ -2220,6 +2226,8 @@ Allowed status:
 * `value = null`
 * Sample counts 보존
 * Zero로 변환하지 않음
+
+위 필드 목록(`formula_reference`, `analysis_cutoff` 등 snake_case)은 conceptual placeholder 목록이며, exact camelCase runtime envelope/필드명·전체 count breakdown·순서 규칙은 아니다. Retention v1의 exact runtime projection authority는 §12.3.4와 API §13.10.11.2다 — 이 §12.3의 conceptual 목록과 §12.3.4의 exact projection이 상충하면 §12.3.4가 우선한다.
 
 **RAW_SOURCE** bundle은 API §13.10.11.1 성공 output과 exactly 대응하는 별도 bundle이다:
 
@@ -2334,6 +2342,78 @@ This rule does NOT authorize:
 * watermark
 * settlement semantics
 
+### 12.3.4 METRIC_RESULT exact projection — Retention v1
+
+이 절은 API §13.10.11.2 `queryMetricResult(pool, input)`의 exact output projection을 Schema authority로 miror한다. 상충 시 API §13.10.11.2가 authority다.
+
+**Exact envelope**
+
+```text
+{
+  formulaReference,
+  analysisCutoff,
+  aggregationGrain,
+  filters,
+  status,
+  groups,
+  sourceRebuildReference
+}
+```
+
+일곱 key 전부 required다. `formulaReference`는 `{ formulaId, formulaVersion, definitionDigest, digestAlgorithm, normalizationVersion }`이다.
+
+**Exact group row**
+
+```text
+{
+  groupKey,
+  status,
+  numerator,
+  denominator,
+  value,
+  candidateCount,
+  eligibleCount,
+  excludedCount,
+  missingCount,
+  technicalFailureCount,
+  withdrawnCount,
+  unscorableCount,
+  normalEmptyCount,
+  earlyCount,
+  lateCount,
+  supersededCount,
+  nonterminalCount,
+  postCutoffCompletionCount,
+  sourceRebuildReference
+}
+```
+
+전부 required key이며 nullable한 유일한 field는 `value`다. camelCase exact runtime field name을 사용하고 중복 snake_case alias는 없다.
+
+**Status**
+
+Group status는 `denominator >= minimumSample`이면 `OK`, 아니면 `INSUFFICIENT`다. Top-level status는 `groups.length > 0`이고 모든 group이 `OK`이면 `OK`, 아니면 `INSUFFICIENT`다. Top-level `INSUFFICIENT`는 개별적으로 `OK`인 group의 `value`를 지우지 않는다.
+
+**Zero candidate**
+
+Zero candidate는 정상 METRIC_RESULT envelope(`groups=[]`, `status=INSUFFICIENT`)다 — RAW_SOURCE `{ status: "empty", data: null }`가 아니다.
+
+**Ordering**
+
+`groups`는 `participantId ASC → nodeId ASC → (DAY_7 before DAY_30) → conditionId ASC → conditionVersion numeric ASC → formulaId ASC → formulaVersion numeric ASC` 순으로 정렬한다.
+
+**Counts**
+
+모든 count/`numerator`/`denominator`는 JavaScript safe-integer(0..9007199254740991)이며 overflow는 `OUT_OF_RANGE_VALUE`다. `eligibleCount = denominator`, `0 <= numerator <= denominator`, `candidateCount = eligibleCount + excludedCount`, `excludedCount`는 `supersededCount + withdrawnCount + technicalFailureCount + missingCount + unscorableCount + normalEmptyCount + nonterminalCount + postCutoffCompletionCount + earlyCount + lateCount`의 합이며 각 bucket은 mutually exclusive다.
+
+**Fixed decimal value**
+
+`OK` value는 percent가 아니라 ratio이며 정확히 `0.000000`부터 `1.000000`까지 six-decimal-place fixed string, HALF_UP, exact integer/rational arithmetic이다(binary floating point를 rounding authority로 쓰지 않는다). `INSUFFICIENT` value는 `null`이며 negative zero는 없다.
+
+**Source provenance**
+
+`sourceRebuildReference`는 per-group과 response-wide 둘 다 존재하며 exact shape는 `{ enrollmentIds, assignmentIds, attemptIds, exposureIds, evaluationIds }`다. ID는 고유하고 canonical JS string ordering이다. Retention v1에서 `exposureIds`는 항상 `[]`다. Response-wide reference는 group reference들의 set-union을 canonicalize한 것이다.
+
 ## 12.4 Eligibility authority
 
 Formula version definition이 다음을 소유한다.
@@ -2348,14 +2428,187 @@ Formula version definition이 다음을 소유한다.
 
 Raw facts는 formula result를 저장하지 않는다.
 
+### 12.4.1 Closed FORMULA definition v1 — Retention synthetic P0
+
+저장된 FORMULA definition은 exactly 다음 14개 top-level key를 갖는 closed object다. 전부 required이고 optional/nullable field는 없다. 기존(미승인) `populationPolicy` 형태는 허용하지 않는다.
+
+```text
+{
+  definitionType,
+  definitionVersion,
+  executionScope,
+  metricKind,
+  aggregationGrain,
+  minimumSample,
+  candidateAdmissionPolicy,
+  denominatorEligibilityPolicy,
+  numeratorRule,
+  denominatorRule,
+  timeliness,
+  sourceCompatibility,
+  exclusionPolicy,
+  valueProjection
+}
+```
+
+Exact constant:
+
+* `definitionType = "EVIDENCE_METRIC_FORMULA"`
+* `definitionVersion = 1`
+* `executionScope = "SYNTHETIC_P0"`
+* `metricKind = "RETENTION"` — `definitionVersion 1`은 `RETENTION`만 지원하며 `UNSEEN_TRANSFER`는 지원하지 않는다(F-MR-ARCH-06, OPEN/DEFERRED)
+
+Exact `candidateAdmissionPolicy`:
+
+```text
+{
+  observationUnit: "ASSIGNMENT_NODE",
+  assignmentType: "ASSESSMENT",
+  targetTimepoints: ["DAY_7", "DAY_30"],
+  sourceCutoffRule: "ENROLLMENT_ASSIGNMENT_SNAPSHOT_AT_OR_BEFORE_CUTOFF",
+  dueAtRule: "REQUIRED_AND_AT_OR_BEFORE_CUTOFF"
+}
+```
+
+Exact `denominatorEligibilityPolicy`:
+
+```text
+{
+  completionRequirement: "COMPLETED",
+  requireNonSuperseded: true,
+  attemptSelection: "ASSIGNMENT_COMPLETION_ATTEMPT_ONLY",
+  completionCutoffRule: "COMPLETED_AT_AND_FINALIZED_AT_AT_OR_BEFORE_CUTOFF",
+  timelinessRequirement: "ON_TIME",
+  requireScorableAttempt: true,
+  requireScorableNodeEvaluation: true,
+  correctnessRequirement: "BOOLEAN",
+  excludeTechnicalInvalid: true,
+  excludeNormalEmpty: true
+}
+```
+
+`numeratorRule = "CORRECT_ELIGIBLE_NODE_EVALUATIONS"`, `denominatorRule = "ALL_ELIGIBLE_SCORABLE_NODE_EVALUATIONS"`.
+
+Exact `timeliness`:
+
+```text
+{
+  basis: "ASSIGNMENT_DUE_AT",
+  observationTimestamp: "FINALIZATION_FINALIZED_AT",
+  earlyToleranceMs,
+  lateToleranceMs,
+  lowerBoundInclusive: true,
+  upperBoundInclusive: true
+}
+```
+
+Exact `sourceCompatibility`:
+
+```text
+{
+  assignmentFormulaRequirement: "EXACT_MATCH",
+  mismatchedAssignmentTreatment: "EXCLUDE_FROM_CANDIDATE_POPULATION",
+  latestVersionReinterpretation: "PROHIBITED",
+  mutableLifecycleProjection: "TRANSACTION_VISIBLE_AS_OF_READ",
+  historicalLifecycleFabrication: "PROHIBITED"
+}
+```
+
+Exact `exclusionPolicy`:
+
+```text
+{
+  classificationRule: "FIRST_MATCH",
+  matchedCandidateTreatment: "EXCLUDE_AND_COUNT",
+  ruleOrder: [
+    "ASSIGNMENT_SUPERSEDED",
+    "ASSIGNMENT_WITHDRAWN",
+    "ASSIGNMENT_TECHNICAL_FAILURE",
+    "ASSIGNMENT_MISSING",
+    "ASSIGNMENT_UNSCORABLE",
+    "ASSIGNMENT_NORMAL_EMPTY",
+    "ASSIGNMENT_NONTERMINAL",
+    "POST_CUTOFF_COMPLETION",
+    "COMPLETION_EARLY",
+    "COMPLETION_LATE",
+    "ON_TIME_TECHNICAL_INVALID_ATTEMPT",
+    "ON_TIME_NORMAL_EMPTY_RESPONSE",
+    "ON_TIME_UNSCORABLE_ATTEMPT",
+    "ON_TIME_UNSCORABLE_NODE_EVALUATION"
+  ]
+}
+```
+
+Exact `valueProjection`:
+
+```text
+{
+  representation: "FIXED_DECIMAL_STRING",
+  scale: "RATIO_0_TO_1",
+  decimalPlaces: 6,
+  roundingMode: "HALF_UP"
+}
+```
+
+v1에서 유일한 variable field: `minimumSample`(safe integer 1..9007199254740991), `earlyToleranceMs`(safe integer 0..9007199254740991), `lateToleranceMs`(safe integer 0..9007199254740991). Default 값은 없다.
+
+저장된 FORMULA에서 unknown/missing/`undefined`/`null`/wrong-type/out-of-range/unsupported constant/fixed-array mismatch는 전부 `CONTRACT_VIOLATION`이다. `registerReferenceVersion`은 여전히 generic이며 kind-specific validation은 METRIC_RESULT가 FORMULA를 consume할 때(API §13.10.11.2) 발생한다. Executable expression language나 arbitrary DSL은 없다.
+
 ## 12.5 Metric-specific invariants
 
-### Retention
+### Retention (v1, synthetic P0 — API §13.10.11.2 / §12.4.1 authority)
 
-* DAY_7 또는 DAY_30
-* On-time completed scorable evaluations
-* Missing/technical/withdrawn는 conditional denominator에서 제외
-* Counts는 별도 보존
+**Candidate admission**
+
+Candidate identity는 `(assignment_id, node_id)`다. Candidate set은 eligibility 판정 이전에 구성한다.
+
+1. 모든 input/reference의 shape/normalization/duplicate/existence를 validate한다.
+2. Enrollment/condition filter와 일치하고 `enrollment.created_at <= analysisCutoff`인 enrollment를 선택한다.
+3. 그 enrollment에 속하고 `assignment.created_at <= analysisCutoff`, `assignment_type = ASSESSMENT`, `target_timepoint`가 `DAY_7` 또는 `DAY_30`이며 timepoint filter를 통과하는 assignment를 선택한다.
+4. Assignment snapshot이 존재해야 한다(없으면 `CONTRACT_VIOLATION`). `snapshot.created_at > analysisCutoff`면 candidate population 밖이다.
+5. Snapshot formula pair가 request formula pair와 mismatch면 candidate population 밖이다(증가 없음, mixed-formula enrollment는 legal, latest-version reinterpretation은 PROHIBITED).
+6. Item-family filter와 snapshot-node filter를 적용한다.
+7. 남은 assignment는 valid non-null `due_at`을 가져야 한다(없으면 `CONTRACT_VIOLATION`).
+8. `due_at > analysisCutoff`면 candidate population 밖이다.
+9. 남은 각 selected snapshot node는 하나의 candidate를 만든다.
+
+Candidate admission은 `terminal_outcome`, `superseded_by`, `completion_attempt_id`, `completed_at`, `attempt_outcome`, `response_kind`, `evaluation.scorable`, `evaluation.is_correct`, timeliness를 사용하지 않으며, exclusion candidate를 제거하는 completion/evaluation fact에 대한 `INNER JOIN`/`WHERE`는 쓰지 않는다.
+
+**Denominator eligibility**
+
+Candidate는 다음을 모두 만족할 때만 eligible이다: `superseded_by == null`, `terminal_outcome == COMPLETED`, valid `completion_attempt_id`, valid `completed_at`, completion attempt가 같은 assignment 소유, `attempt.started_at <= analysisCutoff`, completion finalization 존재, `completed_at == finalized_at`, `finalized_at <= analysisCutoff`, timeliness `== ON_TIME`, `attempt_outcome == SCORABLE`, `response_kind != NORMAL_EMPTY`, exact target-node evaluation 존재, `evaluation.scorable == true`, `evaluation.is_correct`가 boolean. `TECHNICAL_INVALID`는 eligible이 아니다. Incorrect한 eligible candidate는 denominator에 남는다.
+
+**Completion integrity**
+
+`evidence_assignments.completion_attempt_id`만 사용한다 — sibling/retry/replay attempt는 추가 observation이 아니다. `completed_at > analysisCutoff`면 post-cutoff-completion bucket이며 post-cutoff completion을 historical evidence로 dereference하지 않는다. `completed_at <= analysisCutoff`면 completion pointer required, same-assignment attempt required, `attempt.start <= cutoff`, 하나의 finalization required, `finalized_at <= cutoff`, `completed_at = finalized_at`이며 위반 시 `CONTRACT_VIOLATION`이다. Target-node evaluation은 정확히 선택된 attempt/node이며 snapshot node/rubric과 compatible해야 하고, missing/duplicate/ownership/timestamp contradiction 및 scorable evaluation의 non-boolean `is_correct`는 `CONTRACT_VIOLATION`이다.
+
+**FIRST_MATCH exclusion(§12.4.1 `exclusionPolicy.ruleOrder`)**
+
+모든 candidate는 eligible이거나 정확히 하나의 exclusion 결과(`supersededCount`, `withdrawnCount`, `technicalFailureCount`, `missingCount`, `unscorableCount`, `normalEmptyCount`, `nonterminalCount`, `postCutoffCompletionCount`, `earlyCount`, `lateCount` 중 하나)를 갖는다. 정확한 순서와 매핑은 §12.4.1의 `ruleOrder` 14단계다. First match가 이기며, 이후 excluded도 eligible도 아닌 candidate가 있으면 `CONTRACT_VIOLATION`이다. Missing/technical failure는 절대 learner incorrect가 아니며, `NORMAL_EMPTY`는 별도 outcome으로 eligible incorrect가 아니다.
+
+**Numerator/denominator**
+
+`denominator` = 모든 eligible candidate 수. `numerator` = 선택된 evaluation의 `is_correct == true`인 eligible candidate 수. Eligible incorrect는 `denominator +1`, `numerator +0`, `excluded +0`이다.
+
+**Timeliness**
+
+`D = assignment.due_at`, `F = completion finalization.finalized_at`, `E = earlyToleranceMs`, `L = lateToleranceMs`. EARLY iff `F < D - E`; ON_TIME iff `D - E <= F <= D + L`(양쪽 경계 포함); LATE iff `F > D + L`. PostgreSQL timestamp precision/exact time arithmetic을 사용하며 JS `Date` truncation이 경계를 바꾸지 않도록 한다. FORMULA v1은 `anchor_strategy`를 선택하거나 `due_at`을 `anchor_at`에서 유도하지 않는다 — 저장된 `due_at`이 authority다. Synthetic fixture 값(`minimumSample = 2`, `earlyToleranceMs = lateToleranceMs = 3600000`)은 synthetic P0 fixture일 뿐이며 실제 P1 timing calibration/early-late policy/anchor approval이 아니다.
+
+**Mutable lifecycle/cutoff**
+
+Cutoff-bound source fact: enrollment/assignment/snapshot creation, attempt start, finalization, node evaluation. `terminal_outcome`/`superseded_by`는 `TRANSACTION_VISIBLE_AS_OF_READ`이며 historical lifecycle state를 fabricate하지 않는다. `completed_at`이 explicit completion cutoff guard다. Due 경과⇒MISSING, technical/unscorable finalization⇒terminal outcome, enrollment state⇒assignment outcome, latest protocol⇒past due 재계산은 추론하지 않는다.
+
+**Count/status**
+
+Count/status contract(safe-integer, `eligibleCount = denominator`, `candidateCount = eligibleCount + excludedCount`, 10-bucket 합, fixed 6-decimal HALF_UP ratio, group/top-level `OK`/`INSUFFICIENT`)의 exact authority는 §12.3.4다.
+
+**Source provenance**
+
+`sourceRebuildReference`(per-group/response-wide, `exposureIds=[]` 고정)의 exact authority는 §12.3.4다.
+
+**Transaction/non-authority**
+
+전체 reduction은 정확히 하나의 `REPEATABLE READ`/`READ ONLY` PostgreSQL transaction에서 frozen source로부터 수행하며 nested RAW_SOURCE transaction이나 두 번째 DB transaction은 없다. Zero side effect(Evidence/Progress/`attempt_records`/`next_review_at`/scheduler mutation, metric materialization, learner-state transition, formula/reference write, provider/audio call, lineage write, human-data authorization 없음)다. 결과는 rebuildable analysis artifact일 뿐이다.
 
 ### Unseen transfer
 
@@ -3328,6 +3581,62 @@ No writes.
 
 Synthetic evidence cohort only.
 
+### Retention v1 synthetic conformance
+
+Required fixture coverage(API §13.10.11.2 / §12.4.1 / §12.5 Retention 대응):
+
+* Superseded
+* MISSING
+* TECHNICAL_FAILURE
+* WITHDRAWN
+* UNSCORABLE
+* NORMAL_EMPTY
+* Nonterminal
+* Post-cutoff
+* EARLY
+* LATE
+* 위 항목 전부 candidate로 남음(exclusion이 candidate를 제거하지 않음)
+* All-excluded group 보존
+* Count partition(10-bucket 상호배타 합)
+* FIRST_MATCH만 적용(첫 매치 이후 재분류 없음)
+* Eligible incorrect(denominator +1, numerator +0)
+* Formula mismatch → candidate population 밖
+* Non-ASSESSMENT assignment type → candidate population 밖
+* IMMEDIATE timepoint → candidate population 밖
+* Not-yet-due(`due_at > analysisCutoff`) → candidate population 밖
+* `due_at` null → source contradiction(`CONTRACT_VIOLATION`)
+* ON_TIME lower/upper boundary(양쪽 inclusive)
+* 1ms early/1ms late → ON_TIME 밖
+* Denominator 0
+* Denominator 1
+* Denominator 2 = `minimumSample`(group `OK`)
+* 12-candidate example: 2 eligible + 10 excluded, numerator 1, denominator 2, `excludedCount` 10, `candidateCount` 12, `value` `"0.500000"`
+* Completion pointer만 사용(sibling attempt 미선택)
+* Retry/replay가 중복 candidate로 계산되지 않음
+* Cutoff-bounded fact vs transaction-visible as-of-read mutable lifecycle 분리
+* Source provenance(per-group/response-wide) 정확성
+* `exposureIds = []`(Retention v1 고정)
+* 구조화 ID trim
+* Case preservation(case folding 없음)
+* Normalization 후 중복 reference
+* Missing key vs explicit `undefined` key 구분
+* Version 경계: `1`, `2147483647`, `0`, `2147483648`
+* `null`/fraction/string/BigInt version → invalid
+* Malformed UUID → `INVALID_ID`
+* Empty stable ID → `CONTRACT_VIOLATION`
+* Shape 유효하지만 존재하지 않는 reference → `INVALID_ID`
+* Deterministic repeated result(같은 committed source/cutoff/formula)
+* Same formula/source가 하나의 transaction 안에서 read됨
+* RAW_SOURCE 회귀/non-interference 보존(§13.10.11.1 unaffected)
+
+Synthetic fixed fixture 값:
+
+* `minimumSample = 2`
+* `earlyToleranceMs = 3600000`
+* `lateToleranceMs = 3600000`
+
+이 값들은 synthetic P0 fixture 값일 뿐이며 실제 P1 timing calibration이 아니다.
+
 ## 18.12 Production non-interference
 
 ### Setup
@@ -3623,3 +3932,4 @@ Approval does not permit or declare:
 | 1.5 | 2026-08-29 | VI P1 Measurement Readiness Runtime Foundation B1 Raw Source Rebuild CORE — §12.2/§12.3에 `RAW_SOURCE`/`METRIC_RESULT` query mode 분리를 추가하고 §12.3.1(raw-source projection normalization, BIGINT exact base-10 decimal string, PostgreSQL-native BIGINT compare/order invariant), §12.3.2(raw-source deterministic ordering), §12.3.3(raw-source REPEATABLE READ READ ONLY snapshot)를 신설. 기존 METRIC_RESULT 최소 input/output, §12.4/§12.5 metric-specific eligibility authority, `evidenceMetrics.js` implementation locus(§17)는 불변이며 metric reducer·FORMULA semantic interpretation·migration 014·materialized metric persistence·provider/audio·human data·P1 activation은 승인하지 않음 |
 | 1.6 | 2026-08-30 | B1 RAW_SOURCE `empty_result` exact payload clarification — §12.3에 bounded RAW_SOURCE의 `empty_result`가 정확히 `{ status: "empty", data: null }`이며 `{ status: "empty", data: [] }`는 이 operation에서 허용하지 않음을 명시. All-primary-empty·valid disjoint ancestry·secondary-filter zero-root·analysisCutoff zero-root 네 경로에 동일하게 적용하며, validly-shaped unknown reference는 계속 `INVALID_ID`로 남고 `empty_result`로 변환하지 않음을 확정. API_CONTRACT.md §13.10.11.1과 동기화. METRIC_RESULT의 `OK`/`INSUFFICIENT` 계약은 불변이며 schema/migration/runtime/test·provider·P1 activation·human-data authorization은 없음 |
 | 1.7 | 2026-09-05 | F-RB1-03/F-RB1-04 Architecture disambiguation 동기화 — §12.2 RAW_SOURCE root selection과 closure에 API §13.10.11.1과 정확히 동일한 clarification(assignment-level secondary filter/predicate가 `conditionReferences` 포함 네 개 전부, assignment 존재는 `analysisCutoff` 이하 `created_at` 기준)을 추가. 신규 physical object/column 없음, 기존 §5 physical schema 및 물리 계약은 불변. |
+| 1.8 | 2026-09-08 | VI P1 Measurement Readiness METRIC_RESULT Common Contract + Retention First Reducer Tier C 사용자 승인 반영 — API §13.10.11.2 `queryMetricResult(pool, input)`(synthetic P0 Retention v1) 동기화. §12.2 METRIC_RESULT 최소 input을 exact 5-key input/5-key filters(`assignmentIds`/`attemptIds` 금지, `enrollmentIds`/`conditionReferences` 중 하나 이상 nonempty) pointer로 교체하고, §12.3에 기존 conceptual 필드 목록이 exact runtime projection이 아님을 명시. §12.3.4(exact envelope/19-key group row/status/zero-candidate/ordering/counts/fixed 6-decimal HALF_UP ratio/source provenance)와 §12.4.1(14-key closed FORMULA definition v1, `populationPolicy` 미허용)을 신설. §12.5 Retention subsection을 candidate admission·denominator eligibility·completion integrity·FIRST_MATCH exclusion(14-step)·numerator/denominator·timeliness·mutable lifecycle·count/status·source provenance·transaction/non-authority로 재작성(Unseen transfer subsection 불변). §18.11 끝에 Retention v1 synthetic conformance fixture 목록(`minimumSample=2`, `earlyToleranceMs=lateToleranceMs=3600000`, 실제 P1 calibration 아님)을 추가. RAW_SOURCE input/output/`empty_result`·§5 physical schema·migration·Unseen-transfer(F-MR-ARCH-06, OPEN/DEFERRED)는 불변이며 Runtime/test 구현, human-data collection, 실제 P1 timing calibration/anchor 확정을 승인하지 않고 어떤 finding도 close하지 않는다. |
