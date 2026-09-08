@@ -1987,6 +1987,126 @@ by this review.
   exact Tier C canonical proposal drafting is recorded as the sole Next
   Action (§10).
 
+##### Control Tower Acceptance Check — METRIC_RESULT Tier C Proposal
+##### Corrected / Ready For User Approval
+
+- Role: Control Tower acceptance check (status-only; this Current State
+  update itself, subject `Record METRIC_RESULT proposal ready for user
+  approval`, parent `78f5d7c0da96937a60e92001a9f9eda067cd61df`). Repository
+  mutation caused by this update: limited to `LLE_CURRENT_STATE.md` only.
+  This update does not approve, implement, or canonicalize anything.
+- Preflight confirmed exact baseline unchanged before this update: `main` /
+  `origin/main` `78f5d7c0da96937a60e92001a9f9eda067cd61df`, tree
+  `520a4df10b217dcd59f5a4abfcde499380a79f08`, prior Current State blob
+  `a1824795991313411a9b56d1f6d152a9101bf1fe`, Backlog revision `1.73` blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157`, API revision `1.28` blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`, Schema revision `1.7` blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`; worktree/index clean, no
+  untracked files.
+- Input to this acceptance check: a separate Architecture proposal session
+  (repository mutation `0`) drafted, and then corrected, an exact Tier C
+  proposal for common `METRIC_RESULT` exact contract + Retention first
+  reducer, synthetic P0 query-time only, proposing next revisions
+  `API_CONTRACT.md` `1.29` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`.
+  No canonical file, runtime, test, DB, schema, or migration was modified
+  by that session or by this acceptance check.
+- Control Tower acceptance check finding: the original proposal draft had
+  (1) a candidate-population / eligibility contradiction and (2) a
+  structured-reference exactness gap. The corrected proposal resolves
+  both. This acceptance check does not itself re-derive the corrected
+  proposal text; it records that the correction was verified sufficient to
+  advance the proposal to `READY FOR USER APPROVAL`.
+- Corrected candidate/eligibility model, recorded exactly:
+  1. Candidate admission
+  2. Denominator eligibility
+  3. `FIRST_MATCH` exclusion classification
+  4. minimum-sample status
+  5. numerator
+  6. fixed value projection
+  - Exact candidate identity: `(assignment_id, node_id)`.
+  - Candidate admission does NOT use: `terminal_outcome`, `superseded_by`,
+    `completion_attempt_id`, `completed_at`, `attempt_outcome`,
+    `response_kind`, `evaluation.scorable`, `evaluation.is_correct`,
+    `timeliness`. Therefore excluded outcomes remain inside the candidate
+    population and can be counted.
+  - Denominator eligibility is a strict subset of candidate population.
+  - Count invariant: `eligibleCount = denominator`;
+    `candidateCount = eligibleCount + excludedCount`; `excludedCount =
+    supersededCount + withdrawnCount + technicalFailureCount +
+    missingCount + unscorableCount + normalEmptyCount + nonterminalCount +
+    postCutoffCompletionCount + earlyCount + lateCount`. All buckets are
+    mutually exclusive through fixed `FIRST_MATCH` precedence.
+- FORMULA v1 summary, recorded exactly: exact proposed operation
+  `queryMetricResult(pool, input)`; `definitionType = EVIDENCE_METRIC_
+  FORMULA`; `definitionVersion = 1`; `executionScope = SYNTHETIC_P0`;
+  `metricKind = RETENTION`. FORMULA v1 supports exactly `RETENTION`.
+  Unseen transfer: `OPEN / DEFERRED`. FORMULA exact semantic layers:
+  `candidateAdmissionPolicy`, `denominatorEligibilityPolicy`,
+  `numeratorRule`, `denominatorRule`, `timeliness`, `sourceCompatibility`,
+  `exclusionPolicy`, `valueProjection`. The previous unapproved
+  `populationPolicy` key is not permitted.
+- Structured reference acceptance, recorded exactly: the corrected
+  proposal fixes exact semantics for `conditionReferences` and
+  `itemFamilyReferences`. Stable IDs: primitive string; trim only;
+  empty-after-trim = `CONTRACT_VIOLATION`; no case folding; no Unicode
+  normalization; canonical echo = trimmed value. Versions: primitive
+  JavaScript number; integer; `1..2147483647` inclusive;
+  non-number/fraction/`NaN`/`Infinity` = `CONTRACT_VIOLATION`; integer
+  `<= 0` or `> 2147483647` = `OUT_OF_RANGE_VALUE`. Duplicate-after-
+  normalization = `CONTRACT_VIOLATION`. Valid shape/range but unknown
+  exact reference = `INVALID_ID`. Structured reference missing key =
+  `MISSING_REQUIRED_FIELD`. Explicit `undefined` value =
+  `CONTRACT_VIOLATION`.
+- Other approval-ready semantics preserved by the corrected proposal
+  (summary; full exact text lives in the proposal, not restated here):
+  exact five-key `METRIC_RESULT` input; exact five-filter object; no
+  `assignmentIds` / `attemptIds`; at least `enrollmentIds` or
+  `conditionReferences` nonempty; fixed aggregation grain; deterministic
+  group key/order; exact Formula/source snapshot compatibility; exact
+  Retention candidate/eligibility/exclusion model; exact timing
+  predicates; exact cutoff/as-of-read lifecycle limitation; exact
+  response/group envelopes; safe-integer count projection; six-decimal
+  fixed ratio string; `HALF_UP` exact rational rounding; exact `OK` /
+  `INSUFFICIENT` contract; exact ten-bucket count partition; per-group and
+  response-wide `sourceRebuildReference`; one `REPEATABLE READ READ ONLY`
+  transaction; zero side effects; existing five error codes only;
+  synthetic P0 conformance values `minimumSample = 2`,
+  `earlyToleranceMs = 3600000`, `lateToleranceMs = 3600000` — these
+  fixture values are NOT actual P1 calibration.
+- No-change proposal boundary preserved: `VI_EMPIRICAL_EVIDENCE_
+  CONTRACT.md`, `VI_EMPIRICAL_PILOT_SPEC.md`, Tier A canonical,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `db/migrations/**`, physical
+  PostgreSQL schema, Runtime, and tests are all unchanged by the proposal.
+  Repository mutation by the Architecture proposal session: `0`.
+- Findings: `F-MR-ARCH-01` through `F-MR-ARCH-05` remain `OPEN / TARGETED
+  BY PROPOSAL`. `F-MR-ARCH-06` remains `OPEN / DEFERRED`. No finding is
+  closed by this acceptance check or by the corrected proposal itself.
+  Preserved unchanged: `CLOSED` — `F-RB1-01`–`F-RB1-05`, `F-RC-01`;
+  `OPEN / NON-BLOCKING` — `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02`.
+- Approval boundary, recorded exactly: `USER APPROVAL = PENDING`. API
+  `1.29` = `PROPOSED / NOT APPROVED / NOT CANONICAL`. Schema `1.8` =
+  `PROPOSED / NOT APPROVED / NOT CANONICAL`. Documentation validation
+  candidate = `NOT CREATED`. Runtime implementation = `NOT AUTHORIZED /
+  NOT STARTED`. `METRIC_RESULT` = `NOT IMPLEMENTED`. Retention = `NOT
+  IMPLEMENTED`. Unseen transfer = `NOT IMPLEMENTED / DEFERRED`. `B-3` =
+  `UNRESOLVED`. P1 = `NOT ELIGIBLE / NOT ACTIVATED`. human-data collection
+  = `NOT AUTHORIZED`. efficacy = `NOT VERIFIED`. Current canonical on
+  `main` remains API `1.28` / Schema `1.7`; API `1.29` / Schema `1.8` are
+  not canonical.
+- Final verdict of this acceptance check: `ARCHITECTURE PROPOSAL = READY
+  FOR USER APPROVAL`.
+- This record does not mean: the proposal is user-approved; API `1.29` or
+  Schema `1.8` is canonical; a documentation validation candidate exists;
+  Runtime implementation is authorized or started; `METRIC_RESULT`,
+  Retention, or Unseen transfer are implemented; `F-MR-ARCH-01`–`F-MR-
+  ARCH-06` are closed; `B-3` is resolved; P1 is eligible or activated;
+  human-data collection is authorized; or efficacy is verified. The sole
+  remaining step is the explicit user approval/rejection decision,
+  recorded as the sole Next Action (§10). PostgreSQL/tests: `NOT RUN —
+  STATUS-ONLY UPDATE`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2357,6 +2477,23 @@ This bootstrap does not rerun PostgreSQL or tests.
   approved implementation scope; or Runtime implementation started. See
   "Fresh Architecture Gap Review Result — METRIC_RESULT / Metric-Reducer"
   above for full detail.
+- Control Tower acceptance check of the corrected `METRIC_RESULT` Tier C
+  proposal (status-only, this update, repository mutation limited to
+  `LLE_CURRENT_STATE.md`; separate Architecture proposal session
+  repository mutation `0`): the original proposal draft's candidate-
+  population/eligibility contradiction and structured-reference exactness
+  gap are both resolved by the corrected proposal. Verdict: `ARCHITECTURE
+  PROPOSAL = READY FOR USER APPROVAL`. `F-MR-ARCH-01`–`F-MR-ARCH-05` are
+  `OPEN / TARGETED BY PROPOSAL`; `F-MR-ARCH-06` is `OPEN / DEFERRED`. No
+  finding is closed. `F-RB1-01`–`F-RB1-05` and `F-RC-01` remain `CLOSED`;
+  `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`,
+  `F-RC-04`, `F-API128-01`, `F-RR128-01`, `F-RR128-02` remain `OPEN /
+  NON-BLOCKING`, preserved unchanged. User approval: `PENDING`. API `1.29`
+  and Schema `1.8`: `PROPOSED / NOT APPROVED / NOT CANONICAL`. Current
+  canonical on `main` remains API `1.28` / Schema `1.7`. Runtime
+  implementation: `NOT AUTHORIZED / NOT STARTED`. See "Control Tower
+  Acceptance Check — METRIC_RESULT Tier C Proposal Corrected / Ready For
+  User Approval" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2431,6 +2568,26 @@ VERIFIED`), this ledger does not claim:
   PostgreSQL or tests — NOT CLAIMED; repository mutation by this update is
   limited to `LLE_CURRENT_STATE.md`, and PostgreSQL/tests are `NOT RUN —
   STATUS-ONLY UPDATE`
+- the corrected `METRIC_RESULT` Tier C proposal is user-approved, rejected,
+  or decided — NOT CLAIMED; `USER APPROVAL = PENDING`
+- `API_CONTRACT.md` `1.29` or `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8` is
+  canonical, integrated, or present on `main` — NOT CLAIMED; both remain
+  `PROPOSED / NOT APPROVED / NOT CANONICAL`; current canonical on `main`
+  remains API `1.28` / Schema `1.7`
+- a documentation validation candidate for the corrected proposal has been
+  created — NOT CLAIMED; `NOT CREATED`
+- Runtime implementation of `METRIC_RESULT` or the Retention reducer has
+  been authorized or started — NOT CLAIMED; `NOT AUTHORIZED / NOT STARTED`
+- `F-MR-ARCH-01` through `F-MR-ARCH-05` are closed, non-blocking, or no
+  longer require a canonical patch — NOT CLAIMED; all five remain `OPEN /
+  TARGETED BY PROPOSAL`
+- `F-MR-ARCH-06` (Unseen transfer) is resolved, closed, or in scope — NOT
+  CLAIMED; it remains `OPEN / DEFERRED`
+- approving this proposal itself authorizes Runtime implementation — NOT
+  CLAIMED; a separate docs-only canonical documentation validation
+  candidate on an approved validation branch, followed by fresh
+  Independent Review, is required before any main integration, and neither
+  step is performed by an approval decision alone
 
 This ledger does NOT negate the following current positive facts, which
 remain true and are established in §4/§8 and elsewhere in this document:
@@ -2448,9 +2605,15 @@ remain true and are established in §4/§8 and elsewhere in this document:
   REQUIRED` (see §4/§8)
 - `F-MR-ARCH-01` through `F-MR-ARCH-06` are recorded as new `OPEN`
   findings (§8)
-- the next approved step is exact Tier C canonical proposal drafting for
-  the `METRIC_RESULT` common contract + Retention first reducer,
-  synthetic P0 query-time only (see §10)
+- the corrected `METRIC_RESULT` Tier C proposal (common `METRIC_RESULT`
+  exact contract + Retention first reducer, synthetic P0 query-time only;
+  proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `1.8`) has passed the Control Tower acceptance check and is
+  `ARCHITECTURE PROPOSAL = READY FOR USER APPROVAL`, with `F-MR-ARCH-01`–
+  `F-MR-ARCH-05` `OPEN / TARGETED BY PROPOSAL` and `F-MR-ARCH-06`
+  `OPEN / DEFERRED` (see §4/§8)
+- the next step is the explicit user approval/rejection decision on that
+  proposal (see §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -2731,30 +2894,29 @@ historical ledger does not.
   APPROVAL REQUIRED`, and the recommended slice/patch surface remain
   Architecture recommendations only, pending an exact approval-ready
   proposal (recorded as the sole Next Action in §10)
+- the prior recorded Next Action ("Fresh Architecture exact Tier C
+  canonical proposal drafting for `METRIC_RESULT` common contract +
+  Retention first reducer, synthetic P0 query-time only...") remained
+  `NOT YET PERFORMED` — it has since been performed by a separate
+  Architecture proposal session (repository mutation `0`), which drafted
+  and then corrected the proposal; a Control Tower acceptance check
+  confirmed the original candidate-population/eligibility contradiction
+  and structured-reference exactness gap are both resolved by the
+  correction and recorded the result as `ARCHITECTURE PROPOSAL = READY
+  FOR USER APPROVAL` (see §4/§8); that result did not itself grant user
+  approval, canonicalize API `1.29`/Schema `1.8`, create a documentation
+  validation candidate, or authorize Runtime implementation — the sole
+  remaining step is the explicit user approval/rejection decision, now
+  recorded in §10
 
 ## 10. Next Action
 
-- Fresh Architecture exact Tier C canonical proposal drafting for
-  `METRIC_RESULT` common contract + Retention first reducer, synthetic P0
-  query-time only. Use a fresh `[LLE] 10 Architecture & Canonical
-  Contracts` session. Recommended model: `GPT-6 Pro (Astra)`. Reasoning:
-  `high`. Repository mutation: `0`. The Architecture proposal must produce
-  an approval-ready exact contract, not modify files. It must specify at
-  minimum: exact operation name and signature; exact input closed object
-  and filter vocabulary; exact aggregation grain serialization/
-  cardinality/order; exact versioned closed FORMULA definition schema;
-  exact `RETENTION` first-kind semantics; exact Formula/source snapshot
-  compatibility; exact output object/envelope/casing; exact numeric/
-  count/value projection and rounding; exact `OK` / `INSUFFICIENT`
-  predicates; denominator-zero and minimum-sample behavior; exact
-  missing/technical/withdrawn/unscorable/normal-empty partition; exact
-  source-rebuild-reference membership/order; exact existing error-code
-  mapping; exact one-snapshot transaction/read-only boundary; exact
-  synthetic-P0 timeliness/minimum-sample fixture boundary; exact proposed
-  API `1.29` / Schema `1.8` patch text or section-level replacement;
-  explicit no-change boundaries for Evidence Contract / Pilot Spec / Tier
-  A / migration / DDL; and acceptance criteria for a future documentation
-  validation candidate. It must end with one of: `ARCHITECTURE PROPOSAL =
-  READY FOR USER APPROVAL` or `ARCHITECTURE PROPOSAL = BLOCKED — DECISION
-  REQUIRED`. Do NOT create a documentation candidate before explicit user
-  approval.
+- User approval/rejection decision on the corrected approval-ready Tier C
+  proposal for: common `METRIC_RESULT` exact contract + Retention first
+  reducer + synthetic P0 query-time only, proposed as
+  `API_CONTRACT.md` `1.29` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`.
+  The approval decision does NOT itself authorize Runtime implementation.
+  If approved, the next lifecycle step will be a separate docs-only
+  canonical documentation validation candidate on an approved validation
+  branch, followed by fresh Independent Review before main integration.
+  Do not create that candidate in this session.
