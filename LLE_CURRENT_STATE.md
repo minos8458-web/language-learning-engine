@@ -2507,6 +2507,71 @@ observations only.
   state, Lexico-Construction, mixed scheduler, bounded conversation, or AI
   audit selection is made by this update.
 
+#### Control Tower Milestone-Transition Reconciliation — Complete / METRIC_RESULT Runtime Pre-Analysis Selected
+
+- Role: Control Tower milestone-transition reconciliation (status-only;
+  repository mutation limited to this update to `LLE_CURRENT_STATE.md`).
+  No API/Schema/Backlog/Runtime/test/DB file modified. PostgreSQL/tests:
+  `NOT RUN — STATUS-ONLY`.
+- Live-verified exact current `main` before this update: branch `main`;
+  `HEAD` / `origin/main` `fda2fa281cf8ae5613607762deb116bcfb418981`; tree
+  `6b40d3acd88a27af5ff70e19ac4f4799fb54c4cf`; parent
+  `463b5a56efb3041b2ddd443e06855a8ed755cc5d`; subject `Record METRIC_RESULT
+  Tier C documentation closure`; worktree clean; index clean; no untracked
+  files.
+- Confirmed exact current canonical identities: `API_CONTRACT.md` revision
+  `1.29`, blob `a498d5536ea1d228d133610780ff06d77a9d403f`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.8`, blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`;
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.74`, blob
+  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`; prior
+  `LLE_CURRENT_STATE.md` blob `0c3ee2731b11ac5dae3901b3ba1f45c730617b2f`.
+- Confirmed exact current Runtime baseline:
+  `src/instrumentation/evidenceMetrics.js` blob
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a` (current export
+  `queryRawEvidenceForMetricRebuild`; source explicitly states it does not
+  interpret FORMULA semantics or compute a metric reducer);
+  `src/instrumentation/index.js` blob
+  `14577b90cc19fe10de27d7c1afe0373679e105e9`. `queryMetricResult(pool,
+  input)` Runtime: `NOT IMPLEMENTED`. Retention reducer Runtime: `NOT
+  IMPLEMENTED / NOT VALIDATED`. Runtime implementation authorization: `NOT
+  AUTHORIZED`.
+- Reconciliation result: `COMPLETE`. What just `CLOSED` is the bounded
+  METRIC_RESULT Common Contract + Retention First Reducer + Synthetic P0
+  Query-Time Only Tier C documentation-contract lifecycle (see §9.1); this
+  reconciliation does not reopen, alter, or add to that closed lifecycle.
+- Selected next P0 action: a fresh read-only Codex / GPT Work
+  implementation-readiness pre-analysis for `queryMetricResult(pool,
+  input)` + Retention v1 Runtime, synthetic P0 query-time only, against
+  exact current API `1.29` / Schema `1.8` / Backlog `1.74` and current
+  Runtime/test/schema sources (full scope, required questions, and required
+  verdict form recorded in §10). Repository mutation of that future
+  pre-analysis: `0`. No branch creation, file modification, commit, push,
+  or PostgreSQL mutation by that future pre-analysis.
+- Rationale: measurement-before-intervention. The canonical METRIC_RESULT
+  contract is now closed and review-recorded, but the executable
+  METRIC_RESULT / Retention reducer does not exist. Therefore this
+  reconciliation does NOT advance to VI efficacy pilot execution, modality
+  state intervention, Lexico-Construction, mixed scheduler, bounded
+  conversation, or AI audit — the measurement Runtime capability must be
+  analyzed first. This selection does not itself authorize Runtime
+  implementation.
+- Preserved unchanged by this reconciliation: the METRIC_RESULT Tier C
+  documentation-contract lifecycle remains `USER-APPROVED / INDEPENDENTLY
+  REVIEWED / CANONICAL ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED /
+  REVIEW-RECORDED / CLOSED`; `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED —
+  documentation-contract gap findings only`; `F-MR-ARCH-06` remains `OPEN /
+  DEFERRED`; `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
+  Runtime Foundation B1's existing `CLOSED` lifecycle is unchanged. This
+  reconciliation does not treat any of `F-MR-IR-01`–`F-MR-IR-04` as fixed or
+  closed.
+- This record does not mean: Runtime implementation started or authorized;
+  `queryMetricResult(pool, input)` or the Retention reducer implemented or
+  validated; VI P1 Measurement Readiness complete; `B-3` resolved; P1
+  eligible or activated; human-data collection authorized; actual-provider
+  or audio authorized; efficacy verified; GitHub Actions `PASS`; Validation
+  Level 3 §10 overall `PASS`; or Evidence Foundation overall complete.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2988,6 +3053,21 @@ This bootstrap does not rerun PostgreSQL or tests.
   overall PASS, and Evidence Foundation overall complete: `NOT CLAIMED`.
   See "METRIC_RESULT Tier C Documentation Review-Record and Closure" above
   for full detail.
+- Control Tower milestone-transition reconciliation (status-only;
+  repository mutation limited to this update to `LLE_CURRENT_STATE.md`;
+  PostgreSQL/tests `NOT RUN — STATUS-ONLY`): `COMPLETE`. Live-verified
+  exact `main` `fda2fa281cf8ae5613607762deb116bcfb418981`, tree
+  `6b40d3acd88a27af5ff70e19ac4f4799fb54c4cf`, API `1.29`, Schema `1.8`,
+  Backlog `1.74`. Selected next P0 action: fresh read-only Codex / GPT Work
+  implementation-readiness pre-analysis for `queryMetricResult(pool,
+  input)` + Retention v1 Runtime, synthetic P0 query-time only (see §10).
+  Rationale: measurement-before-intervention. No finding is closed or
+  reopened by this reconciliation. `F-MR-ARCH-01`–`F-MR-ARCH-05` remain
+  `CLOSED`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-IR-01`–
+  `F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`. Runtime implementation
+  remains `NOT AUTHORIZED / NOT STARTED`. See "Control Tower
+  Milestone-Transition Reconciliation — Complete / METRIC_RESULT Runtime
+  Pre-Analysis Selected" above (§4) for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -3075,12 +3155,22 @@ remain true and are established in §4/§8 and elsewhere in this document:
   REVIEW-RECORDED` — documentation-contract gap findings only, not Runtime
   implementation or validation; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
   `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING` (see §4/§8)
-- the sole recorded next action is Control Tower milestone-transition
-  reconciliation: live-verify this closure-sync commit, re-read the exact
-  current `LLE_CURRENT_STATE.md`, confirm API `1.29` / Schema `1.8` /
-  Backlog `1.74` identities, preserve all Runtime/P1/human-data/efficacy
-  non-claims recorded above, and select exactly one next approved VI P1
-  Measurement Readiness / P0 roadmap action (see §10)
+- Control Tower milestone-transition reconciliation is `COMPLETE` (see §4/
+  §8): exact current `main`, API `1.29`, Schema `1.8`, and Backlog `1.74`
+  were live-verified, and all Runtime/P1/human-data/efficacy non-claims
+  recorded above were preserved unchanged
+- the sole recorded next action is a fresh read-only Codex / GPT Work
+  implementation-readiness pre-analysis for `queryMetricResult(pool,
+  input)` + Retention v1 Runtime, synthetic P0 query-time only, against
+  exact current API `1.29` / Schema `1.8` / Backlog `1.74` and current
+  Runtime/test/schema sources (see §10); this pre-analysis has repository
+  mutation `0` and does not itself authorize Runtime implementation
+- this reconciliation selected, started, or authorized VI efficacy pilot
+  execution, modality state intervention, Lexico-Construction, mixed
+  scheduler, bounded conversation, or AI audit — NOT CLAIMED; none of these
+  was selected; the sole selected next P0 action is the read-only
+  METRIC_RESULT / Retention Runtime implementation-readiness pre-analysis
+  above
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -3450,22 +3540,72 @@ historical ledger does not.
   authorize human-data collection, actual provider, or audio; did not
   verify efficacy; and did not close `F-MR-ARCH-06` or any `F-MR-IR`
   finding — all remain exactly as recorded in §9.1
+- the prior recorded Next Action ("Control Tower milestone-transition
+  reconciliation: live-verify this closure-sync commit...") remained
+  `NOT YET PERFORMED` — it has since been performed: a status-only Control
+  Tower reconciliation session live-verified exact `main`
+  `fda2fa281cf8ae5613607762deb116bcfb418981` (tree
+  `6b40d3acd88a27af5ff70e19ac4f4799fb54c4cf`), confirmed API `1.29` /
+  Schema `1.8` / Backlog `1.74` identities, preserved all
+  Runtime/P1/human-data/efficacy non-claims, and recorded the reconciliation
+  as `COMPLETE`, selecting exactly one next P0 action — a fresh read-only
+  Codex / GPT Work implementation-readiness pre-analysis for
+  `queryMetricResult(pool, input)` + Retention v1 Runtime, synthetic P0
+  query-time only — now recorded in §10; that selection did not itself
+  authorize Runtime implementation, did not implement or validate
+  `queryMetricResult(pool, input)` or the Retention reducer, did not modify
+  any API/Schema/Backlog/Runtime/test/DB file, and did not select a VI
+  pilot/intervention milestone (see §4/§8/§9.1 for current status)
 
 ## 10. Next Action
 
-- Control Tower milestone-transition reconciliation: live-verify this
-  closure-sync commit; re-read the exact current `LLE_CURRENT_STATE.md`;
-  confirm API `1.29` (blob `a498d5536ea1d228d133610780ff06d77a9d403f`) /
-  Schema `1.8` (blob `a0e4037db07f7416109e53ed72c10a12b7c433bb`) / Backlog
-  `1.74` (blob `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`) identities;
-  preserve the Runtime/P1/human-data/efficacy non-claims recorded in §9.1
-  (METRIC_RESULT Runtime, Retention reducer Runtime, and Unseen transfer
-  `NOT IMPLEMENTED`; Runtime implementation `NOT AUTHORIZED`; VI P1
-  Measurement Readiness overall `NOT CLAIMED`; `B-3` `UNRESOLVED`; P1 `NOT
-  ELIGIBLE / NOT ACTIVATED`; human-data collection, actual provider, and
-  audio `NOT AUTHORIZED`; efficacy `NOT VERIFIED`); and then select exactly
-  one next approved VI P1 Measurement Readiness / P0 roadmap action. This
-  reconciliation does not itself pre-authorize or start Runtime
-  implementation, and does not automatically select modality state,
-  Lexico-Construction, mixed scheduler, bounded conversation, or AI audit
-  as that next action.
+- Fresh read-only Codex / GPT Work implementation-readiness pre-analysis
+  for `queryMetricResult(pool, input)` + Retention v1 Runtime, synthetic P0
+  query-time only, against exact API `1.29` (blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f`) / Schema `1.8` (blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`) / Backlog `1.74` (blob
+  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`) and current Runtime source
+  (`src/instrumentation/evidenceMetrics.js` blob
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`, `src/instrumentation/index.js`
+  blob `14577b90cc19fe10de27d7c1afe0373679e105e9`). Repository mutation of
+  this pre-analysis = `0`: no branch creation, no file modification, no
+  commit, no push, no PostgreSQL mutation. It must inspect at minimum
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `src/instrumentation/evidenceRepository.js`,
+  `src/instrumentation/index.js`, `tests/viP1RawSourceRuntime.test.js`,
+  existing Evidence Foundation tests, relevant physical schema/migrations
+  001–013, FORMULA reference/version storage, assignment
+  snapshot/exposure/evaluation/finalization schema, and current error
+  classes and validation helpers; and must determine: (1) exact
+  implementation files required; (2) exact test files required; (3)
+  whether `evidenceMetrics.js` should safely share a private
+  already-open-client source-selection helper with RAW_SOURCE or require
+  another bounded internal refactor, with no semantic alternative silently
+  chosen; (4) exact implementation shape for the five-key METRIC_RESULT
+  input, five-filter normalization, structured references, FORMULA v1
+  validation, candidate admission, denominator eligibility, FIRST_MATCH
+  exclusion, timeliness, count/status/value projection,
+  `sourceRebuildReference`, and one REPEATABLE READ READ ONLY transaction;
+  (5) which existing B1 code can be reused without changing
+  `queryRawEvidenceForMetricRebuild` semantics; (6) whether any canonical
+  ambiguity remains — if yes, `BLOCKED — CONTRACT / ARCHITECTURE DECISION
+  REQUIRED`, with no invented value; (7) whether any migration or DDL is
+  actually required, verified from the physical schema rather than
+  assumed (canonical expectation: no migration, no DDL); (8) exact
+  synthetic PostgreSQL fixture plan; (9) exact focused and full regression
+  plan; (10) zero-side-effect verification plan; (11) exact proposed
+  Development allowed-file list; (12) exact proposed forbidden-file list;
+  (13) implementation risks involving cutoff/as-of-read lifecycle,
+  completion pointer integrity, timestamp precision, safe-integer
+  overflow, exact HALF_UP rational rounding, formula digest/provenance,
+  candidate retention for excluded outcomes, and RAW_SOURCE
+  non-interference; and (14) treatment of existing open non-blocking
+  findings `F-MR-IR-01`–`F-MR-IR-04`, not silently fixed or closed unless
+  implementation correctness strictly requires a scoped correction. The
+  report must end with exactly one verdict: `RUNTIME PRE-ANALYSIS = READY
+  FOR DEVELOPMENT SCOPE` or `RUNTIME PRE-ANALYSIS = BLOCKED — CONTRACT /
+  IMPLEMENTATION DECISION REQUIRED`. Even if `READY`, Runtime
+  implementation remains `NOT AUTHORIZED` until Control Tower reviews the
+  report and records the subsequent implementation decision. This Next
+  Action does not itself pre-authorize or start Runtime implementation.
