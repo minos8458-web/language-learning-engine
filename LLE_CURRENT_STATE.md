@@ -2107,6 +2107,108 @@ by this review.
   recorded as the sole Next Action (§10). PostgreSQL/tests: `NOT RUN —
   STATUS-ONLY UPDATE`.
 
+##### Control Tower User Approval Record — METRIC_RESULT Tier C Proposal
+##### Approved / Documentation Candidate Next
+
+- Role: Control Tower user-approval record (status-only; this Current
+  State update itself, subject `Record METRIC_RESULT Tier C proposal user
+  approval`, parent `b967d8bc623dce517a6000e8be2a93e42b78e306`). Repository
+  mutation caused by this update: limited to `LLE_CURRENT_STATE.md` only.
+  This update does not create a canonical documentation candidate and does
+  not modify `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, Runtime, tests, or the database.
+- Preflight confirmed exact baseline unchanged before this update: `main` /
+  `origin/main` `b967d8bc623dce517a6000e8be2a93e42b78e306`, tree
+  `16c2245ff8ed618ee00118e6ba2b47a86ec23037`, prior Current State blob
+  `9768f47938f58be05bf052cc2b92409c25ae19ce`, Backlog revision `1.73` blob
+  `b99825ecf611d8cdd9e962ce66b16f2a41da1157`, API revision `1.28` blob
+  `b70bda6cdf8896337c0a699b8810852bb466dace`, Schema revision `1.7` blob
+  `ea55989eba1c5441e0cea68257f718b80453e8fb`; worktree/index clean, no
+  untracked files.
+- User approval, recorded exactly: `USER APPROVAL = APPROVED`. The user
+  explicitly approved the corrected Architecture proposal for common
+  `METRIC_RESULT` exact contract + Retention first reducer, synthetic P0
+  query-time only, as accepted by the Control Tower acceptance check above
+  ("Control Tower Acceptance Check — METRIC_RESULT Tier C Proposal
+  Corrected / Ready For User Approval").
+- Approved scope, recorded exactly:
+  - common `METRIC_RESULT` exact contract
+  - exact internal operation `queryMetricResult(pool, input)`
+  - Retention as first reducer
+  - synthetic P0 query-time-only scope
+  - candidate admission / denominator eligibility / `FIRST_MATCH`
+    exclusion separation
+  - closed FORMULA definition v1
+  - `metricKind = RETENTION`
+  - exact five-key `METRIC_RESULT` input
+  - exact five-filter object
+  - exact structured-reference normalization/range/error semantics
+  - exact fixed aggregation grain
+  - exact Formula/source-snapshot compatibility
+  - exact Retention candidate/eligibility/exclusion semantics
+  - exact timing/cutoff/as-of-read lifecycle semantics
+  - exact output/status/count/numeric/source provenance
+  - exact `OK` / `INSUFFICIENT` semantics
+  - one `REPEATABLE READ READ ONLY` transaction
+  - zero side effects
+  - existing five error codes only
+  - synthetic conformance values: `minimumSample = 2`,
+    `earlyToleranceMs = 3600000`, `lateToleranceMs = 3600000`
+  - proposed `API_CONTRACT.md` revision `1.29`
+  - proposed `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.8`
+- Approval non-scope, recorded exactly — user approval does NOT authorize:
+  - Runtime implementation
+  - `METRIC_RESULT` implementation
+  - Retention reducer implementation
+  - Unseen-transfer implementation
+  - P1 activation
+  - P1 eligibility declaration
+  - human-data collection
+  - actual-provider path
+  - audio
+  - Tier A changes
+  - migration
+  - physical schema DDL
+  - Evidence Contract change
+  - Pilot Spec change
+  - finding closure
+  - efficacy conclusion
+
+  Unseen transfer remains `F-MR-ARCH-06 = OPEN / DEFERRED`, unaffected by
+  this approval.
+- Findings preserved unchanged by this approval record: `F-MR-ARCH-01`
+  through `F-MR-ARCH-05` remain `OPEN / TARGETED BY USER-APPROVED
+  PROPOSAL`. `F-MR-ARCH-06` remains `OPEN / DEFERRED`. No `F-MR-ARCH`
+  finding is closed by this approval. `F-RB1-01`–`F-RB1-05` and `F-RC-01`
+  remain `CLOSED`; `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`,
+  `F-RC-02`, `F-RC-03`, `F-RC-04`, `F-API128-01`, `F-RR128-01`,
+  `F-RR128-02` remain `OPEN / NON-BLOCKING`, preserved unchanged.
+- Lifecycle after approval, recorded exactly:
+  - `METRIC_RESULT` Tier C proposal = `USER-APPROVED / CANONICAL
+    DOCUMENTATION CANDIDATE PENDING / NOT YET CANONICAL / RUNTIME NOT
+    AUTHORIZED`
+  - API `1.29` = `USER-APPROVED PROPOSAL / NOT YET DOCUMENTATION
+    CANDIDATE / NOT CANONICAL ON MAIN`
+  - Schema `1.8` = `USER-APPROVED PROPOSAL / NOT YET DOCUMENTATION
+    CANDIDATE / NOT CANONICAL ON MAIN`
+  - Documentation validation candidate = `NOT CREATED`
+  - Runtime implementation = `NOT AUTHORIZED / NOT STARTED`
+  - P1 = `NOT ELIGIBLE / NOT ACTIVATED`
+  - human-data collection = `NOT AUTHORIZED`
+  - `B-3` = `UNRESOLVED`
+  - efficacy = `NOT VERIFIED`
+  - Current canonical on `main` remains API `1.28` / Schema `1.7`; API
+    `1.29` / Schema `1.8` are not canonical.
+- This record does not mean: a canonical documentation candidate exists;
+  API `1.29` or Schema `1.8` is canonical; Runtime implementation is
+  authorized or started; `METRIC_RESULT`, Retention, or Unseen transfer
+  are implemented; any `F-MR-ARCH` finding is closed; `B-3` is resolved;
+  P1 is eligible or activated; human-data collection is authorized; or
+  efficacy is verified. The sole remaining step is the creation of the
+  docs-only canonical documentation validation candidate by a fresh
+  Windows Claude Architecture documentation session, recorded as the sole
+  Next Action (§10). PostgreSQL/tests: `NOT RUN — STATUS-ONLY UPDATE`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -2494,6 +2596,27 @@ This bootstrap does not rerun PostgreSQL or tests.
   implementation: `NOT AUTHORIZED / NOT STARTED`. See "Control Tower
   Acceptance Check — METRIC_RESULT Tier C Proposal Corrected / Ready For
   User Approval" above for full detail.
+- User approval of the corrected `METRIC_RESULT` Tier C proposal
+  (status-only, this update, repository mutation limited to
+  `LLE_CURRENT_STATE.md`): `USER APPROVAL = APPROVED`, covering common
+  `METRIC_RESULT` exact contract + Retention first reducer, synthetic P0
+  query-time only, proposed `API_CONTRACT.md` `1.29` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`. Approval explicitly does not
+  authorize Runtime implementation, `METRIC_RESULT`/Retention/Unseen-
+  transfer implementation, P1 activation/eligibility, human-data
+  collection, actual-provider/audio, Tier A changes, migration, schema
+  DDL, Evidence Contract/Pilot Spec change, finding closure, or efficacy
+  conclusion. `F-MR-ARCH-01`–`F-MR-ARCH-05` are `OPEN / TARGETED BY
+  USER-APPROVED PROPOSAL`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`. No
+  finding is closed. `F-RB1-01`–`F-RB1-05` and `F-RC-01` remain `CLOSED`;
+  `F-RB1-06`, `F-RB1-07`, `F-RB1-08`, `F-CS-01`, `F-RC-02`, `F-RC-03`,
+  `F-RC-04`, `F-API128-01`, `F-RR128-01`, `F-RR128-02` remain `OPEN /
+  NON-BLOCKING`, preserved unchanged. API `1.29` and Schema `1.8`:
+  `USER-APPROVED PROPOSAL / NOT YET DOCUMENTATION CANDIDATE / NOT
+  CANONICAL ON MAIN`. Documentation validation candidate: `NOT CREATED`.
+  Current canonical on `main` remains API `1.28` / Schema `1.7`. Runtime
+  implementation: `NOT AUTHORIZED / NOT STARTED`. See "Control Tower User
+  Approval Record — METRIC_RESULT Tier C Proposal" above for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -2549,8 +2672,13 @@ VERIFIED`), this ledger does not claim:
   CLAIMED; that drafting is the recorded Next Action (§10)
 - the Tier C canonical patch, the recommended smallest slice, or the
   proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  `1.8` patch surface is user-approved — NOT CLAIMED; these remain
-  Architecture recommendations only
+  `1.8` patch surface being user-approved means a canonical documentation
+  candidate exists, API `1.29`/Schema `1.8` are canonical, or Runtime
+  implementation is authorized — NOT CLAIMED; the proposal is
+  `USER-APPROVED` (see "Control Tower User Approval Record — METRIC_RESULT
+  Tier C Proposal" above) but the documentation candidate remains `NOT
+  CREATED` and Runtime implementation remains `NOT AUTHORIZED / NOT
+  STARTED`
 - `F-MR-ARCH-01`, `F-MR-ARCH-02`, `F-MR-ARCH-03`, `F-MR-ARCH-04`
   (BLOCKER), or `F-MR-ARCH-05`, `F-MR-ARCH-06` (HIGH) are resolved,
   closed, non-blocking, or require no further canonical patch — NOT
@@ -2568,8 +2696,9 @@ VERIFIED`), this ledger does not claim:
   PostgreSQL or tests — NOT CLAIMED; repository mutation by this update is
   limited to `LLE_CURRENT_STATE.md`, and PostgreSQL/tests are `NOT RUN —
   STATUS-ONLY UPDATE`
-- the corrected `METRIC_RESULT` Tier C proposal is user-approved, rejected,
-  or decided — NOT CLAIMED; `USER APPROVAL = PENDING`
+- the corrected `METRIC_RESULT` Tier C proposal remains undecided — NOT
+  CLAIMED; `USER APPROVAL = APPROVED` (see "Control Tower User Approval
+  Record — METRIC_RESULT Tier C Proposal" above)
 - `API_CONTRACT.md` `1.29` or `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8` is
   canonical, integrated, or present on `main` — NOT CLAIMED; both remain
   `PROPOSED / NOT APPROVED / NOT CANONICAL`; current canonical on `main`
@@ -2608,12 +2737,14 @@ remain true and are established in §4/§8 and elsewhere in this document:
 - the corrected `METRIC_RESULT` Tier C proposal (common `METRIC_RESULT`
   exact contract + Retention first reducer, synthetic P0 query-time only;
   proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  `1.8`) has passed the Control Tower acceptance check and is
-  `ARCHITECTURE PROPOSAL = READY FOR USER APPROVAL`, with `F-MR-ARCH-01`–
-  `F-MR-ARCH-05` `OPEN / TARGETED BY PROPOSAL` and `F-MR-ARCH-06`
-  `OPEN / DEFERRED` (see §4/§8)
-- the next step is the explicit user approval/rejection decision on that
-  proposal (see §10)
+  `1.8`) is `USER-APPROVED` (`USER APPROVAL = APPROVED`), with
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` `OPEN / TARGETED BY USER-APPROVED
+  PROPOSAL` and `F-MR-ARCH-06` `OPEN / DEFERRED` (see §4/§8)
+- the next step is creation of the docs-only canonical documentation
+  validation candidate for API `1.29` / Schema `1.8` on a fresh approved
+  validation branch, by a fresh Windows Claude Architecture documentation
+  session, followed by fresh Independent Review before any main
+  integration (see §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -2908,15 +3039,48 @@ historical ledger does not.
   validation candidate, or authorize Runtime implementation — the sole
   remaining step is the explicit user approval/rejection decision, now
   recorded in §10
+- the Tier C canonical patch, the recommended smallest slice, or the
+  proposed `API_CONTRACT.md` `1.29` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `1.8` patch surface was user-approved — at that stage none of these was;
+  they remained Architecture recommendations only, pending the explicit
+  user approval/rejection decision (subsequently approved; see §9.1 for
+  current status)
+- the corrected `METRIC_RESULT` Tier C proposal was user-approved,
+  rejected, or decided — at that stage it remained `USER APPROVAL =
+  PENDING` (subsequently approved; see §9.1 for current status)
+- the prior recorded Next Action ("User approval/rejection decision on the
+  corrected approval-ready Tier C proposal for: common `METRIC_RESULT`
+  exact contract + Retention first reducer + synthetic P0 query-time
+  only...") remained undecided — it has since been performed: the user
+  explicitly approved the proposal, `USER APPROVAL = APPROVED`, recorded
+  by a separate status-only Control Tower user-approval record (repository
+  mutation limited to `LLE_CURRENT_STATE.md`); that approval does not
+  itself create a documentation validation candidate, canonicalize API
+  `1.29`/Schema `1.8`, authorize Runtime implementation, or close any
+  `F-MR-ARCH` finding — the sole remaining step, creation of the docs-only
+  canonical documentation validation candidate, is now recorded in §10
 
 ## 10. Next Action
 
-- User approval/rejection decision on the corrected approval-ready Tier C
-  proposal for: common `METRIC_RESULT` exact contract + Retention first
-  reducer + synthetic P0 query-time only, proposed as
-  `API_CONTRACT.md` `1.29` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`.
-  The approval decision does NOT itself authorize Runtime implementation.
-  If approved, the next lifecycle step will be a separate docs-only
-  canonical documentation validation candidate on an approved validation
-  branch, followed by fresh Independent Review before main integration.
-  Do not create that candidate in this session.
+- Fresh Windows Claude Architecture documentation session to create the
+  user-approved docs-only canonical documentation validation candidate for
+  `API_CONTRACT.md` `1.29` + `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`,
+  covering common `METRIC_RESULT` exact contract + Retention first reducer
+  + synthetic P0 query-time only. The candidate must be created on a new
+  approved validation branch from the then-current exact `origin/main`.
+  Recommended branch name:
+  `validation/vi-p1-metric-result-retention-tierc-api129-schema18-20260908`.
+  The future Architecture candidate session must: modify exactly
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`; apply the
+  user-approved corrected proposal without inventing semantics; add API
+  revision `1.29` exactly once; add Schema revision `1.8` exactly once;
+  keep API `1.30` / Schema `1.9` absent; keep
+  `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` unchanged; keep
+  `VI_EMPIRICAL_PILOT_SPEC.md` unchanged; keep Backlog and Current State
+  unchanged during candidate construction; make no Runtime/test/db/
+  package/workflow changes; make no migration/DDL; preserve `RAW_SOURCE`
+  unchanged; preserve `F-MR-ARCH-06` as `OPEN / DEFERRED`; create a
+  documentation validation candidate only; NOT declare findings closed;
+  NOT authorize Runtime implementation; NOT integrate to main; and NOT
+  perform Independent Review in the same session. Do not create that
+  candidate in this status-only updater session.
