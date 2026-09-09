@@ -2774,6 +2774,137 @@ observations only.
   exists; any finding closed; or any authorization/scope value changed.
   Runtime implementation remains `NOT STARTED` / `NOT IMPLEMENTED`.
 
+#### METRIC_RESULT Retention v1 Runtime Development Candidate — Created / Pushed / Development-Session Evidence Pass
+
+- Role: status-only Control Tower record of a completed bounded
+  Windows-local Development session under the authorization above. This
+  record performs no Runtime code modification, no Independent Review, and
+  no main integration. Repository mutation caused by this record: limited
+  to this update to `LLE_CURRENT_STATE.md`. PostgreSQL/tests:
+  `NOT RUN — STATUS-ONLY UPDATE`.
+- Under the bounded authorization recorded above ("Control Tower Review —
+  METRIC_RESULT Runtime Pre-Analysis Accepted / Bounded Runtime Development
+  Authorized"), a Windows-local Development session implemented
+  `queryMetricResult(pool, input)` + Retention v1 reducer, synthetic P0
+  query-time only, on the approved validation branch, and pushed exactly
+  one implementation commit.
+- Validation branch: `validation/vi-p1-metric-result-retention-v1-runtime-20260909`.
+- Candidate SHA: `2a6ab261a287f0cca4a2af5956a207c3b525ec54`.
+- Candidate parent: `8c60cbcbdf358f17c0d8249447b08c264946fc51` (exact `main`
+  HEAD at authorization time — "Correct METRIC_RESULT runtime development
+  handoff baseline").
+- Candidate tree: `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`.
+- Candidate subject: `Implement METRIC_RESULT Retention v1 runtime`.
+- Exactly one candidate commit exists after the parent.
+- Exact changed files (three-file scope, no other file):
+  - `src/instrumentation/evidenceMetrics.js` — blob
+    `f2fb6723cb2320fd5eca9c5e1e91b28194642a69`
+  - `src/instrumentation/evidenceValidation.js` — blob
+    `fadee158da77693fba319976001d43f43c784196`
+  - NEW `tests/viP1MetricResultRuntime.test.js` — blob
+    `2d9738fabb4225c2841c180d16dc262595048f7d`
+- Candidate diff summary: `3` files changed, `3350` insertions, `0`
+  deletions at Git object level for the approved effective additions; new
+  file `tests/viP1MetricResultRuntime.test.js`. Line-ending/tooling
+  observations are not reinterpreted as additional repository files.
+
+##### Implementation Summary (Development-reported; correctness not validated by this record)
+
+- `queryMetricResult(pool, input)` added to
+  `src/instrumentation/evidenceMetrics.js`, implemented as a SEPARATE
+  METRIC_RESULT source path.
+- Existing `queryRawEvidenceForMetricRebuild(pool, input)` remains present,
+  unchanged.
+- `validateBoundedVersion` added to
+  `src/instrumentation/evidenceValidation.js` for METRIC_RESULT exact
+  `1..2147483647` version semantics.
+- Existing validation helpers `assertExactDefinitionKeys` and
+  `validatePositiveSafeInteger` were exported for bounded FORMULA
+  validation reuse.
+- New synthetic PostgreSQL suite: `tests/viP1MetricResultRuntime.test.js`.
+- `src/instrumentation/index.js`, `src/instrumentation/evidenceRepository.js`,
+  canonical docs (`API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`), and migrations remained
+  unchanged.
+- These are Development-session implementation descriptions; they are NOT
+  converted into an Independent Review `PASS` by this record.
+
+##### Development-Session Execution Evidence
+
+Classification recorded exactly as `DEVELOPMENT-SESSION EXECUTION
+EVIDENCE` — explicitly not Independent Review evidence and not post-merge
+validation evidence.
+
+- Execution environment: Windows-local, repository
+  `C:\Users\atomy\Documents\GitHub\language-learning-engine`.
+- PostgreSQL: `17.10`. Node: `v24.18.0`. npm: `11.16.0`.
+- Isolated temporary database: `lle_test_vip1_metricresult_1788959076`.
+- Routing evidence: Windows `psql` `current_database()` and repository
+  `db/pool.js` `current_database()` both confirmed exactly
+  `lle_test_vip1_metricresult_1788959076`. `lle_dev`: `NOT USED` as
+  migration/test/fixture target.
+- Focused METRIC_RESULT + RAW_SOURCE command
+  (`tests/viP1MetricResultRuntime.test.js` +
+  `tests/viP1RawSourceRuntime.test.js`, `--test-concurrency=1`): `156`
+  tests, `156` pass, `0` fail/cancelled/skipped.
+- Focused Evidence/Foundation + Runtime command (`dbPool.healthcheck`,
+  `migrations`, `evidenceFoundationMigration`, `evidenceFoundationRepository`,
+  `viP1ItemLineageRuntime`, `viP1RawSourceRuntime`, `viP1MetricResultRuntime`,
+  `--test-concurrency=1`): `300` tests, `9` suites, `300` pass, `0` fail.
+- Full configured regression (`npm test`): `56` suites, `530` tests, `530`
+  pass, `0` fail, `0` cancelled, `0` skipped, `0` todo, exit code `0`.
+- Development reran the required gates after an incidental line-ending
+  cleanup, before the final candidate commit. Earlier intermediate failing
+  fixture runs preceding that rerun are Development iterations only and are
+  not recorded as final `PASS` evidence.
+- Migration evidence (isolated Development DB): repository migrations
+  `001` through `013`; migration `013` applied exactly once; migration
+  `014` `ABSENT`. Runtime created no new migration, no new
+  view/materialized view, and no DDL was added to the repository.
+- Temporary database cleanup: `DROP PASS`; post-drop `pg_database` count
+  `0`.
+- This is not recorded as post-merge validation.
+
+##### Zero-Side-Effect Development Evidence
+
+Development reports coverage including: `T89` (query capture / no write
+statement / single `BEGIN`/`COMMIT`); `T93`–`T97` (before/after state
+checks for success, zero-candidate, all-excluded, validation-error, and
+mid-transaction rollback/error paths). Runtime design reports exactly one
+`REPEATABLE READ` `READ ONLY` transaction; no nested RAW_SOURCE call; no
+second transaction; no Evidence/Progress/scheduler/sequence/materialization/
+provider/audio write path is intended. This remains Development evidence
+pending Independent Review.
+
+##### Candidate Lifecycle
+
+METRIC_RESULT / Retention v1 Runtime candidate =
+`AUTHORIZED / IMPLEMENTATION CANDIDATE CREATED / PUSHED TO VALIDATION
+BRANCH / DEVELOPMENT-SESSION POSTGRESQL + REGRESSION EVIDENCE PASS /
+INDEPENDENT REVIEW PENDING / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT
+CLOSED`. `queryMetricResult(pool, input)` exists only on the validation
+candidate; it does NOT yet exist on canonical `main`.
+
+##### Findings — Preserved Unchanged
+
+`F-MR-IR-01`, `F-MR-IR-02`, `F-MR-IR-03`, `F-MR-IR-04`: `LOW / OPEN /
+NON-BLOCKING`, unchanged. `F-MR-ARCH-06`: `OPEN / DEFERRED`, unchanged.
+`F-MR-ARCH-01` through `F-MR-ARCH-05`: `CLOSED` (documentation-contract
+findings only), unchanged. No finding is closed, reopened, downgraded, or
+silently fixed by this status-sync.
+
+##### Non-Claims
+
+This record does not mean: Runtime independently reviewed = `NO`; Runtime
+validated = `NO`; Runtime canonical on `main` = `NO`; Runtime
+review-recorded = `NO`; post-merge PostgreSQL validation = `NO`; VI P1
+Measurement Readiness complete = `NO`; `B-3` resolved = `NO`; P1 eligible =
+`NO`; P1 activated = `NO`; human-data collection authorized = `NO`;
+efficacy verified = `NO`; actual-provider authorized = `NO`; audio
+authorized = `NO`; GitHub Actions `PASS` = `NOT CLAIMED`; Validation Level
+3 §10 overall `PASS` = `NOT CLAIMED`; Evidence Foundation overall complete
+= `NOT CLAIMED`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3290,6 +3421,41 @@ This bootstrap does not rerun PostgreSQL or tests.
   remain `NOT IMPLEMENTED / NOT VALIDATED`. See "Control Tower Review —
   METRIC_RESULT Runtime Pre-Analysis Accepted / Bounded Runtime Development
   Authorized" above (§4) for full detail.
+- METRIC_RESULT Retention v1 Runtime Development candidate (status-only
+  Control Tower record of a completed Windows-local Development session;
+  repository mutation caused by this record limited to
+  `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN — STATUS-ONLY UPDATE`):
+  validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; candidate
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, tree
+  `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`, subject `Implement
+  METRIC_RESULT Retention v1 runtime`; exactly one implementation commit;
+  exact three-file scope `src/instrumentation/evidenceMetrics.js` (blob
+  `f2fb6723cb2320fd5eca9c5e1e91b28194642a69`),
+  `src/instrumentation/evidenceValidation.js` (blob
+  `fadee158da77693fba319976001d43f43c784196`), NEW
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `2d9738fabb4225c2841c180d16dc262595048f7d`). Development-session
+  PostgreSQL/test execution evidence classified `DEVELOPMENT-SESSION
+  EXECUTION EVIDENCE` — not Independent Review evidence, not post-merge
+  validation evidence: focused METRIC_RESULT + RAW_SOURCE `156/156`,
+  focused Evidence/Foundation + Runtime `300/300`/`9` suites, full
+  regression `530/530`/`56` suites/exit `0`; isolated database
+  `lle_test_vip1_metricresult_1788959076`, routing-evidence confirmed,
+  `lle_dev` not used; migrations `001`–`013`, `013` exactly once, `014`
+  `ABSENT`, no new DDL; temp DB cleanup `DROP PASS`, post-drop
+  `pg_database` count `0`. `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN /
+  NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`. No finding is closed,
+  reopened, downgraded, or silently fixed by this record. Candidate
+  lifecycle: `AUTHORIZED / IMPLEMENTATION CANDIDATE CREATED / PUSHED TO
+  VALIDATION BRANCH / DEVELOPMENT-SESSION POSTGRESQL + REGRESSION EVIDENCE
+  PASS / INDEPENDENT REVIEW PENDING / NOT CANONICAL ON MAIN / NOT VALIDATED
+  / NOT CLOSED`. `queryMetricResult(pool, input)` runtime: `PRESENT ON
+  VALIDATION CANDIDATE / ABSENT ON MAIN`. See "METRIC_RESULT Retention v1
+  Runtime Development Candidate — Created / Pushed / Development-Session
+  Evidence Pass" above (§4) for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -3303,7 +3469,12 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.74`), this ledger does not claim:
+revision `1.74`; METRIC_RESULT Retention v1 Runtime Development candidate
+`2a6ab261a287f0cca4a2af5956a207c3b525ec54` `AUTHORIZED / IMPLEMENTATION
+CANDIDATE CREATED / PUSHED TO VALIDATION BRANCH / DEVELOPMENT-SESSION
+POSTGRESQL + REGRESSION EVIDENCE PASS / INDEPENDENT REVIEW PENDING / NOT
+CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
+claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -3319,10 +3490,32 @@ revision `1.74`), this ledger does not claim:
   `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`, covering exactly
   `queryMetricResult(pool, input)` + Retention v1 reducer + synthetic P0
   query-time only, on approved validation branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. This
-  bounded authorization is NOT a claim that Runtime implementation has
-  started, that any code exists on that branch, or that any file other than
-  `LLE_CURRENT_STATE.md` was modified by that record
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. That
+  bounded authorization was NOT itself a claim that Runtime implementation
+  had started, that any code existed on that branch, or that any file other
+  than `LLE_CURRENT_STATE.md` was modified by that record. A bounded
+  implementation candidate has since been created and pushed to that
+  branch (candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, exactly one implementation
+  commit, exact three-file scope; see §4/§8) with Development-session
+  PostgreSQL/test execution evidence `PASS` (`156/156` focused,
+  `300/300`/`9` suites, `530/530`/`56` suites/exit `0`). This is NOT a
+  claim that the candidate is independently reviewed, validated, or
+  canonical on `main` — it remains `INDEPENDENT REVIEW PENDING / NOT
+  CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`
+- METRIC_RESULT Retention v1 Runtime candidate independently reviewed,
+  review-recorded, validated, or canonical on `main` — NOT CLAIMED; the
+  candidate is `INDEPENDENT REVIEW PENDING / NOT CANONICAL ON MAIN / NOT
+  VALIDATED / NOT CLOSED`
+- post-merge PostgreSQL validation of the METRIC_RESULT Runtime candidate
+  performed — NOT CLAIMED; the recorded execution evidence is classified
+  exactly `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
+  Validation and not post-merge validation evidence
+- `F-MR-IR-01`–`F-MR-IR-04` or `F-MR-ARCH-06` closed, reopened, downgraded,
+  or otherwise disposed by the Development candidate's creation or its
+  execution evidence — NOT CLAIMED; `F-MR-IR-01`–`F-MR-IR-04` remain `LOW /
+  OPEN / NON-BLOCKING` and `F-MR-ARCH-06` remains `OPEN / DEFERRED`,
+  preserved unchanged
 - VI P1 Measurement Readiness complete — NOT CLAIMED
 - `B-3` resolved — NOT CLAIMED; `UNRESOLVED`
 - P1 eligible or activated — NOT CLAIMED; `NOT ELIGIBLE / NOT ACTIVATED`
@@ -3401,14 +3594,14 @@ remain true and are established in §4/§8 and elsewhere in this document:
   reducer + synthetic P0 query-time only, limited to exactly three allowed
   files, on approved validation branch
   `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (see §4/§8)
-- the sole recorded next action is a fresh Windows Claude Development
-  session to implement the approved bounded `queryMetricResult(pool,
-  input)` + Retention v1 synthetic-P0 Runtime on validation branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, from the
-  then-current exact `origin/main` (see §10); this Control Tower review/
-  acceptance record has repository mutation limited to
+- the sole recorded next action is a fresh Claude Opus 5 Independent Review
+  of exact candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54` on branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, against
+  exact candidate parent `8c60cbcbdf358f17c0d8249447b08c264946fc51` and
+  current canonical API `1.29` / Schema `1.8` / Backlog `1.74` (see §10);
+  this status-only record has repository mutation limited to
   `LLE_CURRENT_STATE.md` and does not itself implement, validate, or
-  independently review any Runtime code
+  independently review any Runtime code, and does not integrate `main`
 - this record selected, started, or authorized VI efficacy pilot execution,
   modality state intervention, Lexico-Construction, mixed scheduler,
   bounded conversation, or AI audit — NOT CLAIMED; none of these was
@@ -3812,78 +4005,68 @@ historical ledger does not.
   input)` or the Retention reducer, did not modify any file other than
   `LLE_CURRENT_STATE.md`, and did not select a VI pilot/intervention
   milestone — the sole remaining step, a fresh Windows Claude Development
-  session on the approved validation branch, is now recorded in §10
+  session on the approved validation branch, was then recorded in §10
+- the prior recorded Next Action ("Fresh Windows Claude Development session
+  to implement the approved bounded `queryMetricResult(pool, input)` +
+  Retention v1 synthetic-P0 Runtime on validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`...")
+  remained not yet performed — it has since been performed: a Windows-local
+  Development session created and pushed exactly one implementation commit
+  (candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, tree
+  `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`) to that branch, modifying
+  exactly the three approved files, with Development-session PostgreSQL/
+  test execution evidence `PASS` (`156/156`, `300/300`/`9` suites,
+  `530/530`/`56` suites/exit `0`); that session did not integrate `main`,
+  did not perform Independent Review, and did not close any finding
+  (`F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`) — the sole remaining step, a
+  fresh Claude Opus 5 Independent Review of the exact candidate, is now
+  recorded in §10
 
 ## 10. Next Action
 
-- Fresh Windows Claude Development session to implement the approved
-  bounded `queryMetricResult(pool, input)` + Retention v1 synthetic-P0
-  Runtime on validation branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, created
-  from the then-current exact `origin/main`. This session must first `git
-  fetch origin`; require local branch `main`; require `HEAD ==
-  origin/main` at the moment Development begins; resolve
-  `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA = git rev-parse origin/main`;
-  require authorization anchor commit
-  `acc4d478ffed12961122bcdffc5f51bc7693722c` (subject "Authorize
-  METRIC_RESULT Retention runtime development scope") to be an ancestor of
-  that exact `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`; and verify, via `git
-  diff --name-only acc4d478ffed12961122bcdffc5f51bc7693722c..origin/main`,
-  that every path changed since that authorization anchor is status-only —
-  for the expected state immediately after the correction that introduced
-  this rule, the only such changed path is `LLE_CURRENT_STATE.md`; any
-  other changed path is `BLOCKED — UNEXPECTED DRIFT AFTER METRIC_RESULT
-  DEVELOPMENT AUTHORIZATION` and this session must `STOP`. This session
-  must then freshly verify, at `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`,
-  the exact immutable canonical/runtime blobs — Backlog `1.74` blob
-  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`; API `1.29` blob
-  `a498d5536ea1d228d133610780ff06d77a9d403f`; Schema `1.8` blob
-  `a0e4037db07f7416109e53ed72c10a12b7c433bb`;
-  `src/instrumentation/evidenceMetrics.js` blob
-  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`;
-  `src/instrumentation/evidenceValidation.js` blob
-  `ababb120ec017669963429ceb0006064ad78f65a`;
-  `src/instrumentation/evidenceRepository.js` blob
-  `9792ff414febb0878b04d031145a8b2dafab2623`; `src/instrumentation/index.js`
-  blob `14577b90cc19fe10de27d7c1afe0373679e105e9`;
-  `tests/viP1RawSourceRuntime.test.js` blob
-  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`; and worktree clean, index
-  clean, no untracked files — and must `STOP — BLOCKED` on any mismatch,
-  with no pull/merge/reset/stash/rebase/amend/cherry-pick/force-push
-  repair. This rule deliberately does NOT hard-pin a future
-  `LLE_CURRENT_STATE.md` blob: the Current State file necessarily changes
-  during status-only governance commits, so Development must instead
-  consume the then-current exact Current State content after Control
-  Tower's live verification of the resulting `main`, which will supply the
-  exact `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA` to use; create the new
-  validation branch from, with parent exactly, that resolved
-  `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`; modify exactly
-  `src/instrumentation/evidenceMetrics.js`,
-  `src/instrumentation/evidenceValidation.js`, and
-  `tests/viP1MetricResultRuntime.test.js` (new file), and no other file,
-  implementing `queryMetricResult(pool, input)` as a SEPARATE source path
-  (not calling `queryRawEvidenceForMetricRebuild`, no nested RAW_SOURCE
-  transaction, no reinterpretation of RAW_SOURCE output as METRIC_RESULT
-  source) per the approved implementation-shape constraints recorded in §4
-  ("Control Tower Review — METRIC_RESULT Runtime Pre-Analysis Accepted /
-  Bounded Runtime Development Authorized"); make exactly one implementation
-  commit (no preliminary refactor commit; if the three-file scope is
-  insufficient, `STOP` and report `BLOCKED — APPROVED DEVELOPMENT FILE
-  SCOPE INSUFFICIENT` rather than silently expanding scope); run isolated
-  actual-PostgreSQL focused and full regression gates
-  (`--test-concurrency=1`), using an isolated synthetic temporary DB and
-  never `lle_dev`, and capture all test/DB/blob/SHA evidence with
-  zero-side-effect Evidence behavior preserved throughout; push only the
-  new validation branch. This session must NOT integrate `main`, must NOT
-  perform Independent Review, must NOT close any finding
+- Fresh Claude Opus 5 Independent Review of exact candidate
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` on branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, against
+  exact candidate parent / implementation baseline
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51` and current canonical (API
+  `1.29`, Schema `1.8`, Backlog `1.74`). The reviewer must fresh-fetch
+  `origin` and independently verify: candidate SHA
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, tree
+  `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, subject `Implement
+  METRIC_RESULT Retention v1 runtime`, exactly one candidate commit after
+  the parent, and exact changed-file scope
+  `src/instrumentation/evidenceMetrics.js` (blob
+  `f2fb6723cb2320fd5eca9c5e1e91b28194642a69`),
+  `src/instrumentation/evidenceValidation.js` (blob
+  `fadee158da77693fba319976001d43f43c784196`), NEW
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `2d9738fabb4225c2841c180d16dc262595048f7d`). Do not hard-pin this review
+  to this updater's pre-update `origin/main`: the candidate parent
+  (`8c60cbcbdf358f17c0d8249447b08c264946fc51`) and candidate SHA/tree above
+  remain exact and immutable; current `main` may have advanced only by
+  status-only `LLE_CURRENT_STATE.md` update(s) since that parent before
+  this review begins — the reviewer must verify, via `git diff --name-only
+  8c60cbcbdf358f17c0d8249447b08c264946fc51..origin/main` against the
+  then-current `origin/main`, that any such drift is limited exactly to
+  `LLE_CURRENT_STATE.md`; any other changed path (canonical docs, runtime,
+  tests, `db/**`, `package*.json`, `.github/**`) is `BLOCKED — UNEXPECTED
+  MAIN DRIFT BEFORE METRIC_RESULT INDEPENDENT REVIEW` and the reviewer must
+  `STOP` rather than proceed or repair. The review must be fresh and
+  read-only with repository mutation `0`: it must independently inspect
+  the candidate's code, tests, and current canonical authority
+  (`API_CONTRACT.md` `1.29`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.74`) directly, and must NOT
+  rely on the Development-session PostgreSQL/regression `PASS` evidence
+  recorded in §4/§8 as proof of semantic correctness. It must NOT modify
+  the candidate, must NOT integrate `main`, must NOT run a correction, and
+  must NOT close any finding itself except a finding-level disposition
+  explicitly justified by review authority and project governance
   (`F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
-  `F-MR-ARCH-06` remains `OPEN / DEFERRED`), and must `STOP` on any
-  scope/canonical/schema mismatch. Runtime implementation remains scoped to
-  exactly `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`; this Next Action does
-  not itself implement, validate, or independently review any Runtime
-  code, and does not authorize Unseen transfer, actual P1 timing/anchor
-  calibration, human-data execution, actual provider, audio, Tier A
-  changes, canonical API/Schema changes, migration, DDL, materialized
-  metric storage, a public HTTP API, a new Engine, modality intervention,
-  Lexico-Construction, a mixed scheduler, bounded conversation, or an AI
-  audit.
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-ARCH-01`–`F-MR-ARCH-05`
+  remain `CLOSED` as documentation-contract findings only). If the review
+  discovers a required correction, the verdict must be `REQUEST
+  CORRECTION` with the exact finding(s) reported — not a self-performed
+  fix. No PR is required for this review.
