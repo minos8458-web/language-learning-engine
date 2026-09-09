@@ -36,6 +36,11 @@ const FAMILY_2 = 'FAMILY_METRIC_2';
 const FAMILY_UNKNOWN = { itemFamilyId: 'FAMILY_METRIC_UNKNOWN', itemFamilyVersion: 1 };
 const LEXICAL_ID = 'LEXICAL_METRIC';
 const RUBRIC_ID = 'RUBRIC_METRIC';
+// A second, independently valid RUBRIC reference (F-MR-RR-02): never used by
+// the shared fixture's assignments/snapshots, only registered on demand by
+// the rubric-mismatch test so a "wrong rubric ID" is a real, valid, existing
+// reference rather than an arbitrary unregistered string.
+const RUBRIC_ID_2 = 'RUBRIC_METRIC_2';
 const SCHEDULER_ID = 'SCHEDULER_METRIC';
 const INSTRUMENTATION_ID = 'INSTRUMENTATION_METRIC';
 
@@ -223,6 +228,27 @@ async function registerNegativeFormula(definition) {
   formulaSeq += 1;
   const referenceId = `FORMULA_METRIC_NEG_${formulaSeq}`;
   await registerFormula(referenceId, definition);
+  return referenceId;
+}
+
+// Registers a fresh, valid, usable FORMULA (F-MR-RR-06 fixtures) whose only
+// deviation from the canonical shape is a caller-controlled
+// earlyToleranceMs/lateToleranceMs pair -- unlike registerNegativeFormula,
+// this formula is expected to be pinned into an actually-executed
+// queryMetricResult call, not merely existence-checked.
+async function registerToleranceFormula(earlyToleranceMs, lateToleranceMs) {
+  formulaSeq += 1;
+  const referenceId = `FORMULA_METRIC_TOLERANCE_${formulaSeq}`;
+  await registerFormula(referenceId, formulaDefinition({
+    timeliness: {
+      basis: 'ASSIGNMENT_DUE_AT',
+      observationTimestamp: 'FINALIZATION_FINALIZED_AT',
+      earlyToleranceMs,
+      lateToleranceMs,
+      lowerBoundInclusive: true,
+      upperBoundInclusive: true,
+    },
+  }));
   return referenceId;
 }
 
@@ -2240,5 +2266,341 @@ describe('VI P1 METRIC_RESULT Retention v1 runtime (queryMetricResult)', { concu
       'participantId', 'nodeId', 'targetTimepoint', 'conditionId',
       'conditionVersion', 'formulaId', 'formulaVersion',
     ].sort());
+  });
+
+  // ===========================================================================
+  // 14. Independent Review correction (Retention runtime candidate):
+  //     F-MR-RR-01 evaluation cutoff binding.
+  // ===========================================================================
+
+  const RR01_CUTOFF = '2030-01-01T00:00:00.000Z';
+  const RR01_CUTOFF_PLUS_1US = '2030-01-01T00:00:00.000001Z';
+
+  test('T100 target-node evaluation created exactly at analysisCutoff is valid (inclusive boundary)', async () => {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment();
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET created_at = $1 WHERE attempt_id = $2 AND node_id = $3`,
+      [RR01_CUTOFF, attempt.attemptId, NODE_A]
+    );
+    const result = await queryMetricResult(pool, baseInput({
+      analysisCutoff: RR01_CUTOFF,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 1);
+  });
+
+  test('T101 target-node evaluation created 1 microsecond after analysisCutoff is CONTRACT_VIOLATION', async () => {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment();
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET created_at = $1 WHERE attempt_id = $2 AND node_id = $3`,
+      [RR01_CUTOFF_PLUS_1US, attempt.attemptId, NODE_A]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        analysisCutoff: RR01_CUTOFF,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T102 a post-cutoff target-node evaluation id never leaks into a returned result (rule 14 path)', async () => {
+    // NODE_A stays fully valid (keeps the completion attempt SCORABLE
+    // overall); only NODE_B's evaluation -- the one that would otherwise be
+    // classified ON_TIME_UNSCORABLE_NODE_EVALUATION and carry evaluationId
+    // into the group's sourceRebuildReference -- is pushed post-cutoff.
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment({
+      targetNodeIds: [NODE_A, NODE_B],
+    });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A), unscorableNodeEvaluation(NODE_B)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET created_at = $1 WHERE attempt_id = $2 AND node_id = $3`,
+      [RR01_CUTOFF_PLUS_1US, attempt.attemptId, NODE_B]
+    );
+    // The whole call rejects -- there is no successful result object at all
+    // for the post-cutoff evaluationId to appear in.
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        analysisCutoff: RR01_CUTOFF,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T103 a genuinely missing target-node evaluation under an explicit analysisCutoff remains the existing source-contradiction path', async () => {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment();
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `DELETE FROM evidence_target_node_evaluations WHERE attempt_id = $1 AND node_id = $2`,
+      [attempt.attemptId, NODE_A]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        analysisCutoff: RR01_CUTOFF,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  // ===========================================================================
+  // 15. Independent Review correction: F-MR-RR-02 rubric compatibility.
+  // ===========================================================================
+
+  test('T104 exact snapshot/evaluation rubric pair (default fixture) is valid', async () => {
+    const { enrollment } = await candidateWithTimeliness(DUE_AT, [correctEvaluation(NODE_A)]);
+    const result = await queryMetricResult(pool, baseInput({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 1);
+  });
+
+  test('T105 same rubric id, wrong rubric version on the evaluation is CONTRACT_VIOLATION', async () => {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment();
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET rubric_version = 2 WHERE attempt_id = $1 AND node_id = $2`,
+      [attempt.attemptId, NODE_A]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T106 wrong rubric id on the evaluation (a different, valid, existing RUBRIC reference) is CONTRACT_VIOLATION', async () => {
+    await registerReference('RUBRIC', RUBRIC_ID_2, 1, rubricDefinition());
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment();
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET rubric_id = $1 WHERE attempt_id = $2 AND node_id = $3`,
+      [RUBRIC_ID_2, attempt.attemptId, NODE_A]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T107 a rubric-mismatched evaluation id never leaks into a returned result (rule 14 path)', async () => {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment({
+      targetNodeIds: [NODE_A, NODE_B],
+    });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A), unscorableNodeEvaluation(NODE_B)]);
+    await forceTimeliness(attempt, assignmentId, dueAt);
+    await pool.query(
+      `UPDATE evidence_target_node_evaluations SET rubric_version = 2 WHERE attempt_id = $1 AND node_id = $2`,
+      [attempt.attemptId, NODE_B]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  // ===========================================================================
+  // 16. Independent Review correction: F-MR-RR-06 timestamp overflow.
+  // ===========================================================================
+
+  async function candidateWithToleranceFormula(formulaId, finalizedAt) {
+    const { enrollment, assignmentId, dueAt } = await newCandidateAssignment({ formulaId, dueAt: DUE_AT });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, finalizedAt);
+    return { enrollment, assignmentId, attempt, dueAt };
+  }
+
+  test('T108 Number.MAX_SAFE_INTEGER early/late tolerance executes deterministically without a timestamp overflow', async () => {
+    const formulaId = await registerToleranceFormula(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    const { enrollment } = await candidateWithToleranceFormula(formulaId, DUE_AT);
+    const result = await queryMetricResult(pool, baseInput({
+      formulaId,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.earlyCount, 0);
+    assert.equal(group.lateCount, 0);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 1);
+  });
+
+  test('T109 zero tolerance: finalized exactly at due_at is ON_TIME (lower and upper boundary coincide, inclusive)', async () => {
+    const formulaId = await registerToleranceFormula(0, 0);
+    const { enrollment } = await candidateWithToleranceFormula(formulaId, DUE_AT);
+    const result = await queryMetricResult(pool, baseInput({
+      formulaId,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.earlyCount, 0);
+    assert.equal(group.lateCount, 0);
+    assert.equal(group.denominator, 1);
+  });
+
+  test('T110 zero tolerance: 1 microsecond before due_at is EARLY', async () => {
+    const formulaId = await registerToleranceFormula(0, 0);
+    const { enrollment } = await candidateWithToleranceFormula(formulaId, '2026-06-08T11:59:59.999999Z');
+    const result = await queryMetricResult(pool, baseInput({
+      formulaId,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.earlyCount, 1);
+    assert.equal(group.denominator, 0);
+  });
+
+  test('T111 zero tolerance: 1 microsecond after due_at is LATE', async () => {
+    const formulaId = await registerToleranceFormula(0, 0);
+    const { enrollment } = await candidateWithToleranceFormula(formulaId, '2026-06-08T12:00:00.000001Z');
+    const result = await queryMetricResult(pool, baseInput({
+      formulaId,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.lateCount, 1);
+    assert.equal(group.denominator, 0);
+  });
+
+  // ===========================================================================
+  // 17. Independent Review correction: F-MR-RR-03 structured sparse arrays.
+  // ===========================================================================
+
+  test('T112 a sparse-array hole in conditionReferences is MISSING_REQUIRED_FIELD, not a raw TypeError', async () => {
+    const conditionReferences = [{ conditionId: CONDITION_1, conditionVersion: 1 }];
+    conditionReferences[2] = { conditionId: CONDITION_2, conditionVersion: 1 }; // index 1 is a genuine hole
+    assert.equal(conditionReferences.length, 3);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ conditionReferences }),
+      })),
+      'MISSING_REQUIRED_FIELD'
+    );
+  });
+
+  test('T113 a sparse-array hole in itemFamilyReferences is MISSING_REQUIRED_FIELD, not a raw TypeError', async () => {
+    const itemFamilyReferences = [{ itemFamilyId: FAMILY_1, itemFamilyVersion: 1 }];
+    itemFamilyReferences[2] = { itemFamilyId: FAMILY_2, itemFamilyVersion: 1 }; // index 1 is a genuine hole
+    assert.equal(itemFamilyReferences.length, 3);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [UNKNOWN_BUT_VALID_UUID], itemFamilyReferences }),
+      })),
+      'MISSING_REQUIRED_FIELD'
+    );
+  });
+
+  test('T114 an explicit undefined array element (not a hole) has the same canonical required-error behavior', async () => {
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ conditionReferences: [undefined] }),
+      })),
+      'MISSING_REQUIRED_FIELD'
+    );
+  });
+
+  // ===========================================================================
+  // 18. Independent Review correction: F-MR-RR-04 primitive sparse arrays.
+  // ===========================================================================
+
+  test('T115 a sparse-array hole in enrollmentIds is CONTRACT_VIOLATION, not a silent skip', async () => {
+    const enrollment = await newEnrollment();
+    const enrollmentIds = [enrollment.enrollment_id];
+    enrollmentIds[2] = UNKNOWN_BUT_VALID_UUID; // index 1 is a genuine hole
+    assert.equal(enrollmentIds.length, 3);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({ filters: baseFilters({ enrollmentIds }) })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T116 a sparse-array hole in nodeIds is CONTRACT_VIOLATION, not a silent skip', async () => {
+    const nodeIds = [NODE_A];
+    nodeIds[2] = NODE_B; // index 1 is a genuine hole
+    assert.equal(nodeIds.length, 3);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [UNKNOWN_BUT_VALID_UUID], nodeIds }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T117 a sparse-array hole in targetTimepoints is CONTRACT_VIOLATION, not a silent skip', async () => {
+    const targetTimepoints = ['DAY_7'];
+    targetTimepoints[2] = 'DAY_30'; // index 1 is a genuine hole
+    assert.equal(targetTimepoints.length, 3);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [UNKNOWN_BUT_VALID_UUID], targetTimepoints }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T118 F-MR-RR-04 non-interference: RAW_SOURCE sparse primitive-array validation is byte-for-byte unchanged', async () => {
+    // RAW_SOURCE's shared `validateUuidArray` is deliberately left untouched
+    // by this correction (F-MR-RR-04 is METRIC_RESULT-local): a sparse hole
+    // still passes RAW_SOURCE's pure shape validation silently -- exactly as
+    // it did before this correction -- and the call proceeds all the way to
+    // `pool.connect()`, proving nothing in the shared validator changed.
+    const poisonedPool = {
+      connect: async () => { throw new Error('sentinel: RAW_SOURCE reached pool.connect'); },
+    };
+    const enrollmentIds = [UNKNOWN_BUT_VALID_UUID];
+    enrollmentIds[2] = '00000000-0000-4000-8000-000000000098'; // index 1 is a genuine hole
+    await assert.rejects(
+      () => queryRawEvidenceForMetricRebuild(poisonedPool, {
+        formulaId: FORMULA_ID,
+        formulaVersion: 1,
+        analysisCutoff: FAR_FUTURE_CUTOFF,
+        filters: {
+          enrollmentIds,
+          assignmentIds: [],
+          attemptIds: [],
+          conditionReferences: [],
+          targetTimepoints: [],
+          nodeIds: [],
+          itemFamilyReferences: [],
+        },
+      }),
+      (error) => {
+        assert.equal(error.message, 'sentinel: RAW_SOURCE reached pool.connect');
+        return true;
+      }
+    );
   });
 });

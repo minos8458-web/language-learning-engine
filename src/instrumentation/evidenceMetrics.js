@@ -1034,20 +1034,32 @@ function validateMetricAggregationGrainInput(value) {
   return REQUIRED_AGGREGATION_GRAIN.slice();
 }
 
+// F-MR-RR-03 (METRIC_RESULT-specific): built with a dense index-by-index
+// loop rather than `Array.prototype.map`, which silently skips a sparse
+// hole and lets it survive into `normalized` as a hole -- later producing a
+// raw TypeError (or worse, a silent pass-through) instead of routing the
+// hole through the same per-element validation as every other index. A hole
+// read via `value[index]` is `undefined`, exactly like an explicit
+// undefined element, so `assertExactKeys(undefined, ...)` already reports it
+// as MISSING_REQUIRED_FIELD -- no separate hole-detection branch is needed
+// once iteration itself cannot skip it. The RAW_SOURCE analog of this
+// function (`validateConditionReferenceArray`) is untouched.
 function validateMetricConditionReferenceArray(value, fieldName) {
   if (value === null || !Array.isArray(value)) {
     throw new ContractViolationError(`${fieldName} must be an array`);
   }
-  const normalized = value.map((element, index) => {
+  const normalized = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const element = value[index];
     assertExactKeys(element, ['conditionId', 'conditionVersion'], `${fieldName}[${index}]`);
-    return {
+    normalized.push({
       conditionId: validateStableId(element.conditionId, `${fieldName}[${index}].conditionId`),
       conditionVersion: validateBoundedVersion(
         element.conditionVersion,
         `${fieldName}[${index}].conditionVersion`
       ),
-    };
-  });
+    });
+  }
   const seen = new Set();
   for (const ref of normalized) {
     const key = `${ref.conditionId}@${ref.conditionVersion}`;
@@ -1062,20 +1074,25 @@ function validateMetricConditionReferenceArray(value, fieldName) {
   });
 }
 
+// F-MR-RR-03 (METRIC_RESULT-specific): see validateMetricConditionReferenceArray
+// above for the dense-iteration rationale. The RAW_SOURCE analog of this
+// function (`validateItemFamilyReferenceArray`) is untouched.
 function validateMetricItemFamilyReferenceArray(value, fieldName) {
   if (value === null || !Array.isArray(value)) {
     throw new ContractViolationError(`${fieldName} must be an array`);
   }
-  const normalized = value.map((element, index) => {
+  const normalized = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const element = value[index];
     assertExactKeys(element, ['itemFamilyId', 'itemFamilyVersion'], `${fieldName}[${index}]`);
-    return {
+    normalized.push({
       itemFamilyId: validateStableId(element.itemFamilyId, `${fieldName}[${index}].itemFamilyId`),
       itemFamilyVersion: validateBoundedVersion(
         element.itemFamilyVersion,
         `${fieldName}[${index}].itemFamilyVersion`
       ),
-    };
-  });
+    });
+  }
   const seen = new Set();
   for (const ref of normalized) {
     const key = `${ref.itemFamilyId}@${ref.itemFamilyVersion}`;
@@ -1114,6 +1131,27 @@ function validateRetentionTargetTimepointArray(value, fieldName) {
     .sort((a, b) => RETENTION_TARGET_TIMEPOINTS.indexOf(a) - RETENTION_TARGET_TIMEPOINTS.indexOf(b));
 }
 
+// F-MR-RR-04 (METRIC_RESULT-specific primitive-array guard): the shared
+// RAW_SOURCE array validators (`validateUuidArray`/`validateStableIdArray`)
+// and this module's own `validateRetentionTargetTimepointArray` all build
+// their normalized output with `Array.prototype.map`, which silently skips
+// a sparse hole instead of validating it -- the hole then survives
+// normalization and can reach PostgreSQL as a NULL array element. This
+// guard runs first and rejects any hole as CONTRACT_VIOLATION before the
+// array is ever handed to a validator, without changing those validators'
+// own behavior -- RAW_SOURCE's use of the shared validators is therefore
+// unaffected.
+function assertDenseMetricArray(value, fieldName) {
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.prototype.hasOwnProperty.call(value, index)) {
+        throw new ContractViolationError(`${fieldName}[${index}] must not be a sparse array hole`);
+      }
+    }
+  }
+  return value;
+}
+
 function validateMetricFilters(rawFilters) {
   // `assignmentIds`/`attemptIds` are not in METRIC_FILTER_KEYS, so
   // supplying either is already rejected here as an unrecognized key
@@ -1122,6 +1160,10 @@ function validateMetricFilters(rawFilters) {
   for (const key of METRIC_FILTER_KEYS) {
     requireField(rawFilters, key);
   }
+
+  assertDenseMetricArray(rawFilters.enrollmentIds, 'filters.enrollmentIds');
+  assertDenseMetricArray(rawFilters.nodeIds, 'filters.nodeIds');
+  assertDenseMetricArray(rawFilters.targetTimepoints, 'filters.targetTimepoints');
 
   const enrollmentIds = validateUuidArray(rawFilters.enrollmentIds, 'filters.enrollmentIds');
   const conditionReferences = validateMetricConditionReferenceArray(
@@ -1208,6 +1250,12 @@ async function selectQualifyingEnrollmentsForMetric(client, filters, analysisCut
 // snapshot row is distinguishable (has_snapshot=false) from one whose
 // snapshot is merely post-cutoff -- the "missing snapshot/due_at contradicts
 // admission" requirement must never be hidden behind an INNER JOIN/WHERE.
+//
+// `s.rubric_id`/`s.rubric_version` (F-MR-RR-02) are carried through here so
+// the snapshot's rubric authority can later be compared, exactly, against
+// the completion target-node evaluation's own rubric_id/rubric_version --
+// node compatibility is already enforced through the existing
+// (attempt_id, node_id) evaluation lookup and is not touched here.
 async function selectCandidateAssignments(client, enrollmentIds, filters, analysisCutoff) {
   if (enrollmentIds.length === 0) return [];
   const effectiveTimepoints = filters.targetTimepoints.length > 0
@@ -1229,6 +1277,8 @@ async function selectCandidateAssignments(client, enrollmentIds, filters, analys
        s.formula_version,
        s.item_family_id,
        s.item_family_version,
+       s.rubric_id,
+       s.rubric_version,
        (a.completed_at IS NOT NULL AND a.completed_at <= $3::timestamptz) AS completed_within_cutoff
      FROM evidence_assignments a
      LEFT JOIN evidence_assignment_snapshots s ON s.assignment_id = a.assignment_id
@@ -1275,6 +1325,8 @@ function resolvePopulationEligibleAssignments(assignmentRows, formulaId, formula
       supersededBy: row.superseded_by,
       completionAttemptId: row.completion_attempt_id,
       completedWithinCutoff: row.completed_within_cutoff,
+      rubricId: row.rubric_id,
+      rubricVersion: Number(row.rubric_version),
     });
   }
   return eligible;
@@ -1309,6 +1361,8 @@ function buildMetricCandidates(nodeRows, assignmentMap, enrollmentMap, formulaId
       supersededBy: assignment.supersededBy,
       completionAttemptId: assignment.completionAttemptId,
       completedWithinCutoff: assignment.completedWithinCutoff,
+      rubricId: assignment.rubricId,
+      rubricVersion: assignment.rubricVersion,
       formulaId,
       formulaVersion,
     };
@@ -1320,31 +1374,74 @@ function buildMetricCandidates(nodeRows, assignmentMap, enrollmentMap, formulaId
 // ---------------------------------------------------------------------------
 
 // Timeliness and the completed_at/finalized_at equality check are computed
-// entirely in SQL as exact TIMESTAMPTZ/INTERVAL comparisons -- never via a
-// JS `Date` subtraction, which would truncate below millisecond precision
-// and could move an exact boundary. `($ms::text || ' milliseconds')::interval`
-// is an exact microsecond-integer interval for the safe-integer range this
-// runtime accepts.
+// entirely in PostgreSQL as exact integer arithmetic -- never via a JS
+// `Date` subtraction, which would truncate below millisecond precision and
+// could move an exact boundary.
+//
+// F-MR-RR-06: the tolerance range is 0..Number.MAX_SAFE_INTEGER ms, so
+// `due_at ± tolerance-interval` (the prior shape) can construct a timestamp
+// outside PostgreSQL's representable TIMESTAMPTZ range and raise SQLSTATE
+// 22008, regardless of how close `finalized_at` actually is to `due_at`.
+// This never constructs a timestamp outside the valid range: `finalized_at
+// - due_at` is a plain difference of two already-valid timestamps (always
+// representable as an INTERVAL, never an overflow), decomposed into an
+// exact whole-day BIGINT count plus a sub-day microsecond remainder -- the
+// only step touching EXTRACT's internal float8 division is the sub-day
+// remainder, whose magnitude is always under one day, far below where
+// float64 rounding could ever move a microsecond boundary -- and
+// reassembled into a single exact BIGINT microsecond delta. Freshly
+// verified against PostgreSQL 17.10, including the ±1 microsecond boundary
+// and the full Number.MAX_SAFE_INTEGER millisecond tolerance.
 async function selectCompletionDetails(client, assignmentIds, analysisCutoff, earlyToleranceMs, lateToleranceMs) {
   if (assignmentIds.length === 0) return new Map();
   const { rows } = await client.query(
-    `SELECT
-       a.assignment_id,
-       a.completion_attempt_id,
-       (att.attempt_id IS NOT NULL) AS attempt_exists,
-       att.assignment_id AS attempt_owner_assignment_id,
-       (att.started_at IS NOT NULL AND att.started_at <= $2::timestamptz) AS attempt_started_within_cutoff,
-       (fin.attempt_id IS NOT NULL) AS finalization_exists,
-       (fin.finalized_at IS NOT NULL AND fin.finalized_at <= $2::timestamptz) AS finalized_within_cutoff,
-       (a.completed_at = fin.finalized_at) AS completed_equals_finalized,
-       fin.response_kind,
-       fin.attempt_outcome,
-       (fin.finalized_at < (a.due_at - ($3::text || ' milliseconds')::interval)) AS is_early,
-       (fin.finalized_at > (a.due_at + ($4::text || ' milliseconds')::interval)) AS is_late
-     FROM evidence_assignments a
-     LEFT JOIN evidence_attempts att ON att.attempt_id = a.completion_attempt_id
-     LEFT JOIN evidence_attempt_finalizations fin ON fin.attempt_id = a.completion_attempt_id
-    WHERE a.assignment_id = ANY($1::uuid[])`,
+    `WITH base AS (
+       SELECT
+         a.assignment_id,
+         a.completion_attempt_id,
+         a.due_at,
+         att.attempt_id AS att_attempt_id,
+         att.assignment_id AS attempt_owner_assignment_id,
+         att.started_at,
+         fin.attempt_id AS fin_attempt_id,
+         fin.finalized_at,
+         a.completed_at,
+         fin.response_kind,
+         fin.attempt_outcome
+       FROM evidence_assignments a
+       LEFT JOIN evidence_attempts att ON att.attempt_id = a.completion_attempt_id
+       LEFT JOIN evidence_attempt_finalizations fin ON fin.attempt_id = a.completion_attempt_id
+      WHERE a.assignment_id = ANY($1::uuid[])
+     ),
+     delta AS (
+       SELECT
+         assignment_id,
+         CASE WHEN finalized_at IS NULL OR due_at IS NULL THEN NULL::bigint ELSE (
+           EXTRACT(DAY FROM (finalized_at - due_at))::bigint * 86400000000
+           + ROUND(
+               EXTRACT(EPOCH FROM (
+                 (finalized_at - due_at)
+                 - (EXTRACT(DAY FROM (finalized_at - due_at))::int * INTERVAL '1 day')
+               )) * 1000000
+             )::bigint
+         ) END AS delta_microseconds
+       FROM base
+     )
+     SELECT
+       base.assignment_id,
+       base.completion_attempt_id,
+       (base.att_attempt_id IS NOT NULL) AS attempt_exists,
+       base.attempt_owner_assignment_id,
+       (base.started_at IS NOT NULL AND base.started_at <= $2::timestamptz) AS attempt_started_within_cutoff,
+       (base.fin_attempt_id IS NOT NULL) AS finalization_exists,
+       (base.finalized_at IS NOT NULL AND base.finalized_at <= $2::timestamptz) AS finalized_within_cutoff,
+       (base.completed_at = base.finalized_at) AS completed_equals_finalized,
+       base.response_kind,
+       base.attempt_outcome,
+       (delta.delta_microseconds < (-($3::bigint) * 1000)) AS is_early,
+       (delta.delta_microseconds > ($4::bigint * 1000)) AS is_late
+     FROM base
+     JOIN delta ON delta.assignment_id = base.assignment_id`,
     [assignmentIds, analysisCutoff, String(earlyToleranceMs), String(lateToleranceMs)]
   );
   const map = new Map();
@@ -1354,13 +1451,26 @@ async function selectCompletionDetails(client, assignmentIds, analysisCutoff, ea
   return map;
 }
 
-async function selectEvaluationsForAttempts(client, attemptIds) {
+// F-MR-RR-01: `created_at` (via the SQL-computed `created_within_cutoff`
+// fact) is carried so a post-cutoff evaluation can be distinguished from a
+// genuinely missing one -- this must never be a WHERE predicate that would
+// filter such a row out of this result set, which would make the two
+// indistinguishable to the caller.
+// F-MR-RR-02: `rubric_id`/`rubric_version` are carried so the evaluation's
+// own rubric authority can be compared, exactly, against the assignment
+// snapshot's rubric_id/rubric_version before this evaluation may become
+// scorable/correctness/provenance authority. Node compatibility is already
+// enforced through the (attempt_id, node_id) lookup key below and is not
+// touched here.
+async function selectEvaluationsForAttempts(client, attemptIds, analysisCutoff) {
   if (attemptIds.length === 0) return new Map();
   const { rows } = await client.query(
-    `SELECT evaluation_id, attempt_id, node_id, scorable, is_correct
+    `SELECT evaluation_id, attempt_id, node_id, scorable, is_correct,
+            rubric_id, rubric_version,
+            (created_at <= $2::timestamptz) AS created_within_cutoff
        FROM evidence_target_node_evaluations
       WHERE attempt_id = ANY($1::uuid[])`,
-    [attemptIds]
+    [attemptIds, analysisCutoff]
   );
   const map = new Map();
   for (const row of rows) {
@@ -1438,6 +1548,26 @@ function classifyMetricCandidate(candidate, completionDetail, evaluationMap) {
   const evaluation = evaluationMap.get(`${candidate.completionAttemptId} ${candidate.nodeId}`);
   if (!evaluation) {
     throw new ContractViolationError('required target-node evaluation does not exist');
+  }
+  // F-MR-RR-01: a present-but-post-cutoff evaluation is a distinct
+  // contradiction from a genuinely missing one (checked immediately above)
+  // -- it must never become scorable/correctness/provenance authority, and
+  // throwing here (before any branch below ever reads evaluation_id) means
+  // its evaluationId can never leak into a returned classification.
+  if (!evaluation.created_within_cutoff) {
+    throw new ContractViolationError('target-node evaluation was created after analysisCutoff');
+  }
+  // F-MR-RR-02: rubric compatibility between the evaluation and the
+  // assignment snapshot's pinned rubric authority -- exact match only, no
+  // latest-version reinterpretation. Node compatibility is already enforced
+  // by the (attempt_id, node_id) lookup key above.
+  if (
+    evaluation.rubric_id !== candidate.rubricId
+    || Number(evaluation.rubric_version) !== candidate.rubricVersion
+  ) {
+    throw new ContractViolationError(
+      'target-node evaluation rubric does not match the assignment snapshot rubric authority'
+    );
   }
   if (evaluation.scorable === false) {
     return {
@@ -1735,7 +1865,7 @@ async function runMetricResult(client, validated) {
       ))
       .map((detail) => detail.completion_attempt_id)
   )];
-  const evaluationMap = await selectEvaluationsForAttempts(client, evaluationAttemptIds);
+  const evaluationMap = await selectEvaluationsForAttempts(client, evaluationAttemptIds, analysisCutoff);
 
   // Transaction step 7: in-memory Retention reduction.
   const groupAccumulators = reduceMetricCandidates(candidates, completionDetailMap, evaluationMap);
