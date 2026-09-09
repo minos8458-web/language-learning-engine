@@ -2905,6 +2905,220 @@ authorized = `NO`; GitHub Actions `PASS` = `NOT CLAIMED`; Validation Level
 3 §10 overall `PASS` = `NOT CLAIMED`; Evidence Foundation overall complete
 = `NOT CLAIMED`.
 
+#### METRIC_RESULT Retention v1 Runtime — Independent Review Result — Request Correction
+
+- Role: status-only Control Tower record of a completed fresh Claude Opus 5
+  Independent Review of the METRIC_RESULT / Retention v1 Runtime candidate.
+  This record performs no candidate code modification, no re-review, and no
+  main integration. Repository mutation caused by this record: limited to
+  this update to `LLE_CURRENT_STATE.md`. PostgreSQL/tests: `NOT RUN —
+  STATUS-ONLY UPDATE`.
+- Reviewer: fresh Claude Opus 5, fresh read-only Independent Review. Reviewer
+  repository source mutation: `0`. Commits: `0`. Pushes: `0`. PRs: `0`.
+  Candidate files modified: `0`.
+- Reviewed candidate identity (unchanged, re-verified): validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; candidate
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, tree
+  `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, subject `Implement
+  METRIC_RESULT Retention v1 runtime`; exact three-file scope
+  `src/instrumentation/evidenceMetrics.js` (blob
+  `f2fb6723cb2320fd5eca9c5e1e91b28194642a69`),
+  `src/instrumentation/evidenceValidation.js` (blob
+  `fadee158da77693fba319976001d43f43c784196`), NEW
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `2d9738fabb4225c2841c180d16dc262595048f7d`). Candidate branch was not
+  modified by the review.
+- Final verdict: `REQUEST CORRECTION`. Correction required: `YES`. Owner
+  value required: `NO`. Architecture decision required: `NO`. Migration
+  required: `NO`. DDL required: `NO`. Main-integration eligibility: `NOT
+  ELIGIBLE`.
+
+##### Review Baseline Results
+
+MAIN BASELINE `PASS`; MAIN DRIFT `STATUS-ONLY`; CANDIDATE IDENTITY `PASS`;
+EXACT THREE-FILE SCOPE `PASS`; CANONICAL CONTRACT FIDELITY `FAIL`;
+RAW_SOURCE NON-INTERFERENCE `PASS`; INPUT / ERROR CONTRACT `FAIL`; FORMULA
+V1 `PASS`; CANDIDATE ADMISSION `PASS`; GROUPING / ORDERING `PASS`;
+ELIGIBILITY / COMPLETION INTEGRITY `FAIL`; FIRST_MATCH `PASS`; TIMELINESS /
+PRECISION `FAIL`; NUMERIC / HALF_UP `PASS`; PROVENANCE `FAIL`; TRANSACTION
+`PASS`; ZERO SIDE EFFECT `PASS`; TEST COVERAGE `FAIL`; INDEPENDENT
+POSTGRESQL RERUN `PASS`, with environment/cleanup qualifications recorded
+immediately below.
+
+##### Independent Review Execution Environment
+
+Recorded exactly; deviation not concealed:
+
+- Reviewer PostgreSQL `16.15` vs. Development PostgreSQL `17.10`.
+- Reviewer Node `v22.22.2` vs. Development Node `v24.18.0`.
+- Reviewer npm `10.9.7`.
+- Review temp DB: `lle_review_vip1_metricresult_1788989185`.
+- Independent rerun expected counts reproduced on the `core.autocrlf=true`
+  / Windows-equivalent checkout: METRIC_RESULT + RAW_SOURCE `156/156
+  PASS`; Evidence/Foundation + Runtime `300/300 PASS`, `9` suites; full
+  regression `530/530 PASS`, `56` suites.
+- LF checkout: one pre-existing platform-dependent byte-identity guard
+  failure in `tests/evidenceFoundationMigration.test.js`, outside candidate
+  scope, corresponding to `F-MR-RR-08`.
+- This reviewer environment is NOT the same-environment PostgreSQL `17.10`
+  / Node `v24` evidence recorded for the Development session above and is
+  not reinterpreted as such.
+
+##### Review Cleanup Qualification
+
+- Reviewer temp DB cleanup/count-`0` verification: `INCOMPLETE`.
+- Disposable reviewer clone deletion verification: `INCOMPLETE`.
+- The reviewer reported this rather than concealing it. This means: a clean
+  reviewer-environment cleanup lifecycle is NOT claimed; the reviewer rerun
+  is NOT reinterpreted as post-merge validation; the review is NOT treated
+  as production-equivalent environment validation. This does not erase the
+  semantic `REQUEST CORRECTION` findings below, which were established from
+  canonical text, exact candidate source inspection, and independent
+  reproduction. No new product finding is created solely for this ephemeral
+  reviewer cleanup note in this status-sync.
+
+##### Blocking Findings (main-integration blocking; all `OPEN`)
+
+- `F-MR-RR-01` (HIGH, `OPEN`, CONTRACT/RUNTIME) — Target-node evaluation
+  (`src/instrumentation/evidenceMetrics.js`,
+  `selectEvaluationsForAttempts`) is not cutoff-bounded: the evaluation
+  query does not read or enforce `created_at <= analysisCutoff`. A
+  post-cutoff evaluation may become correctness authority and its
+  `evaluationId` may enter provenance. Canonical requires node evaluation
+  to be a cutoff-bound source fact. Correction required: `YES`. Owner value
+  required: `NO`. Migration required: `NO`. Main-integration blocking:
+  `YES`.
+- `F-MR-RR-02` (HIGH, `OPEN`, CONTRACT/RUNTIME) — Snapshot rubric
+  compatibility is not validated reader-side
+  (`selectCandidateAssignments`, `selectEvaluationsForAttempts`): snapshot
+  `rubric_id`/`rubric_version` and evaluation `rubric_id`/`rubric_version`
+  are not selected and compared, though canonical requires target-node
+  evaluation compatibility with the assignment snapshot node/rubric
+  authority. Correction required: `YES`. Owner value required: `NO`.
+  Migration required: `NO`. Main-integration blocking: `YES`.
+- `F-MR-RR-06` (HIGH, `OPEN`, CONTRACT/RUNTIME) — Overflowing timestamp
+  arithmetic for canonically valid large tolerances in
+  `selectCompletionDetails`: the current `due_at ± interval` pattern, with
+  tolerance up to `Number.MAX_SAFE_INTEGER` milliseconds, can overflow the
+  PostgreSQL timestamp range, which canonical explicitly prohibits;
+  additionally SQLSTATE `22008` is not currently mapped by
+  `mapDatabaseError`. Preferred correction direction: avoid constructing an
+  out-of-range timestamp entirely, using overflow-safe signed difference
+  comparison that preserves PostgreSQL precision, rather than merely
+  catching `22008` after performing prohibited arithmetic. Correction
+  required: `YES`. Owner value required: `NO`. Migration required: `NO`.
+  Main-integration blocking: `YES`.
+- `F-MR-RR-03` (MEDIUM, `OPEN`, CONTRACT/RUNTIME) — Sparse-array hole in
+  structured references can escape as a `TypeError`
+  (`validateMetricConditionReferenceArray`,
+  `validateMetricItemFamilyReferenceArray`): `Array.map` skips holes, so a
+  structured-reference hole can reach later code as `undefined` and
+  produce an unmapped `TypeError`. Canonical mapping requires an
+  absent/undefined element to be handled through the existing contract
+  error registry rather than a raw `TypeError`. Correction required:
+  `YES`. Owner value required: `NO`. Migration required: `NO`.
+  Main-integration blocking: `YES`.
+- `F-MR-RR-04` (MEDIUM, `OPEN`, CONTRACT/RUNTIME) — Sparse-array holes
+  bypass primitive-array element validation for `enrollmentIds`,
+  `nodeIds`, `targetTimepoints`: the shared `.map()` validators skip
+  sparse holes, but canonical requires each provided element to satisfy
+  its primitive/string contract with holes not passing silently.
+  Correction boundary: prefer METRIC_RESULT-local dense-array
+  guards/wrappers so the correction does not silently change existing
+  RAW_SOURCE B1 semantics; changing shared B1 helper behavior is not
+  necessary for this correction. Correction required: `YES`. Owner value
+  required: `NO`. Migration required: `NO`. Main-integration blocking:
+  `YES`.
+
+##### Non-Blocking Review Findings (preserved `OPEN`)
+
+- `F-MR-RR-05` (LOW, `OPEN`, RUNTIME/PROCESS) — literal NUL byte delimiter
+  is semantically collision-safe but tooling-fragile. Correction required:
+  `NO`. Main-integration blocking: `NO`. Not bundled into the required
+  correction unless separately approved.
+- `F-MR-RR-07` (LOW, `OPEN`, TEST) — zero-side-effect proof is weaker than
+  implementation cleanliness: row-count-only checks do not detect an
+  in-place `UPDATE`, and sequence/catalog coverage is incomplete.
+  Correction required: `NO`. Main-integration blocking: `NO`.
+- `F-MR-RR-08` (LOW, `OPEN`, TEST/PROCESS) — pre-existing platform-dependent
+  byte-identity test `tests/evidenceFoundationMigration.test.js`
+  (hard-coded CRLF checkout digest, no `.gitattributes`), outside
+  candidate scope. Correction required for this candidate: `NO`.
+  Main-integration blocking: `NO`.
+
+##### Existing Findings — Preserved
+
+`F-MR-IR-01`–`F-MR-IR-04`: `LOW / OPEN / NON-BLOCKING`, unchanged.
+`F-MR-ARCH-06`: `OPEN / DEFERRED`, unchanged. `F-MR-ARCH-01`–`F-MR-ARCH-05`
+remain `CLOSED`, documentation-contract findings only, unchanged.
+
+##### Correction Scope Disposition
+
+The required correction is uniquely determined by approved canonical
+authority. New owner value required: `NO`. Architecture decision required:
+`NO`. Migration required: `NO`. DDL required: `NO`. The blocking correction
+remains within the previously approved Development file boundary:
+`src/instrumentation/evidenceMetrics.js`,
+`src/instrumentation/evidenceValidation.js`,
+`tests/viP1MetricResultRuntime.test.js`. A fourth file is not currently
+required; the correction should normally modify only the subset actually
+needed. Canonical docs and the existing RAW_SOURCE test must not be
+modified; B1 semantics must not be changed merely to solve METRIC_RESULT
+sparse-hole validation.
+
+##### Exact Minimal Correction Requirements
+
+1. Evaluation cutoff: select evaluation `created_at` and enforce the
+   canonical cutoff relation; a required evaluation that violates the
+   reader cutoff must produce the canonical timestamp/source contradiction
+   behavior, not silently serve as authority.
+2. Rubric compatibility: carry snapshot rubric ID/version and evaluation
+   rubric ID/version and enforce exact compatibility before the evaluation
+   becomes eligibility/correctness authority.
+3. Timeliness overflow: replace `due_at ± interval` classification with
+   overflow-safe exact PostgreSQL-precision difference arithmetic; do not
+   rely on JS `Date` truncation; do not merely map SQLSTATE `22008` while
+   retaining prohibited overflow-prone arithmetic.
+4. Structured sparse arrays: explicitly detect absent indexes before
+   `.map()` semantics can skip them, using the canonical required error
+   mapping.
+5. Primitive sparse arrays: add a METRIC_RESULT-local dense-array check
+   before using shared UUID/stable-ID array validators, preserving
+   RAW_SOURCE shared behavior unless a separate authorized B1 change is
+   later requested.
+6. Add direct regression tests for all five blocking findings without
+   weakening existing tests.
+
+##### Candidate Lifecycle After Review
+
+METRIC_RESULT / Retention v1 Runtime candidate =
+`AUTHORIZED / DEVELOPMENT CANDIDATE CREATED / DEVELOPMENT-SESSION EVIDENCE
+PASS / INDEPENDENT REVIEWED — REQUEST CORRECTION / CORRECTION REQUIRED /
+MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT
+CLOSED`. Not `APPROVED`, not `VALIDATED`, not `CLOSED`, not `CANONICAL ON
+MAIN`, and not `REVIEW-RECORDED` for the Runtime candidate.
+
+##### Correction History Governance
+
+The original candidate commit `2a6ab261a287f0cca4a2af5956a207c3b525ec54`
+remains immutable: it must NOT be amended, rebased, or squashed. The
+required correction must be a separate new commit on the same validation
+branch `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. This
+supersedes the earlier one-commit Development-history expectation because
+Independent Review has now formally required correction; that is the
+normal project correction lifecycle.
+
+##### Non-Claims
+
+This record does not mean: correction implemented = `NO`; corrected
+candidate independently re-reviewed = `NO`; Runtime validated = `NO`;
+Runtime canonical on `main` = `NO`; post-merge PostgreSQL validation =
+`NO`; review-record complete = `NO`; VI P1 Measurement Readiness complete =
+`NO`; `B-3` resolved = `NO`; P1 eligible/activated = `NO`; human-data
+authorized = `NO`; efficacy verified = `NO`; actual-provider/audio
+authorized = `NO`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3470,11 +3684,11 @@ POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
 revision `1.74`; METRIC_RESULT Retention v1 Runtime Development candidate
-`2a6ab261a287f0cca4a2af5956a207c3b525ec54` `AUTHORIZED / IMPLEMENTATION
-CANDIDATE CREATED / PUSHED TO VALIDATION BRANCH / DEVELOPMENT-SESSION
-POSTGRESQL + REGRESSION EVIDENCE PASS / INDEPENDENT REVIEW PENDING / NOT
-CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
-claim:
+`2a6ab261a287f0cca4a2af5956a207c3b525ec54` `AUTHORIZED / DEVELOPMENT
+CANDIDATE CREATED / DEVELOPMENT-SESSION EVIDENCE PASS / INDEPENDENT
+REVIEWED — REQUEST CORRECTION / CORRECTION REQUIRED / MAIN-INTEGRATION NOT
+ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this
+ledger does not claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -3501,21 +3715,46 @@ claim:
   PostgreSQL/test execution evidence `PASS` (`156/156` focused,
   `300/300`/`9` suites, `530/530`/`56` suites/exit `0`). This is NOT a
   claim that the candidate is independently reviewed, validated, or
-  canonical on `main` — it remains `INDEPENDENT REVIEW PENDING / NOT
-  CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`
-- METRIC_RESULT Retention v1 Runtime candidate independently reviewed,
-  review-recorded, validated, or canonical on `main` — NOT CLAIMED; the
-  candidate is `INDEPENDENT REVIEW PENDING / NOT CANONICAL ON MAIN / NOT
-  VALIDATED / NOT CLOSED`
+  canonical on `main` — a fresh Claude Opus 5 Independent Review has since
+  completed with verdict `REQUEST CORRECTION` (see below and §4/§8); the
+  candidate remains `INDEPENDENT REVIEWED — REQUEST CORRECTION /
+  CORRECTION REQUIRED / MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON
+  MAIN / NOT VALIDATED / NOT CLOSED`
+- METRIC_RESULT Retention v1 Runtime candidate approved, validated, or
+  canonical on `main` — NOT CLAIMED; the candidate's fresh Claude Opus 5
+  Independent Review (repository mutation `0`, commits `0`, pushes `0`,
+  PRs `0`, candidate files modified `0`) returned verdict `REQUEST
+  CORRECTION`, not `APPROVE`; correction required `YES`; owner value
+  required `NO`; architecture decision required `NO`; migration/DDL
+  required `NO`; main-integration eligibility `NOT ELIGIBLE`; the
+  candidate remains `NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED /
+  NOT REVIEW-RECORDED`
+- correction implemented, corrected candidate independently re-reviewed,
+  Runtime validated, Runtime canonical on `main`, review-record complete,
+  VI P1 Measurement Readiness complete, `B-3` resolved, P1
+  eligible/activated, human-data authorized, efficacy verified, or
+  actual-provider/audio authorized — NOT CLAIMED; none of these has
+  occurred
+- five new blocking findings (`F-MR-RR-01` HIGH, `F-MR-RR-02` HIGH,
+  `F-MR-RR-06` HIGH, `F-MR-RR-03` MEDIUM, `F-MR-RR-04` MEDIUM) or three new
+  non-blocking findings (`F-MR-RR-05` LOW, `F-MR-RR-07` LOW, `F-MR-RR-08`
+  LOW) from the Independent Review are closed, resolved, or corrected by
+  this record — NOT CLAIMED; all eight remain `OPEN` (see §4/§8 for exact
+  detail and required correction scope)
+- the reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
+  same as, or upgrades, the Development-session environment (PostgreSQL
+  `17.10`, Node `v24.18.0`) evidence, or that the reviewer's temp-DB/clone
+  cleanup is verified complete — NOT CLAIMED; the deviation is recorded
+  exactly and reviewer cleanup verification is `INCOMPLETE` (see §4)
 - post-merge PostgreSQL validation of the METRIC_RESULT Runtime candidate
   performed — NOT CLAIMED; the recorded execution evidence is classified
   exactly `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
   Validation and not post-merge validation evidence
 - `F-MR-IR-01`–`F-MR-IR-04` or `F-MR-ARCH-06` closed, reopened, downgraded,
-  or otherwise disposed by the Development candidate's creation or its
-  execution evidence — NOT CLAIMED; `F-MR-IR-01`–`F-MR-IR-04` remain `LOW /
-  OPEN / NON-BLOCKING` and `F-MR-ARCH-06` remains `OPEN / DEFERRED`,
-  preserved unchanged
+  or otherwise disposed by the Development candidate's creation, its
+  execution evidence, or this Independent Review record — NOT CLAIMED;
+  `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING` and
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`, preserved unchanged
 - VI P1 Measurement Readiness complete — NOT CLAIMED
 - `B-3` resolved — NOT CLAIMED; `UNRESOLVED`
 - P1 eligible or activated — NOT CLAIMED; `NOT ELIGIBLE / NOT ACTIVATED`
@@ -3594,14 +3833,17 @@ remain true and are established in §4/§8 and elsewhere in this document:
   reducer + synthetic P0 query-time only, limited to exactly three allowed
   files, on approved validation branch
   `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (see §4/§8)
-- the sole recorded next action is a fresh Claude Opus 5 Independent Review
-  of exact candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54` on branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, against
-  exact candidate parent `8c60cbcbdf358f17c0d8249447b08c264946fc51` and
-  current canonical API `1.29` / Schema `1.8` / Backlog `1.74` (see §10);
-  this status-only record has repository mutation limited to
-  `LLE_CURRENT_STATE.md` and does not itself implement, validate, or
-  independently review any Runtime code, and does not integrate `main`
+- the fresh Claude Opus 5 Independent Review of exact candidate
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` that was the prior recorded
+  Next Action has completed, with final verdict `REQUEST CORRECTION` (see
+  §4/§8); this current update is itself a separate status-only Control
+  Tower record of that completed review's result, with repository mutation
+  limited to `LLE_CURRENT_STATE.md`; it does not itself implement,
+  validate, correct, or independently re-review any Runtime code, and does
+  not integrate `main`. The sole recorded next action is now a fresh
+  Windows Claude Development correction session on the existing validation
+  branch, starting from the unchanged, un-amended candidate tip
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` (see §10)
 - this record selected, started, or authorized VI efficacy pilot execution,
   modality state intervention, Lexico-Construction, mixed scheduler,
   bounded conversation, or AI audit — NOT CLAIMED; none of these was
@@ -4023,50 +4265,70 @@ historical ledger does not.
   `F-MR-ARCH-06` remains `OPEN / DEFERRED`) — the sole remaining step, a
   fresh Claude Opus 5 Independent Review of the exact candidate, is now
   recorded in §10
+- Fresh Claude Opus 5 Independent Review of the METRIC_RESULT / Retention
+  v1 Runtime candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54` (status-
+  only, this update; repository mutation limited to
+  `LLE_CURRENT_STATE.md`; separate reviewer session repository mutation
+  `0`, commits `0`, pushes `0`, PRs `0`, candidate files modified `0`;
+  PostgreSQL/tests by this update `NOT RUN — STATUS-ONLY`): final verdict
+  `REQUEST CORRECTION`. Correction required: `YES`. Owner value required:
+  `NO`. Architecture decision required: `NO`. Migration/DDL required:
+  `NO`. Main-integration eligibility: `NOT ELIGIBLE`. Reviewer environment
+  deviated from Development (PostgreSQL `16.15` vs. `17.10`; Node
+  `v22.22.2` vs. `v24.18.0`) and reviewer temp-DB/clone cleanup
+  verification is `INCOMPLETE` — recorded, not concealed; not reinterpreted
+  as production-equivalent or post-merge validation. Five new blocking
+  findings, all `OPEN`: `F-MR-RR-01` (HIGH, evaluation cutoff not
+  enforced), `F-MR-RR-02` (HIGH, snapshot/evaluation rubric compatibility
+  not validated), `F-MR-RR-06` (HIGH, overflowing timestamp arithmetic for
+  large tolerances), `F-MR-RR-03` (MEDIUM, structured sparse-array hole
+  escapes as `TypeError`), `F-MR-RR-04` (MEDIUM, primitive sparse-array
+  holes bypass validation). Three new non-blocking findings, all `OPEN`:
+  `F-MR-RR-05` (LOW, NUL delimiter tooling-fragility), `F-MR-RR-07` (LOW,
+  zero-side-effect proof weaker than implementation cleanliness),
+  `F-MR-RR-08` (LOW, pre-existing platform-dependent byte-identity test,
+  outside candidate scope). `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN /
+  NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`, documentation-contract
+  findings only. Candidate lifecycle: `AUTHORIZED / DEVELOPMENT CANDIDATE
+  CREATED / DEVELOPMENT-SESSION EVIDENCE PASS / INDEPENDENT REVIEWED —
+  REQUEST CORRECTION / CORRECTION REQUIRED / MAIN-INTEGRATION NOT
+  ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`. The
+  original candidate commit remains immutable (no amend/rebase/squash);
+  the required correction must be a separate new commit on the same
+  validation branch. See "METRIC_RESULT Retention v1 Runtime — Independent
+  Review Result — Request Correction" above (§4) for full detail; the sole
+  Next Action is now a Windows Claude Development correction session
+  (§10).
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Review of exact candidate
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` on branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, against
-  exact candidate parent / implementation baseline
-  `8c60cbcbdf358f17c0d8249447b08c264946fc51` and current canonical (API
-  `1.29`, Schema `1.8`, Backlog `1.74`). The reviewer must fresh-fetch
-  `origin` and independently verify: candidate SHA
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, tree
-  `0d7a706412d1bbef2c48bcacf9659d0ca81931d5`, parent
-  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, subject `Implement
-  METRIC_RESULT Retention v1 runtime`, exactly one candidate commit after
-  the parent, and exact changed-file scope
-  `src/instrumentation/evidenceMetrics.js` (blob
-  `f2fb6723cb2320fd5eca9c5e1e91b28194642a69`),
-  `src/instrumentation/evidenceValidation.js` (blob
-  `fadee158da77693fba319976001d43f43c784196`), NEW
-  `tests/viP1MetricResultRuntime.test.js` (blob
-  `2d9738fabb4225c2841c180d16dc262595048f7d`). Do not hard-pin this review
-  to this updater's pre-update `origin/main`: the candidate parent
-  (`8c60cbcbdf358f17c0d8249447b08c264946fc51`) and candidate SHA/tree above
-  remain exact and immutable; current `main` may have advanced only by
-  status-only `LLE_CURRENT_STATE.md` update(s) since that parent before
-  this review begins — the reviewer must verify, via `git diff --name-only
-  8c60cbcbdf358f17c0d8249447b08c264946fc51..origin/main` against the
-  then-current `origin/main`, that any such drift is limited exactly to
-  `LLE_CURRENT_STATE.md`; any other changed path (canonical docs, runtime,
-  tests, `db/**`, `package*.json`, `.github/**`) is `BLOCKED — UNEXPECTED
-  MAIN DRIFT BEFORE METRIC_RESULT INDEPENDENT REVIEW` and the reviewer must
-  `STOP` rather than proceed or repair. The review must be fresh and
-  read-only with repository mutation `0`: it must independently inspect
-  the candidate's code, tests, and current canonical authority
-  (`API_CONTRACT.md` `1.29`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`,
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.74`) directly, and must NOT
-  rely on the Development-session PostgreSQL/regression `PASS` evidence
-  recorded in §4/§8 as proof of semantic correctness. It must NOT modify
-  the candidate, must NOT integrate `main`, must NOT run a correction, and
-  must NOT close any finding itself except a finding-level disposition
-  explicitly justified by review authority and project governance
-  (`F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
-  `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-ARCH-01`–`F-MR-ARCH-05`
-  remain `CLOSED` as documentation-contract findings only). If the review
-  discovers a required correction, the verdict must be `REQUEST
-  CORRECTION` with the exact finding(s) reported — not a self-performed
-  fix. No PR is required for this review.
+- Fresh Windows Claude Development correction session on the existing
+  branch `validation/vi-p1-metric-result-retention-v1-runtime-20260909`,
+  starting from exact branch tip
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`. The correction session must:
+  fresh-fetch `origin`; verify current `main` drift since candidate parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains limited exactly to
+  status-only `LLE_CURRENT_STATE.md` governance commits (any other
+  changed path is `BLOCKED — UNEXPECTED MAIN DRIFT BEFORE METRIC_RESULT
+  CORRECTION`, and the session must `STOP` and return to Control Tower
+  rather than proceed or repair); verify the validation branch tip remains
+  exactly the original candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54`
+  unchanged; implement exactly the five blocking findings `F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` per the "Exact
+  Minimal Correction Requirements" recorded in §4; add direct regression
+  tests for each without weakening existing tests; stay within the
+  existing approved three-file boundary
+  (`src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`); preserve RAW_SOURCE shared
+  semantics; use actual Windows-local PostgreSQL `17.10` in an isolated
+  temp DB; rerun the focused METRIC_RESULT + RAW_SOURCE suite, the broader
+  focused Evidence/Foundation + Runtime suite, and the full regression;
+  verify temp DB cleanup; create exactly one separate correction commit
+  (must NOT amend, rebase, or squash the original candidate commit
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`); push only the validation
+  branch. The session must NOT integrate `main`, must NOT perform
+  Independent Re-Review, and must NOT close any finding itself. If a
+  fourth file or an architecture decision becomes necessary, the session
+  is `BLOCKED` and must return to Control Tower rather than proceed.
