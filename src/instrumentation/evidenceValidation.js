@@ -268,6 +268,25 @@ function validatePositiveVersion(value, fieldName) {
   return value;
 }
 
+// METRIC_RESULT-specific bounded version validator (API_CONTRACT.md
+// §13.10.11.2 `formulaVersion`/`conditionVersion`/`itemFamilyVersion`: exact
+// range 1..2147483647 inclusive). This is intentionally a new, separate
+// helper rather than a broadened `validatePositiveVersion` -- widening that
+// existing helper's upper bound would change behavior for its other callers
+// (RAW_SOURCE and the repository writers), which is out of scope here.
+function validateBoundedVersion(value, fieldName) {
+  if (value === undefined) {
+    throw new MissingRequiredFieldError(`${fieldName} is required`);
+  }
+  if (value === null || typeof value !== 'number' || !Number.isInteger(value)) {
+    throw new ContractViolationError(`${fieldName} must be an integer`);
+  }
+  if (value <= 0 || value > MAX_POSTGRES_INTEGER) {
+    throw new OutOfRangeValueError(`${fieldName} must be between 1 and ${MAX_POSTGRES_INTEGER}`);
+  }
+  return value;
+}
+
 function validateNonnegativeSafeInteger(value, fieldName, { postgresInteger = false } = {}) {
   if (typeof value !== 'number' || !Number.isSafeInteger(value)) {
     if (typeof value === 'number' && Number.isInteger(value)) {
@@ -697,6 +716,7 @@ module.exports = {
   TIMING_PROFILES,
   UnauthorizedCallerError,
   assertAllowedKeys,
+  assertExactDefinitionKeys,
   assertExactKeys,
   hasOwn,
   isPlainObject,
@@ -705,6 +725,7 @@ module.exports = {
   requireField,
   validateAnchorStrategy,
   validateAssignmentType,
+  validateBoundedVersion,
   validateConditionClass,
   validateDefinition,
   validateInputObject,
@@ -713,6 +734,7 @@ module.exports = {
   validateOptionalStableId,
   validateOptionalString,
   validatePartialReference,
+  validatePositiveSafeInteger,
   validatePositiveVersion,
   validateReferenceKind,
   validateResponseModalities,
