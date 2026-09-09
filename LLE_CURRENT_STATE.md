@@ -2700,6 +2700,80 @@ observations only.
   action is a fresh Windows Claude Development session on the approved
   validation branch (see §10).
 
+#### Control Tower Correction — METRIC_RESULT Development Handoff Baseline Self-Stale / Corrected
+
+- Role: Control Tower status-only correction of an operational handoff
+  baseline defect found in the prior record's §10 Next Action. This
+  correction performs no Runtime implementation, changes no approved
+  Development scope, and modifies no API/Schema/Backlog/Runtime/test/DB
+  file. Repository mutation caused by this correction: limited to this
+  update to `LLE_CURRENT_STATE.md`. PostgreSQL/tests:
+  `NOT RUN — STATUS-ONLY`.
+- Defect: the prior §10 Next Action hard-pinned a future Development
+  preflight to `HEAD`/`origin/main`
+  `414522ef0abc0d0232469204653ff2fe29ed192b`, tree
+  `88598419fa572253d3f61cc8d63b344dbdb873c4`, and Current State blob
+  `26bf3d048adf2a3ed6b42f66b8e479cd132ed61d`. Those were the parent
+  (pre-update) baseline of the authorization status commit itself
+  (`acc4d478ffed12961122bcdffc5f51bc7693722c`, subject "Authorize
+  METRIC_RESULT Retention runtime development scope", parent
+  `414522ef0abc0d0232469204653ff2fe29ed192b`), not the live baseline after
+  that commit. Because the authorization commit necessarily changed
+  `LLE_CURRENT_STATE.md` itself, that hard-pinned future precondition was
+  self-stale from the moment it was recorded.
+- Governance disposition: `BLOCKED — METRIC_RESULT DEVELOPMENT HANDOFF
+  BASELINE SELF-STALE`. This is explicitly NOT an API `1.29` defect, NOT a
+  Schema `1.8` defect, NOT a Runtime contract defect, NOT a Development
+  scope defect, and NOT a new owner-value requirement — it is a
+  status/handoff baseline defect only.
+- Preserved unchanged by this correction: pre-analysis verdict `RUNTIME
+  PRE-ANALYSIS = READY FOR DEVELOPMENT SCOPE`; Control Tower disposition
+  `ACCEPTED`; Runtime implementation authorization `AUTHORIZED — BOUNDED
+  DEVELOPMENT ONLY`; exact authorized slice `queryMetricResult(pool,
+  input)` + Retention v1 reducer + synthetic P0 query-time only; approved
+  validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; exact
+  three Development-allowed files
+  (`src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`); migration required `NO`; DDL
+  required `NO`; new owner value `NO`; canonical correction required `NO`;
+  RAW_SOURCE reuse strategy `SEPARATE METRIC_RESULT SOURCE PATH`; expected
+  implementation history one implementation commit, no preliminary refactor
+  commit.
+- Correction strategy: §10 no longer hard-pins a future literal
+  `HEAD`/`origin/main`, tree, or Current State blob — any such literal
+  pin goes stale the instant a further status-only commit lands, including
+  this one. §10 now instead requires the future Development session to
+  `git fetch origin`, require local branch `main` with `HEAD ==
+  origin/main` at the moment Development begins, resolve
+  `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA = git rev-parse origin/main`,
+  require authorization anchor
+  `acc4d478ffed12961122bcdffc5f51bc7693722c` to be an ancestor of that
+  baseline, and verify via `git diff --name-only
+  acc4d478ffed12961122bcdffc5f51bc7693722c..origin/main` that all drift
+  since the authorization anchor is status-only (for the expected state
+  immediately after this correction, the only changed path is
+  `LLE_CURRENT_STATE.md`) before freshly re-verifying the exact
+  canonical/runtime blobs. The future Development branch parent must be
+  that resolved `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`, not a value
+  hard-pinned today.
+- Confirmed facts: the authorization commit itself is valid; bounded
+  Development authorization remains valid; canonical API/Schema/Backlog
+  are unchanged; the Runtime/source baseline is unchanged; no Development
+  branch or Runtime candidate exists yet.
+- Unconfirmed before this correction: the exact future Development branch
+  parent (previously hard-pinned to a now-stale SHA).
+- Release condition: this status-only correction is committed and pushed
+  to `main`, Control Tower live-verifies the resulting `origin/main`, and
+  Control Tower supplies that exact post-correction `main` SHA as the
+  Development execution baseline. Upon successful correction, the
+  self-stale-baseline blocker is `CLEARED`.
+- This record does not mean: Runtime implementation started; Runtime
+  implemented or validated; a Development branch or Runtime candidate
+  exists; any finding closed; or any authorization/scope value changed.
+  Runtime implementation remains `NOT STARTED` / `NOT IMPLEMENTED`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3746,13 +3820,24 @@ historical ledger does not.
   bounded `queryMetricResult(pool, input)` + Retention v1 synthetic-P0
   Runtime on validation branch
   `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, created
-  from the then-current exact `origin/main`. This session must: preflight
-  exact `main` and canonical blobs (branch `main`; `HEAD`/`origin/main`
-  `414522ef0abc0d0232469204653ff2fe29ed192b`; tree
-  `88598419fa572253d3f61cc8d63b344dbdb873c4`; Current State blob
-  `26bf3d048adf2a3ed6b42f66b8e479cd132ed61d`; Backlog `1.74`, blob
-  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`; API `1.29`, blob
-  `a498d5536ea1d228d133610780ff06d77a9d403f`; Schema `1.8`, blob
+  from the then-current exact `origin/main`. This session must first `git
+  fetch origin`; require local branch `main`; require `HEAD ==
+  origin/main` at the moment Development begins; resolve
+  `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA = git rev-parse origin/main`;
+  require authorization anchor commit
+  `acc4d478ffed12961122bcdffc5f51bc7693722c` (subject "Authorize
+  METRIC_RESULT Retention runtime development scope") to be an ancestor of
+  that exact `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`; and verify, via `git
+  diff --name-only acc4d478ffed12961122bcdffc5f51bc7693722c..origin/main`,
+  that every path changed since that authorization anchor is status-only —
+  for the expected state immediately after the correction that introduced
+  this rule, the only such changed path is `LLE_CURRENT_STATE.md`; any
+  other changed path is `BLOCKED — UNEXPECTED DRIFT AFTER METRIC_RESULT
+  DEVELOPMENT AUTHORIZATION` and this session must `STOP`. This session
+  must then freshly verify, at `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`,
+  the exact immutable canonical/runtime blobs — Backlog `1.74` blob
+  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`; API `1.29` blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f`; Schema `1.8` blob
   `a0e4037db07f7416109e53ed72c10a12b7c433bb`;
   `src/instrumentation/evidenceMetrics.js` blob
   `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`;
@@ -3762,10 +3847,17 @@ historical ledger does not.
   `9792ff414febb0878b04d031145a8b2dafab2623`; `src/instrumentation/index.js`
   blob `14577b90cc19fe10de27d7c1afe0373679e105e9`;
   `tests/viP1RawSourceRuntime.test.js` blob
-  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`; worktree clean, index clean,
-  no untracked files) and `STOP — BLOCKED` on any mismatch, with no
-  pull/merge/reset/stash/rebase/amend/cherry-pick/force-push repair; create
-  the new validation branch from that exact `main`; modify exactly
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`; and worktree clean, index
+  clean, no untracked files — and must `STOP — BLOCKED` on any mismatch,
+  with no pull/merge/reset/stash/rebase/amend/cherry-pick/force-push
+  repair. This rule deliberately does NOT hard-pin a future
+  `LLE_CURRENT_STATE.md` blob: the Current State file necessarily changes
+  during status-only governance commits, so Development must instead
+  consume the then-current exact Current State content after Control
+  Tower's live verification of the resulting `main`, which will supply the
+  exact `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA` to use; create the new
+  validation branch from, with parent exactly, that resolved
+  `METRIC_RESULT_RUNTIME_DEV_BASELINE_SHA`; modify exactly
   `src/instrumentation/evidenceMetrics.js`,
   `src/instrumentation/evidenceValidation.js`, and
   `tests/viP1MetricResultRuntime.test.js` (new file), and no other file,
@@ -3780,7 +3872,8 @@ historical ledger does not.
   SCOPE INSUFFICIENT` rather than silently expanding scope); run isolated
   actual-PostgreSQL focused and full regression gates
   (`--test-concurrency=1`), using an isolated synthetic temporary DB and
-  never `lle_dev`, and capture all test/DB/blob/SHA evidence; push only the
+  never `lle_dev`, and capture all test/DB/blob/SHA evidence with
+  zero-side-effect Evidence behavior preserved throughout; push only the
   new validation branch. This session must NOT integrate `main`, must NOT
   perform Independent Review, must NOT close any finding
   (`F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
