@@ -2913,9 +2913,13 @@ authorized = `NO`; GitHub Actions `PASS` = `NOT CLAIMED`; Validation Level
   main integration. Repository mutation caused by this record: limited to
   this update to `LLE_CURRENT_STATE.md`. PostgreSQL/tests: `NOT RUN —
   STATUS-ONLY UPDATE`.
-- Reviewer: fresh Claude Opus 5, fresh read-only Independent Review. Reviewer
-  repository source mutation: `0`. Commits: `0`. Pushes: `0`. PRs: `0`.
-  Candidate files modified: `0`.
+- Reviewer: fresh Claude Opus 5, fresh read-only Independent Review.
+  Canonical repository/origin mutation: `0`. Commits: `0`. Pushes: `0`.
+  PRs: `0`. Candidate files modified: `0`. (This states canonical/origin
+  mutation precisely; it is NOT an unqualified claim that every reviewer
+  clone worktree had zero local mutation — disposable clone A had local
+  uncommitted `npm install`-caused changes. See "Addendum — Cleanup
+  Completion and Reviewer Clone Mutation Disclosure" below.)
 - Reviewed candidate identity (unchanged, re-verified): validation branch
   `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; candidate
   `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, tree
@@ -2965,18 +2969,110 @@ Recorded exactly; deviation not concealed:
   / Node `v24` evidence recorded for the Development session above and is
   not reinterpreted as such.
 
-##### Review Cleanup Qualification
+##### Review Cleanup Qualification (Initial Report — Superseded Below)
 
-- Reviewer temp DB cleanup/count-`0` verification: `INCOMPLETE`.
-- Disposable reviewer clone deletion verification: `INCOMPLETE`.
-- The reviewer reported this rather than concealing it. This means: a clean
-  reviewer-environment cleanup lifecycle is NOT claimed; the reviewer rerun
-  is NOT reinterpreted as post-merge validation; the review is NOT treated
-  as production-equivalent environment validation. This does not erase the
-  semantic `REQUEST CORRECTION` findings below, which were established from
-  canonical text, exact candidate source inspection, and independent
-  reproduction. No new product finding is created solely for this ephemeral
-  reviewer cleanup note in this status-sync.
+- Reviewer temp DB cleanup/count-`0` verification (initial report):
+  `INCOMPLETE`.
+- Disposable reviewer clone deletion verification (initial report):
+  `INCOMPLETE`.
+- The reviewer reported this rather than concealing it at the time. This
+  initial-report statement is SUPERSEDED by the "Addendum — Cleanup
+  Completion and Reviewer Clone Mutation Disclosure" subsection
+  immediately below, submitted after the reviewer's session tool limit was
+  extended. The current governing cleanup status is `PASS`, not
+  `INCOMPLETE` — see the addendum for exact verification detail. This does
+  not erase the semantic `REQUEST CORRECTION` findings below, which were
+  established from canonical text, exact candidate source inspection, and
+  independent reproduction.
+
+##### Addendum — Cleanup Completion and Reviewer Clone Mutation Disclosure
+
+- Role: status-only Control Tower synchronization of a reviewer-submitted
+  CLEANUP COMPLETION ADDENDUM, received after the reviewer's session tool
+  limit was extended following the initial report above. This addendum
+  sync performs no candidate code modification, no re-review, and no main
+  integration. Repository mutation caused by this record: limited to
+  `LLE_CURRENT_STATE.md`. PostgreSQL/tests: `NOT RUN — STATUS-ONLY
+  UPDATE`.
+- Reviewer temp DB cleanup: `PASS`. Cleanup failure: `NONE`.
+  - Review temp DB: `lle_review_vip1_metricresult_1788989185`.
+  - Connections to review temp DB verified before drop: `0`.
+  - `DROP DATABASE`: `PASS`.
+  - Post-drop verification `SELECT count(*) FROM pg_database WHERE
+    datname = 'lle_review_vip1_metricresult_1788989185'`: result `0`.
+  - Also verified `SELECT count(*) FROM pg_database WHERE datname =
+    'lle_dev'`: result `0`; `lle_dev` was never created or touched by the
+    reviewer environment.
+  - After cleanup: reviewer PostgreSQL cluster `STOPPED`; disposable
+    reviewer clones `DELETED`; scratch probe scripts/run logs `REMOVED`.
+- Reviewer clone mutation disclosure (correcting the broad prior
+  "repository mutation `0`" phrasing above to a precise distinction — too
+  broad as originally phrased):
+  - Canonical repository / origin mutation: `0`. Commits: `0`. Pushes:
+    `0`. PRs: `0`. Branches created by reviewer: `0`. Candidate three
+    files (`src/instrumentation/evidenceMetrics.js`,
+    `src/instrumentation/evidenceValidation.js`,
+    `tests/viP1MetricResultRuntime.test.js`) modified by reviewer: `0`.
+  - However, disposable reviewer clone A had local uncommitted
+    tracked-worktree modifications caused by running `npm install pg`:
+    `package.json` and `package-lock.json` changed (observed
+    `package.json` change: `"pg": "^8.13.1"` -> `"pg": "^8.23.0"`, plus
+    removal of an empty `devDependencies` object). These clone-A changes
+    were confined to disposable clone A, were never committed, were never
+    pushed, never touched the canonical repository/origin, and never
+    changed the candidate three files.
+  - The authoritative clean reviewer rerun evidence came from disposable
+    clone B, not clone A. Clone B tracked-file modifications: `NONE`;
+    clone B's `package.json` and `package-lock.json` were byte-identical
+    to the candidate tree. Clone B received `node_modules` by copy and did
+    not run `npm install`.
+  - Therefore: canonical repository/origin mutation is correctly stated as
+    `0`, but this must NOT be read as an unqualified statement that every
+    reviewer clone worktree had zero mutation — clone A did not. This is a
+    review-process disclosure, not a product correctness finding.
+- `F-MR-RR-05` rationale strengthened by this addendum (severity,
+  correction requirement, and main-integration-blocking status all
+  UNCHANGED: `LOW / OPEN / NON-BLOCKING`, correction required `NO`, owner
+  value required `NO`, main-integration blocking `NO`): the candidate
+  contains three literal NUL bytes used as collision-safe delimiters.
+  Under `core.autocrlf=true` with no `.gitattributes`:
+  `evidenceValidation.js` (CR `747`, LF `747`, NUL `0`) is
+  CRLF-normalized; `viP1MetricResultRuntime.test.js` (CR `2244`, LF
+  `2244`, NUL `0`) is CRLF-normalized; `evidenceMetrics.js` (CR `0`, LF
+  `1808`, NUL `3`) is NOT CRLF-normalized, because git's binary heuristic
+  is triggered by the literal NUL bytes. Therefore candidate sibling
+  source files receive inconsistent line-ending handling on a Windows
+  checkout, which composes poorly with the existing `F-MR-RR-08`
+  byte-identity portability issue. The NUL delimiter remains semantically
+  collision-safe; this strengthened rationale does NOT upgrade severity,
+  does NOT make correction mandatory, and does NOT add `F-MR-RR-05` to the
+  required correction scope (which remains exactly `F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`). The reviewer's
+  "should ride along" suggestion is advisory only and has NOT been
+  separately approved by Control Tower/user.
+- Reviewer environment deviation (unchanged, preserved exactly): PostgreSQL
+  `16.15` vs. Development PostgreSQL `17.10`; Node `v22.22.2` vs.
+  Development Node `v24.18.0`; npm `10.9.7`. Authoritative clean clone-B
+  reruns: METRIC_RESULT + RAW_SOURCE `156/156 PASS`; Evidence/Foundation +
+  Runtime `300/300 PASS`, `9` suites; full regression `530/530 PASS`, `56`
+  suites. This is NOT reinterpreted as same-environment Development
+  validation, post-merge validation, or production-equivalent validation.
+- Semantic verdict: UNCHANGED by this addendum. Final verdict remains
+  `REQUEST CORRECTION`; correction required `YES`; owner value required
+  `NO`; architecture decision required `NO`; migration required `NO`; DDL
+  required `NO`; main-integration eligibility remains `NOT ELIGIBLE`.
+  Blocking findings `F-MR-RR-01` (HIGH), `F-MR-RR-02` (HIGH), `F-MR-RR-06`
+  (HIGH), `F-MR-RR-03` (MEDIUM), `F-MR-RR-04` (MEDIUM) remain `OPEN /
+  blocking`, unchanged. No semantic review verdict change results from
+  this addendum.
+- Current governing cleanup status (supersedes the initial-report
+  `INCOMPLETE` statement above): reviewer temp DB cleanup/count-`0`
+  verification `PASS`; disposable reviewer clone deletion verification
+  `PASS` (both clone A and clone B deleted after clone B's authoritative
+  rerun). A clean reviewer-environment cleanup lifecycle IS now claimed.
+  This is still NOT reinterpreted as post-merge validation or as
+  production-equivalent environment validation, and does not erase or
+  alter the semantic `REQUEST CORRECTION` findings below.
 
 ##### Blocking Findings (main-integration blocking; all `OPEN`)
 
@@ -3036,7 +3132,10 @@ Recorded exactly; deviation not concealed:
 - `F-MR-RR-05` (LOW, `OPEN`, RUNTIME/PROCESS) — literal NUL byte delimiter
   is semantically collision-safe but tooling-fragile. Correction required:
   `NO`. Main-integration blocking: `NO`. Not bundled into the required
-  correction unless separately approved.
+  correction unless separately approved. Rationale strengthened with exact
+  CRLF-normalization byte-count evidence by the cleanup-completion
+  addendum below (severity/requirement unchanged); see "Addendum —
+  Cleanup Completion and Reviewer Clone Mutation Disclosure" above.
 - `F-MR-RR-07` (LOW, `OPEN`, TEST) — zero-side-effect proof is weaker than
   implementation cleanliness: row-count-only checks do not detect an
   in-place `UPDATE`, and sequence/catalog coverage is incomplete.
@@ -3722,13 +3821,14 @@ ledger does not claim:
   MAIN / NOT VALIDATED / NOT CLOSED`
 - METRIC_RESULT Retention v1 Runtime candidate approved, validated, or
   canonical on `main` — NOT CLAIMED; the candidate's fresh Claude Opus 5
-  Independent Review (repository mutation `0`, commits `0`, pushes `0`,
-  PRs `0`, candidate files modified `0`) returned verdict `REQUEST
-  CORRECTION`, not `APPROVE`; correction required `YES`; owner value
-  required `NO`; architecture decision required `NO`; migration/DDL
-  required `NO`; main-integration eligibility `NOT ELIGIBLE`; the
-  candidate remains `NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED /
-  NOT REVIEW-RECORDED`
+  Independent Review (canonical repository/origin mutation `0`, commits
+  `0`, pushes `0`, PRs `0`, candidate files modified `0`; see §4 addendum
+  for the precise reviewer clone-local mutation disclosure) returned
+  verdict `REQUEST CORRECTION`, not `APPROVE`; correction required `YES`;
+  owner value required `NO`; architecture decision required `NO`;
+  migration/DDL required `NO`; main-integration eligibility `NOT
+  ELIGIBLE`; the candidate remains `NOT CANONICAL ON MAIN / NOT VALIDATED
+  / NOT CLOSED / NOT REVIEW-RECORDED`
 - correction implemented, corrected candidate independently re-reviewed,
   Runtime validated, Runtime canonical on `main`, review-record complete,
   VI P1 Measurement Readiness complete, `B-3` resolved, P1
@@ -3743,9 +3843,17 @@ ledger does not claim:
   detail and required correction scope)
 - the reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
-  `17.10`, Node `v24.18.0`) evidence, or that the reviewer's temp-DB/clone
-  cleanup is verified complete — NOT CLAIMED; the deviation is recorded
-  exactly and reviewer cleanup verification is `INCOMPLETE` (see §4)
+  `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
+  same-environment Development validation, post-merge validation, or
+  production-equivalent validation — NOT CLAIMED; the deviation is
+  recorded exactly (see §4). Reviewer temp-DB/clone cleanup verification
+  is no longer `INCOMPLETE`: a reviewer CLEANUP COMPLETION ADDENDUM has
+  since been recorded with cleanup `PASS` (temp DB dropped, post-drop
+  count `0`, disposable clones A and B both deleted; see §4 "Addendum —
+  Cleanup Completion and Reviewer Clone Mutation Disclosure"). This
+  addendum sync does not reinterpret the reviewer rerun as
+  production-equivalent or post-merge validation, and does not change the
+  semantic `REQUEST CORRECTION` verdict
 - post-merge PostgreSQL validation of the METRIC_RESULT Runtime candidate
   performed — NOT CLAIMED; the recorded execution evidence is classified
   exactly `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
@@ -4300,6 +4408,37 @@ historical ledger does not.
   Review Result — Request Correction" above (§4) for full detail; the sole
   Next Action is now a Windows Claude Development correction session
   (§10).
+- the immediately preceding historical entry's "reviewer temp-DB/clone
+  cleanup verification is `INCOMPLETE`" statement, and its unqualified
+  "repository mutation `0`" phrasing, reflected the reviewer's initial
+  report only — they have since been superseded: after the reviewer's
+  session tool limit was extended, the reviewer submitted a CLEANUP
+  COMPLETION ADDENDUM (status-only sync, this update; repository mutation
+  limited to `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN —
+  STATUS-ONLY`). The addendum records: reviewer temp DB cleanup `PASS`
+  (temp DB `lle_review_vip1_metricresult_1788989185`, `0` connections
+  before drop, `DROP DATABASE` `PASS`, post-drop count `0`; `lle_dev`
+  count `0`, never touched); disposable reviewer clones deleted; reviewer
+  PostgreSQL cluster stopped; scratch probe scripts/run logs removed.
+  Separately, the addendum discloses that canonical repository/origin
+  mutation is `0` (commits `0`, pushes `0`, PRs `0`, candidate files
+  modified `0`), but that disposable reviewer clone A (not clone B, whose
+  rerun is the authoritative clean evidence) had local uncommitted
+  `package.json`/`package-lock.json` changes from running `npm install
+  pg`, never committed, never pushed, never touching canonical/origin or
+  the candidate three files — so the unqualified "repository mutation `0`"
+  phrasing in the initial report above is corrected to this precise
+  distinction. The addendum also strengthens `F-MR-RR-05`'s rationale with
+  exact CR/LF/NUL byte counts per file, without upgrading its severity,
+  without making its correction mandatory, and without adding it to the
+  required correction scope. This addendum performed no candidate code
+  modification, no re-review, and no main integration; the semantic
+  verdict remains `REQUEST CORRECTION`, main-integration eligibility
+  remains `NOT ELIGIBLE`, the required correction remains exactly
+  `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`, and
+  the sole Next Action remains unchanged: the Windows Claude Development
+  correction session recorded in §10. See "Addendum — Cleanup Completion
+  and Reviewer Clone Mutation Disclosure" above (§4) for full detail.
 
 ## 10. Next Action
 
