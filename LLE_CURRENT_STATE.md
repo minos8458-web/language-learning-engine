@@ -2572,6 +2572,134 @@ observations only.
   or audio authorized; efficacy verified; GitHub Actions `PASS`; Validation
   Level 3 §10 overall `PASS`; or Evidence Foundation overall complete.
 
+#### Control Tower Review — METRIC_RESULT Runtime Pre-Analysis Accepted / Bounded Runtime Development Authorized
+
+- Role: Control Tower status-only review and acceptance of a completed
+  fresh read-only Codex / GPT Work `queryMetricResult(pool, input)` +
+  Retention v1 Runtime implementation-readiness pre-analysis. Repository
+  mutation caused by that pre-analysis: `0`. Repository mutation caused by
+  this Control Tower review/record itself: limited to this update to
+  `LLE_CURRENT_STATE.md`. No API/Schema/Backlog/Runtime/test/DB file
+  modified. PostgreSQL/tests: `NOT RUN — STATUS-ONLY`.
+- Pre-analysis role: fresh read-only Codex / GPT Work, evaluated against
+  exact current API `1.29` (blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f`) / Schema `1.8` (blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`) / Backlog `1.74` (blob
+  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`) and current Runtime baseline
+  (`src/instrumentation/evidenceMetrics.js` blob
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`,
+  `src/instrumentation/evidenceValidation.js` blob
+  `ababb120ec017669963429ceb0006064ad78f65a`,
+  `src/instrumentation/evidenceRepository.js` blob
+  `9792ff414febb0878b04d031145a8b2dafab2623`,
+  `src/instrumentation/index.js` blob
+  `14577b90cc19fe10de27d7c1afe0373679e105e9`,
+  `tests/viP1RawSourceRuntime.test.js` blob
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`).
+- Pre-analysis recorded results: BASELINE `PASS`; CANONICAL CONTRACT
+  SUFFICIENT `YES`; PHYSICAL SCHEMA SUFFICIENT `YES`; RAW_SOURCE REUSE
+  STRATEGY = `SEPARATE METRIC_RESULT SOURCE PATH`; MIGRATION REQUIRED `NO`;
+  DDL REQUIRED `NO`; NEW OWNER VALUE REQUIRED `NO`; CANONICAL CORRECTION
+  REQUIRED `NO`; DEVELOPMENT SCOPE FULLY DETERMINED `YES`.
+- Pre-analysis final verdict: `RUNTIME PRE-ANALYSIS = READY FOR DEVELOPMENT
+  SCOPE`.
+- Control Tower disposition of this pre-analysis: `ACCEPTED`. Bounded
+  Runtime Development scope: `APPROVED`.
+- Runtime implementation authorization changes by this record from `NOT
+  AUTHORIZED` to `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`.
+- Exact authorized slice: `queryMetricResult(pool, input)` + Retention v1
+  reducer + synthetic P0 query-time only. This authorization explicitly
+  does NOT include: Unseen transfer; actual P1 timing/anchor calibration;
+  human-data execution; actual provider; audio; Tier A changes; canonical
+  API/Schema changes; migration; DDL; materialized metric storage; public
+  HTTP API; new Engine; modality intervention; Lexico-Construction; mixed
+  scheduler; bounded conversation; AI audit.
+- Approved Development branch:
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, created
+  from the then-current exact `origin/main` at Development preflight. The
+  pre-analysis's advisory branch-name recommendation,
+  `implementation/vi-p1-metric-result-retention-v1`, is explicitly NOT
+  used — LLE project lifecycle requires implementation/evidence to proceed
+  on an approved `validation/*` branch before Independent Review and main
+  integration. Branch parent must be the exact then-current `main` recorded
+  by this update.
+- Exact approved Development-allowed files (three, no other file):
+  `src/instrumentation/evidenceMetrics.js` (REQUIRED),
+  `src/instrumentation/evidenceValidation.js` (REQUIRED),
+  `tests/viP1MetricResultRuntime.test.js` (REQUIRED / NEW FILE).
+- Forbidden Development files (recorded verbatim, non-exhaustive list):
+  `API_CONTRACT.md`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md`;
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`; `LLE_CURRENT_STATE.md`;
+  `VI_EMPIRICAL_EVIDENCE_CONTRACT.md`; `VI_EMPIRICAL_PILOT_SPEC.md`; any
+  Tier A document; `db/migrations/**`; `db/migrate.js`; `db/pool.js`;
+  `src/instrumentation/evidenceRepository.js`;
+  `src/instrumentation/evidenceNormalization.js`;
+  `src/instrumentation/index.js`; `tests/viP1RawSourceRuntime.test.js`; all
+  existing test files; `src/engines/**`; `src/client/**`;
+  `src/transport/**`; `src/providers/**`; `src/composition/**`;
+  `package.json`; `package-lock.json`; `.github/**`; deployment/workflow
+  config files. No migration `014`. No helper/temp artifact may be
+  committed.
+- Approved implementation-shape constraints recorded verbatim: (1)
+  `queryMetricResult(...)` uses a SEPARATE source path — must NOT call
+  `queryRawEvidenceForMetricRebuild(...)`, must NOT create a nested
+  RAW_SOURCE transaction, must NOT reinterpret RAW_SOURCE output as
+  METRIC_RESULT source; (2) existing `queryRawEvidenceForMetricRebuild(pool,
+  input)` semantics (input, filter semantics, closure semantics, ordering,
+  `empty_result`, projection, transaction, provenance, zero-side-effect
+  behavior) must remain unchanged; (3) reuse limited to safe scalar/helpers
+  and internal utilities whose semantics match API `1.29`; (4)
+  METRIC_RESULT-specific validation must enforce `formulaVersion` and
+  structured-reference versions in range `1..2147483647` inclusive — the
+  existing `validatePositiveVersion` lacks this upper bound and must not be
+  silently reused where its semantics are too broad; (5) FORMULA v1
+  validation must be closed and operation-specific; (6) candidate admission
+  and denominator eligibility remain separate; (7) FIRST_MATCH remains an
+  exact 14-rule in-memory classification after complete frozen source
+  projection; (8) timeliness comparison must preserve PostgreSQL timestamp
+  precision — no JS `Date` millisecond truncation as classification
+  authority; (9) exact ratio rounding must use integer/rational arithmetic,
+  no floating-point rounding authority; (10) exactly one `REPEATABLE READ` /
+  `READ ONLY` transaction; (11) no writes / side effects.
+- Implementation commit shape: exactly one implementation commit. No
+  preliminary refactor commit is required, and no separate speculative
+  refactor is to be created. If the three-file bounded scope cannot be
+  completed without another file, Development must `STOP` and report
+  `BLOCKED — APPROVED DEVELOPMENT FILE SCOPE INSUFFICIENT` rather than
+  silently expanding scope.
+- PostgreSQL/test requirements for the future Development session: actual
+  PostgreSQL in an isolated synthetic temporary DB (`lle_dev` must not be
+  used as migration/test/fixture target); before tests, prove both
+  `psql current_database()` and the repository's actual `db/pool.js`
+  `current_database()` equal the exact approved temporary DB; required test
+  layers — (1) METRIC_RESULT + RAW_SOURCE focused Runtime, (2)
+  Evidence/Foundation + Runtime focused regression, (3) full configured
+  `npm test` regression — all serialized `--test-concurrency=1`.
+  PostgreSQL/test evidence from Runtime B1 must not be reused as new
+  METRIC_RESULT validation evidence.
+- Open findings preserved by this record, none closed or reopened:
+  `F-MR-IR-01` through `F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-ARCH-01` through
+  `F-MR-ARCH-05` remain `CLOSED` as documentation-contract findings only.
+  Future Development must respect their boundaries but must not silently
+  close them.
+- Non-claims recorded explicitly, even after this authorization record:
+  METRIC_RESULT Runtime implemented — `NO`; Retention reducer implemented —
+  `NO`; Runtime candidate created — `NO`; Runtime independently reviewed —
+  `NO`; Runtime validated — `NO`; PostgreSQL/test `PASS` — `NO`; VI P1
+  Measurement Readiness complete — `NO`; P1 eligible/activated — `NO`;
+  `B-3` resolved — `NO`; human-data authorized — `NO`; efficacy verified —
+  `NO`; actual-provider/audio authorized — `NO`.
+- This record does not mean: Runtime code exists on any branch;
+  `queryMetricResult(pool, input)` or the Retention reducer is implemented
+  or validated; any `F-MR-IR` or `F-MR-ARCH-06` finding is closed; `B-3` is
+  resolved; P1 is eligible or activated; human-data collection, actual
+  provider, or audio is authorized; efficacy is verified; or any
+  modality-intervention, Lexico-Construction, mixed-scheduler,
+  bounded-conversation, or AI-audit milestone is selected. The sole next
+  action is a fresh Windows Claude Development session on the approved
+  validation branch (see §10).
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3068,6 +3196,26 @@ This bootstrap does not rerun PostgreSQL or tests.
   remains `NOT AUTHORIZED / NOT STARTED`. See "Control Tower
   Milestone-Transition Reconciliation — Complete / METRIC_RESULT Runtime
   Pre-Analysis Selected" above (§4) for full detail.
+- Control Tower review and acceptance of the fresh read-only Codex / GPT
+  Work `queryMetricResult(pool, input)` + Retention v1 Runtime
+  implementation-readiness pre-analysis (repository mutation `0`;
+  PostgreSQL/tests `NOT RUN — STATUS-ONLY`): pre-analysis verdict `RUNTIME
+  PRE-ANALYSIS = READY FOR DEVELOPMENT SCOPE`, `ACCEPTED`. Bounded Runtime
+  Development scope `APPROVED`: Runtime implementation authorization
+  changes from `NOT AUTHORIZED` to `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`,
+  covering exactly `queryMetricResult(pool, input)` + Retention v1 reducer +
+  synthetic P0 query-time only, on approved validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, limited to
+  exactly three allowed files (`src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`). No migration, no DDL, no owner
+  value, no canonical correction required. `F-MR-IR-01`–`F-MR-IR-04` remain
+  `LOW / OPEN / NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`. No finding is closed or
+  reopened by this record. METRIC_RESULT Runtime and Retention reducer
+  remain `NOT IMPLEMENTED / NOT VALIDATED`. See "Control Tower Review —
+  METRIC_RESULT Runtime Pre-Analysis Accepted / Bounded Runtime Development
+  Authorized" above (§4) for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -3089,8 +3237,18 @@ revision `1.74`), this ledger does not claim:
   IMPLEMENTED / NOT VALIDATED`
 - Unseen transfer implemented — NOT CLAIMED; it remains `NOT IMPLEMENTED /
   DEFERRED` (`F-MR-ARCH-06`)
-- Runtime implementation authorized or started by this closure-sync — NOT
-  CLAIMED; `NOT AUTHORIZED`
+- Runtime implementation authorized or started by the earlier closure-sync
+  session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
+  implementation authorization has since changed by a later Control Tower
+  record (see §4 "Control Tower Review — METRIC_RESULT Runtime Pre-Analysis
+  Accepted / Bounded Runtime Development Authorized" and §8): it is now
+  `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`, covering exactly
+  `queryMetricResult(pool, input)` + Retention v1 reducer + synthetic P0
+  query-time only, on approved validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. This
+  bounded authorization is NOT a claim that Runtime implementation has
+  started, that any code exists on that branch, or that any file other than
+  `LLE_CURRENT_STATE.md` was modified by that record
 - VI P1 Measurement Readiness complete — NOT CLAIMED
 - `B-3` resolved — NOT CLAIMED; `UNRESOLVED`
 - P1 eligible or activated — NOT CLAIMED; `NOT ELIGIBLE / NOT ACTIVATED`
@@ -3159,18 +3317,29 @@ remain true and are established in §4/§8 and elsewhere in this document:
   §8): exact current `main`, API `1.29`, Schema `1.8`, and Backlog `1.74`
   were live-verified, and all Runtime/P1/human-data/efficacy non-claims
   recorded above were preserved unchanged
-- the sole recorded next action is a fresh read-only Codex / GPT Work
-  implementation-readiness pre-analysis for `queryMetricResult(pool,
-  input)` + Retention v1 Runtime, synthetic P0 query-time only, against
-  exact current API `1.29` / Schema `1.8` / Backlog `1.74` and current
-  Runtime/test/schema sources (see §10); this pre-analysis has repository
-  mutation `0` and does not itself authorize Runtime implementation
-- this reconciliation selected, started, or authorized VI efficacy pilot
-  execution, modality state intervention, Lexico-Construction, mixed
-  scheduler, bounded conversation, or AI audit — NOT CLAIMED; none of these
-  was selected; the sole selected next P0 action is the read-only
-  METRIC_RESULT / Retention Runtime implementation-readiness pre-analysis
-  above
+- a fresh read-only Codex / GPT Work `queryMetricResult(pool, input)` +
+  Retention v1 Runtime implementation-readiness pre-analysis was completed
+  (repository mutation `0`) with final verdict `RUNTIME PRE-ANALYSIS =
+  READY FOR DEVELOPMENT SCOPE`, and Control Tower has reviewed and accepted
+  that result, approving a bounded Runtime Development scope: Runtime
+  implementation authorization is now `AUTHORIZED — BOUNDED DEVELOPMENT
+  ONLY`, covering exactly `queryMetricResult(pool, input)` + Retention v1
+  reducer + synthetic P0 query-time only, limited to exactly three allowed
+  files, on approved validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (see §4/§8)
+- the sole recorded next action is a fresh Windows Claude Development
+  session to implement the approved bounded `queryMetricResult(pool,
+  input)` + Retention v1 synthetic-P0 Runtime on validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, from the
+  then-current exact `origin/main` (see §10); this Control Tower review/
+  acceptance record has repository mutation limited to
+  `LLE_CURRENT_STATE.md` and does not itself implement, validate, or
+  independently review any Runtime code
+- this record selected, started, or authorized VI efficacy pilot execution,
+  modality state intervention, Lexico-Construction, mixed scheduler,
+  bounded conversation, or AI audit — NOT CLAIMED; none of these was
+  selected; the sole authorized scope is the bounded Runtime Development
+  slice described above
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -3556,56 +3725,72 @@ historical ledger does not.
   `queryMetricResult(pool, input)` or the Retention reducer, did not modify
   any API/Schema/Backlog/Runtime/test/DB file, and did not select a VI
   pilot/intervention milestone (see §4/§8/§9.1 for current status)
+- the prior recorded Next Action ("Fresh read-only Codex / GPT Work
+  implementation-readiness pre-analysis for `queryMetricResult(pool,
+  input)` + Retention v1 Runtime, synthetic P0 query-time only...")
+  remained `NOT YET PERFORMED` — it has since been performed: a fresh
+  read-only Codex / GPT Work pre-analysis (repository mutation `0`)
+  returned final verdict `RUNTIME PRE-ANALYSIS = READY FOR DEVELOPMENT
+  SCOPE`; Control Tower reviewed and accepted that result, approving a
+  bounded Runtime Development scope now recorded in §4/§8/§9.1; that
+  pre-analysis and this Control Tower acceptance record did not themselves
+  implement, validate, or independently review `queryMetricResult(pool,
+  input)` or the Retention reducer, did not modify any file other than
+  `LLE_CURRENT_STATE.md`, and did not select a VI pilot/intervention
+  milestone — the sole remaining step, a fresh Windows Claude Development
+  session on the approved validation branch, is now recorded in §10
 
 ## 10. Next Action
 
-- Fresh read-only Codex / GPT Work implementation-readiness pre-analysis
-  for `queryMetricResult(pool, input)` + Retention v1 Runtime, synthetic P0
-  query-time only, against exact API `1.29` (blob
-  `a498d5536ea1d228d133610780ff06d77a9d403f`) / Schema `1.8` (blob
-  `a0e4037db07f7416109e53ed72c10a12b7c433bb`) / Backlog `1.74` (blob
-  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`) and current Runtime source
-  (`src/instrumentation/evidenceMetrics.js` blob
-  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`, `src/instrumentation/index.js`
-  blob `14577b90cc19fe10de27d7c1afe0373679e105e9`). Repository mutation of
-  this pre-analysis = `0`: no branch creation, no file modification, no
-  commit, no push, no PostgreSQL mutation. It must inspect at minimum
+- Fresh Windows Claude Development session to implement the approved
+  bounded `queryMetricResult(pool, input)` + Retention v1 synthetic-P0
+  Runtime on validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, created
+  from the then-current exact `origin/main`. This session must: preflight
+  exact `main` and canonical blobs (branch `main`; `HEAD`/`origin/main`
+  `414522ef0abc0d0232469204653ff2fe29ed192b`; tree
+  `88598419fa572253d3f61cc8d63b344dbdb873c4`; Current State blob
+  `26bf3d048adf2a3ed6b42f66b8e479cd132ed61d`; Backlog `1.74`, blob
+  `e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`; API `1.29`, blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f`; Schema `1.8`, blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`;
+  `src/instrumentation/evidenceMetrics.js` blob
+  `2ecf3c9a80b1c5e3fb38aedf1a8d3beaf70ee53a`;
+  `src/instrumentation/evidenceValidation.js` blob
+  `ababb120ec017669963429ceb0006064ad78f65a`;
+  `src/instrumentation/evidenceRepository.js` blob
+  `9792ff414febb0878b04d031145a8b2dafab2623`; `src/instrumentation/index.js`
+  blob `14577b90cc19fe10de27d7c1afe0373679e105e9`;
+  `tests/viP1RawSourceRuntime.test.js` blob
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`; worktree clean, index clean,
+  no untracked files) and `STOP — BLOCKED` on any mismatch, with no
+  pull/merge/reset/stash/rebase/amend/cherry-pick/force-push repair; create
+  the new validation branch from that exact `main`; modify exactly
   `src/instrumentation/evidenceMetrics.js`,
-  `src/instrumentation/evidenceValidation.js`,
-  `src/instrumentation/evidenceRepository.js`,
-  `src/instrumentation/index.js`, `tests/viP1RawSourceRuntime.test.js`,
-  existing Evidence Foundation tests, relevant physical schema/migrations
-  001–013, FORMULA reference/version storage, assignment
-  snapshot/exposure/evaluation/finalization schema, and current error
-  classes and validation helpers; and must determine: (1) exact
-  implementation files required; (2) exact test files required; (3)
-  whether `evidenceMetrics.js` should safely share a private
-  already-open-client source-selection helper with RAW_SOURCE or require
-  another bounded internal refactor, with no semantic alternative silently
-  chosen; (4) exact implementation shape for the five-key METRIC_RESULT
-  input, five-filter normalization, structured references, FORMULA v1
-  validation, candidate admission, denominator eligibility, FIRST_MATCH
-  exclusion, timeliness, count/status/value projection,
-  `sourceRebuildReference`, and one REPEATABLE READ READ ONLY transaction;
-  (5) which existing B1 code can be reused without changing
-  `queryRawEvidenceForMetricRebuild` semantics; (6) whether any canonical
-  ambiguity remains — if yes, `BLOCKED — CONTRACT / ARCHITECTURE DECISION
-  REQUIRED`, with no invented value; (7) whether any migration or DDL is
-  actually required, verified from the physical schema rather than
-  assumed (canonical expectation: no migration, no DDL); (8) exact
-  synthetic PostgreSQL fixture plan; (9) exact focused and full regression
-  plan; (10) zero-side-effect verification plan; (11) exact proposed
-  Development allowed-file list; (12) exact proposed forbidden-file list;
-  (13) implementation risks involving cutoff/as-of-read lifecycle,
-  completion pointer integrity, timestamp precision, safe-integer
-  overflow, exact HALF_UP rational rounding, formula digest/provenance,
-  candidate retention for excluded outcomes, and RAW_SOURCE
-  non-interference; and (14) treatment of existing open non-blocking
-  findings `F-MR-IR-01`–`F-MR-IR-04`, not silently fixed or closed unless
-  implementation correctness strictly requires a scoped correction. The
-  report must end with exactly one verdict: `RUNTIME PRE-ANALYSIS = READY
-  FOR DEVELOPMENT SCOPE` or `RUNTIME PRE-ANALYSIS = BLOCKED — CONTRACT /
-  IMPLEMENTATION DECISION REQUIRED`. Even if `READY`, Runtime
-  implementation remains `NOT AUTHORIZED` until Control Tower reviews the
-  report and records the subsequent implementation decision. This Next
-  Action does not itself pre-authorize or start Runtime implementation.
+  `src/instrumentation/evidenceValidation.js`, and
+  `tests/viP1MetricResultRuntime.test.js` (new file), and no other file,
+  implementing `queryMetricResult(pool, input)` as a SEPARATE source path
+  (not calling `queryRawEvidenceForMetricRebuild`, no nested RAW_SOURCE
+  transaction, no reinterpretation of RAW_SOURCE output as METRIC_RESULT
+  source) per the approved implementation-shape constraints recorded in §4
+  ("Control Tower Review — METRIC_RESULT Runtime Pre-Analysis Accepted /
+  Bounded Runtime Development Authorized"); make exactly one implementation
+  commit (no preliminary refactor commit; if the three-file scope is
+  insufficient, `STOP` and report `BLOCKED — APPROVED DEVELOPMENT FILE
+  SCOPE INSUFFICIENT` rather than silently expanding scope); run isolated
+  actual-PostgreSQL focused and full regression gates
+  (`--test-concurrency=1`), using an isolated synthetic temporary DB and
+  never `lle_dev`, and capture all test/DB/blob/SHA evidence; push only the
+  new validation branch. This session must NOT integrate `main`, must NOT
+  perform Independent Review, must NOT close any finding
+  (`F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`;
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`), and must `STOP` on any
+  scope/canonical/schema mismatch. Runtime implementation remains scoped to
+  exactly `AUTHORIZED — BOUNDED DEVELOPMENT ONLY`; this Next Action does
+  not itself implement, validate, or independently review any Runtime
+  code, and does not authorize Unseen transfer, actual P1 timing/anchor
+  calibration, human-data execution, actual provider, audio, Tier A
+  changes, canonical API/Schema changes, migration, DDL, materialized
+  metric storage, a public HTTP API, a new Engine, modality intervention,
+  Lexico-Construction, a mixed scheduler, bounded conversation, or an AI
+  audit.
