@@ -3358,6 +3358,171 @@ Measurement Readiness complete = `NO`; `B-3` resolved = `NO`; P1
 eligible/activated = `NO`; human-data authorized = `NO`; efficacy verified
 = `NO`; actual-provider/audio authorized = `NO`.
 
+#### METRIC_RESULT Retention v1 Runtime — Fresh Independent Re-Review Result / Control Tower Adjudication (F-MR-RR2-01 Reclassified Blocking)
+
+- Role: status-only Control Tower record of (1) a completed fresh Claude
+  Opus 5 Independent Re-Review of the corrected validation tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` (parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
+  METRIC_RESULT Retention v1 review findings`), and (2) a Control Tower
+  adjudication of one new reviewer finding against canonical contract.
+  This record performs no Runtime code modification, no validation-branch
+  modification, and no main integration. Repository mutation caused by
+  this record is limited to `LLE_CURRENT_STATE.md`. PostgreSQL/tests by
+  this update: `NOT RUN — STATUS-ONLY UPDATE`. The re-review itself was
+  executed independently by a separate reviewer session, not by this
+  status-sync.
+- Reviewer environment: fresh Independent Re-Review, Linux container,
+  PostgreSQL server `17.10`, Node `v22.22.2`, npm `10.9.7`.
+- Canonical/origin mutation caused by the reviewer: `0`. Reviewer clone
+  tracked mutation: `0`.
+- Reviewer cleanup: reviewer DB drop `PASS`; post-drop `pg_database`
+  count `0`; disposable clone deleted; reviewer PostgreSQL instance
+  stopped.
+
+##### Prior Five Blocking Findings — Independently Corrected
+
+- `F-MR-RR-01` = `CORRECTED`.
+- `F-MR-RR-02` = `CORRECTED`.
+- `F-MR-RR-06` = `CORRECTED`. RR-06 reachable BIGINT domain: `SAFE`.
+- `F-MR-RR-03` = `CORRECTED`.
+- `F-MR-RR-04` = `CORRECTED`.
+- RAW_SOURCE non-interference: `PASS`.
+- Canonical contract fidelity for these five corrections: `PASS`.
+- Transaction / zero-side-effect: `PASS`.
+- Focused: `175/175 PASS`, exit `0`.
+- Broader: `319` total, `318` pass, `1` fail, exit `1`.
+- Full: `549` total, `548` pass, `1` fail, exit `1`.
+- The sole failure in the broader and full runs is the already-known
+  `F-MR-RR-08` LF/CRLF byte-identity guard, a pre-existing
+  platform-dependent test outside the approved correction scope. This is
+  NOT recorded as an unqualified clean regression `PASS`: candidate-related
+  semantic/execution checks reproduced; the known pre-existing
+  `F-MR-RR-08` platform guard remains the sole failure.
+- Reviewer verdict: `APPROVE WITH NON-BLOCKING NOTES` /
+  `MAIN-INTEGRATION ELIGIBLE`. This reviewer verdict is preserved
+  historically exactly as reported (see "Candidate Lifecycle" below for
+  how Control Tower's own main-integration eligibility determination
+  differs from the reviewer's self-assessment).
+
+##### New Finding — F-MR-RR2-01 (Reviewer Disposition)
+
+- Reviewer introduced `F-MR-RR2-01`, reviewer disposition `LOW / OPEN /
+  NON-BLOCKING`.
+- Observed behavior: physically storable contradictory timestamp states
+  can cause raw PostgreSQL errors outside the METRIC_RESULT five-code
+  registry.
+- Examples independently reproduced by the reviewer:
+  - `due_at = -infinity` -> raw PostgreSQL `0A000`.
+  - `finalized_at = infinity` -> raw PostgreSQL `0A000`.
+  - extreme finite contradictory timestamps -> raw PostgreSQL `22008`.
+- Reviewer recommendation: a future finiteness/contradiction guard.
+
+##### Control Tower Adjudication — F-MR-RR2-01
+
+Recorded separately from the reviewer disposition above: Control Tower has
+compared the reviewer's `LOW / NON-BLOCKING` classification of
+`F-MR-RR2-01` against the canonical contract and does NOT accept it.
+
+- Control Tower disposition: `F-MR-RR2-01 = MEDIUM / OPEN /
+  MAIN-INTEGRATION BLOCKING`.
+- Correction required: `YES`.
+- Owner value required: `NO`.
+- Architecture decision required: `NO`.
+- Migration required: `NO`.
+- DDL required: `NO`.
+- Reason: API `1.29` candidate admission requires selected assignments to
+  have a valid non-null `due_at`; otherwise `CONTRACT_VIOLATION`. API
+  `1.29` states source inconsistency is `CONTRACT_VIOLATION`. Required
+  evaluation/completion timestamp contradictions are contract violations,
+  not infrastructure errors. `METRIC_RESULT` uses the existing five-code
+  registry only. Therefore a raw PostgreSQL `0A000`/`22008` escaping from
+  contradictory stored timestamp facts is not contract-conformant even
+  though it fails closed. The lack of a current production `due_at` writer
+  does NOT waive the reader-side source-integrity/error contract for this
+  synthetic-P0 query-time operation. Fail-closed behavior reduces severity
+  from HIGH but does not make it integration-safe.
+
+##### Minimal F-MR-RR2-01 Correction Direction
+
+No canonical clarification is required. Expected narrow correction,
+within the already-approved three-file boundary, is limited to
+`src/instrumentation/evidenceMetrics.js` and
+`tests/viP1MetricResultRuntime.test.js`. Required semantic shape:
+
+- explicitly guard finite/valid timestamp source facts before delta
+  arithmetic;
+- ensure invalid/non-finite `due_at` becomes `CONTRACT_VIOLATION`;
+- ensure `finalized_at`/source contradictions are classified through
+  canonical source-integrity checks before arithmetic that can raise raw
+  PostgreSQL errors;
+- do not merely catch/map arbitrary PostgreSQL errors after the fact;
+- preserve normal timeliness precision and the RR-06 corrected arithmetic;
+- add direct regression tests for the three independently reproduced
+  cases.
+
+Do NOT modify canonical docs. Do NOT modify migrations/DDL.
+
+##### F-MR-RR2-02 (Note, Pre-Existing RAW_SOURCE Scope)
+
+- `F-MR-RR2-02 = NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`.
+- Observation: RAW_SOURCE structured sparse holes can still expose raw
+  `TypeError`, and primitive holes can still bypass validation. This
+  behavior was intentionally preserved by the METRIC_RESULT correction.
+- It is NOT a blocker for this METRIC_RESULT correction slice. Do NOT
+  silently fix it as part of the `F-MR-RR2-01` correction.
+
+##### Other Findings (Preserved Unchanged)
+
+- `F-MR-RR-05` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-RR-07` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-RR-08` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-IR-01`–`F-MR-IR-04` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-ARCH-06` = `OPEN / DEFERRED`.
+- `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`, documentation-contract
+  findings only.
+
+##### Process Order
+
+Control Tower does NOT adopt the reviewer handoff's proposed ordering
+(review-record -> main integration -> post-merge). LLE governance order
+remains: Independent Review / Re-Review -> eligible candidate integration
+-> post-merge PostgreSQL validation -> review-record.
+
+##### Candidate Lifecycle
+
+METRIC_RESULT / Retention v1 Runtime corrected candidate =
+`DEVELOPMENT CORRECTION IMPLEMENTED / PRIOR FIVE BLOCKING FINDINGS
+INDEPENDENTLY CORRECTED / NEW F-MR-RR2-01 CONTROL-TOWER BLOCKER OPEN /
+MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED /
+NOT CLOSED`.
+
+The fresh reviewer's own verdict, `APPROVE WITH NON-BLOCKING NOTES`, must
+be preserved historically as the reviewer verdict and is not altered by
+this record. However, `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = NOT
+ELIGIBLE`, because `F-MR-RR2-01` is reclassified `MEDIUM / OPEN /
+MAIN-INTEGRATION BLOCKING` by Control Tower, superseding the reviewer's
+own `MAIN-INTEGRATION ELIGIBLE` self-assessment for integration-eligibility
+purposes. `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
+`F-MR-RR-04` are `CORRECTED` (independently re-reviewed), but the overall
+candidate lifecycle is not `CLOSED` and not `REVIEW-RECORDED` — canonical
+closure awaits a Development correction session for `F-MR-RR2-01`.
+
+##### Non-Claims
+
+This record does not mean: `F-MR-RR2-01` corrected = `NO`; `F-MR-RR2-01`
+closed = `NO`; `F-MR-RR2-02` fixed = `NO` (intentionally out of scope for
+this slice); Runtime validated = `NO`; Runtime canonical on `main` = `NO`;
+post-merge PostgreSQL validation = `NO`; review-record complete = `NO`;
+main integration performed = `NO`; this record itself performed an
+Independent Re-Review — NOT CLAIMED; a separate reviewer session did, and
+this record only adjudicates and transcribes the result; this record
+modified any Runtime code, test file, canonical document, or validation
+branch — NOT CLAIMED; repository mutation by this record is limited to
+`LLE_CURRENT_STATE.md`; VI P1 Measurement Readiness complete = `NO`; `B-3`
+resolved = `NO`; P1 eligible/activated = `NO`; human-data authorized =
+`NO`; efficacy verified = `NO`; actual-provider/audio authorized = `NO`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3909,6 +4074,44 @@ This bootstrap does not rerun PostgreSQL or tests.
   VALIDATION CANDIDATE / ABSENT ON MAIN`. See "METRIC_RESULT Retention v1
   Runtime Development Candidate — Created / Pushed / Development-Session
   Evidence Pass" above (§4) for full detail.
+- Fresh Claude Opus 5 Independent Re-Review of the corrected tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` (Linux container, PostgreSQL
+  `17.10`, Node `v22.22.2`, npm `10.9.7`, canonical/origin mutation `0`,
+  reviewer clone tracked mutation `0`, cleanup `PASS`): `F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06` (reachable BIGINT domain `SAFE`),
+  `F-MR-RR-03`, `F-MR-RR-04` are `CORRECTED`. Focused `175/175 PASS`;
+  broader `319` total/`318` pass/`1` fail; full `549` total/`548` pass/`1`
+  fail — the sole failure in each is the already-known `F-MR-RR-08`
+  LF/CRLF byte-identity guard, not recorded as an unqualified clean
+  regression. Reviewer verdict `APPROVE WITH NON-BLOCKING NOTES /
+  MAIN-INTEGRATION ELIGIBLE`, preserved historically. New finding
+  `F-MR-RR2-01` (reviewer disposition `LOW / OPEN / NON-BLOCKING`:
+  contradictory stored timestamp states — `due_at = -infinity`,
+  `finalized_at = infinity`, extreme finite contradictions — cause raw
+  PostgreSQL `0A000`/`22008` outside the five-code registry). Control
+  Tower does NOT accept the reviewer's `LOW / NON-BLOCKING` classification:
+  Control Tower disposition `F-MR-RR2-01 = MEDIUM / OPEN /
+  MAIN-INTEGRATION BLOCKING` (correction required `YES`; owner value,
+  Architecture decision, migration, DDL all `NO`) because API `1.29`
+  requires a valid non-null `due_at` and treats source inconsistency as
+  `CONTRACT_VIOLATION`, and `METRIC_RESULT` uses the existing five-code
+  registry only, so a raw PostgreSQL error escaping contradictory stored
+  timestamp facts is not contract-conformant even though it fails closed.
+  New finding `F-MR-RR2-02` (`NOTE / OPEN / PRE-EXISTING RAW_SOURCE
+  SCOPE` — RAW_SOURCE structured/primitive sparse-hole exposure remains
+  intentionally preserved; not a blocker; not to be silently fixed as part
+  of the `F-MR-RR2-01` correction). `F-MR-RR-05`, `F-MR-RR-07`,
+  `F-MR-RR-08`, `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN /
+  NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`. Candidate lifecycle:
+  `DEVELOPMENT CORRECTION IMPLEMENTED / PRIOR FIVE BLOCKING FINDINGS
+  INDEPENDENTLY CORRECTED / NEW F-MR-RR2-01 CONTROL-TOWER BLOCKER OPEN /
+  MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED /
+  NOT CLOSED`. `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = NOT
+  ELIGIBLE`, superseding the reviewer's own eligibility self-assessment.
+  See "METRIC_RESULT Retention v1 Runtime — Fresh Independent Re-Review
+  Result / Control Tower Adjudication (F-MR-RR2-01 Reclassified
+  Blocking)" above (§4) for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -3924,11 +4127,11 @@ and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
 revision `1.74`; METRIC_RESULT Retention v1 Runtime Development corrected
 candidate `e1390eedb75137cc7c45027ac75b02f614e3a34e` (parent
-`2a6ab261a287f0cca4a2af5956a207c3b525ec54`) `ORIGINAL DEVELOPMENT
-CANDIDATE / INDEPENDENT REVIEW REQUEST CORRECTION / DEVELOPMENT
-CORRECTION IMPLEMENTED / DEVELOPMENT CORRECTION EVIDENCE PASS /
-INDEPENDENT RE-REVIEW PENDING / NOT CANONICAL ON MAIN / NOT VALIDATED /
-NOT CLOSED`), this ledger does not claim:
+`2a6ab261a287f0cca4a2af5956a207c3b525ec54`) `DEVELOPMENT CORRECTION
+IMPLEMENTED / PRIOR FIVE BLOCKING FINDINGS INDEPENDENTLY CORRECTED / NEW
+F-MR-RR2-01 CONTROL-TOWER BLOCKER OPEN / MAIN-INTEGRATION NOT ELIGIBLE /
+NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
+claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -3979,16 +4182,29 @@ NOT CLOSED`), this ledger does not claim:
   occurred — see below and §4
 - any of `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
   `F-MR-RR-04`, or `F-MR-RR-05`/`F-MR-RR-07`/`F-MR-RR-08` is `CLOSED` by
-  this record — NOT CLAIMED. A separate Windows-local Development
-  correction session (not this status-sync) has since implemented
-  corrections for the five blocking findings `F-MR-RR-01`, `F-MR-RR-02`,
-  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`; each is now `CORRECTION
-  IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`, not `CLOSED` —
-  closure requires a fresh Independent Re-Review of the corrected tip
-  `e1390eedb75137cc7c45027ac75b02f614e3a34e`. The three non-blocking
-  findings `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08` were NOT corrected and
-  remain `LOW / OPEN / NON-BLOCKING` exactly as before (see §4 for exact
-  detail)
+  this record — NOT CLAIMED. A fresh Claude Opus 5 Independent Re-Review of
+  the corrected tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` has since
+  determined `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
+  `F-MR-RR-04` are `CORRECTED` — this is a re-review determination, not
+  itself a formal `CLOSED` disposition of the overall candidate lifecycle
+  (see §4/§8). The three non-blocking findings `F-MR-RR-05`, `F-MR-RR-07`,
+  `F-MR-RR-08` were NOT corrected and remain `LOW / OPEN / NON-BLOCKING`
+  exactly as before (see §4 for exact detail)
+- `F-MR-RR2-01` is corrected, closed, or `LOW`/non-blocking — NOT CLAIMED.
+  The reviewer disposition is `LOW / OPEN / NON-BLOCKING`, but Control
+  Tower has adjudicated it against canonical API `1.29` and reclassified it
+  `MEDIUM / OPEN / MAIN-INTEGRATION BLOCKING`; correction is required
+  before main integration (see §4/§8 for full reasoning)
+- `F-MR-RR2-02` is a blocker, or was fixed by this or any prior record —
+  NOT CLAIMED; it is `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`,
+  intentionally preserved, and must NOT be silently fixed as part of the
+  `F-MR-RR2-01` correction
+- METRIC_RESULT / Retention v1 Runtime is main-integration eligible — NOT
+  CLAIMED as a Control Tower determination. The fresh reviewer's own
+  verdict was `APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION
+  ELIGIBLE`, preserved historically exactly as reported, but `CONTROL
+  TOWER MAIN-INTEGRATION ELIGIBILITY = NOT ELIGIBLE`, because `F-MR-RR2-01`
+  is reclassified `MEDIUM / MAIN-INTEGRATION BLOCKING` by Control Tower
 - the reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
   `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
@@ -4113,6 +4329,37 @@ remain true and are established in §4/§8 and elsewhere in this document:
   bounded conversation, or AI audit — NOT CLAIMED; none of these was
   selected; the sole authorized scope is the bounded Runtime Development
   slice described above
+- a fresh Claude Opus 5 Independent Re-Review of the corrected validation
+  tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` has since completed
+  (Linux container, PostgreSQL `17.10`, Node `v22.22.2`, npm `10.9.7`,
+  canonical/origin mutation `0`, reviewer clone tracked mutation `0`,
+  cleanup `PASS`): `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06` (reachable
+  BIGINT domain `SAFE`), `F-MR-RR-03`, `F-MR-RR-04` are `CORRECTED`;
+  focused `175/175 PASS`, broader `319` total/`318` pass/`1` fail, full
+  `549` total/`548` pass/`1` fail, with the sole failure in each being the
+  already-known `F-MR-RR-08` LF/CRLF byte-identity guard (not recorded as
+  an unqualified clean regression). Reviewer verdict `APPROVE WITH
+  NON-BLOCKING NOTES / MAIN-INTEGRATION ELIGIBLE`, preserved historically.
+  The reviewer introduced new finding `F-MR-RR2-01` (reviewer disposition
+  `LOW / OPEN / NON-BLOCKING`) for raw PostgreSQL errors (`0A000`/`22008`)
+  produced by physically storable contradictory timestamp states
+  (`due_at = -infinity`, `finalized_at = infinity`, extreme finite
+  contradictions). Control Tower independently adjudicated
+  `F-MR-RR2-01` against canonical API `1.29` and does NOT accept the
+  reviewer's `LOW / NON-BLOCKING` classification, reclassifying it
+  `MEDIUM / OPEN / MAIN-INTEGRATION BLOCKING` (correction required `YES`;
+  owner value, Architecture decision, migration, and DDL all `NO`) —
+  therefore `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = NOT ELIGIBLE`,
+  superseding the reviewer's own eligibility self-assessment. New finding
+  `F-MR-RR2-02` (`NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`) was also
+  recorded and is explicitly out of scope for the `F-MR-RR2-01`
+  correction. This current update is itself a separate status-only Control
+  Tower record of that completed re-review and this adjudication, with
+  repository mutation limited to `LLE_CURRENT_STATE.md`; it does not
+  itself implement, validate, correct any Runtime code, perform an
+  Independent Re-Review, or integrate `main`. The sole recorded next
+  action is now a fresh Windows Claude Development correction session for
+  `F-MR-RR2-01` only, on the same validation branch (see §4/§8/§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -4645,35 +4892,48 @@ historical ledger does not.
   Retention v1 Runtime — Development Correction Implemented (Status-Only)"
   above (§4) for full detail; the sole Next Action is now a fresh Claude
   Opus 5 Independent Re-Review of the corrected tip (§10).
+- the prior recorded Next Action ("Fresh Claude Opus 5 Independent
+  Re-Review of the exact corrected validation tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`...") remained not yet
+  performed — it has since been performed: a fresh Claude Opus 5
+  Independent Re-Review (Linux container, PostgreSQL `17.10`, Node
+  `v22.22.2`, npm `10.9.7`, canonical/origin mutation `0`, reviewer clone
+  tracked mutation `0`, cleanup `PASS`) determined `F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` `CORRECTED` and
+  returned verdict `APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION
+  ELIGIBLE`; that re-review did not itself modify any Runtime code, test
+  file, canonical document, or validation branch, and did not integrate
+  `main`. Control Tower has since adjudicated the reviewer's new finding
+  `F-MR-RR2-01` and does NOT accept the reviewer's `LOW / NON-BLOCKING`
+  classification — it is reclassified `MEDIUM / OPEN / MAIN-INTEGRATION
+  BLOCKING`, so `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = NOT
+  ELIGIBLE`, superseding the reviewer's own eligibility self-assessment
+  — this adjudication is a Control Tower determination, not itself a
+  code change, Independent Re-Review, or main integration. See
+  "METRIC_RESULT Retention v1 Runtime — Fresh Independent Re-Review
+  Result / Control Tower Adjudication (F-MR-RR2-01 Reclassified
+  Blocking)" above (§4) for full detail; the sole Next Action is now a
+  fresh Windows Claude Development correction session for `F-MR-RR2-01`
+  only, on the same validation branch (§10)
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Re-Review of the exact corrected
-  validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` on branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (parent
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
-  METRIC_RESULT Retention v1 review findings`). The re-review must
-  fresh-fetch `origin` and compare both the original candidate
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` and the correction
-  `e1390eedb75137cc7c45027ac75b02f614e3a34e` against current canonical
-  authority (`API_CONTRACT.md` `1.29`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  `1.8`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.74`). Primary purpose:
-  independently determine whether `F-MR-RR-01`, `F-MR-RR-02`,
-  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` are actually corrected. The
-  fresh reviewer must also verify no regression to RAW_SOURCE, FORMULA,
-  FIRST_MATCH, provenance, transaction, zero-side-effect, numeric/HALF_UP,
-  or candidate-admission behavior. The fresh reviewer must NOT rely on the
-  Development-session `PASS` evidence recorded in §4/§9 as semantic proof
-  and must independently reproduce execution evidence, preferring actual
-  Windows-local PostgreSQL `17.10` so the prior reviewer's PostgreSQL
-  `16.15`-vs-`17.10` environment deviation is not repeated. Repository
-  source mutation by the re-review session must be `0`: no candidate
-  correction in the reviewer session, no main integration, and no
-  review-record write. This baseline is drift-safe — the reviewer must NOT
-  hard-pin to this updater's pre-update `main` SHA, but must verify that
-  all `main` drift since candidate parent
-  `8c60cbcbdf358f17c0d8249447b08c264946fc51` is limited exactly to
-  status-only `LLE_CURRENT_STATE.md` governance commits; any other changed
-  path is `BLOCKED — UNEXPECTED MAIN DRIFT BEFORE METRIC_RESULT
-  INDEPENDENT RE-REVIEW`, and the reviewer must `STOP` and return to
-  Control Tower rather than proceed or repair.
+- Fresh Windows Claude Development correction session for `F-MR-RR2-01`
+  only, on existing validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, starting
+  from exact current validation tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`. The Development correction
+  must: preserve all five already-corrected findings (`F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`); add
+  finite/source-contradiction guards before dangerous timestamp
+  arithmetic; make the reproduced non-finite/extreme contradiction cases
+  (`due_at = -infinity`, `finalized_at = infinity`, extreme finite
+  contradictory timestamps) return `CONTRACT_VIOLATION` instead of raw
+  PostgreSQL errors; add direct regression tests; remain inside the
+  approved three-file boundary (limited in practice to
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1MetricResultRuntime.test.js`); use a Windows-local PostgreSQL
+  `17.10` isolated database; create a separate correction commit; not
+  amend, rebase, or squash; push the validation branch only; not
+  integrate `main`; not perform Independent Re-Review; and not close any
+  finding.
