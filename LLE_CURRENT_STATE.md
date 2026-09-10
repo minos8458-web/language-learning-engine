@@ -3523,6 +3523,180 @@ branch — NOT CLAIMED; repository mutation by this record is limited to
 resolved = `NO`; P1 eligible/activated = `NO`; human-data authorized =
 `NO`; efficacy verified = `NO`; actual-provider/audio authorized = `NO`.
 
+#### METRIC_RESULT Retention v1 Runtime — RR2-01 Development Correction Implemented (Status-Only)
+
+- Role: status-only Control Tower record of a completed Windows-local
+  Development correction session for finding `F-MR-RR2-01` only, performed
+  in response to the Control Tower adjudication recorded immediately above
+  ("Fresh Independent Re-Review Result / Control Tower Adjudication
+  (F-MR-RR2-01 Reclassified Blocking)"). This record performs no further
+  candidate code modification, no Independent Re-Review, and no main
+  integration. Repository mutation caused by this record: limited to this
+  update to `LLE_CURRENT_STATE.md`. PostgreSQL/tests: `NOT RUN —
+  STATUS-ONLY UPDATE`. The correction itself was executed and pushed by a
+  separate Windows-local Development session, not by this status-sync.
+- Pre-RR2-01 validation tip (unchanged, immutable): validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; commit
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, tree
+  `3e920fd687f670157835c236025c2773ce2497b4`, parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
+  METRIC_RESULT Retention v1 review findings`. Not amended, not rebased,
+  not squashed.
+- RR2-01 correction commit (new, separate, on the same validation branch):
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`, tree
+  `1b19a279d01a37d027a3d3baa79e22e04bb6be1c`, parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, subject `Correct
+  METRIC_RESULT Retention timestamp contradictions`. This is now the exact
+  remote tip of the validation branch. Branch history after the
+  implementation baseline is exactly three commits: (1)
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` "Implement METRIC_RESULT
+  Retention v1 runtime"; (2) `e1390eedb75137cc7c45027ac75b02f614e3a34e`
+  "Correct METRIC_RESULT Retention v1 review findings"; (3)
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` "Correct METRIC_RESULT
+  Retention timestamp contradictions".
+- Exact correction file scope: the RR2-01 correction commit changed exactly
+  `src/instrumentation/evidenceMetrics.js` (blob
+  `6ce1347dee91b8310da17ed092f6b58fdddbeb54`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `1f21704b64cb184f0b25a24d8b0696af90628143`).
+  `src/instrumentation/evidenceValidation.js` was not changed by the
+  correction; its blob remains `fadee158da77693fba319976001d43f43c784196`,
+  unchanged. No canonical document, migration, package, workflow,
+  RAW_SOURCE test, `evidenceRepository.js`, `evidenceNormalization.js`, or
+  `index.js` change.
+- Correction implemented (Development-reported implementation evidence, NOT
+  Independent Re-Review validation — `F-MR-RR2-01`'s disposition is
+  `CORRECTION IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`, not
+  `CLOSED`):
+  - `selectCandidateAssignments` now projects an explicit
+    `due_at_finite` source fact; a present but non-finite `due_at`
+    (`-infinity` or `infinity`) is classified as source contradiction and
+    throws `CONTRACT_VIOLATION` before the due-within-cutoff decision.
+  - `selectCompletionDetails` now carries an explicit
+    `finalized_at_finite` fact; a present but non-finite `finalized_at`
+    (`-infinity` or `infinity`) is rejected as `CONTRACT_VIOLATION` before
+    cutoff/timeliness classification.
+  - the prior extreme-finite interval arithmetic was removed; the signed
+    timestamp delta now uses PostgreSQL NUMERIC epoch values
+    (`EXTRACT(EPOCH FROM finalized_at) - EXTRACT(EPOCH FROM due_at)`) with
+    exact NUMERIC multiplication by `1000000` — no full delta `BIGINT`
+    cast, no timestamp ± interval, no extreme timestamp subtraction into
+    `INTERVAL`; `CASE`/`isfinite` guards prevent arithmetic from running on
+    infinite endpoints.
+  - Development reports the three previously reproduced raw PostgreSQL
+    failure classes (`0A000`, `0A000`, `22008`) now reach canonical
+    `CONTRACT_VIOLATION` rather than raw SQLSTATE.
+  - `F-MR-RR2-01`'s status is `CORRECTION IMPLEMENTED / OPEN PENDING
+    INDEPENDENT RE-REVIEW` — not `CLOSED` by this record; closure requires
+    a fresh Independent Re-Review of the corrected tip. This Development
+    session cannot close `F-MR-RR2-01` itself.
+- Prior five findings — preserved, unaffected by this correction:
+  `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06` (reachable BIGINT domain
+  `SAFE`), `F-MR-RR-03`, `F-MR-RR-04` remain `INDEPENDENTLY CORRECTED` (per
+  the fresh Independent Re-Review recorded above), unchanged by this
+  RR2-01-only correction.
+- Non-blocking findings — preserved, NOT touched by this correction:
+  - `F-MR-RR-05` remains `LOW / OPEN / NON-BLOCKING / NOT CORRECTED`.
+    Literal NUL byte count in `evidenceMetrics.js`: `3` before the RR2-01
+    correction, `3` after — unchanged. `F-MR-RR-05` therefore remains
+    untouched.
+  - `F-MR-RR-07` remains `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-RR-08` remains `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-RR2-02` remains `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE /
+    OUT OF RR2-01 SCOPE` — intentionally not touched by this correction.
+  - `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-ARCH-06` remains `OPEN / DEFERRED`.
+  - `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`, documentation-contract
+    findings only.
+
+##### RR2-01 Direct Regression Tests (T119–T125)
+
+- `T119`: `due_at = -infinity` -> `CONTRACT_VIOLATION`.
+- `T120`: `due_at = infinity` -> `CONTRACT_VIOLATION`.
+- `T121`: `finalized_at = infinity`, with finite in-cutoff `completed_at`
+  so the completion-detail path is actually reached -> `CONTRACT_VIOLATION`.
+- `T122`: `finalized_at = -infinity`, with finite in-cutoff `completed_at`
+  -> `CONTRACT_VIOLATION`.
+- `T123`: extreme finite contradictory PostgreSQL timestamp pair that
+  previously reproduced SQLSTATE `22008` -> `CONTRACT_VIOLATION`, no raw
+  database error.
+- `T124`: large but consistent finite year-`0001` to year-`9999` gap ->
+  normal `LATE` classification.
+- `T125`: ordinary valid timestamp -> unchanged normal behavior.
+- Total new tests: `7`.
+
+##### RR2-01 Development Correction Execution Evidence
+
+- Evidence class: `DEVELOPMENT-SESSION EXECUTION EVIDENCE` (not
+  Independent Validation, not post-merge validation).
+- Execution environment: Windows-local. PostgreSQL `17.10`. Node
+  `v24.18.0`. npm `11.16.0`.
+- Correction temp DB: `lle_rr2_01_correction_20260911_045325`. Both
+  Windows `psql current_database()` and the repository's `db/pool.js`
+  `current_database()` routing check confirmed exactly that isolated DB.
+  `lle_dev` was not used as a migration/test/fixture target.
+- Development additionally verified on PostgreSQL `17.10`:
+  `isfinite('-infinity'::timestamptz) = false`;
+  `isfinite('infinity'::timestamptz) = false`; exact `+1` microsecond delta
+  preserved; exact `-1` microsecond delta preserved;
+  `Number.MAX_SAFE_INTEGER` tolerance scaling/comparison remains exact and
+  deterministic; the new NUMERIC epoch-difference expression executes on
+  the extreme finite pair that previously caused SQLSTATE `22008`.
+- Migration evidence: existing migrations only, `001` through `013`;
+  `schema_migrations` contains `013` exactly once; migration `014` is
+  absent. No migration, no DDL, no view/materialized view addition.
+- Final Development test evidence:
+  - Pre-RR2-01 counts: focused `175`; broader focused `319`; full `549`.
+  - Post-RR2-01 final counts: focused METRIC_RESULT + RAW_SOURCE `182/182
+    PASS`, exit `0`; broader Evidence/Foundation + Runtime `326/326 PASS`,
+    exit `0`; full configured regression `556/556 PASS`, exit `0`. Each
+    increase is exactly `+7`, corresponding exactly to new `T119`–`T125`.
+  - Final gates: fail `0`, cancelled `0`, skipped `0`, todo `0`.
+  - Evidence-collection correction note: an earlier piped `npm test |
+    tail` command did not preserve npm's true exit code. The Development
+    session corrected this evidence-collection error and reran the full
+    test with the real process exit captured, `REAL_EXIT_CODE = 0`. Only
+    that later final result is used as full-suite evidence.
+  - A scratch Node probe initially failed to resolve `pg` because it
+    executed outside the repository module-resolution path; this is
+    classified exactly as a scratch execution-path issue, not a
+    product/test failure. A repository-local temporary probe was then
+    used, and final repository state was clean.
+- Safety / cleanup: `git diff --check` `PASS`. Correction temp DB `DROP`
+  `PASS`; post-drop `pg_database` count `0`. `lle_dev` remained present and
+  untouched. NUL byte count in `evidenceMetrics.js`: `3` before and after.
+  Final worktree/index/untracked: clean.
+
+##### Candidate Lifecycle After RR2-01 Correction
+
+METRIC_RESULT / Retention v1 Runtime corrected candidate =
+`PRIOR FIVE REVIEW FINDINGS INDEPENDENTLY CORRECTED / F-MR-RR2-01
+DEVELOPMENT CORRECTION IMPLEMENTED / DEVELOPMENT-SESSION PG17.10
+REGRESSION EVIDENCE PASS / F-MR-RR2-01 INDEPENDENT RE-REVIEW PENDING /
+MAIN-INTEGRATION NOT YET ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED
+/ NOT CLOSED`.
+
+Not `APPROVED`, not `VALIDATED`, not `CLOSED`, not `CANONICAL ON MAIN`,
+not `REVIEW-RECORDED`, not `MAIN-INTEGRATION ELIGIBLE`. This Development
+session cannot close `F-MR-RR2-01` itself; closure requires a fresh
+Independent Re-Review of the corrected tip
+`316df38ef03c5256fbdab598da0df73c3be4e7e0`.
+
+##### Non-Claims
+
+This record does not mean: `F-MR-RR2-01` corrected = `NO` (`CORRECTION
+IMPLEMENTED`, not `CLOSED`); `F-MR-RR2-01` closed = `NO`; `F-MR-RR2-02`
+fixed = `NO` (intentionally out of scope); Runtime validated = `NO`;
+Runtime canonical on `main` = `NO`; post-merge PostgreSQL validation =
+`NO`; review-record complete = `NO`; main integration performed = `NO`;
+this record itself performed an Independent Re-Review — NOT CLAIMED; this
+record modified any Runtime code, test file, canonical document, or
+validation branch — NOT CLAIMED; repository mutation by this record is
+limited to `LLE_CURRENT_STATE.md`; VI P1 Measurement Readiness complete =
+`NO`; `B-3` resolved = `NO`; P1 eligible/activated = `NO`; human-data
+authorized = `NO`; efficacy verified = `NO`; actual-provider/audio
+authorized = `NO`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -4112,6 +4286,51 @@ This bootstrap does not rerun PostgreSQL or tests.
   See "METRIC_RESULT Retention v1 Runtime — Fresh Independent Re-Review
   Result / Control Tower Adjudication (F-MR-RR2-01 Reclassified
   Blocking)" above (§4) for full detail.
+- Windows-local Development correction session for `F-MR-RR2-01` only, on
+  validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e`: pushed exactly
+  one new correction commit `316df38ef03c5256fbdab598da0df73c3be4e7e0`
+  (tree `1b19a279d01a37d027a3d3baa79e22e04bb6be1c`, parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, subject `Correct
+  METRIC_RESULT Retention timestamp contradictions`) to the same
+  validation branch, changing exactly `src/instrumentation/evidenceMetrics.js`
+  (blob `6ce1347dee91b8310da17ed092f6b58fdddbeb54`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `1f21704b64cb184f0b25a24d8b0696af90628143`);
+  `src/instrumentation/evidenceValidation.js` unchanged (blob
+  `fadee158da77693fba319976001d43f43c784196`). `due_at`/`finalized_at`
+  non-finite (`-infinity`/`infinity`) source facts and the extreme finite
+  22008-reproducing pair now reach `CONTRACT_VIOLATION` via new
+  `due_at_finite`/`finalized_at_finite` guards and a NUMERIC
+  epoch-difference arithmetic replacement, per new direct tests
+  `T119`–`T125` (`+7`). `F-MR-RR2-01 = CORRECTION IMPLEMENTED / OPEN
+  PENDING INDEPENDENT RE-REVIEW`, not `CLOSED`. Prior five findings
+  (`F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`)
+  remain `INDEPENDENTLY CORRECTED`, unaffected. `F-MR-RR-05` remains `LOW /
+  OPEN / NON-BLOCKING / NOT CORRECTED` (NUL byte count `3`/`3`, unchanged).
+  `F-MR-RR2-02` remains `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE / OUT
+  OF RR2-01 SCOPE`. `F-MR-RR-07`, `F-MR-RR-08`, `F-MR-IR-01`–`F-MR-IR-04`
+  remain `LOW / OPEN / NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN /
+  DEFERRED`; `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`.
+  Development-session Windows-local PostgreSQL `17.10` execution evidence
+  (isolated DB `lle_rr2_01_correction_20260911_045325`, `lle_dev`
+  untouched, migrations `001`–`013` only, `014` absent): focused
+  METRIC_RESULT + RAW_SOURCE `182/182 PASS`, broader Evidence/Foundation +
+  Runtime `326/326 PASS`, full configured regression `556/556 PASS`, each
+  `+7` over the pre-correction `175`/`319`/`549`, true full-suite exit code
+  `0` (an earlier piped `npm test | tail` evidence-collection error that
+  did not preserve npm's real exit code was corrected and superseded by
+  this final rerun); `git diff --check` `PASS`; temp DB dropped, post-drop
+  `pg_database` count `0`; NUL byte count in `evidenceMetrics.js` `3`
+  before/after. This is classified exactly as `DEVELOPMENT-SESSION
+  EXECUTION EVIDENCE`, NOT Independent Re-Review validation. Candidate
+  lifecycle: `PRIOR FIVE REVIEW FINDINGS INDEPENDENTLY CORRECTED /
+  F-MR-RR2-01 DEVELOPMENT CORRECTION IMPLEMENTED / DEVELOPMENT-SESSION
+  PG17.10 REGRESSION EVIDENCE PASS / F-MR-RR2-01 INDEPENDENT RE-REVIEW
+  PENDING / MAIN-INTEGRATION NOT YET ELIGIBLE / NOT CANONICAL ON MAIN / NOT
+  VALIDATED / NOT CLOSED`. This Development session cannot close
+  `F-MR-RR2-01` itself. See "METRIC_RESULT Retention v1 Runtime — RR2-01
+  Development Correction Implemented (Status-Only)" above (§4) for full
+  detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -4125,12 +4344,13 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.74`; METRIC_RESULT Retention v1 Runtime Development corrected
-candidate `e1390eedb75137cc7c45027ac75b02f614e3a34e` (parent
-`2a6ab261a287f0cca4a2af5956a207c3b525ec54`) `DEVELOPMENT CORRECTION
-IMPLEMENTED / PRIOR FIVE BLOCKING FINDINGS INDEPENDENTLY CORRECTED / NEW
-F-MR-RR2-01 CONTROL-TOWER BLOCKER OPEN / MAIN-INTEGRATION NOT ELIGIBLE /
-NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
+revision `1.74`; METRIC_RESULT Retention v1 Runtime RR2-01-corrected
+candidate `316df38ef03c5256fbdab598da0df73c3be4e7e0` (parent
+`e1390eedb75137cc7c45027ac75b02f614e3a34e`) `PRIOR FIVE REVIEW FINDINGS
+INDEPENDENTLY CORRECTED / F-MR-RR2-01 DEVELOPMENT CORRECTION IMPLEMENTED /
+DEVELOPMENT-SESSION PG17.10 REGRESSION EVIDENCE PASS / F-MR-RR2-01
+INDEPENDENT RE-REVIEW PENDING / MAIN-INTEGRATION NOT YET ELIGIBLE / NOT
+CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
 claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
@@ -4190,11 +4410,20 @@ claim:
   (see §4/§8). The three non-blocking findings `F-MR-RR-05`, `F-MR-RR-07`,
   `F-MR-RR-08` were NOT corrected and remain `LOW / OPEN / NON-BLOCKING`
   exactly as before (see §4 for exact detail)
-- `F-MR-RR2-01` is corrected, closed, or `LOW`/non-blocking — NOT CLAIMED.
-  The reviewer disposition is `LOW / OPEN / NON-BLOCKING`, but Control
-  Tower has adjudicated it against canonical API `1.29` and reclassified it
-  `MEDIUM / OPEN / MAIN-INTEGRATION BLOCKING`; correction is required
-  before main integration (see §4/§8 for full reasoning)
+- `F-MR-RR2-01` is closed, independently re-reviewed, or `LOW`/non-blocking
+  — NOT CLAIMED. The reviewer disposition was `LOW / OPEN / NON-BLOCKING`,
+  but Control Tower adjudicated it against canonical API `1.29` and
+  reclassified it `MEDIUM / OPEN / MAIN-INTEGRATION BLOCKING`. A
+  Windows-local Development correction session has since implemented a
+  targeted fix (commit `316df38ef03c5256fbdab598da0df73c3be4e7e0`, parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`) with Development-session
+  PostgreSQL `17.10` execution evidence `PASS` (`182/182` focused,
+  `326/326` broader, `556/556` full, `+7` each, `T119`–`T125`, exit `0`);
+  `F-MR-RR2-01 = CORRECTION IMPLEMENTED / OPEN PENDING INDEPENDENT
+  RE-REVIEW`, NOT `CLOSED` — a Development session cannot close it. A
+  fresh Independent Re-Review of the corrected tip is required before any
+  closure or main-integration-eligibility claim (see §4/§8/§10 for full
+  reasoning)
 - `F-MR-RR2-02` is a blocker, or was fixed by this or any prior record —
   NOT CLAIMED; it is `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`,
   intentionally preserved, and must NOT be silently fixed as part of the
@@ -4360,6 +4589,62 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Independent Re-Review, or integrate `main`. The sole recorded next
   action is now a fresh Windows Claude Development correction session for
   `F-MR-RR2-01` only, on the same validation branch (see §4/§8/§10)
+- the fresh Windows Claude Development correction session called for by
+  the immediately preceding entry has since completed (status-only, this
+  update; repository mutation limited to `LLE_CURRENT_STATE.md`; the
+  correction session itself was a separate Windows-local Development
+  session, not this status-sync; PostgreSQL/tests by this update `NOT
+  RUN — STATUS-ONLY`). It pushed exactly one new correction commit,
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` (tree
+  `1b19a279d01a37d027a3d3baa79e22e04bb6be1c`, parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, subject `Correct
+  METRIC_RESULT Retention timestamp contradictions`), to the same
+  validation branch `validation/vi-p1-metric-result-retention-v1-runtime-20260909`;
+  the prior tip remains immutable and un-amended. The correction changed
+  exactly `src/instrumentation/evidenceMetrics.js` (blob
+  `6ce1347dee91b8310da17ed092f6b58fdddbeb54`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `1f21704b64cb184f0b25a24d8b0696af90628143`);
+  `src/instrumentation/evidenceValidation.js` was not touched (blob
+  unchanged, `fadee158da77693fba319976001d43f43c784196`). It adds explicit
+  `due_at_finite`/`finalized_at_finite` source-contradiction guards and
+  replaces the prior extreme-finite interval arithmetic with PostgreSQL
+  NUMERIC epoch-difference arithmetic, per new direct tests `T119`–`T125`
+  (`+7`); `F-MR-RR2-01` is now `CORRECTION IMPLEMENTED / OPEN PENDING
+  INDEPENDENT RE-REVIEW`, not `CLOSED`. The prior five findings
+  (`F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`)
+  remain `INDEPENDENTLY CORRECTED`, unaffected; `F-MR-RR-05` remains `LOW /
+  OPEN / NON-BLOCKING / NOT CORRECTED` (NUL byte count `3`/`3`, unchanged);
+  `F-MR-RR2-02` remains `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE / OUT
+  OF RR2-01 SCOPE`, intentionally untouched. Development-session execution
+  evidence (Windows-local, PostgreSQL `17.10`, Node `v24.18.0`, npm
+  `11.16.0`, isolated temp DB `lle_rr2_01_correction_20260911_045325`,
+  both `psql` and repository `db/pool.js` routing checks confirmed against
+  that temp DB, `lle_dev` untouched; existing migrations `001`–`013` only,
+  `014` absent, no migration/DDL change) reports `PASS`: focused
+  METRIC_RESULT + RAW_SOURCE `182/182` (`+7` from the pre-correction
+  `175`), broader Evidence/Foundation + Runtime `326/326` (`+7` from
+  `319`), full regression `556/556` (`+7` from `549`), fail `0`, cancelled
+  `0`, skipped `0`, todo `0`, true full-suite exit `0` (an earlier piped
+  `npm test | tail` evidence-collection error that did not preserve npm's
+  real exit code was identified and superseded by this final rerun);
+  correction temp DB dropped, post-drop `pg_database` count `0`. This is
+  classified exactly as `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, NOT
+  Independent Re-Review validation and NOT post-merge validation; the
+  fresh reviewer must not rely on it as semantic proof. The corrected
+  candidate's lifecycle is now `PRIOR FIVE REVIEW FINDINGS INDEPENDENTLY
+  CORRECTED / F-MR-RR2-01 DEVELOPMENT CORRECTION IMPLEMENTED /
+  DEVELOPMENT-SESSION PG17.10 REGRESSION EVIDENCE PASS / F-MR-RR2-01
+  INDEPENDENT RE-REVIEW PENDING / MAIN-INTEGRATION NOT YET ELIGIBLE / NOT
+  CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED` — not `APPROVED`, not
+  `VALIDATED`, not `CLOSED`, not `CANONICAL ON MAIN`, not
+  `REVIEW-RECORDED`, not `MAIN-INTEGRATION ELIGIBLE`. This Development
+  session cannot close `F-MR-RR2-01` itself. This record performed no
+  candidate code modification, no Independent Re-Review, and no main
+  integration. See "METRIC_RESULT Retention v1 Runtime — RR2-01
+  Development Correction Implemented (Status-Only)" above (§4) for full
+  detail; the sole Next Action is now a fresh Claude Opus 5 Independent
+  Re-Review of the RR2-01-corrected tip (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -4918,22 +5203,32 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Fresh Windows Claude Development correction session for `F-MR-RR2-01`
-  only, on existing validation branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`, starting
-  from exact current validation tip
-  `e1390eedb75137cc7c45027ac75b02f614e3a34e`. The Development correction
-  must: preserve all five already-corrected findings (`F-MR-RR-01`,
-  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`); add
-  finite/source-contradiction guards before dangerous timestamp
-  arithmetic; make the reproduced non-finite/extreme contradiction cases
-  (`due_at = -infinity`, `finalized_at = infinity`, extreme finite
-  contradictory timestamps) return `CONTRACT_VIOLATION` instead of raw
-  PostgreSQL errors; add direct regression tests; remain inside the
-  approved three-file boundary (limited in practice to
-  `src/instrumentation/evidenceMetrics.js` and
-  `tests/viP1MetricResultRuntime.test.js`); use a Windows-local PostgreSQL
-  `17.10` isolated database; create a separate correction commit; not
-  amend, rebase, or squash; push the validation branch only; not
-  integrate `main`; not perform Independent Re-Review; and not close any
-  finding.
+- Fresh Claude Opus 5 Independent Re-Review of exact RR2-01 corrected tip
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` on branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. Primary
+  purpose: independently determine whether `F-MR-RR2-01` is corrected. The
+  reviewer must compare pre-RR2-01 tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` against
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` and canonical API `1.29` /
+  Schema `1.8` / Backlog `1.74`. The re-review must independently verify at
+  minimum: `due_at = -infinity` -> `CONTRACT_VIOLATION`; `due_at =
+  infinity` -> `CONTRACT_VIOLATION`; `finalized_at = -infinity` ->
+  `CONTRACT_VIOLATION`; `finalized_at = infinity` -> `CONTRACT_VIOLATION`;
+  extreme finite prior-`22008` contradiction -> `CONTRACT_VIOLATION`; a
+  large valid finite delta still classifies correctly; exact ±1
+  microsecond precision; `Number.MAX_SAFE_INTEGER` tolerance; prior
+  `F-MR-RR-01`/`F-MR-RR-02`/`F-MR-RR-06`/`F-MR-RR-03`/`F-MR-RR-04` remain
+  corrected; RAW_SOURCE unchanged; NUL count remains `3`; no new five-code
+  error-surface leak; one `REPEATABLE READ READ ONLY` transaction /
+  zero-side-effect unchanged. Prefer actual PostgreSQL `17.10`. Reviewer
+  repository source mutation must be `0`. No code correction. No main
+  integration. No review-record write. Do not close any finding. The
+  immutable review target is `316df38ef03c5256fbdab598da0df73c3be4e7e0`
+  with parent `e1390eedb75137cc7c45027ac75b02f614e3a34e`; do NOT hard-pin
+  the future reviewer to this updater's pre-update main SHA
+  (`8cbb717538944838993c9da39c302cbc4d104125`) — current `main` may advance
+  only via this status-only `LLE_CURRENT_STATE.md` updater. The reviewer
+  must verify that all `main` drift since
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains limited exactly to
+  `LLE_CURRENT_STATE.md`; any other `main` path drift is `BLOCKED —
+  UNEXPECTED MAIN DRIFT BEFORE RR2-01 INDEPENDENT RE-REVIEW`.
