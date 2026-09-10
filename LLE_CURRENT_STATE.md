@@ -3218,6 +3218,146 @@ Runtime canonical on `main` = `NO`; post-merge PostgreSQL validation =
 authorized = `NO`; efficacy verified = `NO`; actual-provider/audio
 authorized = `NO`.
 
+#### METRIC_RESULT Retention v1 Runtime — Development Correction Implemented (Status-Only)
+
+- Role: status-only Control Tower record of a completed Windows-local
+  Development correction session for the METRIC_RESULT / Retention v1
+  Runtime candidate, performed in response to the fresh Claude Opus 5
+  Independent Review "Request Correction" verdict recorded immediately
+  above. This record performs no further candidate code modification, no
+  Independent Re-Review, and no main integration. Repository mutation
+  caused by this record: limited to this update to `LLE_CURRENT_STATE.md`.
+  PostgreSQL/tests: `NOT RUN — STATUS-ONLY UPDATE`. The correction itself
+  was executed and pushed by a separate Windows-local Development session,
+  not by this status-sync.
+- Original candidate (unchanged, immutable): validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`; commit
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51`, subject `Implement
+  METRIC_RESULT Retention v1 runtime`. Not amended, not rebased, not
+  squashed.
+- Correction commit (new, separate, on the same validation branch):
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, tree
+  `3e920fd687f670157835c236025c2773ce2497b4`, parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
+  METRIC_RESULT Retention v1 review findings`. This is now the exact
+  remote tip of the validation branch. Branch history after the
+  implementation baseline is exactly two commits: (1)
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` "Implement METRIC_RESULT
+  Retention v1 runtime"; (2) `e1390eedb75137cc7c45027ac75b02f614e3a34e`
+  "Correct METRIC_RESULT Retention v1 review findings".
+- Exact correction file scope: the correction commit changed exactly
+  `src/instrumentation/evidenceMetrics.js` (blob
+  `518536f91f5d1b4f79c32d2c188bd6a62282d3ae`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `5ed00d05dd4443f140bf2f85aebe9a8e3195e3ca`).
+  `src/instrumentation/evidenceValidation.js` was not changed by the
+  correction; its blob remains `fadee158da77693fba319976001d43f43c784196`,
+  unchanged from the original candidate. Canonical docs, migrations, the
+  existing RAW_SOURCE test, `evidenceRepository.js`,
+  `evidenceNormalization.js`, and `index.js` remained unchanged.
+- Corrections implemented (Development-reported implementation evidence,
+  NOT Independent Re-Review validation — each finding's disposition is
+  `CORRECTION IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`, not
+  `CLOSED`):
+  - `F-MR-RR-01` — target-node evaluation cutoff fact is now carried and
+    enforced; a present-but-post-cutoff evaluation is distinguished from a
+    missing evaluation and is rejected before it can become
+    scorable/correctness/provenance authority.
+  - `F-MR-RR-02` — assignment snapshot `rubric_id`/`rubric_version` and
+    evaluation `rubric_id`/`rubric_version` are now carried, and exact-pair
+    compatibility is enforced.
+  - `F-MR-RR-06` — the overflow-prone `due_at ± tolerance` interval
+    construction was replaced with overflow-safe timestamp-difference /
+    exact microsecond arithmetic; no out-of-range timestamp construction is
+    intended, and `Number.MAX_SAFE_INTEGER` tolerance was directly
+    exercised on PostgreSQL `17.10`.
+  - `F-MR-RR-03` — METRIC_RESULT structured-reference validators now
+    iterate densely so a sparse hole routes through required per-element
+    validation instead of escaping as an unmapped `TypeError`.
+  - `F-MR-RR-04` — a METRIC_RESULT-local dense-array guard now rejects
+    sparse primitive-array holes before the shared RAW_SOURCE validators
+    run; shared RAW_SOURCE behavior remains intentionally unchanged.
+  - Each finding's status is `CORRECTION IMPLEMENTED / OPEN PENDING
+    INDEPENDENT RE-REVIEW` — none of `F-MR-RR-01`, `F-MR-RR-02`,
+    `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` is `CLOSED` by this record;
+    closure requires a fresh Independent Re-Review of the corrected tip.
+- Non-blocking findings — preserved, NOT corrected by this candidate:
+  - `F-MR-RR-05` remains `LOW / OPEN / NON-BLOCKING / NOT CORRECTED`.
+    Literal NUL byte count in `evidenceMetrics.js`: `3` before the
+    correction, `3` after — unchanged. Not claimed resolved.
+  - `F-MR-RR-07` remains `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-RR-08` remains `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-IR-01`–`F-MR-IR-04` remain `LOW / OPEN / NON-BLOCKING`.
+  - `F-MR-ARCH-06` remains `OPEN / DEFERRED`.
+  - `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`, documentation-contract
+    findings only.
+
+##### Development Correction Execution Evidence
+
+- Evidence class: `DEVELOPMENT-SESSION EXECUTION EVIDENCE` (not
+  Independent Validation, not post-merge validation).
+- Execution environment: Windows-local. PostgreSQL `17.10`. Node
+  `v24.18.0`. npm `11.16.0`.
+- Correction temp DB: `lle_correction_mr_rr_20260910070444`. Both Windows
+  `psql current_database()` and the repository's `db/pool.js`
+  `current_database()` routing check confirmed exactly that temp DB.
+  `lle_dev` was not used as a migration/test/fixture target.
+- Migration evidence: existing migrations only, `001` through `013`;
+  `schema_migrations` contains `013` exactly once; migration `014` is
+  absent. No migration change, no DDL change. An intermediate diagnostic
+  query incorrectly assumed a `schema_migrations.version` column and
+  failed; this is classified only as a non-blocking diagnostic-command
+  error, not a migration-ledger failure — the session then inspected the
+  actual schema and verified the migration ledger correctly. This
+  intermediate diagnostic failure is not converted into a final migration
+  `FAIL`.
+- Final Development test evidence:
+  - Before correction: focused `156`; broader focused `300`; full `530`.
+  - After correction: focused METRIC_RESULT + RAW_SOURCE `175/175 PASS`
+    (`+19`); broader Evidence/Foundation + Runtime `319/319 PASS` (`+19`);
+    full configured regression `549/549 PASS` (`+19`). All `+19` correspond
+    to new `T100`–`T118` correction tests.
+  - Final gates: fail `0`, cancelled `0`, skipped `0`, todo `0`, exit code
+    `0`.
+  - This is the final Development execution evidence; no earlier
+    intermediate execution is reused as final evidence.
+- Correction-specific probes (Development-reported):
+  - RR-01: post-cutoff evaluation -> `CONTRACT_VIOLATION`.
+  - RR-02: rubric ID/version mismatch -> `CONTRACT_VIOLATION`.
+  - RR-06: `Number.MAX_SAFE_INTEGER` tolerance -> deterministic execution on
+    PostgreSQL `17.10` without SQLSTATE `22008`.
+  - RR-03: structured sparse hole -> `MISSING_REQUIRED_FIELD`, no raw
+    `TypeError`.
+  - RR-04: primitive sparse hole -> `CONTRACT_VIOLATION`, no silent skip.
+- Safety / cleanup: `git diff --check` `PASS`. Correction temp DB `DROP`
+  `PASS`; post-drop `pg_database` count `0`. `lle_dev` remained present and
+  untouched. NUL byte count in `evidenceMetrics.js`: `3` before and after.
+
+##### Candidate Lifecycle After Correction
+
+METRIC_RESULT / Retention v1 Runtime corrected candidate =
+`ORIGINAL DEVELOPMENT CANDIDATE / INDEPENDENT REVIEW REQUEST CORRECTION /
+DEVELOPMENT CORRECTION IMPLEMENTED / DEVELOPMENT CORRECTION EVIDENCE PASS /
+INDEPENDENT RE-REVIEW PENDING / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT
+CLOSED`. Not `APPROVED`, not `VALIDATED`, not `CLOSED`, not `CANONICAL ON
+MAIN`, not `REVIEW-RECORDED`, and not `MAIN-INTEGRATION ELIGIBLE`. The
+prior Independent Review verdict remains historically `REQUEST CORRECTION`
+until a fresh Independent Re-Review evaluates the corrected tip
+`e1390eedb75137cc7c45027ac75b02f614e3a34e`.
+
+##### Non-Claims
+
+This record does not mean: correction independently re-reviewed = `NO`;
+Runtime validated = `NO`; Runtime canonical on `main` = `NO`; post-merge
+PostgreSQL validation = `NO`; review-record complete = `NO`; main
+integration performed = `NO`; `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`,
+`F-MR-RR-03`, `F-MR-RR-04` closed = `NO` (each is `CORRECTION IMPLEMENTED
+/ OPEN PENDING INDEPENDENT RE-REVIEW`); `F-MR-RR-05` resolved = `NO`; VI P1
+Measurement Readiness complete = `NO`; `B-3` resolved = `NO`; P1
+eligible/activated = `NO`; human-data authorized = `NO`; efficacy verified
+= `NO`; actual-provider/audio authorized = `NO`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -3782,12 +3922,13 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.74`; METRIC_RESULT Retention v1 Runtime Development candidate
-`2a6ab261a287f0cca4a2af5956a207c3b525ec54` `AUTHORIZED / DEVELOPMENT
-CANDIDATE CREATED / DEVELOPMENT-SESSION EVIDENCE PASS / INDEPENDENT
-REVIEWED — REQUEST CORRECTION / CORRECTION REQUIRED / MAIN-INTEGRATION NOT
-ELIGIBLE / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this
-ledger does not claim:
+revision `1.74`; METRIC_RESULT Retention v1 Runtime Development corrected
+candidate `e1390eedb75137cc7c45027ac75b02f614e3a34e` (parent
+`2a6ab261a287f0cca4a2af5956a207c3b525ec54`) `ORIGINAL DEVELOPMENT
+CANDIDATE / INDEPENDENT REVIEW REQUEST CORRECTION / DEVELOPMENT
+CORRECTION IMPLEMENTED / DEVELOPMENT CORRECTION EVIDENCE PASS /
+INDEPENDENT RE-REVIEW PENDING / NOT CANONICAL ON MAIN / NOT VALIDATED /
+NOT CLOSED`), this ledger does not claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -3829,18 +3970,25 @@ ledger does not claim:
   migration/DDL required `NO`; main-integration eligibility `NOT
   ELIGIBLE`; the candidate remains `NOT CANONICAL ON MAIN / NOT VALIDATED
   / NOT CLOSED / NOT REVIEW-RECORDED`
-- correction implemented, corrected candidate independently re-reviewed,
-  Runtime validated, Runtime canonical on `main`, review-record complete,
-  VI P1 Measurement Readiness complete, `B-3` resolved, P1
-  eligible/activated, human-data authorized, efficacy verified, or
-  actual-provider/audio authorized — NOT CLAIMED; none of these has
-  occurred
-- five new blocking findings (`F-MR-RR-01` HIGH, `F-MR-RR-02` HIGH,
-  `F-MR-RR-06` HIGH, `F-MR-RR-03` MEDIUM, `F-MR-RR-04` MEDIUM) or three new
-  non-blocking findings (`F-MR-RR-05` LOW, `F-MR-RR-07` LOW, `F-MR-RR-08`
-  LOW) from the Independent Review are closed, resolved, or corrected by
-  this record — NOT CLAIMED; all eight remain `OPEN` (see §4/§8 for exact
-  detail and required correction scope)
+- corrected candidate independently re-reviewed, Runtime validated,
+  Runtime canonical on `main`, review-record complete, VI P1 Measurement
+  Readiness complete, `B-3` resolved, P1 eligible/activated, human-data
+  authorized, efficacy verified, or actual-provider/audio authorized —
+  NOT CLAIMED; none of these has occurred. Development correction
+  IMPLEMENTATION (distinct from Independent Re-Review or validation) HAS
+  occurred — see below and §4
+- any of `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
+  `F-MR-RR-04`, or `F-MR-RR-05`/`F-MR-RR-07`/`F-MR-RR-08` is `CLOSED` by
+  this record — NOT CLAIMED. A separate Windows-local Development
+  correction session (not this status-sync) has since implemented
+  corrections for the five blocking findings `F-MR-RR-01`, `F-MR-RR-02`,
+  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`; each is now `CORRECTION
+  IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`, not `CLOSED` —
+  closure requires a fresh Independent Re-Review of the corrected tip
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`. The three non-blocking
+  findings `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08` were NOT corrected and
+  remain `LOW / OPEN / NON-BLOCKING` exactly as before (see §4 for exact
+  detail)
 - the reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
   `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
@@ -3942,16 +4090,24 @@ remain true and are established in §4/§8 and elsewhere in this document:
   files, on approved validation branch
   `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (see §4/§8)
 - the fresh Claude Opus 5 Independent Review of exact candidate
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` that was the prior recorded
-  Next Action has completed, with final verdict `REQUEST CORRECTION` (see
-  §4/§8); this current update is itself a separate status-only Control
-  Tower record of that completed review's result, with repository mutation
-  limited to `LLE_CURRENT_STATE.md`; it does not itself implement,
-  validate, correct, or independently re-review any Runtime code, and does
-  not integrate `main`. The sole recorded next action is now a fresh
-  Windows Claude Development correction session on the existing validation
-  branch, starting from the unchanged, un-amended candidate tip
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` (see §10)
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` completed with final verdict
+  `REQUEST CORRECTION` (see §4/§8); the fresh Windows Claude Development
+  correction session that verdict called for has since completed and
+  pushed exactly one new correction commit
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` (parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`) to the same validation
+  branch, implementing `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`,
+  `F-MR-RR-03`, `F-MR-RR-04` within the approved three-file boundary, with
+  Development-session PostgreSQL `17.10` execution evidence `PASS`
+  (`175/175` focused, `319/319` broader, `549/549` full, `+19` each, exit
+  `0`) (see §4). This current update is itself a separate status-only
+  Control Tower record of that completed correction session's result, with
+  repository mutation limited to `LLE_CURRENT_STATE.md`; it does not
+  itself implement, validate, correct, or independently re-review any
+  Runtime code, and does not integrate `main`. The sole recorded next
+  action is now a fresh Claude Opus 5 Independent Re-Review of the exact
+  corrected validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` (see
+  §10)
 - this record selected, started, or authorized VI efficacy pilot execution,
   modality state intervention, Lexico-Construction, mixed scheduler,
   bounded conversation, or AI audit — NOT CLAIMED; none of these was
@@ -4439,35 +4595,85 @@ historical ledger does not.
   the sole Next Action remains unchanged: the Windows Claude Development
   correction session recorded in §10. See "Addendum — Cleanup Completion
   and Reviewer Clone Mutation Disclosure" above (§4) for full detail.
+- The fresh Windows Claude Development correction session called for by
+  the immediately preceding two historical entries has since completed
+  (status-only, this update; repository mutation limited to
+  `LLE_CURRENT_STATE.md`; the correction session itself was a separate
+  Windows-local Development session, not this status-sync; PostgreSQL/
+  tests by this update `NOT RUN — STATUS-ONLY`). It pushed exactly one new
+  correction commit, `e1390eedb75137cc7c45027ac75b02f614e3a34e` (tree
+  `3e920fd687f670157835c236025c2773ce2497b4`, parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
+  METRIC_RESULT Retention v1 review findings`), to the same validation
+  branch `validation/vi-p1-metric-result-retention-v1-runtime-20260909`;
+  the original candidate commit remains immutable and un-amended. The
+  correction changed exactly `src/instrumentation/evidenceMetrics.js`
+  (blob `518536f91f5d1b4f79c32d2c188bd6a62282d3ae`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `5ed00d05dd4443f140bf2f85aebe9a8e3195e3ca`);
+  `src/instrumentation/evidenceValidation.js` was not touched (blob
+  unchanged, `fadee158da77693fba319976001d43f43c784196`). It implements
+  `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` per
+  the "Exact Minimal Correction Requirements" recorded in §4; each finding
+  is now `CORRECTION IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`,
+  not `CLOSED`. `F-MR-RR-05` was NOT corrected (NUL byte count `3` before
+  and after, unchanged) and remains `LOW / OPEN / NON-BLOCKING /
+  NOT CORRECTED`; `F-MR-RR-07` and `F-MR-RR-08` remain `LOW / OPEN /
+  NON-BLOCKING`. Development-session execution evidence (Windows-local,
+  PostgreSQL `17.10`, Node `v24.18.0`, npm `11.16.0`, isolated temp DB
+  `lle_correction_mr_rr_20260910070444`, both `psql` and repository
+  `db/pool.js` routing checks confirmed against that temp DB, `lle_dev`
+  untouched; existing migrations `001`–`013` only, `014` absent, no
+  migration/DDL change) reports `PASS`: focused METRIC_RESULT + RAW_SOURCE
+  `175/175` (`+19` from the pre-correction `156`), broader
+  Evidence/Foundation + Runtime `319/319` (`+19` from `300`), full
+  regression `549/549` (`+19` from `530`), fail `0`, cancelled `0`,
+  skipped `0`, todo `0`, exit `0`; correction temp DB dropped, post-drop
+  `pg_database` count `0`. This is classified exactly as
+  `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, NOT Independent Re-Review
+  validation and NOT post-merge validation; the fresh reviewer must not
+  rely on it as semantic proof. The corrected candidate's lifecycle is now
+  `ORIGINAL DEVELOPMENT CANDIDATE / INDEPENDENT REVIEW REQUEST CORRECTION
+  / DEVELOPMENT CORRECTION IMPLEMENTED / DEVELOPMENT CORRECTION EVIDENCE
+  PASS / INDEPENDENT RE-REVIEW PENDING / NOT CANONICAL ON MAIN / NOT
+  VALIDATED / NOT CLOSED` — not `APPROVED`, not `VALIDATED`, not `CLOSED`,
+  not `CANONICAL ON MAIN`, not `REVIEW-RECORDED`, not `MAIN-INTEGRATION
+  ELIGIBLE`. The prior Independent Review verdict remains historically
+  `REQUEST CORRECTION` until a fresh Independent Re-Review evaluates the
+  corrected tip. This record performed no candidate code modification, no
+  Independent Re-Review, and no main integration. See "METRIC_RESULT
+  Retention v1 Runtime — Development Correction Implemented (Status-Only)"
+  above (§4) for full detail; the sole Next Action is now a fresh Claude
+  Opus 5 Independent Re-Review of the corrected tip (§10).
 
 ## 10. Next Action
 
-- Fresh Windows Claude Development correction session on the existing
-  branch `validation/vi-p1-metric-result-retention-v1-runtime-20260909`,
-  starting from exact branch tip
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`. The correction session must:
-  fresh-fetch `origin`; verify current `main` drift since candidate parent
-  `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains limited exactly to
-  status-only `LLE_CURRENT_STATE.md` governance commits (any other
-  changed path is `BLOCKED — UNEXPECTED MAIN DRIFT BEFORE METRIC_RESULT
-  CORRECTION`, and the session must `STOP` and return to Control Tower
-  rather than proceed or repair); verify the validation branch tip remains
-  exactly the original candidate `2a6ab261a287f0cca4a2af5956a207c3b525ec54`
-  unchanged; implement exactly the five blocking findings `F-MR-RR-01`,
-  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` per the "Exact
-  Minimal Correction Requirements" recorded in §4; add direct regression
-  tests for each without weakening existing tests; stay within the
-  existing approved three-file boundary
-  (`src/instrumentation/evidenceMetrics.js`,
-  `src/instrumentation/evidenceValidation.js`,
-  `tests/viP1MetricResultRuntime.test.js`); preserve RAW_SOURCE shared
-  semantics; use actual Windows-local PostgreSQL `17.10` in an isolated
-  temp DB; rerun the focused METRIC_RESULT + RAW_SOURCE suite, the broader
-  focused Evidence/Foundation + Runtime suite, and the full regression;
-  verify temp DB cleanup; create exactly one separate correction commit
-  (must NOT amend, rebase, or squash the original candidate commit
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`); push only the validation
-  branch. The session must NOT integrate `main`, must NOT perform
-  Independent Re-Review, and must NOT close any finding itself. If a
-  fourth file or an architecture decision becomes necessary, the session
-  is `BLOCKED` and must return to Control Tower rather than proceed.
+- Fresh Claude Opus 5 Independent Re-Review of the exact corrected
+  validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` on branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` (parent
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`, subject `Correct
+  METRIC_RESULT Retention v1 review findings`). The re-review must
+  fresh-fetch `origin` and compare both the original candidate
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` and the correction
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` against current canonical
+  authority (`API_CONTRACT.md` `1.29`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  `1.8`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.74`). Primary purpose:
+  independently determine whether `F-MR-RR-01`, `F-MR-RR-02`,
+  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` are actually corrected. The
+  fresh reviewer must also verify no regression to RAW_SOURCE, FORMULA,
+  FIRST_MATCH, provenance, transaction, zero-side-effect, numeric/HALF_UP,
+  or candidate-admission behavior. The fresh reviewer must NOT rely on the
+  Development-session `PASS` evidence recorded in §4/§9 as semantic proof
+  and must independently reproduce execution evidence, preferring actual
+  Windows-local PostgreSQL `17.10` so the prior reviewer's PostgreSQL
+  `16.15`-vs-`17.10` environment deviation is not repeated. Repository
+  source mutation by the re-review session must be `0`: no candidate
+  correction in the reviewer session, no main integration, and no
+  review-record write. This baseline is drift-safe — the reviewer must NOT
+  hard-pin to this updater's pre-update `main` SHA, but must verify that
+  all `main` drift since candidate parent
+  `8c60cbcbdf358f17c0d8249447b08c264946fc51` is limited exactly to
+  status-only `LLE_CURRENT_STATE.md` governance commits; any other changed
+  path is `BLOCKED — UNEXPECTED MAIN DRIFT BEFORE METRIC_RESULT
+  INDEPENDENT RE-REVIEW`, and the reviewer must `STOP` and return to
+  Control Tower rather than proceed or repair.
