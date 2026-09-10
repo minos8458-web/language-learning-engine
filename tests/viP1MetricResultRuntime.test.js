@@ -2603,4 +2603,163 @@ describe('VI P1 METRIC_RESULT Retention v1 runtime (queryMetricResult)', { concu
       }
     );
   });
+
+  // ===========================================================================
+  // 19. F-MR-RR2-01 residual timestamp-contradiction correction: -infinity/
+  //     infinity due_at/finalized_at, and extreme finite contradictory
+  //     endpoints, are physically storable PostgreSQL facts that must never
+  //     escape as a raw database error (SQLSTATE 0A000/22008) -- they must
+  //     deterministically surface as CONTRACT_VIOLATION.
+  // ===========================================================================
+
+  test('T119 selected assignment due_at = -infinity is CONTRACT_VIOLATION, not a raw database error', async () => {
+    const { enrollment } = await newCandidateAssignment({ dueAt: '-infinity' });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T120 selected assignment due_at = infinity is CONTRACT_VIOLATION, not a raw database error', async () => {
+    const { enrollment } = await newCandidateAssignment({ dueAt: 'infinity' });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  // `forceTimeliness` always sets `completed_at` equal to `finalized_at`, so
+  // an infinite `finalized_at` via that helper would also make `completed_at`
+  // infinite -- which trips `completedWithinCutoff` (infinity <= cutoff is
+  // false) and short-circuits to the unrelated, already-correct
+  // POST_CUTOFF_COMPLETION exclusion *before* the completion-detail query
+  // (and its finalized_at-finiteness guard) is ever reached. To reach the
+  // actual finalized_at-finiteness guard, `completed_at` is set
+  // independently, to a finite in-cutoff value, while only `finalized_at`
+  // (on the finalization row) is left at the non-finite value -- exactly the
+  // condition that raised raw SQLSTATE 0A000 ("cannot convert infinity to
+  // bigint") in the prior implementation, empirically reproduced against
+  // this PostgreSQL 17.10 instance.
+  async function candidateWithMismatchedFinalization(finalizedAt, completedAt, evaluations) {
+    const { enrollment, assignmentId } = await newCandidateAssignment({ dueAt: DUE_AT });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, evaluations);
+    await pool.query(
+      'UPDATE evidence_attempt_finalizations SET finalized_at = $1 WHERE attempt_id = $2',
+      [finalizedAt, attempt.attemptId]
+    );
+    await pool.query(
+      `UPDATE evidence_assignments
+          SET terminal_outcome = 'COMPLETED', completion_attempt_id = $2, completed_at = $3
+        WHERE assignment_id = $1`,
+      [assignmentId, attempt.attemptId, completedAt]
+    );
+    return { enrollment, assignmentId, attempt };
+  }
+
+  test('T121 required finalization finalized_at = infinity is CONTRACT_VIOLATION, not a raw database error', async () => {
+    const { enrollment } = await candidateWithMismatchedFinalization(
+      'infinity',
+      DUE_AT,
+      [correctEvaluation(NODE_A)]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T122 required finalization finalized_at = -infinity is CONTRACT_VIOLATION, not a raw database error', async () => {
+    const { enrollment } = await candidateWithMismatchedFinalization(
+      '-infinity',
+      DUE_AT,
+      [correctEvaluation(NODE_A)]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T123 extreme finite contradictory timestamps (near-full-range due_at/finalized_at, completed_at mismatched) surface as CONTRACT_VIOLATION, not raw SQLSTATE 22008 -- the row is classified, not filtered away', async () => {
+    // Empirically confirmed against this PostgreSQL 17.10 instance: the prior
+    // RR-06-corrected delta shape (EXTRACT(DAY FROM interval) decomposition)
+    // raises raw SQLSTATE 22008 ("interval out of range") for a due_at/
+    // finalized_at pair spanning close to PostgreSQL's full representable
+    // TIMESTAMPTZ range. `finalized_at` cannot itself pass analysisCutoff
+    // (its canonical pattern caps a cutoff at a 4-digit year), so this
+    // fixture reaches the vulnerable arithmetic the same way a genuine
+    // production contradiction would: completed_at is set independently, to
+    // a finite in-range value, so completedWithinCutoff is true and the row
+    // reaches selectCompletionDetails -- while finalized_at itself is left
+    // at the extreme, mismatched value. That mismatch (completed_at !=
+    // finalized_at) is itself a pre-existing, already-correct source
+    // contradiction; the point of this fixture is that the SQL must not
+    // crash before that contradiction is ever classified.
+    const EXTREME_EARLY_DUE_AT = '4713-01-01 00:00:00+00 BC';
+    const EXTREME_LATE_FINALIZED_AT = '294276-12-31T23:59:59.999999Z';
+    const MISMATCHED_COMPLETED_AT = '2026-06-08T12:00:00.000000Z';
+    const { enrollment, assignmentId } = await newCandidateAssignment({ dueAt: EXTREME_EARLY_DUE_AT });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await pool.query(
+      'UPDATE evidence_attempt_finalizations SET finalized_at = $1 WHERE attempt_id = $2',
+      [EXTREME_LATE_FINALIZED_AT, attempt.attemptId]
+    );
+    await pool.query(
+      `UPDATE evidence_assignments
+          SET terminal_outcome = 'COMPLETED', completion_attempt_id = $2, completed_at = $3
+        WHERE assignment_id = $1`,
+      [assignmentId, attempt.attemptId, MISMATCHED_COMPLETED_AT]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T124 a large but consistent finite due_at/finalized_at gap (year 0001 to year 9999) classifies normally as LATE, without raising SQLSTATE 22008', async () => {
+    const EXTREME_EARLY_DUE_AT = '0001-01-01T00:00:00.000000Z';
+    const EXTREME_CUTOFF = '9999-12-31T23:59:59.999Z';
+    // Exactly equal to EXTREME_CUTOFF (inclusive upper boundary), so this
+    // stays within cutoff while still spanning the largest finite gap
+    // reachable through the public analysisCutoff pattern (~9998 years).
+    const EXTREME_LATE_FINALIZED_AT = EXTREME_CUTOFF;
+    const { enrollment, assignmentId } = await newCandidateAssignment({ dueAt: EXTREME_EARLY_DUE_AT });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, assignmentId, EXTREME_LATE_FINALIZED_AT);
+    const result = await queryMetricResult(pool, baseInput({
+      analysisCutoff: EXTREME_CUTOFF,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.lateCount, 1);
+    assert.equal(group.denominator, 0);
+  });
+
+  test('T125 ordinary finite valid timestamps still classify exactly as before this correction (non-regression)', async () => {
+    const { enrollment } = await candidateWithTimeliness(DUE_AT, [correctEvaluation(NODE_A)]);
+    const result = await queryMetricResult(pool, baseInput({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(group.earlyCount, 0);
+    assert.equal(group.lateCount, 0);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 1);
+  });
 });

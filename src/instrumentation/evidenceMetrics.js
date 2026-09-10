@@ -1270,7 +1270,16 @@ async function selectCandidateAssignments(client, enrollmentIds, filters, analys
        a.superseded_by,
        a.completion_attempt_id,
        (a.due_at IS NOT NULL) AS has_due_at,
-       (a.due_at IS NOT NULL AND a.due_at <= $3::timestamptz) AS due_within_cutoff,
+       -- F-MR-RR2-01: -infinity/infinity are physically storable due_at
+       -- values that pass every ordinary NULL/comparison predicate
+       -- silently. Expose finiteness as its own fact so a non-finite
+       -- due_at is never folded into "not yet due" or "already due".
+       (a.due_at IS NULL OR isfinite(a.due_at)) AS due_at_finite,
+       (
+         a.due_at IS NOT NULL
+         AND isfinite(a.due_at)
+         AND a.due_at <= $3::timestamptz
+       ) AS due_within_cutoff,
        (s.assignment_id IS NOT NULL) AS has_snapshot,
        (s.assignment_id IS NOT NULL AND s.created_at <= $3::timestamptz) AS snapshot_within_cutoff,
        s.formula_id,
@@ -1313,6 +1322,16 @@ function resolvePopulationEligibleAssignments(assignmentRows, formulaId, formula
     if (!row.has_due_at) {
       throw new ContractViolationError(
         `assignment ${row.assignment_id} has no due_at, required for Retention candidate admission`
+      );
+    }
+    // F-MR-RR2-01: a present but non-finite due_at (-infinity/infinity) must
+    // never be treated as merely "not yet due" or "already due" -- it is a
+    // source contradiction distinct from both, and must surface as
+    // CONTRACT_VIOLATION before any timeliness/cutoff comparison authority
+    // is derived from it.
+    if (!row.due_at_finite) {
+      throw new ContractViolationError(
+        `assignment ${row.assignment_id} has a non-finite due_at, required for Retention candidate admission`
       );
     }
     if (!row.due_within_cutoff) continue; // not yet due
@@ -1374,24 +1393,46 @@ function buildMetricCandidates(nodeRows, assignmentMap, enrollmentMap, formulaId
 // ---------------------------------------------------------------------------
 
 // Timeliness and the completed_at/finalized_at equality check are computed
-// entirely in PostgreSQL as exact integer arithmetic -- never via a JS
+// entirely in PostgreSQL as exact NUMERIC arithmetic -- never via a JS
 // `Date` subtraction, which would truncate below millisecond precision and
 // could move an exact boundary.
 //
 // F-MR-RR-06: the tolerance range is 0..Number.MAX_SAFE_INTEGER ms, so
-// `due_at ± tolerance-interval` (the prior shape) can construct a timestamp
-// outside PostgreSQL's representable TIMESTAMPTZ range and raise SQLSTATE
-// 22008, regardless of how close `finalized_at` actually is to `due_at`.
-// This never constructs a timestamp outside the valid range: `finalized_at
-// - due_at` is a plain difference of two already-valid timestamps (always
-// representable as an INTERVAL, never an overflow), decomposed into an
-// exact whole-day BIGINT count plus a sub-day microsecond remainder -- the
-// only step touching EXTRACT's internal float8 division is the sub-day
-// remainder, whose magnitude is always under one day, far below where
-// float64 rounding could ever move a microsecond boundary -- and
-// reassembled into a single exact BIGINT microsecond delta. Freshly
-// verified against PostgreSQL 17.10, including the ±1 microsecond boundary
-// and the full Number.MAX_SAFE_INTEGER millisecond tolerance.
+// `due_at ± tolerance-interval` (the original shape) can construct a
+// timestamp outside PostgreSQL's representable TIMESTAMPTZ range and raise
+// SQLSTATE 22008, regardless of how close `finalized_at` actually is to
+// `due_at`.
+//
+// F-MR-RR2-01: the RR-06 correction (`finalized_at - due_at` decomposed via
+// EXTRACT(DAY ...) plus a sub-day remainder) still raised raw SQLSTATE 22008
+// for extreme finite PostgreSQL timestamps -- interval subtraction and
+// day-decomposition across extreme endpoints can themselves overflow
+// PostgreSQL's representable INTERVAL range before the sub-day remainder is
+// ever reached, independent of how that remainder is computed. It also
+// never guarded against a non-finite `due_at`/`finalized_at`
+// (-infinity/infinity are physically storable and pass every prior
+// NULL/comparison predicate silently), which raised raw SQLSTATE 0A000 the
+// moment interval subtraction was attempted against an infinite endpoint.
+//
+// This corrected shape never constructs or subtracts an INTERVAL at all:
+// `EXTRACT(EPOCH FROM finalized_at) - EXTRACT(EPOCH FROM due_at)` computes
+// the signed delta as a difference of two PostgreSQL NUMERIC epoch values
+// (seconds since 1970-01-01 UTC, exact to microsecond precision, never a
+// float/double authority), then scales to microseconds by NUMERIC
+// multiplication -- exact, with no BIGINT cast of the full delta and no
+// INTERVAL range to overflow. A `CASE` guard evaluates `isfinite()` on both
+// endpoints before this arithmetic ever runs, so a non-finite `due_at`/
+// `finalized_at` yields `NULL::numeric` (never raises) and is exposed to the
+// in-memory classifier as an explicit `finalized_at_finite` fact (due_at
+// finiteness is already enforced upstream, in
+// `resolvePopulationEligibleAssignments`, before an assignment's id can ever
+// reach this query) rather than being silently absorbed into an
+// EARLY/ON_TIME/LATE comparison. `is_early`/`is_late` are computed only from
+// a non-null delta, so a non-finite endpoint can never resolve to a false
+// "on time". Freshly verified against PostgreSQL 17.10, including the ±1
+// microsecond boundary, the full Number.MAX_SAFE_INTEGER millisecond
+// tolerance, and extreme finite endpoints that previously raised SQLSTATE
+// 22008.
 async function selectCompletionDetails(client, assignmentIds, analysisCutoff, earlyToleranceMs, lateToleranceMs) {
   if (assignmentIds.length === 0) return new Map();
   const { rows } = await client.query(
@@ -1416,15 +1457,13 @@ async function selectCompletionDetails(client, assignmentIds, analysisCutoff, ea
      delta AS (
        SELECT
          assignment_id,
-         CASE WHEN finalized_at IS NULL OR due_at IS NULL THEN NULL::bigint ELSE (
-           EXTRACT(DAY FROM (finalized_at - due_at))::bigint * 86400000000
-           + ROUND(
-               EXTRACT(EPOCH FROM (
-                 (finalized_at - due_at)
-                 - (EXTRACT(DAY FROM (finalized_at - due_at))::int * INTERVAL '1 day')
-               )) * 1000000
-             )::bigint
-         ) END AS delta_microseconds
+         CASE
+           WHEN finalized_at IS NULL OR due_at IS NULL THEN NULL::numeric
+           WHEN NOT isfinite(finalized_at) OR NOT isfinite(due_at) THEN NULL::numeric
+           ELSE (
+             EXTRACT(EPOCH FROM finalized_at) - EXTRACT(EPOCH FROM due_at)
+           ) * 1000000
+         END AS delta_microseconds
        FROM base
      )
      SELECT
@@ -1434,12 +1473,22 @@ async function selectCompletionDetails(client, assignmentIds, analysisCutoff, ea
        base.attempt_owner_assignment_id,
        (base.started_at IS NOT NULL AND base.started_at <= $2::timestamptz) AS attempt_started_within_cutoff,
        (base.fin_attempt_id IS NOT NULL) AS finalization_exists,
-       (base.finalized_at IS NOT NULL AND base.finalized_at <= $2::timestamptz) AS finalized_within_cutoff,
+       -- F-MR-RR2-01: distinguish "finalization absent" from "finalization
+       -- present with a non-finite finalized_at" -- true whenever
+       -- finalized_at is null (no finalization row / not yet dereferenced)
+       -- or finite; false only when a finalization row exists and its
+       -- finalized_at is -infinity/infinity.
+       (base.finalized_at IS NULL OR isfinite(base.finalized_at)) AS finalized_at_finite,
+       (
+         base.finalized_at IS NOT NULL
+         AND isfinite(base.finalized_at)
+         AND base.finalized_at <= $2::timestamptz
+       ) AS finalized_within_cutoff,
        (base.completed_at = base.finalized_at) AS completed_equals_finalized,
        base.response_kind,
        base.attempt_outcome,
-       (delta.delta_microseconds < (-($3::bigint) * 1000)) AS is_early,
-       (delta.delta_microseconds > ($4::bigint * 1000)) AS is_late
+       (delta.delta_microseconds IS NOT NULL AND delta.delta_microseconds < (-($3::numeric) * 1000)) AS is_early,
+       (delta.delta_microseconds IS NOT NULL AND delta.delta_microseconds > ($4::numeric * 1000)) AS is_late
      FROM base
      JOIN delta ON delta.assignment_id = base.assignment_id`,
     [assignmentIds, analysisCutoff, String(earlyToleranceMs), String(lateToleranceMs)]
@@ -1519,6 +1568,15 @@ function classifyMetricCandidate(candidate, completionDetail, evaluationMap) {
   }
   if (!detail.finalization_exists) {
     throw new ContractViolationError('completion attempt has no finalization');
+  }
+  // F-MR-RR2-01: a present but non-finite finalized_at (-infinity/infinity)
+  // must become a source contradiction before it can become timeliness
+  // authority -- checked immediately once finalization is known to exist,
+  // and before the within-cutoff/timeliness comparisons that would
+  // otherwise silently misclassify it (e.g. -infinity <= analysisCutoff is
+  // true, which would wrongly read as "within cutoff").
+  if (!detail.finalized_at_finite) {
+    throw new ContractViolationError('completion finalization has a non-finite finalized_at');
   }
   if (!detail.finalized_within_cutoff) {
     throw new ContractViolationError('completion finalization occurred after analysisCutoff');
