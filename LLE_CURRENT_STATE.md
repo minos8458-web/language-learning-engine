@@ -4716,6 +4716,50 @@ This bootstrap does not rerun PostgreSQL or tests.
   "METRIC_RESULT Retention v1 Runtime — RR3 Fresh Independent Re-Review
   Result / Control Tower Environment Adjudication (F-MR-RR2-01
   Independently Corrected — Approved)" above (§4) for full detail.
+- METRIC_RESULT Retention v1 Runtime main integration and post-merge
+  validation (Windows-local Validation/Integration session; three normal
+  cherry-picks, no squash/amend/rebase/merge; repository mutation limited
+  to the three integration commits on `main` plus this status-sync
+  commit): main integration commits
+  `533685347ab3ee83e8d4323fbd64c41c7f7fab81` ->
+  `457d5a4bb89164b691d409c3ba64388b3b2559e0` ->
+  `22508147625090af84af141ac0ec574792369115`, effective scope exactly
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`. Actual Windows-local PostgreSQL
+  `17.10` post-merge validation on isolated database
+  `lle_pm_metric_result_retention_20260911095529` (dual database-routing
+  proof `PASS`, `lle_dev` untouched): focused `182/182 PASS`, broader
+  `326/326 PASS`, full `556/556 PASS`/`56` suites/exit `0`, `T100`–`T125`
+  `PASS`, migrations `001`–`013`/`013` exactly once/`014` absent, temp
+  database dropped and post-drop absence confirmed. `F-MR-RR3-01`,
+  `F-MR-RR3-02`, `F-MR-RR3-03`, `F-MR-RR2-02`, `F-MR-RR-05`, `F-MR-RR-07`,
+  `F-MR-RR-08`, `F-MR-IR-01`–`F-MR-IR-04` remain `OPEN / NON-BLOCKING`;
+  `F-MR-ARCH-06` remains `OPEN / DEFERRED`; `F-MR-ARCH-01`–`F-MR-ARCH-05`
+  remain `CLOSED`. No finding is closed, reopened, downgraded, or silently
+  fixed by this integration/validation. METRIC_RESULT / Retention v1
+  Runtime is now the current superseding disposition: `INDEPENDENT REVIEW
+  PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10
+  VERIFIED / VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`. This
+  supersedes all earlier candidate-stage dispositions recorded above (`NOT
+  CANONICAL ON MAIN`, `NOT VALIDATED`, `MAIN-INTEGRATION NOT ELIGIBLE`,
+  etc.), which remain accurate only as time-scoped history of their own
+  review stage. See §4 "METRIC_RESULT Retention v1 Runtime — Main
+  Integration Complete / Post-Merge Windows-Local PostgreSQL 17.10
+  Validation PASSED" for full detail.
+- Current State reconciliation (status-only, this update; repository
+  mutation limited to `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN —
+  STATUS-ONLY RECONCILIATION`): Control Tower live-verified the exact
+  Runtime integration/post-merge identities and accepted the post-merge
+  evidence above; a governing Current State self-contradiction (stale
+  pre-integration/pre-validation wording surviving in §8/§9.1 after the
+  post-merge status commit) was found and is reconciled by this update.
+  This update does NOT rerun validation, does NOT alter any Runtime
+  evidence or finding disposition, and does NOT perform the review-record.
+  No finding is closed, reopened, or altered by this reconciliation. The
+  governing lifecycle remains unchanged: `INDEPENDENT REVIEW PASSED /
+  CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
+  VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`.
 
 ## 9. Lifecycle Non-Claims
 
@@ -4744,10 +4788,12 @@ REVIEW-RECORDED / NOT CLOSED` (see §4 "Main Integration Complete /
 Post-Merge Windows-Local PostgreSQL 17.10 Validation PASSED")), this
 ledger does not claim:
 
-- METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
-  validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
-- Retention reducer Runtime implemented or validated — NOT CLAIMED; `NOT
-  IMPLEMENTED / NOT VALIDATED`
+- METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) or the Retention
+  reducer Runtime is `NOT IMPLEMENTED` or `NOT VALIDATED` — NOT CLAIMED;
+  both are now `IMPLEMENTED / CANONICAL ON MAIN / POST-MERGE
+  WINDOWS-LOCAL POSTGRESQL 17.10 VALIDATED`, per the main integration and
+  post-merge validation recorded above and in §4/§8. This does NOT mean
+  review-record complete (`NO`) or Runtime `CLOSED` (`NO`)
 - Unseen transfer implemented — NOT CLAIMED; it remains `NOT IMPLEMENTED /
   DEFERRED` (`F-MR-ARCH-06`)
 - Runtime implementation authorized or started by the earlier closure-sync
@@ -4770,27 +4816,38 @@ ledger does not claim:
   `300/300`/`9` suites, `530/530`/`56` suites/exit `0`). This is NOT a
   claim that the candidate is independently reviewed, validated, or
   canonical on `main` — a fresh Claude Opus 5 Independent Review has since
-  completed with verdict `REQUEST CORRECTION` (see below and §4/§8); the
-  candidate remains `INDEPENDENT REVIEWED — REQUEST CORRECTION /
-  CORRECTION REQUIRED / MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON
-  MAIN / NOT VALIDATED / NOT CLOSED`
-- METRIC_RESULT Retention v1 Runtime candidate approved, validated, or
-  canonical on `main` — NOT CLAIMED; the candidate's fresh Claude Opus 5
-  Independent Review (canonical repository/origin mutation `0`, commits
-  `0`, pushes `0`, PRs `0`, candidate files modified `0`; see §4 addendum
-  for the precise reviewer clone-local mutation disclosure) returned
-  verdict `REQUEST CORRECTION`, not `APPROVE`; correction required `YES`;
-  owner value required `NO`; architecture decision required `NO`;
-  migration/DDL required `NO`; main-integration eligibility `NOT
-  ELIGIBLE`; the candidate remains `NOT CANONICAL ON MAIN / NOT VALIDATED
-  / NOT CLOSED / NOT REVIEW-RECORDED`
-- corrected candidate independently re-reviewed, Runtime validated,
-  Runtime canonical on `main`, review-record complete, VI P1 Measurement
-  Readiness complete, `B-3` resolved, P1 eligible/activated, human-data
-  authorized, efficacy verified, or actual-provider/audio authorized —
-  NOT CLAIMED; none of these has occurred. Development correction
-  IMPLEMENTATION (distinct from Independent Re-Review or validation) HAS
-  occurred — see below and §4
+  completed with verdict `REQUEST CORRECTION` (see below and §4/§8); at
+  that review stage the candidate was `INDEPENDENT REVIEWED — REQUEST
+  CORRECTION / CORRECTION REQUIRED / MAIN-INTEGRATION NOT ELIGIBLE / NOT
+  CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`. That stage has since
+  been superseded: following Development correction, further Independent
+  Re-Review, a targeted RR2-01 correction, and a fresh RR3 Independent
+  Re-Review, the candidate was integrated onto `main` and post-merge
+  Windows-local PostgreSQL `17.10` validated (see §4/§8 and the governing
+  lifecycle above)
+- At the time of its first Independent Review, the METRIC_RESULT Retention
+  v1 Runtime candidate was NOT approved, validated, or canonical on `main`
+  — that Independent Review (canonical repository/origin mutation `0`,
+  commits `0`, pushes `0`, PRs `0`, candidate files modified `0`; see §4
+  addendum for the precise reviewer clone-local mutation disclosure)
+  returned verdict `REQUEST CORRECTION`, not `APPROVE`; correction required
+  `YES`; owner value required `NO`; architecture decision required `NO`;
+  migration/DDL required `NO`; main-integration eligibility at that time
+  was `NOT ELIGIBLE`. That stage has since been superseded by Development
+  correction, further Independent Re-Review, a targeted RR2-01 correction,
+  a fresh RR3 Independent Re-Review, main integration, and post-merge
+  Windows-local PostgreSQL `17.10` validation (see §4/§8); the current
+  governing lifecycle is stated above. Review-record complete and Runtime
+  `CLOSED` remain NOT CLAIMED (`NO`)
+- corrected candidate independently re-reviewed, Runtime validated, and
+  Runtime canonical on `main` — these HAVE since occurred (see §4/§8 and
+  the governing lifecycle above): the candidate was independently
+  re-reviewed (RR2/RR3), integrated onto `main`, and post-merge
+  Windows-local PostgreSQL `17.10` validated. This ledger does NOT claim:
+  review-record complete (`NO`); VI P1 Measurement Readiness complete
+  (`NO`); `B-3` resolved (`NO`); P1 eligible/activated (`NO`); human-data
+  collection authorized (`NO`); efficacy verified (`NO`); actual-provider/
+  audio authorized (`NO`)
 - any of `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
   `F-MR-RR-04`, or `F-MR-RR-05`/`F-MR-RR-07`/`F-MR-RR-08` is `CLOSED` by
   this record — NOT CLAIMED. A fresh Claude Opus 5 Independent Re-Review of
@@ -4819,31 +4876,37 @@ ledger does not claim:
   NOT CLAIMED; it is `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`,
   intentionally preserved, and must NOT be silently fixed as part of the
   `F-MR-RR2-01` correction
-- METRIC_RESULT / Retention v1 Runtime is canonical on `main`, that main
-  integration has been performed, or that main-integration eligibility
-  equals validation — NOT CLAIMED. `CONTROL TOWER MAIN-INTEGRATION
-  ELIGIBILITY = ELIGIBLE`, per the fresh RR3 Claude Opus 5 Independent
-  Re-Review of the RR2-01-corrected tip and Control Tower's bounded
-  acceptance of its Linux-container environment deviation as
-  main-integration eligibility evidence (see §4/§8); this eligibility
-  determination is NOT itself main integration, canonical status,
-  post-merge validation, or Runtime `VALIDATED`
+- At the RR3 stage, METRIC_RESULT / Retention v1 Runtime was not yet
+  canonical on `main` and main integration had not yet been performed;
+  `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = ELIGIBLE` only, per the
+  fresh RR3 Claude Opus 5 Independent Re-Review of the RR2-01-corrected tip
+  and Control Tower's bounded acceptance of its Linux-container environment
+  deviation as main-integration eligibility evidence (see §4/§8). That
+  stage has since been superseded: main integration HAS since been
+  performed and post-merge Windows-local PostgreSQL `17.10` validation HAS
+  since PASSED (see §4/§8 and the governing lifecycle above). Review-record
+  complete and Runtime `CLOSED` remain NOT CLAIMED (`NO`)
 - the RR3 reviewer's environment (Linux container, PostgreSQL `17.10`,
   Node `v22.22.2`, npm `10.9.7`, `psql` `16.15`) is Windows-local, or that
-  this Independent Re-Review is same-environment Independent Validation or
-  post-merge validation — NOT CLAIMED; Control Tower reviewed this
-  deviation and accepted the review as main-integration eligibility
-  evidence only, for the reasons recorded in §4; actual post-merge
-  Windows-local PostgreSQL `17.10` validation remains mandatory after main
-  integration
+  this Independent Re-Review was itself same-environment Independent
+  Validation or post-merge validation — NOT CLAIMED; Control Tower
+  reviewed this deviation and accepted the review as main-integration
+  eligibility evidence only, for the reasons recorded in §4. Actual
+  post-merge Windows-local PostgreSQL `17.10` validation, which was
+  mandatory after main integration, HAS since been performed and PASSED
+  (see §4/§8 and the governing lifecycle above)
 - `F-MR-RR3-01`, `F-MR-RR3-02`, or `F-MR-RR3-03` require correction, an
   Architecture decision, or an owner value, or are anything other than
   `NOTE / OPEN / NON-BLOCKING` — NOT CLAIMED; all three are optional future
   considerations only (see §4/§8)
-- METRIC_RESULT / Retention v1 Runtime is `VALIDATED`, `CLOSED`, canonical
-  on `main`, post-merge verified, or review-recorded — NOT CLAIMED; none
-  of these has occurred; main-integration eligibility (`ELIGIBLE`) is
-  distinct from and does not imply any of these
+- METRIC_RESULT / Retention v1 Runtime `CLOSED` or review-recorded — NOT
+  CLAIMED; neither has occurred. `VALIDATED`, canonical on `main`, and
+  post-merge verified HAVE since occurred (main integration performed,
+  post-merge Windows-local PostgreSQL `17.10` validation PASSED; see §4/§8
+  and the governing lifecycle above); main-integration eligibility
+  (`ELIGIBLE`, established at the RR3 stage) is distinct from, and was
+  established earlier than, this later validated/canonical/post-merge-
+  verified status
 - the earlier reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
   `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
@@ -4857,10 +4920,13 @@ ledger does not claim:
   addendum sync does not reinterpret the reviewer rerun as
   production-equivalent or post-merge validation, and does not change the
   semantic `REQUEST CORRECTION` verdict
-- post-merge PostgreSQL validation of the METRIC_RESULT Runtime candidate
-  performed — NOT CLAIMED; the recorded execution evidence is classified
-  exactly `DEVELOPMENT-SESSION EXECUTION EVIDENCE`, not Independent
-  Validation and not post-merge validation evidence
+- at that Development-session stage, post-merge PostgreSQL validation of
+  the METRIC_RESULT Runtime candidate had NOT yet been performed; the
+  recorded execution evidence was classified exactly `DEVELOPMENT-SESSION
+  EXECUTION EVIDENCE`, not Independent Validation and not post-merge
+  validation evidence. Actual post-merge Windows-local PostgreSQL `17.10`
+  validation of the merged `main` SHA HAS since been performed and PASSED
+  (see §4/§8 and the governing lifecycle above)
 - `F-MR-IR-01`–`F-MR-IR-04` or `F-MR-ARCH-06` closed, reopened, downgraded,
   or otherwise disposed by the Development candidate's creation, its
   execution evidence, or this Independent Review record — NOT CLAIMED;
@@ -4959,10 +5025,10 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Control Tower record of that completed correction session's result, with
   repository mutation limited to `LLE_CURRENT_STATE.md`; it does not
   itself implement, validate, correct, or independently re-review any
-  Runtime code, and does not integrate `main`. The sole recorded next
-  action is now a fresh Claude Opus 5 Independent Re-Review of the exact
-  corrected validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e` (see
-  §10)
+  Runtime code, and does not integrate `main`. At that stage, the recorded
+  Next Action was a fresh Claude Opus 5 Independent Re-Review of the exact
+  corrected validation tip `e1390eedb75137cc7c45027ac75b02f614e3a34e`; that
+  re-review has since completed (see below and §4/§8)
 - this record selected, started, or authorized VI efficacy pilot execution,
   modality state intervention, Lexico-Construction, mixed scheduler,
   bounded conversation, or AI audit — NOT CLAIMED; none of these was
@@ -4996,9 +5062,10 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Tower record of that completed re-review and this adjudication, with
   repository mutation limited to `LLE_CURRENT_STATE.md`; it does not
   itself implement, validate, correct any Runtime code, perform an
-  Independent Re-Review, or integrate `main`. The sole recorded next
-  action is now a fresh Windows Claude Development correction session for
-  `F-MR-RR2-01` only, on the same validation branch (see §4/§8/§10)
+  Independent Re-Review, or integrate `main`. At that stage, the recorded
+  Next Action was a fresh Windows Claude Development correction session for
+  `F-MR-RR2-01` only, on the same validation branch; that correction
+  session has since completed (see below and §4/§8)
 - the fresh Windows Claude Development correction session called for by
   the immediately preceding entry has since completed (status-only, this
   update; repository mutation limited to `LLE_CURRENT_STATE.md`; the
@@ -5053,8 +5120,9 @@ remain true and are established in §4/§8 and elsewhere in this document:
   candidate code modification, no Independent Re-Review, and no main
   integration. See "METRIC_RESULT Retention v1 Runtime — RR2-01
   Development Correction Implemented (Status-Only)" above (§4) for full
-  detail; the sole Next Action is now a fresh Claude Opus 5 Independent
-  Re-Review of the RR2-01-corrected tip (§10)
+  detail. At that stage, the recorded Next Action was a fresh Claude Opus 5
+  Independent Re-Review of the RR2-01-corrected tip; that re-review has
+  since completed (see below and §4/§8)
 - the fresh Claude Opus 5 Independent Re-Review of the RR2-01-corrected
   tip called for by the immediately preceding entry has since completed
   (Linux container, PostgreSQL `17.10`, Node `v22.22.2`, npm `10.9.7`,
@@ -5087,10 +5155,60 @@ remain true and are established in §4/§8 and elsewhere in this document:
   that post-merge validation succeeds. See "METRIC_RESULT Retention v1
   Runtime — RR3 Fresh Independent Re-Review Result / Control Tower
   Environment Adjudication (F-MR-RR2-01 Independently Corrected —
-  Approved)" above (§4) for full detail; the sole Next Action is now a
-  fresh Windows Claude Validation/Integration session to cherry-pick the
-  three approved Runtime commits onto `main` and perform mandatory
-  post-merge Windows-local PostgreSQL `17.10` validation (§10)
+  Approved)" above (§4) for full detail. At that stage, the recorded Next
+  Action was a fresh Windows Claude Validation/Integration session to
+  cherry-pick the three approved Runtime commits onto `main` and perform
+  mandatory post-merge Windows-local PostgreSQL `17.10` validation; that
+  session has since completed (see below and §4/§8)
+- the fresh Windows Claude Validation/Integration session called for by
+  the immediately preceding entry has since completed (status-only, this
+  update is a separate Current State reconciliation; the integration and
+  validation session itself was a Windows-local Validation/Integration
+  session, not this reconciliation update): three normal cherry-picks (no
+  squash/amend/rebase/merge) integrated the exact RR3-approved validation-
+  branch Runtime history onto `main` as commits
+  `533685347ab3ee83e8d4323fbd64c41c7f7fab81` ->
+  `457d5a4bb89164b691d409c3ba64388b3b2559e0` ->
+  `22508147625090af84af141ac0ec574792369115`, and mandatory post-merge
+  Windows-local PostgreSQL `17.10` validation of that exact merged `main`
+  SHA PASSED: focused `182/182`, broader `326/326`, full `556/556`/`56`
+  suites/exit `0`, `T100`–`T125` `PASS`, migrations `001`–`013`/`013`
+  exactly once/`014` absent, dual database-routing proof `PASS`, temp
+  database dropped and post-drop absence confirmed, `lle_dev` untouched
+  (see §4 "Main Integration Complete / Post-Merge Windows-Local PostgreSQL
+  17.10 Validation PASSED" for full detail). `F-MR-RR3-01`–`F-MR-RR3-03`,
+  `F-MR-RR2-02`, `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08`,
+  `F-MR-IR-01`–`F-MR-IR-04` remain `OPEN / NON-BLOCKING`; `F-MR-ARCH-06`
+  remains `OPEN / DEFERRED`; `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`.
+  No finding is closed, reopened, downgraded, or silently fixed by this
+  integration/validation. METRIC_RESULT / Retention v1 Runtime's lifecycle
+  is now `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
+  WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / NOT
+  REVIEW-RECORDED / NOT CLOSED` — this is the current superseding
+  disposition; every earlier candidate-stage disposition recorded above
+  (`NOT CANONICAL ON MAIN`, `NOT VALIDATED`, `MAIN-INTEGRATION NOT
+  ELIGIBLE`, etc.) is preserved only as time-scoped history of its own
+  review stage and does not describe current status. Review-record
+  complete and Runtime `CLOSED` remain NOT CLAIMED (`NO`). The recorded
+  Next Action is now Control Tower live verification of this Current
+  State reconciliation before METRIC_RESULT Retention Runtime
+  review-record authorization (§10)
+- this Current State reconciliation itself (this update; repository
+  mutation limited to `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN —
+  STATUS-ONLY RECONCILIATION`): Control Tower live-verified the exact
+  Runtime integration/post-merge identities (`main` HEAD, tree, validation-
+  branch tip, Runtime blobs, canonical blobs) recorded above and accepted
+  the post-merge evidence. A governing Current State self-contradiction —
+  stale pre-integration/pre-validation wording surviving in §8/§9.1 after
+  the post-merge status commit that recorded the main integration and
+  post-merge validation above — was found and is reconciled by this
+  update. This update ONLY reconciles current-status wording in
+  `LLE_CURRENT_STATE.md`; it does NOT rerun PostgreSQL or tests, does NOT
+  alter any Runtime evidence or finding disposition, and does NOT perform
+  the review-record. No finding is closed, reopened, or altered by this
+  reconciliation. The governing lifecycle remains unchanged: `INDEPENDENT
+  REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL
+  17.10 VERIFIED / VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -5694,5 +5812,5 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Control Tower live verification of the METRIC_RESULT Runtime main integration
-  and post-merge validation evidence before review-record authorization.
+- Control Tower live verification of this Current State reconciliation
+  before METRIC_RESULT Retention Runtime review-record authorization.
