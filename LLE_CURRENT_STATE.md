@@ -3697,6 +3697,189 @@ limited to `LLE_CURRENT_STATE.md`; VI P1 Measurement Readiness complete =
 authorized = `NO`; efficacy verified = `NO`; actual-provider/audio
 authorized = `NO`.
 
+#### METRIC_RESULT Retention v1 Runtime — RR3 Fresh Independent Re-Review Result / Control Tower Environment Adjudication (F-MR-RR2-01 Independently Corrected — Approved)
+
+- Role: status-only Control Tower record of (1) a completed fresh Claude
+  Opus 5 Independent Re-Review of the RR2-01-corrected validation tip
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` (parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`, subject `Correct
+  METRIC_RESULT Retention timestamp contradictions`), and (2) a Control
+  Tower adjudication of the reviewer's Linux-container environment
+  deviation. This record performs no Runtime code modification, no
+  validation-branch modification, and no main integration. Repository
+  mutation caused by this record is limited to `LLE_CURRENT_STATE.md`.
+  PostgreSQL/tests by this update: `NOT RUN — STATUS-ONLY UPDATE`. The
+  re-review itself was executed independently by a separate reviewer
+  session, not by this status-sync.
+- Reviewer environment: fresh Independent Re-Review, Linux container (NOT
+  Windows-local), PostgreSQL server `17.10`, Node `v22.22.2`, npm
+  `10.9.7`, `psql` client `16.15`.
+- Reviewer clone method: fresh `--no-checkout` clone, clone-local
+  `core.autocrlf=true`, detached checkout of
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`, reproducing
+  Windows-equivalent CRLF checkout behavior.
+- Canonical/origin mutation caused by the reviewer: `0`. Reviewer clone
+  tracked mutation: `0`. `package.json`/`package-lock.json`: unchanged.
+  npm setup: `npm ci`. No reviewer commit. No push. No PR. No candidate
+  edit.
+- Reviewer cleanup: reviewer DB dropped; post-drop `pg_database` count
+  `0`; reviewer clone deleted (tracked worktree clean before deletion);
+  reviewer PostgreSQL instance stopped. Remote main and validation tips
+  unchanged during review.
+
+##### Control Tower Environment Adjudication
+
+Recorded separately from the reviewer's own verdict: the reviewer's
+environment was a Linux container, not Windows-local, deviating from the
+Development-session Windows-local PostgreSQL `17.10` environment that
+produced the corrected candidate. Control Tower has reviewed this
+deviation and ACCEPTS this Independent Re-Review as evidence for
+main-integration eligibility, for these reasons:
+
+1. the exact reviewed target SHA/tree/blobs were independently verified
+   by the reviewer and match the required RR2-01-corrected tip exactly;
+2. the reviewer's PostgreSQL server was the exact required version
+   `17.10`;
+3. clone-local `core.autocrlf=true` reproduced Windows-equivalent CRLF
+   checkout behavior;
+4. the reviewer independently passed all three regression gates:
+   `182/182`, `326/326`, `556/556`;
+5. the `F-MR-RR-08` CRLF byte-identity guard passed in this checkout;
+6. separate Development evidence on the same corrected content had
+   already passed actual Windows-local PostgreSQL `17.10` with the same
+   `182/182`/`326/326`/`556/556` gates.
+
+This acceptance is explicitly bounded: it does NOT mean same-environment
+Independent Validation = `YES`; it does NOT mean post-merge validation =
+`YES`; it does NOT mean Runtime `VALIDATED` = `YES`. Actual post-merge
+Windows-local PostgreSQL `17.10` validation remains mandatory after main
+integration.
+
+##### F-MR-RR2-01 — Independently Corrected
+
+- `F-MR-RR2-01 = INDEPENDENTLY CORRECTED`. Not formally `CLOSED` by this
+  status record — canonical closure of the overall finding ledger is a
+  separate future determination, not made by this status-only update.
+- Reviewer independently verified, on the RR2-01-corrected tip:
+  - `due_at = -infinity` -> `CONTRACT_VIOLATION`.
+  - `due_at = infinity` -> `CONTRACT_VIOLATION`.
+  - `finalized_at = -infinity`, with finite `completed_at` forcing the
+    detail path -> `CONTRACT_VIOLATION`.
+  - `finalized_at = infinity`, same path -> `CONTRACT_VIOLATION`.
+  - extreme finite prior-`22008` timestamp contradiction ->
+    `CONTRACT_VIOLATION`, no raw `22008`.
+  - large valid finite timestamp gap -> normal classification.
+  - exact `±1` microsecond delta -> `PASS`.
+  - `Number.MAX_SAFE_INTEGER` tolerance -> `PASS`.
+- Reviewer independently confirmed the active delta path is PostgreSQL
+  `NUMERIC` epoch-difference arithmetic, with no active `INTERVAL`
+  subtraction, full-delta `BIGINT` cast, or `timestamp ± interval`.
+
+##### Prior Findings — Still Corrected
+
+- `F-MR-RR-01` = `STILL CORRECTED`.
+- `F-MR-RR-02` = `STILL CORRECTED`.
+- `F-MR-RR-06` = `STILL CORRECTED`.
+- `F-MR-RR-03` = `STILL CORRECTED`.
+- `F-MR-RR-04` = `STILL CORRECTED`.
+- RAW_SOURCE non-interference: `PASS`.
+- Five-code error-surface: `PASS`.
+- Transaction / zero-side-effect: `PASS`.
+- Focused: `182/182 PASS`, fail `0`, cancelled `0`, skipped `0`, todo `0`,
+  suites `2`, exit `0`.
+- Broader: `326/326 PASS`, fail `0`, cancelled `0`, skipped `0`, todo `0`,
+  suites `9`, exit `0`.
+- Full: `556/556 PASS`, fail `0`, cancelled `0`, skipped `0`, todo `0`,
+  suites `56`, exit `0`.
+- `F-MR-RR-08` CRLF guard: `PASS` in the `core.autocrlf=true` CRLF
+  reviewer checkout.
+- Reviewer verdict: `APPROVE WITH NON-BLOCKING NOTES` /
+  `MAIN-INTEGRATION ELIGIBLE`.
+
+##### New RR3 Notes (All Open / Non-Blocking)
+
+- `F-MR-RR3-01 = NOTE / OPEN / NON-BLOCKING`. The code comment globally
+  overstates the microsecond exactness of `EXTRACT(EPOCH FROM
+  timestamptz)`; PostgreSQL `17.10` may lose microsecond precision at
+  very high timestamps around year `294247+`. Not classification-reachable
+  because Retention timeliness authority requires `due_at`/`finalized_at`
+  to pass the canonical `analysisCutoff` domain, whose maximum year is
+  `9999`. No current correctness impact. Optional future comment
+  correction only.
+- `F-MR-RR3-02 = NOTE / OPEN / NON-BLOCKING`. Non-finite sentinel
+  semantics for other timestamp columns remain canonically ambiguous
+  (e.g. `completed_at = +infinity` -> `POST_CUTOFF_COMPLETION`;
+  `-infinity` in `started_at` / evaluation `created_at` / snapshot
+  `created_at` / assignment `created_at` / enrollment `created_at` ->
+  literal `<= cutoff` predicates accept them). No raw database error;
+  current canonical predicates are satisfied literally; no current
+  correction required. If a future Architecture decision forbids all
+  non-finite timestamps globally, handle separately.
+- `F-MR-RR3-03 = NOTE / OPEN / NON-BLOCKING`. `T121`/`T122` assert final
+  behavior/error code but do not uniquely pin the JS `finalized_at` guard,
+  because SQL defense independently yields the same `CONTRACT_VIOLATION`.
+  Runtime behavior remains correct. No main-integration block.
+
+##### Preserved Findings
+
+- `F-MR-RR2-02` = `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`.
+- `F-MR-RR-05` = `LOW / OPEN / NON-BLOCKING`. NUL count remains `3`.
+- `F-MR-RR-07` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-RR-08` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-IR-01`–`F-MR-IR-04` = `LOW / OPEN / NON-BLOCKING`.
+- `F-MR-ARCH-06` = `OPEN / DEFERRED`.
+- `F-MR-ARCH-01`–`F-MR-ARCH-05` = `CLOSED`, documentation-contract
+  findings only.
+
+##### Process Order
+
+Control Tower does NOT adopt the reviewer handoff's proposed ordering
+(review-record -> main integration -> post-merge). LLE governance order
+remains: Independent Review / Re-Review -> eligible candidate integration
+-> post-merge Windows-local PostgreSQL validation -> review-record.
+
+##### Verdict / Eligibility
+
+- Reviewer final verdict: `APPROVE WITH NON-BLOCKING NOTES`.
+- Reviewer main-integration eligibility: `ELIGIBLE`.
+- Control Tower adjudication: `FINAL INDEPENDENT REVIEW RESULT =
+  ACCEPTED`.
+- `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = ELIGIBLE`.
+- Correction required: `NO`. Owner value required: `NO`. Architecture
+  decision required: `NO`. Migration required: `NO`. DDL required: `NO`.
+
+Do NOT claim: Runtime `VALIDATED`; Runtime `CLOSED`; Runtime canonical on
+`main`; post-merge verification complete; review-record complete.
+
+##### Candidate Lifecycle
+
+METRIC_RESULT / Retention v1 Runtime RR2-01-corrected candidate =
+`DEVELOPMENT CANDIDATE + CORRECTIONS COMPLETE / INDEPENDENT REVIEW PASSED
+— APPROVE WITH NON-BLOCKING NOTES / CONTROL TOWER MAIN-INTEGRATION
+ELIGIBLE / NOT YET CANONICAL ON MAIN / NOT YET POST-MERGE VALIDATED / NOT
+REVIEW-RECORDED / NOT CLOSED`.
+
+This is Independent Review evidence, not a same-environment Independent
+Validation and not post-merge validation.
+
+##### Non-Claims
+
+This record does not mean: this record itself performed an Independent
+Re-Review — NOT CLAIMED; a separate reviewer session did, and this record
+only adjudicates the environment deviation and transcribes the result;
+Runtime validated = `NO`; Runtime canonical on `main` = `NO`; post-merge
+PostgreSQL validation = `NO`; review-record complete = `NO`; main
+integration performed = `NO`; this record modified any Runtime code, test
+file, canonical document, or validation branch — NOT CLAIMED; repository
+mutation by this record is limited to `LLE_CURRENT_STATE.md`; the
+reviewer's Linux-container environment is the same as, or is
+same-environment Independent Validation of, the Windows-local Development
+environment — NOT CLAIMED; the Control Tower environment acceptance
+extends beyond main-integration eligibility evidence to any validation or
+closure claim — NOT CLAIMED; VI P1 Measurement Readiness complete = `NO`;
+`B-3` resolved = `NO`; P1 eligible/activated = `NO`; human-data authorized
+= `NO`; efficacy verified = `NO`; actual-provider/audio authorized = `NO`.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -4331,6 +4514,52 @@ This bootstrap does not rerun PostgreSQL or tests.
   `F-MR-RR2-01` itself. See "METRIC_RESULT Retention v1 Runtime — RR2-01
   Development Correction Implemented (Status-Only)" above (§4) for full
   detail.
+- Fresh Claude Opus 5 Independent Re-Review of the RR2-01-corrected tip
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` (Linux container, PostgreSQL
+  `17.10`, Node `v22.22.2`, npm `10.9.7`, `psql` `16.15`, fresh
+  `--no-checkout` clone-local `core.autocrlf=true` detached checkout,
+  canonical/origin mutation `0`, reviewer clone tracked mutation `0`,
+  cleanup `PASS`): `F-MR-RR2-01 = INDEPENDENTLY CORRECTED` (not formally
+  `CLOSED` by this status record). Reviewer independently verified
+  `due_at = -infinity`/`infinity` -> `CONTRACT_VIOLATION`;
+  `finalized_at = -infinity`/`infinity` with finite `completed_at` forcing
+  the detail path -> `CONTRACT_VIOLATION`; extreme finite prior-`22008`
+  contradiction -> `CONTRACT_VIOLATION` with no raw `22008`; large valid
+  finite gap -> normal classification; exact `±1` microsecond and
+  `Number.MAX_SAFE_INTEGER` tolerance -> `PASS`; active delta path
+  confirmed as PostgreSQL `NUMERIC` epoch-difference arithmetic only, with
+  no `INTERVAL` subtraction, full-delta `BIGINT` cast, or
+  `timestamp ± interval`. `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`,
+  `F-MR-RR-03`, `F-MR-RR-04` remain `STILL CORRECTED`. Focused
+  `182/182 PASS`, broader `326/326 PASS`, full `556/556 PASS` (suites `2`/
+  `9`/`56`), fail `0`, cancelled `0`, skipped `0`, todo `0`, all exits `0`
+  (including the `F-MR-RR-08` CRLF guard in this checkout). Three new
+  notes recorded, all `NOTE / OPEN / NON-BLOCKING`: `F-MR-RR3-01` (comment
+  overstates µs exactness at year `294247+`, not classification-reachable
+  within the canonical `analysisCutoff` year-`9999` domain); `F-MR-RR3-02`
+  (non-finite sentinel semantics for other timestamp columns remain
+  canonically ambiguous but satisfy current literal predicates);
+  `F-MR-RR3-03` (`T121`/`T122` do not uniquely pin the JS guard because
+  SQL defense independently yields the same code; runtime behavior
+  correct). `F-MR-RR2-02`, `F-MR-RR-05` (NUL count `3`, unchanged),
+  `F-MR-RR-07`, `F-MR-RR-08`, `F-MR-IR-01`–`F-MR-IR-04` remain `LOW`/`NOTE`
+  `OPEN / NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`. Reviewer verdict `APPROVE
+  WITH NON-BLOCKING NOTES / MAIN-INTEGRATION ELIGIBLE`. Control Tower
+  reviewed the reviewer's Linux-container environment deviation
+  (Windows-local Development evidence on the same corrected content had
+  already passed actual Windows-local PostgreSQL `17.10` with the same
+  gate counts) and ACCEPTED this Independent Review as main-integration
+  eligibility evidence only — explicitly NOT as same-environment
+  Independent Validation and NOT as post-merge validation. `CONTROL TOWER
+  MAIN-INTEGRATION ELIGIBILITY = ELIGIBLE`. Candidate lifecycle:
+  `DEVELOPMENT CANDIDATE + CORRECTIONS COMPLETE / INDEPENDENT REVIEW
+  PASSED — APPROVE WITH NON-BLOCKING NOTES / CONTROL TOWER
+  MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL ON MAIN / NOT YET
+  POST-MERGE VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`. See
+  "METRIC_RESULT Retention v1 Runtime — RR3 Fresh Independent Re-Review
+  Result / Control Tower Environment Adjudication (F-MR-RR2-01
+  Independently Corrected — Approved)" above (§4) for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -4346,12 +4575,11 @@ and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
 revision `1.74`; METRIC_RESULT Retention v1 Runtime RR2-01-corrected
 candidate `316df38ef03c5256fbdab598da0df73c3be4e7e0` (parent
-`e1390eedb75137cc7c45027ac75b02f614e3a34e`) `PRIOR FIVE REVIEW FINDINGS
-INDEPENDENTLY CORRECTED / F-MR-RR2-01 DEVELOPMENT CORRECTION IMPLEMENTED /
-DEVELOPMENT-SESSION PG17.10 REGRESSION EVIDENCE PASS / F-MR-RR2-01
-INDEPENDENT RE-REVIEW PENDING / MAIN-INTEGRATION NOT YET ELIGIBLE / NOT
-CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`), this ledger does not
-claim:
+`e1390eedb75137cc7c45027ac75b02f614e3a34e`) `DEVELOPMENT CANDIDATE +
+CORRECTIONS COMPLETE / INDEPENDENT REVIEW PASSED — APPROVE WITH
+NON-BLOCKING NOTES / CONTROL TOWER MAIN-INTEGRATION ELIGIBLE / NOT YET
+CANONICAL ON MAIN / NOT YET POST-MERGE VALIDATED / NOT REVIEW-RECORDED /
+NOT CLOSED`), this ledger does not claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -4410,31 +4638,50 @@ claim:
   (see §4/§8). The three non-blocking findings `F-MR-RR-05`, `F-MR-RR-07`,
   `F-MR-RR-08` were NOT corrected and remain `LOW / OPEN / NON-BLOCKING`
   exactly as before (see §4 for exact detail)
-- `F-MR-RR2-01` is closed, independently re-reviewed, or `LOW`/non-blocking
-  — NOT CLAIMED. The reviewer disposition was `LOW / OPEN / NON-BLOCKING`,
-  but Control Tower adjudicated it against canonical API `1.29` and
-  reclassified it `MEDIUM / OPEN / MAIN-INTEGRATION BLOCKING`. A
-  Windows-local Development correction session has since implemented a
-  targeted fix (commit `316df38ef03c5256fbdab598da0df73c3be4e7e0`, parent
+- `F-MR-RR2-01` is formally `CLOSED` — NOT CLAIMED. A Windows-local
+  Development correction session implemented a targeted fix (commit
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`, parent
   `e1390eedb75137cc7c45027ac75b02f614e3a34e`) with Development-session
   PostgreSQL `17.10` execution evidence `PASS` (`182/182` focused,
-  `326/326` broader, `556/556` full, `+7` each, `T119`–`T125`, exit `0`);
-  `F-MR-RR2-01 = CORRECTION IMPLEMENTED / OPEN PENDING INDEPENDENT
-  RE-REVIEW`, NOT `CLOSED` — a Development session cannot close it. A
-  fresh Independent Re-Review of the corrected tip is required before any
-  closure or main-integration-eligibility claim (see §4/§8/§10 for full
-  reasoning)
+  `326/326` broader, `556/556` full, `+7` each, `T119`–`T125`, exit `0`),
+  and a fresh Claude Opus 5 Independent Re-Review (Linux container,
+  PostgreSQL `17.10`, Node `v22.22.2`, npm `10.9.7`, `psql` `16.15`,
+  canonical/origin mutation `0`, reviewer clone tracked mutation `0`,
+  cleanup `PASS`) has since independently verified the fix: `F-MR-RR2-01 =
+  INDEPENDENTLY CORRECTED`, reviewer verdict `APPROVE WITH NON-BLOCKING
+  NOTES / MAIN-INTEGRATION ELIGIBLE`. This is a re-review determination,
+  not itself a formal `CLOSED` disposition of the finding or the overall
+  candidate lifecycle (see §4/§8 for full reasoning)
 - `F-MR-RR2-02` is a blocker, or was fixed by this or any prior record —
   NOT CLAIMED; it is `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`,
   intentionally preserved, and must NOT be silently fixed as part of the
   `F-MR-RR2-01` correction
-- METRIC_RESULT / Retention v1 Runtime is main-integration eligible — NOT
-  CLAIMED as a Control Tower determination. The fresh reviewer's own
-  verdict was `APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION
-  ELIGIBLE`, preserved historically exactly as reported, but `CONTROL
-  TOWER MAIN-INTEGRATION ELIGIBILITY = NOT ELIGIBLE`, because `F-MR-RR2-01`
-  is reclassified `MEDIUM / MAIN-INTEGRATION BLOCKING` by Control Tower
-- the reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
+- METRIC_RESULT / Retention v1 Runtime is canonical on `main`, that main
+  integration has been performed, or that main-integration eligibility
+  equals validation — NOT CLAIMED. `CONTROL TOWER MAIN-INTEGRATION
+  ELIGIBILITY = ELIGIBLE`, per the fresh RR3 Claude Opus 5 Independent
+  Re-Review of the RR2-01-corrected tip and Control Tower's bounded
+  acceptance of its Linux-container environment deviation as
+  main-integration eligibility evidence (see §4/§8); this eligibility
+  determination is NOT itself main integration, canonical status,
+  post-merge validation, or Runtime `VALIDATED`
+- the RR3 reviewer's environment (Linux container, PostgreSQL `17.10`,
+  Node `v22.22.2`, npm `10.9.7`, `psql` `16.15`) is Windows-local, or that
+  this Independent Re-Review is same-environment Independent Validation or
+  post-merge validation — NOT CLAIMED; Control Tower reviewed this
+  deviation and accepted the review as main-integration eligibility
+  evidence only, for the reasons recorded in §4; actual post-merge
+  Windows-local PostgreSQL `17.10` validation remains mandatory after main
+  integration
+- `F-MR-RR3-01`, `F-MR-RR3-02`, or `F-MR-RR3-03` require correction, an
+  Architecture decision, or an owner value, or are anything other than
+  `NOTE / OPEN / NON-BLOCKING` — NOT CLAIMED; all three are optional future
+  considerations only (see §4/§8)
+- METRIC_RESULT / Retention v1 Runtime is `VALIDATED`, `CLOSED`, canonical
+  on `main`, post-merge verified, or review-recorded — NOT CLAIMED; none
+  of these has occurred; main-integration eligibility (`ELIGIBLE`) is
+  distinct from and does not imply any of these
+- the earlier reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
   `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
   same-environment Development validation, post-merge validation, or
@@ -4645,6 +4892,42 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Development Correction Implemented (Status-Only)" above (§4) for full
   detail; the sole Next Action is now a fresh Claude Opus 5 Independent
   Re-Review of the RR2-01-corrected tip (§10)
+- the fresh Claude Opus 5 Independent Re-Review of the RR2-01-corrected
+  tip called for by the immediately preceding entry has since completed
+  (Linux container, PostgreSQL `17.10`, Node `v22.22.2`, npm `10.9.7`,
+  `psql` `16.15`, fresh `--no-checkout` clone-local `core.autocrlf=true`
+  detached checkout, canonical/origin mutation `0`, reviewer clone
+  tracked mutation `0`, cleanup `PASS`): `F-MR-RR2-01 = INDEPENDENTLY
+  CORRECTED`, not formally `CLOSED`. `F-MR-RR-01`, `F-MR-RR-02`,
+  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` remain `STILL CORRECTED`.
+  Focused `182/182 PASS`, broader `326/326 PASS`, full `556/556 PASS`, all
+  exits `0`. Reviewer verdict `APPROVE WITH NON-BLOCKING NOTES /
+  MAIN-INTEGRATION ELIGIBLE`. Three new non-blocking notes recorded
+  (`F-MR-RR3-01`, `F-MR-RR3-02`, `F-MR-RR3-03`, all `NOTE / OPEN /
+  NON-BLOCKING`; see §4/§8). Control Tower reviewed the reviewer's
+  Linux-container environment deviation from the Windows-local
+  Development environment and ACCEPTED this Independent Re-Review as
+  main-integration eligibility evidence — explicitly bounded: NOT
+  same-environment Independent Validation, NOT post-merge validation, NOT
+  Runtime `VALIDATED`. `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY =
+  ELIGIBLE`, superseding the prior `NOT ELIGIBLE` determination. This
+  record did not itself perform an Independent Re-Review, modify any
+  Runtime code, test file, canonical document, or validation branch, or
+  integrate `main`; repository mutation by this record is limited to
+  `LLE_CURRENT_STATE.md`. The corrected candidate's lifecycle is now
+  `DEVELOPMENT CANDIDATE + CORRECTIONS COMPLETE / INDEPENDENT REVIEW
+  PASSED — APPROVE WITH NON-BLOCKING NOTES / CONTROL TOWER
+  MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL ON MAIN / NOT YET
+  POST-MERGE VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`. Actual
+  post-merge Windows-local PostgreSQL `17.10` validation remains mandatory
+  after main integration, and review-record writing must not occur before
+  that post-merge validation succeeds. See "METRIC_RESULT Retention v1
+  Runtime — RR3 Fresh Independent Re-Review Result / Control Tower
+  Environment Adjudication (F-MR-RR2-01 Independently Corrected —
+  Approved)" above (§4) for full detail; the sole Next Action is now a
+  fresh Windows Claude Validation/Integration session to cherry-pick the
+  three approved Runtime commits onto `main` and perform mandatory
+  post-merge Windows-local PostgreSQL `17.10` validation (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -5200,35 +5483,72 @@ historical ledger does not.
   Blocking)" above (§4) for full detail; the sole Next Action is now a
   fresh Windows Claude Development correction session for `F-MR-RR2-01`
   only, on the same validation branch (§10)
+- the fresh Windows Claude Development correction session for
+  `F-MR-RR2-01` called for by the immediately preceding entry has since
+  completed (status-only, this update; repository mutation limited to
+  `LLE_CURRENT_STATE.md`; the correction session itself was a separate
+  Windows-local Development session, not this status-sync; PostgreSQL/
+  tests by this update `NOT RUN — STATUS-ONLY`). It pushed exactly one new
+  correction commit, `316df38ef03c5256fbdab598da0df73c3be4e7e0` (tree
+  `1b19a279d01a37d027a3d3baa79e22e04bb6be1c`, parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`), implementing explicit
+  `due_at_finite`/`finalized_at_finite` source-contradiction guards and
+  PostgreSQL `NUMERIC` epoch-difference arithmetic, per new tests
+  `T119`–`T125` (`+7`), with Development-session Windows-local PostgreSQL
+  `17.10` execution evidence `PASS` (`182/182` focused, `326/326`
+  broader, `556/556` full, exit `0`); `F-MR-RR2-01` became `CORRECTION
+  IMPLEMENTED / OPEN PENDING INDEPENDENT RE-REVIEW`, not `CLOSED` — the
+  sole Next Action became a fresh Claude Opus 5 Independent Re-Review of
+  the RR2-01-corrected tip (§10)
+- the prior recorded Next Action ("Fresh Claude Opus 5 Independent
+  Re-Review of exact RR2-01 corrected tip
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`...") remained not yet
+  performed — it has since been performed: a fresh Claude Opus 5
+  Independent Re-Review (Linux container, PostgreSQL `17.10`, Node
+  `v22.22.2`, npm `10.9.7`, `psql` `16.15`, fresh `--no-checkout`
+  clone-local `core.autocrlf=true` detached checkout, canonical/origin
+  mutation `0`, reviewer clone tracked mutation `0`, cleanup `PASS`)
+  independently verified `F-MR-RR2-01 = INDEPENDENTLY CORRECTED` (not
+  formally `CLOSED`), confirmed `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`,
+  `F-MR-RR-03`, `F-MR-RR-04` `STILL CORRECTED`, and reported focused
+  `182/182`, broader `326/326`, full `556/556`, all `PASS`, exit `0`, with
+  reviewer verdict `APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION
+  ELIGIBLE`. Three new non-blocking notes were recorded (`F-MR-RR3-01`,
+  `F-MR-RR3-02`, `F-MR-RR3-03`, all `NOTE / OPEN / NON-BLOCKING`). Control
+  Tower reviewed the reviewer's Linux-container (not Windows-local)
+  environment deviation and ACCEPTED the review as main-integration
+  eligibility evidence only — bounded explicitly: NOT same-environment
+  Independent Validation, NOT post-merge validation, NOT Runtime
+  `VALIDATED`; `CONTROL TOWER MAIN-INTEGRATION ELIGIBILITY = ELIGIBLE`,
+  superseding the prior `NOT ELIGIBLE` determination. That re-review and
+  this adjudication did not modify any Runtime code, test file, canonical
+  document, or validation branch, and did not integrate `main`. See
+  "METRIC_RESULT Retention v1 Runtime — RR3 Fresh Independent Re-Review
+  Result / Control Tower Environment Adjudication (F-MR-RR2-01
+  Independently Corrected — Approved)" above (§4) for full detail; the
+  sole Next Action is now a fresh Windows Claude Validation/Integration
+  session (§10)
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Re-Review of exact RR2-01 corrected tip
-  `316df38ef03c5256fbdab598da0df73c3be4e7e0` on branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`. Primary
-  purpose: independently determine whether `F-MR-RR2-01` is corrected. The
-  reviewer must compare pre-RR2-01 tip
-  `e1390eedb75137cc7c45027ac75b02f614e3a34e` against
-  `316df38ef03c5256fbdab598da0df73c3be4e7e0` and canonical API `1.29` /
-  Schema `1.8` / Backlog `1.74`. The re-review must independently verify at
-  minimum: `due_at = -infinity` -> `CONTRACT_VIOLATION`; `due_at =
-  infinity` -> `CONTRACT_VIOLATION`; `finalized_at = -infinity` ->
-  `CONTRACT_VIOLATION`; `finalized_at = infinity` -> `CONTRACT_VIOLATION`;
-  extreme finite prior-`22008` contradiction -> `CONTRACT_VIOLATION`; a
-  large valid finite delta still classifies correctly; exact ±1
-  microsecond precision; `Number.MAX_SAFE_INTEGER` tolerance; prior
-  `F-MR-RR-01`/`F-MR-RR-02`/`F-MR-RR-06`/`F-MR-RR-03`/`F-MR-RR-04` remain
-  corrected; RAW_SOURCE unchanged; NUL count remains `3`; no new five-code
-  error-surface leak; one `REPEATABLE READ READ ONLY` transaction /
-  zero-side-effect unchanged. Prefer actual PostgreSQL `17.10`. Reviewer
-  repository source mutation must be `0`. No code correction. No main
-  integration. No review-record write. Do not close any finding. The
-  immutable review target is `316df38ef03c5256fbdab598da0df73c3be4e7e0`
-  with parent `e1390eedb75137cc7c45027ac75b02f614e3a34e`; do NOT hard-pin
-  the future reviewer to this updater's pre-update main SHA
-  (`8cbb717538944838993c9da39c302cbc4d104125`) — current `main` may advance
-  only via this status-only `LLE_CURRENT_STATE.md` updater. The reviewer
-  must verify that all `main` drift since
-  `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains limited exactly to
-  `LLE_CURRENT_STATE.md`; any other `main` path drift is `BLOCKED —
-  UNEXPECTED MAIN DRIFT BEFORE RR2-01 INDEPENDENT RE-REVIEW`.
+- Fresh Windows Claude Validation/Integration session. That session must:
+  (1) live-fetch origin and verify then-current `main`; (2) verify all
+  `main` drift since `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains
+  limited exactly to `LLE_CURRENT_STATE.md` status/governance commits; (3)
+  verify the validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` remains
+  exactly `316df38ef03c5256fbdab598da0df73c3be4e7e0`; (4) integrate exactly
+  these Runtime commits, in this order:
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`,
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`,
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`; (5) use normal cherry-pick
+  only; (6) do NOT squash/amend/rebase; (7) stop on any conflict or
+  unexpected path; (8) after successful integration, run mandatory
+  post-merge Windows-local PostgreSQL `17.10` validation on the actual
+  resulting `origin/main` SHA; (9) use a fresh isolated PostgreSQL DB,
+  never `lle_dev`; (10) rerun focused `182`, broader `326`, full `556`
+  expected gates; (11) verify migrations `001`–`013`, `013` exactly once,
+  `014` absent; (12) verify cleanup count `0`; (13) do not write a
+  review-record until post-merge validation succeeds; (14) do not claim
+  `CLOSED` until the review-record lifecycle is complete. This status
+  updater does not perform the integration itself.
