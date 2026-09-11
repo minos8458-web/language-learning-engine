@@ -5303,6 +5303,165 @@ NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Independent Re-Review Result / Approve with Non-Blocking Notes
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record Unseen Transfer Tier C independent re-review`,
+  parent `89b42a7be527720618d1a6898b3c96af6933bc02`) recording that a
+  fresh Claude Opus 5 Independent Re-Review of the corrected METRIC_RESULT
+  Unseen Transfer Tier C documentation candidate
+  `1246e912a9de5f88cb8a24522992e857574815e9` has completed with final
+  verdict `APPROVE WITH NON-BLOCKING NOTES` and main-integration
+  eligibility `ELIGIBLE`, and Control Tower has ACCEPTED the re-review.
+  This record does not modify `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not modify the validation
+  branch, does not run Runtime/tests/db/migrations, does not run
+  PostgreSQL, does not perform main integration, and does not create a
+  review-record. Repository mutation caused by this update: limited to
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline unchanged
+  before this update: `main`/`origin/main`
+  `89b42a7be527720618d1a6898b3c96af6933bc02`, tree
+  `671db5493b6fafb5f0885564547f198680c9cf3d`, parent
+  `a498d372812d88083117fc25a51192b2877995b3`, subject `Record Unseen
+  Transfer Tier C documentation correction`, Current State blob
+  `9a5c9734bb5a5b75331eb14abfe643710f412231`; validation branch tip
+  `1246e912a9de5f88cb8a24522992e857574815e9` (tree
+  `c85541fd6c7803aeac4cb94b8e6f24972ba9e2b3`, parent
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, corrected API `1.30` blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`, corrected Schema `1.9` blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`); Backlog blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b` (`1.75`), canonical `main`
+  API `1.29` blob `a498d5536ea1d228d133610780ff06d77a9d403f`, canonical
+  `main` Schema `1.8` blob `a0e4037db07f7416109e53ed72c10a12b7c433bb`
+  unchanged; worktree/index clean, no untracked files.
+
+###### Independent Re-Review Evidence
+
+- Reviewer: fresh Claude Opus 5 Independent Re-Review, disposable Linux
+  clone, fetch-only.
+- Repository mutation `0`; commit/push/PR/branch/tag creation `0`; final
+  worktree porcelain `0`.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY RE-REVIEW`. Runtime/npm
+  tests: `NOT RUN — DOCUMENTATION-ONLY RE-REVIEW`. `NOT RUN` is not
+  reinterpreted as `PASS`.
+- Review summary: `MAIN BASELINE = PASS`; `MAIN DRIFT = STATUS-ONLY`;
+  `CORRECTED CANDIDATE IDENTITY = PASS`; `CORRECTION DELTA SCOPE = PASS`;
+  `CUMULATIVE TWO-FILE SCOPE = PASS`; `IR-01`–`IR-06` = `CORRECTED`;
+  `USER-APPROVED UT-C FIDELITY = PASS`; `API / SCHEMA CONSISTENCY = PASS`;
+  `RETENTION V1 NON-REGRESSION = PASS`; `RAW_SOURCE NON-REGRESSION =
+  PASS`; `BIGINT EXACTNESS = PASS`; `FIRST_MATCH = PASS`; `PROVENANCE
+  DETERMINISM = PASS`; `FORMULA V2 CLOSEDNESS = PASS`; `PHYSICAL SCHEMA
+  SUFFICIENT = YES`; `MIGRATION REQUIRED = NO`; `DDL REQUIRED = NO`;
+  `TIER A IMPACT = NO`; `OWNER VALUE REQUIRED = NO`; `NEW BLOCKING
+  FINDING = NO`; `CORRECTION REQUIRED FOR CURRENT MAIN-INTEGRATION
+  ELIGIBILITY = NO`; `MAIN-INTEGRATION ELIGIBILITY = ELIGIBLE`; `FINAL
+  VERDICT = APPROVE WITH NON-BLOCKING NOTES`.
+
+###### Prior Finding Dispositions (None Closed)
+
+- `F-MR-UT-IR-01`–`06` = `CORRECTED / MAIN-INTEGRATION BLOCKING = NO /
+  OPEN UNTIL LIFECYCLE GOVERNANCE COMPLETES`.
+- `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`,
+  unchanged.
+- No `F-MR-UT-IR` finding, `F-MR-ARCH-06`, or `F-MR-UT-01`–`09` is closed
+  by this record.
+
+###### New Re-Review Findings — All Open, Non-Blocking
+
+- `F-MR-UT-RR2-01` — `LOW / DOCUMENTATION` — Schema §12.4.1 retains the
+  pre-existing governance-lifecycle annotation `(F-MR-ARCH-06,
+  OPEN/DEFERRED)` while the parallel API wording was cleaned; this is
+  pre-existing Retention v1 main content the approved candidate scope
+  intentionally preserved. Contract consequence: `NONE`; operative
+  `definitionVersion`-1 semantics unchanged. Disposition: `NON-BLOCKING /
+  PRESERVE OPEN / SEPARATELY APPROVED BOUNDED CLEANUP LATER IF DESIRED`.
+  Owner value `NO`; Tier A `NO`; migration `NO`; DDL `NO`.
+- `F-MR-UT-RR2-02` — `LOW / DOCUMENTATION / CONTRACT WORDING` — FORMULA
+  v2 validation-enumeration wording retains a qualifier equivalent to
+  "null in a non-permitted position" even though the corrected absolute
+  rule now states FORMULA v2 has no permitted null position. Contract
+  consequence: `NONE IN OUTCOME` — the governing absolute rule (any null
+  anywhere inside FORMULA v2 = `CONTRACT_VIOLATION`) controls both
+  documents, so the residual qualifier is imprecise but produces no
+  alternate result. Correction required: `YES — FUTURE BOUNDED WORDING
+  CLEANUP`, tracked for later; Control Tower disposition `ACCEPTED / LOW
+  / NON-BLOCKING / DO NOT MODIFY THE REVIEWED CANDIDATE BEFORE MAIN
+  INTEGRATION`. Owner value `NO`; Tier A `NO`; migration `NO`; DDL `NO`.
+- `F-MR-UT-RR2-03` — `NOTE` — `SV(X,Y)` is formally defined over ITEMs
+  but `rho(A)` uses `SV(A, owner(e))` without an explicit
+  notation-lifting sentence; each assignment snapshot pins exactly one
+  ITEM pair, so lifting is unique and deterministic. Disposition: `NOTE /
+  NON-BLOCKING`.
+- `F-MR-UT-RR2-04` — `NOTE` — provenance ordering wording varies between
+  "canonical lowercase UUID/string ordering", "canonical ordering", and
+  "canonical JS string ordering"; all usages defer to the same existing
+  ordering authority and no new normalization/case-folding rule is
+  created. Disposition: `NOTE / NON-BLOCKING`.
+
+###### Control Tower Adjudication
+
+- Independent Re-Review: `ACCEPTED`.
+- Final verdict: `APPROVE WITH NON-BLOCKING NOTES`.
+- Main-integration eligibility: `ELIGIBLE`.
+- New blocking finding: `NO`. Correction required before current main
+  integration: `NO`.
+- The corrected documentation candidate may proceed to the approved
+  Validation/Integration lifecycle. This status record itself does NOT
+  integrate anything.
+
+###### Canonical Main (Unchanged)
+
+Canonical on `main` remains Backlog `1.75` (blob
+`82cc08c77dd8d43014560a5f2cec26d7c619f00b`), API `1.29` (blob
+`a498d5536ea1d228d133610780ff06d77a9d403f`), Schema `1.8` (blob
+`a0e4037db07f7416109e53ed72c10a12b7c433bb`). Corrected API `1.30` /
+Schema `1.9` remain `NOT CANONICAL ON MAIN`.
+
+###### Finding State
+
+- `F-MR-ARCH-06`: `OPEN`. `F-MR-UT-01`–`09`: `OPEN`.
+- `F-MR-UT-IR-01`–`06` = `CORRECTED / MAIN-INTEGRATION BLOCKING = NO /
+  OPEN UNTIL LIFECYCLE GOVERNANCE COMPLETES`.
+- `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`.
+- `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING` (new; see above).
+- No finding is closed by this record.
+
+###### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record.
+
+###### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / ORIGINAL TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE IMPLEMENTED / FIRST INDEPENDENT REVIEW = REQUEST
+CORRECTION / CORRECTION DESIGN COMPLETE / CORRECTION DECISIONS
+USER-APPROVED / DOCUMENTATION CORRECTION IMPLEMENTED ON VALIDATION
+BRANCH / FRESH INDEPENDENT RE-REVIEW = APPROVE WITH NON-BLOCKING NOTES /
+MAIN-INTEGRATION ELIGIBLE / NOT YET CANONICAL ON MAIN / NOT
+REVIEW-RECORDED / RUNTIME NOT AUTHORIZED / NOT VALIDATED AS RUNTIME / NOT
+CLOSED`.
+
+###### Non-Claims
+
+This record does not mean: API `1.30` canonical on `main` — NOT CLAIMED;
+Schema `1.9` canonical on `main` — NOT CLAIMED; main integration
+performed — NOT CLAIMED; review-recorded — NOT CLAIMED; any
+`F-MR-UT-IR` or `F-MR-UT-RR2` finding closed — NOT CLAIMED (all remain
+`OPEN`); Runtime authorized — NOT CLAIMED; Runtime implemented — NOT
+CLAIMED; Runtime validated — NOT CLAIMED; P1 activated — NOT CLAIMED;
+human-data collection authorized — NOT CLAIMED; efficacy verified — NOT
+CLAIMED; `B-3` resolved — NOT CLAIMED; METRIC_RESULT / Retention v1
+Runtime reopened — NOT CLAIMED.
+
+###### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6361,11 +6520,27 @@ ledger does not claim:
   corrected API `1.30` blob `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
   corrected Schema `1.9` blob `aa009da313c3298186537f7aa641c98ea721b15f`),
   and Control Tower has live-verified its remote identity/scope/blobs
-  (see §4/§8). This is NOT a claim that the corrected candidate has been
-  independently re-reviewed, that any finding is closed, or that it is
-  canonical on `main` — Independent Re-Review remains `NOT YET
-  PERFORMED`, `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`, and
-  main integration remains `NOT AUTHORIZED`
+  (see §4/§8). Since then: a fresh Claude Opus 5 Independent Re-Review
+  (disposable Linux clone, fetch-only, repository mutation `0`, no
+  commit/push/PR/branch/tag creation, final worktree porcelain `0`;
+  PostgreSQL/tests `NOT RUN — DOCUMENTATION-ONLY RE-REVIEW`) of exact
+  corrected candidate `1246e912a9de5f88cb8a24522992e857574815e9` has
+  completed with final verdict `APPROVE WITH NON-BLOCKING NOTES` and
+  main-integration eligibility `ELIGIBLE`, ACCEPTED by Control Tower.
+  `F-MR-UT-IR-01`–`06` = `CORRECTED / MAIN-INTEGRATION BLOCKING = NO /
+  OPEN UNTIL LIFECYCLE GOVERNANCE COMPLETES`; `F-MR-UT-IR-07`/`08` remain
+  `NOTE / OPEN / NO CORRECTION REQUIRED`. Four new non-blocking findings
+  were recorded (`F-MR-UT-RR2-01`–`04`, all `OPEN`, none blocking, none
+  requiring correction to the reviewed candidate before main
+  integration; `F-MR-UT-RR2-02` is tracked for a future bounded wording
+  cleanup only). This is NOT a claim that any finding is closed, that
+  API `1.30` or Schema `1.9` is canonical on `main`, that main
+  integration has been performed, or that a review-record exists —
+  `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`; canonical `main`
+  remains API `1.29` / Schema `1.8`; main integration remains
+  `NOT YET PERFORMED`; Runtime remains `NOT AUTHORIZED` (see §4/§8; the
+  sole Next Action is now a fresh Windows Claude Validation/Integration
+  session, §10)
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -7574,33 +7749,55 @@ historical ledger does not.
   above (§4) for full detail; the sole Next Action is now a fresh Claude
   Opus 5 Independent Re-Review of the exact corrected documentation
   candidate (§10)
+- the prior recorded Next Action ("Fresh Claude Opus 5 Independent
+  Re-Review, in a new session, of exact corrected documentation
+  candidate `1246e912a9de5f88cb8a24522992e857574815e9`...") has been
+  fulfilled: a fresh Claude Opus 5 Independent Re-Review (disposable
+  Linux clone, fetch-only, repository mutation `0`, no commit/push/PR/
+  branch/tag creation, final worktree porcelain `0`; PostgreSQL/tests
+  `NOT RUN — DOCUMENTATION-ONLY RE-REVIEW`) returned final verdict
+  `APPROVE WITH NON-BLOCKING NOTES`, main-integration eligibility
+  `ELIGIBLE`, ACCEPTED by Control Tower. `F-MR-UT-IR-01`–`06` =
+  `CORRECTED / MAIN-INTEGRATION BLOCKING = NO / OPEN UNTIL LIFECYCLE
+  GOVERNANCE COMPLETES`; `F-MR-UT-IR-07`/`08` remain `NOTE / OPEN / NO
+  CORRECTION REQUIRED`. Four new non-blocking findings were recorded
+  (`F-MR-UT-RR2-01`–`04`, all `OPEN`, none blocking, none requiring
+  correction to the reviewed candidate before main integration). No
+  finding is closed by this record; `F-MR-ARCH-06` and `F-MR-UT-01`–`09`
+  remain `OPEN`. `METRIC_RESULT` / Retention v1 Runtime remains
+  `REVIEW-RECORDED / CLOSED`, not reopened. Canonical `main` remains
+  Backlog `1.75`, API `1.29`, Schema `1.8`, unchanged; corrected API
+  `1.30` / Schema `1.9` remain `NOT CANONICAL ON MAIN`. See
+  "METRIC_RESULT Unseen Transfer Tier C — Independent Re-Review Result /
+  Approve with Non-Blocking Notes" above (§4) for full detail; the sole
+  Next Action is now a fresh Windows Claude Validation/Integration
+  session that sequentially cherry-picks the two approved documentation
+  commits onto exact then-current `main` (§10)
 
 ## 10. Next Action
 
-- Fresh Claude Opus 5 Independent Re-Review, in a new session, of exact
-  corrected documentation candidate
-  `1246e912a9de5f88cb8a24522992e857574815e9` on validation branch
-  `validation/vi-p1-metric-result-unseen-transfer-
-  tierc-api130-schema19-20260911`, against: exact correction parent
-  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`; original candidate parent
-  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`; current `main`
-  user-approval/correction-decision authority; the original user-approved
-  Unseen Transfer Tier C contract; the accepted Independent Review
-  findings `F-MR-UT-IR-01`–`08`; and the exact user-approved `UT-C1`/
-  `UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decisions. The reviewer must be
-  fresh and read-only: repository mutation `0`. No correction. No main
-  integration. No review-record. The reviewer must specifically verify:
-  exact two-file correction scope; correction parent/subject/tree/blobs;
-  `F-MR-UT-IR-01` fully corrected; `UT-C1` either-direction direct
-  relation; `UT-C1-a` self-reference prohibition; `UT-C1-b` whole-object
-  validation on `L(A)`; `UT-C2` lazy `FIRST_MATCH` validation timing;
-  `UT-C3` full `H(A)` provenance; exact `H`/`W`/`R`/`N`/`L`/`V`
-  definitions and internal consistency; history/time authority;
-  null-safe lineage; source/filter separation; exact 16-rule
-  `FIRST_MATCH` precedence; exact closed 21-key Unseen row; FORMULA v2
-  closed/no-null contract; provenance determinism; writer/reader
-  semantic parity; stable lifecycle-neutral canonical text; API/Schema
-  consistency; Retention v1 non-regression; `RAW_SOURCE` non-regression;
-  physical schema sufficiency; no migration/DDL/Tier A/Runtime/P1
-  authorization leak; prior `F-MR-UT-IR-01`–`06` correction sufficiency;
-  and `F-MR-UT-IR-07`/`08` note preservation.
+- A fresh Windows Claude Validation/Integration session that: (1) starts
+  from exact then-current clean `main` after a live fetch and requires
+  that no non-status canonical/API/Schema drift has occurred; (2)
+  sequentially cherry-picks ONLY these two approved documentation
+  commits, in order, performing no squash/rebase/amend/merge — first
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833` (subject `Add
+  METRIC_RESULT Unseen Transfer Tier C contract`), then
+  `1246e912a9de5f88cb8a24522992e857574815e9` (subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`); (3) verifies final
+  `main` docs equal the exact corrected candidate blobs —
+  `API_CONTRACT.md` = `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `aa009da313c3298186537f7aa641c98ea721b15f`; (4) verifies cumulative
+  integration touches only `API_CONTRACT.md` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`; (5) verifies canonical revision
+  identities API `1.30` and Schema `1.9`; (6) performs
+  documentation/static post-merge verification, does NOT run
+  PostgreSQL/runtime tests merely to claim documentation `PASS` (they
+  may remain `NOT RUN` for this docs-only integration); (7) records
+  post-merge state in a separate Current State status commit only after
+  the exact main-integration SHA is pushed and verified; (8) does not
+  create a review-record yet unless separately authorized later; (9)
+  does not authorize Runtime/P1/efficacy; and (10) preserves all
+  `F-MR-UT-IR-01`–`08` and `F-MR-UT-RR2-01`–`04` findings `OPEN`. No
+  additional correction commit is authorized before this integration.
