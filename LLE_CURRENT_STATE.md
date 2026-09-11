@@ -5693,6 +5693,166 @@ Repository mutation caused by this closure-sync is limited to
 
 See §10.
 
+#### Control Tower Milestone-Transition Selection — METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness Pre-Analysis Selected
+
+##### Preflight / Scope
+
+- This is a status-only selection recording. It does not perform the
+  selected pre-analysis, does not authorize Runtime, does not implement
+  Runtime, does not create a Runtime branch, does not modify Runtime
+  source, tests, `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, migrations, DB artifacts, Tier
+  A documents, or pilot documents, and does not run PostgreSQL or npm
+  tests. Repository mutation caused by this record: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before this
+  update: `main` / `origin/main` `6cc3072f77fadc1267020197fc1fa39ea26a0b1a`,
+  tree `bec617ac423f54ac9331a314b6d08554841e677e`, parent
+  `ffe2fd4234a1bb7898e4df167f8d978b98e83613`, subject `Record Unseen
+  Transfer Tier C documentation closure`; worktree/index clean, no
+  untracked files. Backlog revision `1.76` (blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`); API `1.30` (blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`); Schema `1.9` (blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`); confirmed exactly.
+  Runtime/test baseline confirmed unchanged:
+  `src/instrumentation/evidenceMetrics.js`
+  `6ce1347dee91b8310da17ed092f6b58fdddbeb54`,
+  `src/instrumentation/evidenceValidation.js`
+  `fadee158da77693fba319976001d43f43c784196`,
+  `src/instrumentation/evidenceRepository.js`
+  `9792ff414febb0878b04d031145a8b2dafab2623`,
+  `src/instrumentation/index.js`
+  `14577b90cc19fe10de27d7c1afe0373679e105e9`,
+  `tests/viP1MetricResultRuntime.test.js`
+  `1f21704b64cb184f0b25a24d8b0696af90628143`.
+
+##### Milestone-Transition Reconciliation Completed
+
+Control Tower completed the §10 milestone-transition reconciliation
+called for by the prior closure-sync: it live-verified the closure-sync
+commit against exact remote `origin/main`, re-read exact current
+`LLE_CURRENT_STATE.md` and Backlog revision `1.76`, confirmed the bounded
+METRIC_RESULT Unseen Transfer Tier C API `1.30` / Schema `1.9`
+documentation-contract lifecycle is `REVIEW-RECORDED / CLOSED` (bounded
+to that documentation-contract scope only), preserved all
+Runtime/P1/human-data/efficacy nonclaims and all still-open findings, and
+has now selected exactly one next bounded VI P1 Measurement Readiness /
+P0 roadmap action.
+
+##### Selected Next Bounded Milestone
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+Implementation-Readiness Pre-Analysis`.
+
+Classification: `READ-ONLY PRE-ANALYSIS`. Repository mutation of the
+future pre-analysis: `0`. The future pre-analysis must NOT: create a
+branch; edit files; commit; push; open a PR; run migrations; mutate
+PostgreSQL; authorize Runtime; implement Runtime; claim Runtime
+validation; activate P1; claim efficacy.
+
+##### Selection Rationale
+
+1. Measurement foundation remains prior to learning-intervention work.
+2. Retention v1 Runtime is already `REVIEW-RECORDED / CLOSED`.
+3. Unseen Transfer Tier C API `1.30` / Schema `1.9` documentation contract
+   is now `REVIEW-RECORDED / CLOSED`.
+4. The current `queryMetricResult` Runtime still implements the Retention
+   v1 branch only.
+5. API `1.30` / Schema `1.9` now define the additive Unseen Transfer v2
+   Runtime contract, but Runtime implementation remains `NOT AUTHORIZED`.
+6. Therefore the smallest safe next step is a fresh read-only
+   implementation-readiness pre-analysis before any Development
+   authorization.
+
+##### Preserved Governing State (Unchanged By This Selection)
+
+Bounded METRIC_RESULT Unseen Transfer Tier C documentation lifecycle:
+`USER-APPROVED / CORRECTED / INDEPENDENTLY RE-REVIEWED — APPROVE WITH
+NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED` (documentation-
+contract scope only). Unseen Transfer Runtime remains `NOT AUTHORIZED /
+NOT IMPLEMENTED / NOT VALIDATED`. P1 remains `NOT ACTIVATED`. Human-data
+collection remains `NOT AUTHORIZED`. Efficacy remains `NOT VERIFIED`.
+`F-MR-UT-IR-07` = `NOTE / OPEN / NO CORRECTION REQUIRED`; `F-MR-UT-IR-08`
+= `NOTE / OPEN / TRACEABILITY LIMIT / NO CORRECTION REQUIRED`;
+`F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`, with `F-MR-UT-RR2-02` =
+`LOW / NON-BLOCKING / FUTURE BOUNDED WORDING CLEANUP`. `METRIC_RESULT` /
+Retention v1 Runtime remains `REVIEW-RECORDED / CLOSED`. No lifecycle
+above is reopened or reinterpreted by this selection.
+
+##### Future Pre-Analysis Scope (Pinned, Not Performed Here)
+
+The future read-only pre-analysis must fresh-read exact then-current
+`main` and determine whether implementation is ready without inventing
+contract. At minimum it must inspect canonical/governance sources
+(`API_CONTRACT.md` §13.10.11.2/§13.10.11.3, relevant
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` METRIC_RESULT sections,
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.76`,
+`LLE_CURRENT_STATE.md`) and current Runtime sources
+(`src/instrumentation/evidenceMetrics.js`,
+`src/instrumentation/evidenceValidation.js`,
+`src/instrumentation/evidenceRepository.js`,
+`src/instrumentation/index.js`, `tests/viP1MetricResultRuntime.test.js`,
+and relevant Evidence Foundation tests/migrations/schema sources). It
+must answer, without implementing: (1) exact current Runtime gap between
+Retention v1 and Unseen v2; (2) whether existing `queryMetricResult` can
+be safely extended by `definitionVersion` dispatch without changing
+Retention v1 semantics; (3) exact minimal implementation file scope; (4)
+exact minimal test file scope; (5) whether a new dedicated Unseen Runtime
+test suite is required or existing test scope can be safely extended; (6)
+FORMULA v2 exact 16-key validation plan, including `definitionVersion 2`,
+`metricKind UNSEEN_TRANSFER`, `lineagePolicy`, `scenarioPolicy`, no
+nullable/optional FORMULA v2 field, and exact six-axis aggregation grain;
+(7) exact reuse/non-reuse boundary for Retention v1 helpers; (8) exact
+`H(A)`, `W(A)`, `R(A)`, `N(A,n)`, `L(A)`, `V(A)`, `rho(A)` source plan; (9)
+BIGINT exactness plan — no JavaScript `Number` as exposure ordinal/cutoff
+authority; (10) ITEM `lineageAuthority` read/validation plan
+(`canonicalStimulusId`, `surfaceVariantReferences`, either-direction
+direct relation, self-reference prohibition, duplicate/dangling reference
+handling, whole-object validation on `L(A)`); (11) lazy `FIRST_MATCH`
+requirement — rules 1–14 before `V(A)`, earlier-excluded candidate
+lineage defects must not change result; (12) rule 15
+`ITEM_LINEAGE_NOT_DIFFERENT`; (13) rule 16
+`NODE_PRIOR_EXPOSURE_ABSENT`; (14) exact 21-key Unseen group output plan;
+(15) `ITEM_FAMILY` group-key/order extension; (16) full-history `H(A)`
+provenance plan — `exposureIds`/`assignmentIds` exact membership; (17)
+response-wide provenance union/order; (18) source contradiction/error-code
+mapping; (19) single `REPEATABLE READ` / `READ ONLY` transaction
+ownership; (20) zero-side-effect proof; (21) Retention v1 non-regression
+strategy; (22) RAW_SOURCE non-interference strategy; (23) synthetic
+PostgreSQL fixture matrix needed for Unseen v2; (24) focused and full
+regression gate plan; (25) migration/DDL requirement — expected `NO` per
+canonical physical-schema sufficiency, report `BLOCKED` if current source
+contradicts that; (26) whether any canonical ambiguity remains; (27)
+exact implementation authorization recommendation — `READY` / `NOT
+READY` / `BLOCKED`; (28) if `READY`: exact allowed files, exact forbidden
+files, exact branch recommendation, exact acceptance criteria for future
+Development and Independent Review; (29) if `NOT READY`/`BLOCKED`: exact
+canonical/runtime gap and required prior action. It must also explicitly
+investigate the reuse warning that current RAW_SOURCE helpers fetch
+exposure history with timestamp cutoff semantics, while Unseen v2 `H(A)`
+authority is `exposure_ordinal <= stored cutoff` and must NOT be
+truncated by `analysisCutoff`/`exposed_at`/`created_at` timestamps — the
+pre-analysis must determine which existing helpers are semantically safe
+to reuse and which are NOT.
+
+##### Non-Claims
+
+This record does not mean: the pre-analysis has been performed — NOT
+CLAIMED; Runtime authorized — NOT CLAIMED (`NOT AUTHORIZED`); Runtime
+implemented — NOT CLAIMED (`NOT IMPLEMENTED`); Runtime validated — NOT
+CLAIMED (`NOT VALIDATED`); a Runtime branch created — NOT CLAIMED; P1
+activated — NOT CLAIMED (`NOT ACTIVATED`); human-data collection
+authorized — NOT CLAIMED (`NOT AUTHORIZED`); efficacy verified — NOT
+CLAIMED (`NOT VERIFIED`); any finding closed by this selection — NOT
+CLAIMED (all findings above remain exactly as preserved); `METRIC_RESULT`
+/ Retention v1 Runtime reopened — NOT CLAIMED. Repository mutation
+caused by this selection is limited to `LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6734,6 +6894,27 @@ This bootstrap does not rerun PostgreSQL or tests.
   update is limited to `LLE_CURRENT_STATE.md`. See §4 for full detail; the
   sole Next Action is now Control Tower milestone-transition
   reconciliation (§10).
+- Control Tower has since completed that milestone-transition
+  reconciliation (live-verified against exact remote `main`
+  `6cc3072f77fadc1267020197fc1fa39ea26a0b1a`) and selected exactly one
+  next bounded action: `VI P1 Measurement Readiness — METRIC_RESULT
+  Unseen Transfer v2 Runtime Implementation-Readiness Pre-Analysis`,
+  classification `READ-ONLY PRE-ANALYSIS`, future repository mutation
+  `0`. This selection itself does not authorize or implement Runtime,
+  does not create a Runtime branch, does not activate P1, does not claim
+  efficacy, and does not perform the pre-analysis; the bounded
+  documentation-contract lifecycle remains `REVIEW-RECORDED / CLOSED`
+  (documentation-contract scope only); `F-MR-UT-IR-07`/`08` remain `NOTE
+  / OPEN`; `F-MR-UT-RR2-01`–`04` remain `OPEN / NON-BLOCKING`
+  (`F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING
+  CLEANUP`); `METRIC_RESULT` / Retention v1 Runtime remains
+  `REVIEW-RECORDED / CLOSED`, not reopened. PostgreSQL/tests: `NOT RUN —
+  STATUS-ONLY SELECTION`. Repository mutation by this record is limited
+  to `LLE_CURRENT_STATE.md`. See §4 "Control Tower Milestone-Transition
+  Selection — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness Pre-Analysis Selected" for full detail; the
+  sole Next Action is now that fresh read-only implementation-readiness
+  pre-analysis (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8135,28 +8316,51 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Control Tower milestone-transition reconciliation. Control Tower must:
-  (1) live-verify this closure-sync commit (the commit introducing this
-  update to `LLE_CURRENT_STATE.md`) against exact remote `origin/main`
-  (live `git fetch origin`, exact branch/HEAD/tree/parent/subject
-  confirmation); (2) re-read exact current `LLE_CURRENT_STATE.md` and
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.76` (blob
-  `746b8d687fe681c0b7908450133cf2d0d79ea012`); (3) confirm the bounded
-  METRIC_RESULT Unseen Transfer Tier C API `1.30` / Schema `1.9`
-  documentation-contract lifecycle is `USER-APPROVED / CORRECTED /
-  INDEPENDENTLY RE-REVIEWED — APPROVE WITH NON-BLOCKING NOTES /
-  CANONICAL ON MAIN / POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED /
-  REVIEW-RECORDED / CLOSED`; (4) preserve all Runtime/P1/human-data/
-  efficacy nonclaims (Runtime `NOT AUTHORIZED / NOT IMPLEMENTED / NOT
-  VALIDATED`; P1 `NOT ACTIVATED`; human-data collection `NOT
-  AUTHORIZED`; efficacy `NOT VERIFIED`) and all still-open findings
-  (`F-MR-UT-IR-07` = `NOTE / OPEN / NO CORRECTION REQUIRED`;
-  `F-MR-UT-IR-08` = `NOTE / OPEN / TRACEABILITY LIMIT / NO CORRECTION
-  REQUIRED`; `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`, with
-  `F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING
-  CLEANUP`); and (5) then select exactly one next bounded VI P1
-  Measurement Readiness / P0 roadmap action. This closure-sync itself
-  does NOT authorize Runtime implementation, does NOT select or create
-  or start a Runtime implementation branch, and does NOT perform Runtime
-  implementation-readiness analysis. Selection authority for the next
-  bounded action returns to Control Tower.
+- A fresh READ-ONLY `VI P1 Measurement Readiness — METRIC_RESULT Unseen
+  Transfer v2 Runtime Implementation-Readiness Pre-Analysis`. This next
+  action: (1) requires fresh exact-main verification (live `git fetch
+  origin`, exact branch/HEAD/tree/parent/subject and canonical blob
+  confirmation) before reading anything else; (2) repository mutation =
+  `0` — no branch creation, no file edits, no commit, no push, no PR, no
+  migrations, no PostgreSQL mutation; (3) must NOT authorize Runtime,
+  must NOT implement Runtime, must NOT claim Runtime validation, must NOT
+  activate P1, and must NOT claim efficacy; (4) must fresh-read exact
+  then-current `main` (`API_CONTRACT.md` §13.10.11.2/§13.10.11.3,
+  relevant `EVIDENCE_FOUNDATION_P0_SCHEMA.md` METRIC_RESULT sections,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.76`,
+  `LLE_CURRENT_STATE.md`, and current Runtime —
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `src/instrumentation/evidenceRepository.js`,
+  `src/instrumentation/index.js`,
+  `tests/viP1MetricResultRuntime.test.js`, and relevant Evidence
+  Foundation tests/migrations/schema sources); (5) must answer, without
+  implementing, exactly the 29 pinned questions recorded above in §4
+  "Control Tower Milestone-Transition Selection — METRIC_RESULT Unseen
+  Transfer v2 Runtime Implementation-Readiness Pre-Analysis Selected"
+  (Runtime gap vs. Retention v1; `definitionVersion`-dispatch safety;
+  exact minimal implementation/test file scope; new-vs-extended test
+  suite; FORMULA v2 exact 16-key validation plan; Retention v1 helper
+  reuse/non-reuse boundary; `H(A)`/`W(A)`/`R(A)`/`N(A,n)`/`L(A)`/`V(A)`/
+  `rho(A)` source plan; BIGINT exactness plan; ITEM `lineageAuthority`
+  read/validation plan; lazy `FIRST_MATCH` requirement; rule 15
+  `ITEM_LINEAGE_NOT_DIFFERENT`; rule 16 `NODE_PRIOR_EXPOSURE_ABSENT`;
+  exact 21-key Unseen group output plan; `ITEM_FAMILY` group-key/order
+  extension; full-history `H(A)` provenance plan; response-wide
+  provenance union/order; source contradiction/error-code mapping; single
+  `REPEATABLE READ`/`READ ONLY` transaction ownership; zero-side-effect
+  proof; Retention v1 non-regression strategy; RAW_SOURCE
+  non-interference strategy; synthetic PostgreSQL fixture matrix;
+  focused/full regression gate plan; migration/DDL requirement — expected
+  `NO`, `BLOCKED` if contradicted; remaining canonical ambiguity; and the
+  RAW_SOURCE timestamp-cutoff-vs-`exposure_ordinal`-authority reuse
+  warning — which existing helpers are semantically safe to reuse and
+  which are NOT); (6) must reach exactly one final verdict — `READY` /
+  `NOT READY` / `BLOCKED`; any canonical ambiguity found means `BLOCKED`,
+  not invented or guessed; (7) if `READY`, must state exact allowed
+  files, exact forbidden files, exact branch recommendation, and exact
+  acceptance criteria for future Development and Independent Review; if
+  `NOT READY`/`BLOCKED`, must state the exact canonical/runtime gap and
+  the required prior action; and (8) Control Tower must review the
+  completed pre-analysis before any Development authorization is
+  considered. This selection record does not perform that pre-analysis.
