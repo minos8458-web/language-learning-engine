@@ -4949,6 +4949,204 @@ approval or rejection).
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Correction Decisions User-Approved / Documentation Correction Authorized
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record Unseen Transfer Tier C correction decisions`,
+  parent `30ad66d5e93735810ca31c72d136d501bad43d70`) that the user has
+  explicitly approved all five Control-Tower-recommended Tier C
+  correction decisions (`UT-C1`, `UT-C1-a`, `UT-C1-b`, `UT-C2`, `UT-C3`)
+  presented in "METRIC_RESULT Unseen Transfer Tier C — Correction Design
+  Complete / User Approval Pending" above. This record does not modify
+  the candidate, does not modify `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not run Runtime/tests/
+  migrations/DDL, does not run PostgreSQL, and does not create a
+  correction commit. Repository mutation caused by this update: limited
+  to `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline unchanged
+  before this update: `main` / `origin/main`
+  `30ad66d5e93735810ca31c72d136d501bad43d70`, tree
+  `98f208fd2339ad826ffaefaaa8b264c83219d193`, parent
+  `647a121d4464b246c00a4a13be883a4a818ed3aa`, subject `Record Unseen
+  Transfer Tier C correction design`, Current State blob
+  `041c9095d01c2d1599ce3530e0e2bbbfd37c402e`; worktree/index clean, no
+  untracked files. Candidate identity re-confirmed unchanged: validation
+  branch `validation/vi-p1-metric-result-unseen-transfer-
+  tierc-api130-schema19-20260911`, tip
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, tree
+  `cb6dd609e01d85ef7cb52727f5fd4a54f982d4a7`, parent
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`, exact two-file scope
+  (`API_CONTRACT.md` blob `34052b53fbd88839222e77cd7d5172916b5254eb`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blob
+  `8737be2c618775a51501ff385c1f0b2430782a2d`). Candidate status remains
+  `REQUEST CORRECTION / MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON
+  MAIN`, not mutated by this record. Canonical on `main` remains Backlog
+  `1.75` (blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`), API `1.29`
+  (blob `a498d5536ea1d228d133610780ff06d77a9d403f`), Schema `1.8` (blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`); candidate API `1.30` /
+  Schema `1.9` remain `NOT CANONICAL ON MAIN`.
+
+###### User Approval Result
+
+- All five decisions `APPROVED` exactly as Control-Tower-recommended,
+  none rejected or overridden:
+  - `UT-C1` = `B — EITHER-DIRECTION DIRECT RELATION`: for ITEMs X and Y,
+    `SV(X,Y)` iff X's `surfaceVariantReferences` directly contains Y's
+    exact ITEM pair OR Y's directly contains X's exact ITEM pair;
+    symmetric; no reciprocal stored edge required; no transitive
+    closure; no fuzzy/text-similarity/edit-distance/token-overlap
+    inference; a direct surface-variant relation does not imply family
+    equality.
+  - `UT-C1-a` = `PROHIBIT SELF-REFERENCE`: an ITEM's
+    `surfaceVariantReferences` containing that ITEM's own exact
+    `(itemId, itemVersion)` makes stored `lineageAuthority` invalid —
+    `CONTRACT_VIOLATION`; same `itemId` with a different `itemVersion`
+    remains allowed.
+  - `UT-C1-b` = `WHOLE-OBJECT VALIDATION ON L(A)`: for every ITEM in
+    `L(A)` actually consumed by lineage reconstruction, validate the
+    complete `lineageAuthority` object including every direct
+    `surfaceVariantReferences` entry; ITEM definitions outside `L(A)`
+    are not validated for this lineage operation. A consumed
+    `lineageAuthority`: absent is valid (no explicit cross-item relation
+    declaration); explicit null is `CONTRACT_VIOLATION`;
+    malformed/unknown/missing required key is `CONTRACT_VIOLATION`;
+    duplicate exact relation pair is `CONTRACT_VIOLATION`; dangling
+    referenced ITEM pair is `CONTRACT_VIOLATION`; existence is checked
+    when consumed in the same authoritative transaction snapshot.
+  - `UT-C2` = `LAZY FIRST_MATCH LINEAGE VALIDATION`: `FIRST_MATCH` rules
+    1–14 execute before lineage/history validation; only a candidate
+    `(A,n)` that survives rules 1–14 requires `V(A)`; then (1) require
+    `V(A)`, (2) if stored `resolved_item_lineage != DIFFERENT_ITEM_
+    FAMILY` including null, rule 15 `ITEM_LINEAGE_NOT_DIFFERENT`, (3)
+    else if `N(A,n)` is empty, rule 16 `NODE_PRIOR_EXPOSURE_ABSENT`, (4)
+    else eligible; candidates classified by rules 1–14 do NOT require
+    `V(A)`; corrupt lineage/history belonging only to such an
+    earlier-excluded candidate must not change the operation result;
+    eager prefetch is permitted only as implementation HOW and must not
+    change error outcome, counts, or provenance.
+  - `UT-C3` = `P1 FULL-HISTORY H(A) PROVENANCE`: per group, `exposureIds`
+    = set-union of `H(A)` for every candidate in that group for which
+    `V(A)` is required; candidates classified by rules 1–14 contribute
+    no lineage-history exposures; if `C(A) = 0`, `A` contributes no
+    exposure ID; if `C(A) > 0`, `W(A)` is included because it is a
+    member of `H(A)`; non-target-relevant `H(A)` exposure rows are
+    included because `V(A)` consumes them for history-integrity/
+    node-authority/non-relevance verification; `assignmentIds` = all
+    candidate assignments union owners of all exposureIds listed by this
+    rule; `attemptIds`/`evaluationIds` = existing logical-dereference
+    semantics; response-wide provenance is the per-array canonical set
+    union of group provenance; ID arrays remain unique and use the
+    already-approved canonical string ordering.
+- Derived correction package (no separate user choice, authorized
+  together with the five decisions): `F-MR-UT-IR-01` exact derived
+  history vocabulary (`E(A)`, `C(A)`, `H(A)`, `W(A)`, `R(A)`, `N(A,n)`,
+  `L(A)`, and the five-part `V(A)` requirement) as recorded in
+  "Correction Design Complete / User Approval Pending" above; stored
+  authoritative source contradiction is `CONTRACT_VIOLATION`, not
+  `INVALID_ID`, not `OUT_OF_RANGE_VALUE`, not an exclusion bucket;
+  caller-supplied unknown reference retains existing `INVALID_ID`
+  mapping; global exposure ordinal gaps are legal; history ordering
+  authority is exact `BIGINT` `exposure_ordinal`, not timestamp; `H(A)`
+  must NOT be truncated by `analysisCutoff`/`exposed_at`/assignment-or-
+  snapshot `created_at` when rebuilding the assignment-time immutable
+  history represented by `C(A)`; candidate-side `analysisCutoff` rules
+  remain otherwise unchanged.
+- `F-MR-UT-IR-04`/`05`/`06` authorized cleanup, unchanged from the
+  correction design: remove lifecycle/review-state phrases (`candidate`,
+  `validation candidate`, `PENDING INDEPENDENT REVIEW`, `CANONICAL GAP
+  ADDRESSED BY CANDIDATE`) from would-be canonical API/Schema text,
+  replaced by stable semantic contract wording (lifecycle state remains
+  governed by `LLE_CURRENT_STATE.md`/Backlog/review-record, not enduring
+  canonical text); FORMULA `definitionVersion` 2 exactly 16 required
+  top-level keys, all defined subobject keys required, no optional
+  FORMULA v2 field, no nullable FORMULA v2 field, any null anywhere
+  inside FORMULA v2 definition is `CONTRACT_VIOLATION` (the separate
+  ITEM contract `lineageAuthority.canonicalStimulusId = null` does NOT
+  create a FORMULA v2 null exception); bounded cleanup of API §13.10.11
+  null-safe reconciliation, Schema §12.2 common METRIC_RESULT input
+  wording covering both Retention v1 and Unseen Transfer v2, a
+  writer-side cross-reference to the same history authority/
+  `lineageAuthority` semantics/priority/`BIGINT` exactness/source
+  integrity rules, and an explicit closed 21-required-key Unseen group
+  row (`groupKey`, `status`, `numerator`, `denominator`, `value`,
+  `candidateCount`, `eligibleCount`, `excludedCount`, `missingCount`,
+  `technicalFailureCount`, `withdrawnCount`, `unscorableCount`,
+  `normalEmptyCount`, `earlyCount`, `lateCount`, `supersededCount`,
+  `nonterminalCount`, `postCutoffCompletionCount`,
+  `lineageNotDifferentCount`, `noPriorNodeExposureCount`,
+  `sourceRebuildReference`); `groupKey` remains the exact approved
+  nine-key nested object.
+
+###### Revision / File Scope (Unchanged)
+
+Corrected target remains API `1.30` / Schema `1.9`, because neither
+revision has ever become canonical on `main`. No API `1.31`. No Schema
+`1.10`. Future documentation correction must be a separate correction
+commit on the same validation branch `validation/vi-p1-metric-result-
+unseen-transfer-tierc-api130-schema19-20260911`, with exact parent
+`74f5eeccf26bf90ceff8e4040b8596ed2abac833`, modifying exactly
+`API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`. No amend, no
+rebase, no squash, no force-push, no main integration in that correction
+session.
+
+###### Authorization State
+
+- Correction semantic decisions: `USER-APPROVED`.
+- Documentation correction commit: `AUTHORIZED AS NEXT ACTION`, `NOT YET
+  CREATED`.
+- Runtime implementation: `NOT AUTHORIZED`.
+- Main integration: `NOT AUTHORIZED`.
+- Corrected candidate Independent Re-Review: `NOT YET PERFORMED`.
+- Findings remain `OPEN` until correction and fresh Independent
+  Re-Review.
+
+###### Finding State
+
+- `F-MR-ARCH-06`: `OPEN`. `F-MR-UT-01`–`09`: `OPEN`.
+- `F-MR-UT-IR-01` = `CORRECTION DESIGN APPROVED / OPEN UNTIL CORRECTION +
+  RE-REVIEW`.
+- `F-MR-UT-IR-02` = `SEMANTIC DECISIONS USER-APPROVED / OPEN UNTIL
+  CORRECTION + RE-REVIEW`.
+- `F-MR-UT-IR-03` = `SEMANTIC DECISIONS USER-APPROVED / OPEN UNTIL
+  CORRECTION + RE-REVIEW`.
+- `F-MR-UT-IR-04`/`05`/`06` = `CORRECTION DESIGN APPROVED / OPEN UNTIL
+  CORRECTION + RE-REVIEW`.
+- `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`.
+- No finding is closed by this record.
+
+###### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record.
+
+###### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / ORIGINAL TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW = REQUEST
+CORRECTION / MAIN-INTEGRATION NOT ELIGIBLE / CORRECTION DESIGN COMPLETE /
+CORRECTION DECISIONS USER-APPROVED / DOCUMENTATION CORRECTION AUTHORIZED
+/ CORRECTION COMMIT NOT YET CREATED / RUNTIME NOT AUTHORIZED / NOT
+CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`.
+
+###### Non-Claims
+
+This record does not mean: a correction commit created — NOT CLAIMED;
+the corrected candidate independently reviewed — NOT CLAIMED;
+main-integration eligible — NOT CLAIMED (`NO CURRENTLY`); API `1.30`
+canonical on `main` — NOT CLAIMED; Schema `1.9` canonical on `main` — NOT
+CLAIMED; Runtime authorized — NOT CLAIMED; Runtime implemented — NOT
+CLAIMED; Runtime validated — NOT CLAIMED; P1 activated — NOT CLAIMED;
+human-data collection authorized — NOT CLAIMED; efficacy verified — NOT
+CLAIMED; `B-3` resolved — NOT CLAIMED; METRIC_RESULT / Retention v1
+Runtime reopened — NOT CLAIMED.
+
+###### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -5873,6 +6071,30 @@ This bootstrap does not rerun PostgreSQL or tests.
   the sole Next Action is now explicit user approval or rejection of the
   exact `UT-C1`/`UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decision packet
   (§10).
+- The user has since explicitly approved all five `UT-C1`/`UT-C1-a`/
+  `UT-C1-b`/`UT-C2`/`UT-C3` decisions exactly as Control-Tower-
+  recommended (`B — EITHER-DIRECTION DIRECT RELATION`; `PROHIBIT
+  SELF-REFERENCE`; `WHOLE-OBJECT VALIDATION ON L(A)`; `LAZY FIRST_MATCH
+  LINEAGE VALIDATION`; `P1 FULL-HISTORY H(A) PROVENANCE`), none rejected
+  or overridden, together with the derived `F-MR-UT-IR-01` package and
+  the `F-MR-UT-IR-04`/`05`/`06` cleanup. `F-MR-UT-IR-01` = `CORRECTION
+  DESIGN APPROVED / OPEN UNTIL CORRECTION + RE-REVIEW`; `F-MR-UT-IR-02`/
+  `03` = `SEMANTIC DECISIONS USER-APPROVED / OPEN UNTIL CORRECTION +
+  RE-REVIEW`; `F-MR-UT-IR-04`/`05`/`06` = `CORRECTION DESIGN APPROVED /
+  OPEN UNTIL CORRECTION + RE-REVIEW`; `F-MR-UT-IR-07`/`08` remain notes.
+  No finding is closed by this record; `F-MR-ARCH-06` and
+  `F-MR-UT-01`–`09` remain `OPEN`. `METRIC_RESULT` / Retention v1 Runtime
+  remains `REVIEW-RECORDED / CLOSED`, not reopened. Corrected target
+  remains API `1.30` / Schema `1.9`; documentation correction is now
+  `AUTHORIZED AS NEXT ACTION` on the same validation branch with exact
+  parent `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, but no correction
+  commit is created by this record; Runtime implementation and main
+  integration remain `NOT AUTHORIZED`. Repository mutation by this
+  update is limited to `LLE_CURRENT_STATE.md`. See §4 "METRIC_RESULT
+  Unseen Transfer Tier C — Correction Decisions User-Approved /
+  Documentation Correction Authorized" for full detail; the sole Next
+  Action is now a fresh Windows Claude Architecture documentation
+  correction session for the approved decision packet (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -5937,7 +6159,16 @@ ledger does not claim:
   rejection. This is NOT a claim that any decision is approved, that a
   correction commit exists, that the candidate is re-reviewed, or that
   it is canonical on `main` — repository correction and Runtime
-  implementation remain `NOT AUTHORIZED`
+  implementation remain `NOT AUTHORIZED`. Since then: the user has
+  explicitly approved all five decisions (`UT-C1` = `B`, `UT-C1-a` =
+  `PROHIBIT`, `UT-C1-b` = `WHOLE-OBJECT ON L(A)`, `UT-C2` = `LAZY
+  FIRST_MATCH`, `UT-C3` = `P1 FULL-HISTORY`), together with the derived
+  `F-MR-UT-IR-01` package and the `F-MR-UT-IR-04`/`05`/`06` cleanup;
+  documentation correction is now `AUTHORIZED AS NEXT ACTION` but `NOT
+  YET CREATED` (see §4/§8). This is NOT a claim that a correction commit
+  exists, that the candidate is re-reviewed, or that it is canonical on
+  `main` — correction commit creation, Runtime implementation, and main
+  integration remain `NOT AUTHORIZED`
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -7087,13 +7318,53 @@ historical ledger does not.
   Independent Review Result / Request Correction" above (§4) for full
   detail; the sole Next Action is now a fresh GPT-6 Astra Architecture
   read-only correction-design session for `F-MR-UT-IR-01`–`06` (§10)
+- the prior recorded Next Action ("User approval or rejection of the
+  exact Unseen Transfer Tier C correction decision packet: `UT-C1` = `B
+  — EITHER-DIRECTION DIRECT RELATION`; `UT-C1-a` = `PROHIBIT
+  SELF-REFERENCE`; `UT-C1-b` = `WHOLE-OBJECT VALIDATION ON L(A)`;
+  `UT-C2` = `LAZY FIRST_MATCH LINEAGE VALIDATION`; `UT-C3` = `P1
+  FULL-HISTORY H(A) PROVENANCE`...") has been fulfilled: the user has
+  explicitly approved all five decisions exactly as Control-Tower-
+  recommended, none rejected or overridden, together with the derived
+  `F-MR-UT-IR-01` package and the `F-MR-UT-IR-04`/`05`/`06` cleanup.
+  `F-MR-UT-IR-01` = `CORRECTION DESIGN APPROVED / OPEN UNTIL CORRECTION +
+  RE-REVIEW`; `F-MR-UT-IR-02`/`03` = `SEMANTIC DECISIONS USER-APPROVED /
+  OPEN UNTIL CORRECTION + RE-REVIEW`; `F-MR-UT-IR-04`/`05`/`06` =
+  `CORRECTION DESIGN APPROVED / OPEN UNTIL CORRECTION + RE-REVIEW`;
+  `F-MR-UT-IR-07`/`08` remain notes. No finding is closed. `F-MR-ARCH-06`
+  and `F-MR-UT-01`–`09` remain `OPEN`. `METRIC_RESULT` / Retention v1
+  Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened. Documentation
+  correction is now `AUTHORIZED AS NEXT ACTION` on validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-
+  schema19-20260911` with exact parent
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, targeting exactly
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` at corrected
+  target API `1.30` / Schema `1.9`; no correction commit is created by
+  this record; Runtime implementation and main integration remain `NOT
+  AUTHORIZED`. See "METRIC_RESULT Unseen Transfer Tier C — Correction
+  Decisions User-Approved / Documentation Correction Authorized" above
+  (§4) for full detail; the sole Next Action is now a fresh Windows
+  Claude Architecture documentation correction session on the existing
+  validation branch to create exactly one separate correction commit
+  implementing the approved decision packet (§10)
 
 ## 10. Next Action
 
-- User approval or rejection of the exact Unseen Transfer Tier C
-  correction decision packet: `UT-C1` = `B — EITHER-DIRECTION DIRECT
-  RELATION`; `UT-C1-a` = `PROHIBIT SELF-REFERENCE`; `UT-C1-b` =
-  `WHOLE-OBJECT VALIDATION ON L(A)`; `UT-C2` = `LAZY FIRST_MATCH LINEAGE
-  VALIDATION`; `UT-C3` = `P1 FULL-HISTORY H(A) PROVENANCE`. The user may
-  approve all five together or reject/override any specific item. No
-  repository correction is authorized before explicit user approval.
+- Fresh Windows Claude Architecture documentation correction session on
+  existing validation branch `validation/vi-p1-metric-result-unseen-
+  transfer-tierc-api130-schema19-20260911` at exact starting tip
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833` to create exactly ONE
+  separate correction commit implementing the approved `UT-C1`/
+  `UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` semantics, the derived
+  `F-MR-UT-IR-01` contract, and the `F-MR-UT-IR-04`/`05`/`06` cleanup, in
+  exactly `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`. The
+  future correction session must not modify Current State, not modify
+  Backlog, not modify Runtime/tests/db/migrations, not modify Tier A or
+  pilot documents, not merge/rebase current `main` into the branch, not
+  amend the original candidate, must create one separate correction
+  commit with parent exact `74f5eeccf26bf90ceff8e4040b8596ed2abac833`,
+  push only the validation branch normally, not integrate `main`, not
+  declare any finding `CLOSED`, not declare Runtime authorized, not
+  claim P1 activation or efficacy, must report exact correction SHA/
+  tree/blobs/diff/static evidence, and must leave the next lifecycle
+  step as fresh Independent Re-Review pending.
