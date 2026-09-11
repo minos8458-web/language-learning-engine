@@ -1220,6 +1220,8 @@ Hash 또는 serialization algorithm은 implementation HOW다.
 | Retry                   | Same creation identity and same normalized intent가 구현된 경우 existing assignment replay |
 | Prohibited side effects | Existing assignment/snapshot/cutoff/lineage mutation, caller-supplied actual lineage, Progress write, production attempt write, production scheduling write |
 
+이 writer가 산출하는 `exposure_history_cutoff_ordinal`/`resolved_item_lineage`의 resolution은, METRIC_RESULT Unseen Transfer reader/reducer(API §13.10.11.3)가 consume하는 것과 동일한 `H(A)`/`R(A)`/`L(A)` source authority, 동일한 `lineageAuthority` validity 규칙, 동일한 `SV` relation, 동일한 canonical lineage priority, 동일한 exact `BIGINT` semantics, 동일한 stored-source integrity rule을 consume해야 한다(§13.10.11.3 authority). 이는 documentation contract일 뿐이며 이 절 자체가 Runtime을 수정하지 않는다.
+
 #### 13.10.4.1 Assignment item first-exposure recording
 
 Target internal repository operation:
@@ -1748,11 +1750,11 @@ The existing §13.10.11 query contract is unchanged. For unseen-transfer rebuild
 - formula version reference
 - analysis cutoff
 
-The query uses only Assignment item exposure facts that belong to the same enrollment and whose `exposure_ordinal` is less than or equal to the assignment's stored cutoff.
+The query uses only Assignment item exposure facts that belong to the same enrollment and whose `exposure_ordinal` is less than or equal to the assignment's stored cutoff (exact `H(A)`/`R(A)` scope; see API §13.10.11.3).
 
-For each evaluated node, primary unseen eligibility additionally requires at least one cutoff-bounded target-relevant prior exposure containing that exact `node_id`. Absence of such exposure excludes the node evaluation from the unseen-transfer denominator; it does not create a fifth lineage value.
+For each evaluated node, primary unseen eligibility additionally requires at least one cutoff-bounded target-relevant prior exposure containing that exact `node_id` (exact `N(A,n)`; see API §13.10.11.3). Absence of such exposure excludes the node evaluation from the unseen-transfer denominator; it does not create a fifth lineage value.
 
-Validation/rebuild recomputes assignment item lineage from the stored cutoff and committed exposure facts using the canonical priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY`. If that recomputation disagrees with non-null stored `resolved_item_lineage`, the query fails with `CONTRACT_VIOLATION` and returns no normal metric result.
+Validation/rebuild recomputes assignment item lineage from the stored cutoff and committed exposure facts using the canonical priority `EXACT_REPEAT` → `SURFACE_VARIANT` → `SAME_ITEM_FAMILY` → `DIFFERENT_ITEM_FAMILY` (exact `ρ(A)`; see API §13.10.11.3). Recomputed lineage and stored `resolved_item_lineage` are compared null-safely: stored null + recomputed null is consistent; stored null + recomputed non-null is `CONTRACT_VIOLATION`; stored non-null + recomputed same is consistent; stored non-null + recomputed different (including recomputed null) is `CONTRACT_VIOLATION`. Either contradiction case fails the query with `CONTRACT_VIOLATION` and returns no normal metric result.
 
 Analysis-time latest exposure history must not replace the stored assignment cutoff and must not retroactively reclassify an earlier assignment.
 
@@ -2405,7 +2407,7 @@ Exact constants:
 - `definitionVersion = 1`
 - `executionScope = "SYNTHETIC_P0"`
 - `metricKind = "RETENTION"`
-- `definitionVersion 1`은 `RETENTION`만 지원한다. `UNSEEN_TRANSFER`를 claim하면 `CONTRACT_VIOLATION`이다. 이 의미는 §13.10.11.3(F-MR-ARCH-06 Tier C candidate, `definitionVersion 2` = `UNSEEN_TRANSFER` 신설)이 추가된 뒤에도 소급 변경되지 않는다 — 두 `definitionVersion`은 상호 배타다.
+- `definitionVersion 1`은 `RETENTION`만 지원한다. `UNSEEN_TRANSFER`를 claim하면 `CONTRACT_VIOLATION`이다. 이 의미는 §13.10.11.3(`definitionVersion 2` = `UNSEEN_TRANSFER` 신설)이 추가된 뒤에도 소급 변경되지 않는다 — 두 `definitionVersion`은 상호 배타다.
 
 Exact `candidateAdmissionPolicy`:
 
@@ -2853,7 +2855,7 @@ Pure reducer helper는 complete frozen input을 consume하는 implementation det
 이 §13.10.11.2 contract는 다음을 승인하지 않는다:
 
 - Runtime 구현(`src/instrumentation/evidenceMetrics.js` 포함) 착수
-- Unseen-transfer metric(`UNSEEN_TRANSFER`, F-MR-ARCH-06) Runtime 구현 — §13.10.11.3 documentation candidate 존재와 무관하게 계속 NOT AUTHORIZED
+- Unseen-transfer metric(`UNSEEN_TRANSFER`, F-MR-ARCH-06) Runtime 구현 — §13.10.11.3 contract 존재와 무관하게 계속 NOT AUTHORIZED
 - Migration/DDL/physical schema 변경
 - Tier A 문서 변경
 - Runtime/test 변경
@@ -2862,11 +2864,11 @@ Pure reducer helper는 complete frozen input을 consume하는 implementation det
 - Finding closure(F-MR-ARCH-01~05는 계속 OPEN/targeted by this proposal)
 - §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract 변경
 
-#### 13.10.11.3 METRIC_RESULT Unseen Transfer v2 extension — synthetic P0 (F-MR-ARCH-06 Tier C 문서 candidate)
+#### 13.10.11.3 METRIC_RESULT Unseen Transfer v2 contract — synthetic P0
 
 **Role**
 
-이 subsection은 `F-MR-ARCH-06`의 Tier C documentation validation candidate다. §13.10.11.2를 additive하게 확장할 뿐이며, Retention v1(`definitionVersion 1`) contract의 어떤 요소도 reopen/redefine/weaken하지 않는다. 이 subsection이 침묵하는 부분은 §13.10.11.2의 공유 contract(operation classification, transaction, error registry, zero side effect)를 그대로 따른다.
+이 subsection은 §13.10.11.2를 additive하게 확장하는 stable canonical contract다. Retention v1(`definitionVersion 1`) contract의 어떤 요소도 reopen/redefine/weaken하지 않는다. 이 subsection이 침묵하는 부분은 §13.10.11.2의 공유 contract(operation classification, transaction, error registry, zero side effect)를 그대로 따른다.
 
 **Operation과 dispatch**
 
@@ -2943,11 +2945,72 @@ Canonical priority(정확히 이 순서):
 
 Fuzzy inference, text-similarity inference, edit-distance inference, token-overlap inference, transitive-relation inference는 없다. Target-relevant prior exposure가 없으면 `resolved_item_lineage = null`이다 — `DIFFERENT_ITEM_FAMILY`가 아니다.
 
+**Exact derived-history definitions**
+
+Current candidate ASSESSMENT assignment `A`에 대해 다음을 exact authority로 정의한다:
+
+- `E(A)` = `A`의 owning enrollment.
+- `C(A)` = `A`의 stored exact `BIGINT` `exposure_history_cutoff_ordinal`.
+- `owner(e)` = exposure row `e`를 소유하는 assignment.
+- `nodes(X)` = assignment `X`의 complete immutable snapshot target-node set.
+- `H(A)` = `owner(e).enrollment_id = E(A)`이고 `e.exposure_ordinal <= C(A)`(exact `BIGINT` 비교)인 모든 authoritative first-exposure row `e`.
+- `W(A)` = `C(A) > 0`이면, `exposure_ordinal = C(A)`인 unique exposure row. `C(A) = 0`이면 `W(A)`는 required가 아니다.
+- `R(A)` = `H(A)` 중 `nodes(owner(e))`가 `nodes(A)`와 intersect하는 row 전체(`R(A)`가 empty면 target-relevant history가 없다).
+- `N(A,n)` = `R(A)` 중 `n`이 `nodes(owner(e))`에 포함되는 row 전체.
+- `L(A)` = `R(A)`가 nonempty이면, `A`와 `R(A)`의 모든 `owner(e)`가 pin한 distinct ITEM pair 전체. `R(A)`가 empty이면 `L(A) = empty`.
+
+History ordering authority는 exact `BIGINT` `exposure_ordinal`이다. Global ordinal gap은 legal이며 gapless sequence를 요구하지 않는다. `H(A)`는 `C(A)`가 capture하는 immutable assignment-creation history를 나타낸다 — `analysisCutoff`, `exposed_at`, exposure/assignment/snapshot `created_at` 등 timestamp로 `H(A)`를 truncate하지 않는다. Timestamp는 lineage-history ordering authority가 아니다.
+
+**Surface-variant relation `SV(X,Y)`과 self-reference (UT-C1 / UT-C1-a)**
+
+ITEM `X`, `Y`에 대해 `SV(X,Y)` iff: `X.surfaceVariantReferences`가 `Y`의 exact `(itemId, itemVersion)`을 포함하거나, `Y.surfaceVariantReferences`가 `X`의 exact `(itemId, itemVersion)`을 포함한다. 이 relation은 either-direction으로 성립하는 direct relation이며 symmetric하다 — reciprocal stored edge는 required가 아니다. Transitive closure는 없다. Fuzzy/text-similarity/edit-distance/token-overlap inference는 없다. Direct surface-variant relation은 item-family equality를 imply하지 않는다.
+
+ITEM의 `surfaceVariantReferences`가 그 ITEM 자신의 exact `(itemId, itemVersion)`을 포함하면 `CONTRACT_VIOLATION`이다(self-reference 금지). 같은 `itemId`의 다른 `itemVersion`을 참조하는 것은 허용된다.
+
+**`lineageAuthority` whole-object validation on `L(A)` (UT-C1-b)**
+
+Lineage reconstruction이 consume하는 `L(A)`의 모든 ITEM에 대해, 그 ITEM의 전체 `lineageAuthority` object(모든 `surfaceVariantReferences` entry 포함)를 validate한다. `L(A)` 밖의 ITEM definition은 이 lineage operation을 위해 validate하지 않는다.
+
+Consumed `lineageAuthority` semantics:
+
+- Key 부재: valid — explicit canonical-stimulus/surface-variant 선언이 없음을 의미한다.
+- Explicit `null`: `CONTRACT_VIOLATION`.
+- Present value: closed four-key object여야 한다 — `definitionType`, `definitionVersion`, `canonicalStimulusId`, `surfaceVariantReferences`.
+  - `definitionType = "EVIDENCE_ITEM_LINEAGE"`, `definitionVersion = 1`.
+  - `canonicalStimulusId`는 nonempty string 또는 `null`이다. Trim/case-fold/Unicode normalization은 없다 — 비교는 exact code-unit equality다. `null`은 절대 `canonicalStimulusId` equality를 성립시키지 않는다.
+  - `surfaceVariantReferences`는 array다(empty 허용). 각 entry는 exact closed two-key object `{ itemId, itemVersion }`다 — `itemId`는 nonempty string(정규화 없음), `itemVersion`은 integer `1..2147483647`이다.
+  - Exact duplicate pair, exact self-reference, dangling referenced ITEM pair는 전부 `CONTRACT_VIOLATION`이다.
+- Reference existence는 consume 시점에, 동일 authoritative transaction snapshot 내부에서 validate한다.
+
 **Node-level prior exposure**
 
-Assignment-level `DIFFERENT_ITEM_FAMILY` lineage에 더해, 각 evaluated node는 다음을 만족하는 authoritative prior same-enrollment first-exposure fact를 적어도 하나 요구한다: `exposure_ordinal <= ` current assignment의 stored `exposure_history_cutoff_ordinal`이고, exposed assignment의 immutable target-node set이 그 evaluated node를 포함한다. 이는 assignment-level `DIFFERENT_ITEM_FAMILY` lineage와 별개 요건이다.
+각 evaluated node `n`에 대해 `N(A,n)`이 nonempty여야 한다 — 즉 `n`을 target-node set에 포함하는 owner의 authoritative same-enrollment prior first-exposure fact가 `H(A)` 안에 적어도 하나 있어야 한다. 이는 assignment-level `DIFFERENT_ITEM_FAMILY` lineage와 별개 요건이다.
 
-Assignment lineage가 `DIFFERENT_ITEM_FAMILY`이지만 evaluated node에 qualifying prior target exposure가 없으면, 정상 exclusion bucket `NODE_PRIOR_EXPOSURE_ABSENT`로 분류한다 — `CONTRACT_VIOLATION`이 아니다. Source facts가 stored lineage/cutoff authority와 모순되면(즉 immutable source facts로부터의 recomputation이 stored value와 불일치하면) `CONTRACT_VIOLATION`이다(아래 "Null-safe lineage recomputation" 참고) — 이는 절대 exclusion bucket으로 변환하지 않는다.
+Assignment lineage가 `DIFFERENT_ITEM_FAMILY`이지만 `N(A,n)`이 empty이면, 정상 exclusion bucket `NODE_PRIOR_EXPOSURE_ABSENT`로 분류한다 — `CONTRACT_VIOLATION`이 아니다. Source facts가 stored lineage/cutoff authority와 모순되면(아래 "Assignment lineage validation `V(A)`"/"Recomputed lineage `ρ(A)`" 참고) `CONTRACT_VIOLATION`이다 — 이는 절대 exclusion bucket으로 변환하지 않는다.
+
+**Assignment lineage validation `V(A)`**
+
+Lineage processing에 도달한 candidate에 대해 `V(A)`가 required다. 아래 조건 위반은 전부 stored authoritative-source contradiction `CONTRACT_VIOLATION`이다 — `INVALID_ID`도 exclusion bucket도 아니다. Caller-supplied unknown reference는 기존 `INVALID_ID` semantics를 유지한다.
+
+1. **Cutoff witness** — `C(A) > 0`이면 `exposure_ordinal = C(A)`인 row `W(A)`가 존재해야 하고 그 owner는 `E(A)`에 속해야 한다. `C(A) = 0`이면 positive witness는 required가 아니다.
+2. **Self-exclusion** — `H(A)`의 어떤 `e`도 `owner(e) = A`일 수 없다.
+3. **History node authority** — `H(A)`의 모든 `e`에 대해 `owner(e)`는 immutable assignment snapshot을 가져야 하고 `nodes(owner(e))`는 nonempty여야 한다.
+4. **Consumed reference authority** — `R(A)`가 nonempty이면, `A`와 모든 `R(A)` owner는 exact pinned ITEM/ITEM_FAMILY authority를 가져야 하며, `L(A)`의 모든 ITEM은 위 whole-object `lineageAuthority` validation을 통과해야 한다.
+5. **Null-safe lineage match** — validated source로부터 `ρ(A)`(아래)를 재계산하고, stored `resolved_item_lineage`와 null-safe하게 비교한다: stored null + recomputed null = consistent; stored null + recomputed non-null = `CONTRACT_VIOLATION`; stored non-null + recomputed same = consistent; stored non-null + recomputed different(recomputed null 포함) = `CONTRACT_VIOLATION`. Recomputation은 stored authority를 validate할 뿐이며 overwrite하지 않는다. `C(A)` 이후의 later exposure는 이를 retroactively 바꾸지 않는다.
+
+**Recomputed lineage `ρ(A)`**
+
+`ρ(A)`는 caller-filtered node history가 아니라 `R(A)` 전체를 사용해 계산한다:
+
+- `R(A)`가 empty면 `ρ(A) = null`.
+- 그 외 `R(A)`에 `EXACT(A, owner(e))`를 만족하는 `e`가 있으면 `EXACT_REPEAT`.
+- 그 외 `R(A)`에 `SV(A, owner(e))`를 만족하는 `e`가 있으면 `SURFACE_VARIANT`.
+- 그 외 `R(A)`에 `A`와 같은 authoritative `item_family_id`를 가진 `e`가 있으면 `SAME_ITEM_FAMILY`.
+- 그 외 `DIFFERENT_ITEM_FAMILY`.
+
+`EXACT(X,Y)` iff: 두 assignment의 snapshot ITEM pair가 exact equal이거나, 두 assignment가 consume한 ITEM definition 모두 non-null `canonicalStimulusId`를 가지고 exact code-unit equality다.
+
+Family version은 이 `SAME_ITEM_FAMILY` identity test를 바꾸지 않는다 — 이 문서가 명시적으로 달리 말하지 않는 한 family-version semantic choice를 신규로 도입하지 않는다.
 
 **Scenario role**
 
@@ -2991,26 +3054,58 @@ Rule 1–14는 Retention v1 `exclusionPolicy.ruleOrder`(§13.10.11.2)와 정확�
 
 Source-integrity contradiction(예: 아래 null-safe 규칙 아래 recomputed lineage가 stored lineage와 불일치)은 항상 `CONTRACT_VIOLATION`이며 절대 exclusion bucket이 아니다.
 
+**Lazy `FIRST_MATCH` lineage validation timing (UT-C2)**
+
+Rule 1–14는 lineage/history reference validation을 요구하지 않는다. Rule 1–14를 생존한 candidate `(A,n)`만 `V(A)`를 요구한다:
+
+1. `V(A)`를 require한다.
+2. Stored `resolved_item_lineage`가 `DIFFERENT_ITEM_FAMILY`가 아니면(`null` 포함) rule 15 `ITEM_LINEAGE_NOT_DIFFERENT`.
+3. 그 외 `N(A,n)`이 empty이면 rule 16 `NODE_PRIOR_EXPOSURE_ABSENT`.
+4. 그 외 eligible.
+
+Rule 1–14로 이미 classify된 candidate는 `V(A)`를 required로 하지 않는다 — 그런 candidate에만 속하는 lineage/history defect는 operation failure를 유발해서는 안 된다. Implementation은 HOW로서 prefetch할 수 있으나, prefetch는 error outcome, count, provenance를 바꿔서는 안 된다.
+
 **Numerator / denominator**
 
 Numerator = correct eligible held-out-family node evaluation 수. Denominator = all eligible scorable held-out-family node evaluation 수. Eligible incorrect response: `denominator += 1`, `numerator += 0`. `eligibleCount = denominator`. `candidateCount = eligibleCount + excludedCount`.
 
 **Group output**
 
-Retention group row(§13.10.11.2, 19-key)는 `definitionVersion 1` 결과에서 semantically 불변이다. `definitionVersion 2`(Unseen Transfer) 결과에서는 group row의 `groupKey`가 위 `itemFamilyId`/`itemFamilyVersion`을 추가로 포함하고, 정확히 두 개 count field를 추가한다:
+Retention group row(§13.10.11.2, 19-key)는 `definitionVersion 1` 결과에서 semantically 불변이다. `definitionVersion 2`(Unseen Transfer) 결과의 group row는 exact closed 21-key required object다:
 
 ```text
-lineageNotDifferentCount
-noPriorNodeExposureCount
+{
+  groupKey,
+  status,
+  numerator,
+  denominator,
+  value,
+  candidateCount,
+  eligibleCount,
+  excludedCount,
+  missingCount,
+  technicalFailureCount,
+  withdrawnCount,
+  unscorableCount,
+  normalEmptyCount,
+  earlyCount,
+  lateCount,
+  supersededCount,
+  nonterminalCount,
+  postCutoffCompletionCount,
+  lineageNotDifferentCount,
+  noPriorNodeExposureCount,
+  sourceRebuildReference
+}
 ```
 
-다른 임의 output 확장은 없다. 공통 seven-key top-level envelope(`formulaReference`, `analysisCutoff`, `aggregationGrain`, `filters`, `status`, `groups`, `sourceRebuildReference`)는 그대로 공유한다.
+Nested `groupKey`는 exact nine-key object(`participantId`, `nodeId`, `itemFamilyId`, `itemFamilyVersion`, `targetTimepoint`, `conditionId`, `conditionVersion`, `formulaId`, `formulaVersion`)다. 전부 required key이며 nullable한 유일한 field는 `value`다. 다른 임의 row field는 없다. 공통 seven-key top-level envelope(`formulaReference`, `analysisCutoff`, `aggregationGrain`, `filters`, `status`, `groups`, `sourceRebuildReference`)는 그대로 공유한다.
 
 **Status / numeric**
 
 `OK`/`INSUFFICIENT` semantics는 §13.10.11.2와 동일하다: group `denominator >= minimumSample`이면 `OK`, 아니면 `INSUFFICIENT`. Zero candidate: `groups = []`, `status = INSUFFICIENT`. Value는 six-decimal fixed ratio string `0.000000`..`1.000000`, `HALF_UP`, exact integer/rational arithmetic이다 — binary floating point를 rounding authority로 쓰지 않는다. 모든 count는 JS safe-integer output domain(`0..9007199254740991`)에 남는다. Overflow는 `OUT_OF_RANGE_VALUE`다.
 
-**Provenance**
+**Provenance (UT-C3 — P1 full-history `H(A)` provenance)**
 
 `sourceRebuildReference`는 §13.10.11.2와 정확히 같은 shape다:
 
@@ -3024,7 +3119,13 @@ noPriorNodeExposureCount
 }
 ```
 
-Retention v1과 달리, Unseen Transfer 결과에서 `exposureIds`는 항상 `[]`가 아니다 — lineage 검증에 실제로 consume된 same-enrollment exposure-history fact를 provenance에 포함해야 한다. `assignmentIds`는 candidate assignment와, consumed exposure-history fact를 소유하는 prior assignment를 모두 포함해야 한다. `exposureIds`는 consume된 authoritative exposure fact(`evidence_assignment_item_exposures.exposure_id`)를 포함해야 한다. `attemptIds`/`evaluationIds`는 실제로 logically dereference된 branch를 따른다 — eager SQL prefetch가 아니다. Response-wide provenance는 group provenance의 canonical set-union이다. Item/family/scenario array를 assignment snapshot에서 reconstruct 가능하다는 이유만으로 output에 추가하지 않는다.
+Per group exact membership:
+
+- `exposureIds` = 그 group의 candidate 중 `V(A)`가 required인 모든 candidate에 대한 `H(A)`의 set-union. Rule 1–14로 classify된 candidate는 lineage-history exposure ID를 기여하지 않는다. `C(A) = 0`이면 그 candidate는 exposure ID를 기여하지 않는다. `C(A) > 0`이면 `W(A) ∈ H(A)`이므로 `W(A)`는 자동으로 포함된다. Target-relevant하지 않은 `H(A)` row도 포함한다 — `V(A)`가 history integrity/node authority/non-relevance verification을 위해 그 row를 consume하기 때문이다.
+- `assignmentIds` = 그 group의 모든 candidate assignment의 union과, 위에 나열된 모든 `exposureId`의 owner assignment의 union.
+- `attemptIds`/`evaluationIds`는 기존 logical-dereference semantics를 유지한다.
+
+모든 provenance ID array는 unique set semantics와 기존 canonical lowercase UUID/string ordering을 사용한다. `exposureIds`를 ordinal로 정렬하지 않는다. Eager SQL prefetch는 HOW일 뿐이며 membership을 바꾸지 않는다. Response-wide `sourceRebuildReference`는 group provenance의 array-by-array set-union을 같은 ordering으로 canonicalize한 것이다. Item/family/scenario array를 assignment snapshot에서 reconstruct 가능하다는 이유만으로 output에 추가하지 않는다.
 
 **Transaction / side effect**
 
@@ -3036,7 +3137,7 @@ Retention v1과 달리, Unseen Transfer 결과에서 `exposureIds`는 항상 `[]
 
 **Exact closed FORMULA v2**
 
-Exactly 16개 required top-level key를 갖는 closed object다. 전부 required이며, 아래 ITEM lineage-authority 구조가 명시적으로 허용하는 경우를 제외하고 optional/nullable field는 없다:
+Exactly 16개 required top-level key를 갖는 closed object다. 모든 subobject key도 required다 — FORMULA v2에는 optional field도 nullable field도 없다. FORMULA v2 definition 내부(top-level value, subobject value, array element 포함) 어디에 `null`이 나타나도 `CONTRACT_VIOLATION`이다. ITEM `lineageAuthority.canonicalStimulusId`는 그 자신의 ITEM definition contract 아래 `null`을 허용하지만, 이는 별도 ITEM definition contract이며 이 FORMULA v2 null 금지의 예외가 아니다:
 
 ```text
 {
@@ -3221,22 +3322,12 @@ ITEM.definition.lineageAuthority = {
 }
 ```
 
-Rule:
+Exact structure/validation rule은 위 "`lineageAuthority` whole-object validation on `L(A)` (UT-C1-b)"가 authority다. Surface-variant relation `SV(X,Y)`와 self-reference 금지는 위 "Surface-variant relation `SV(X,Y)`과 self-reference (UT-C1 / UT-C1-a)"가 authority다. 이 절은 추가로 다음을 명시한다:
 
-- 기존 generic `ITEM` definition에 대한 optional extension이다. 부재는 explicit cross-item relation authority가 제공되지 않음을 의미한다.
-- 존재하면 `lineageAuthority`는 closed object다 — unknown key/wrong type은 `CONTRACT_VIOLATION`이다.
-- Fuzzy inference, textual similarity, edit distance, token overlap, transitive inference는 없다.
-- Self(같은 item ID/version)는 항상 `EXACT_REPEAT`다.
-- 같은 non-null `canonicalStimulusId`는 `EXACT_REPEAT`다.
-- 그 외 direct explicit `surfaceVariantReferences` relation은 `SURFACE_VARIANT`다.
-- 그 외 matching authoritative family ID는 `SAME_ITEM_FAMILY`다.
-- 그 외 target-relevant history가 있으면 `DIFFERENT_ITEM_FAMILY`다.
-- Target-relevant history가 없으면 `null`이다.
-- `surfaceVariantReferences`가 참조하는 ITEM pair는 반드시 존재해야 한다.
-- Duplicate direct relation reference는 `CONTRACT_VIOLATION`이다.
+- 기존 generic `ITEM` definition에 대한 optional extension이다.
 - ID/version semantics는 이 문서의 다른 구조화 reference와 동일하게 exact/stable하다.
 - Query는 explicit하게 존재하지 않는 relation을 invent/backfill할 수 없다.
-- Assignment writer(assignment-creation lineage resolution)와 이 metric reconstruction reader는 동일한 canonical priority를 consume한다.
+- Assignment writer(assignment-creation lineage resolution)와 이 metric reconstruction reader는 동일한 canonical priority와 `SV`/`lineageAuthority` validation semantics를 consume한다.
 
 이 subsection은 기존 published ITEM data를 수정하지 않는다.
 
@@ -3244,7 +3335,7 @@ Rule:
 
 `exposure_ordinal`과 `exposure_history_cutoff_ordinal`은 PostgreSQL `BIGINT` exact authority다. Comparison authority, ordering authority, persistence authority, round-trip authority로 JavaScript `Number`를 절대 사용하지 않는다. 이는 assignment creation cutoff resolution, lineage rebuild, cutoff witness validation, ordering, provenance 전부에 적용한다. PostgreSQL `BIGINT`/`NUMERIC` 연산, JavaScript `BigInt`, exact base-10 decimal string 등 exact representation을 상황에 맞게 사용할 수 있다 — contract는 exactness를 요구하지, 특정 HOW를 강제하지 않는다.
 
-`O(A) > 0`(assignment의 stored cutoff가 적어도 하나의 prior exposure를 admit)이면, reducer가 incomplete history로 silently 동작하지 않도록 required cutoff witness semantics를 충분히 명확하게 정의해야 한다. Global ordinal gap은 허용된다 — gapless exposure ordinal sequence를 요구하지 않는다.
+`C(A) > 0`(즉 stored cutoff가 적어도 하나의 prior exposure를 admit)이면, 위 "Assignment lineage validation `V(A)`" 조건 1(cutoff witness)이 required cutoff witness `W(A)`를 exact하게 정의한다 — reducer는 `W(A)` 부재/불완전 history로 silently 동작할 수 없다. Global ordinal gap은 허용된다 — gapless exposure ordinal sequence를 요구하지 않는다.
 
 **Null-safe lineage recomputation**
 
@@ -3284,7 +3375,7 @@ Retention count/output contract는 불변이다. Retention row에 신규 count f
 
 **Explicit non-authorizations(Unseen Transfer)**
 
-이 §13.10.11.3 documentation candidate는 다음을 승인하지 않는다:
+이 §13.10.11.3 contract는 다음을 승인하지 않는다:
 
 - Runtime 구현(`src/instrumentation/evidenceMetrics.js` 포함) 착수
 - Runtime test
@@ -3300,8 +3391,6 @@ Retention count/output contract는 불변이다. Retention row에 신규 count f
 - Scheduler 변경
 - Retention v1 reopening
 - `B-3` resolution
-
-이 subsection은 `F-MR-ARCH-06`과 `F-MR-UT-01`–`F-MR-UT-07`/`F-MR-UT-09`가 나타내는 canonical gap을 target한다(`F-MR-UT-08`은 Runtime-readiness NOTE로 남는다). 상태는 `CANONICAL GAP ADDRESSED BY CANDIDATE / PENDING INDEPENDENT REVIEW`다 — 이 목록의 어떤 finding도 이 candidate로 `CLOSED`를 선언하지 않는다.
 
 
 ### 13.11 Production/evidence dual-write orchestration
@@ -3449,4 +3538,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.27 | 2026-09-05 | F-RB1-03/F-RB1-04 Architecture disambiguation — §13.10.11.1 Closure에 두 개 additive 문장을 추가해 "assignment-level secondary filter"/"secondary predicate"가 `conditionReferences`를 포함한 기존 네 predicate 전부를 가리킴을 명시(F-RB1-04)하고, 해당 closure 판정의 assignment 존재/부재를 `analysisCutoff` 이하 `evidence_assignments.created_at` 기준으로 판정함을 명시(F-RB1-03, mutable lifecycle column as-of-read projection과 무관)한다. Root selection·Physical filter authority·Raw-source cutoff boundary·exact `empty_result` payload·five-code registry·API count는 불변이며 신규 filter dimension이나 paired-ownership assertion을 도입하지 않는다. Owner value 불요, Tier A 영향 없음, migration/schema/runtime/test/provider/P1 activation/human-data authorization 없음. |
 | 1.28 | 2026-09-05 | F-RB1-05/F-RC-01 `analysisCutoff` contract adjudication — §13.10.11.1의 입력 문자열 자체가 정확히 `YYYY-MM-DDTHH:mm:ss.sssZ`인 valid canonical UTC timestamp여야 하는 R1을 명시하고, 대체 표기의 normalization acceptance를 허용하지 않으며 invalid/impossible/noncanonical input은 기존 `OUT_OF_RANGE_VALUE`로 거부함을 확정. Required/type error mapping, five-code registry, RAW_SOURCE input/output와 exact `empty_result`, source-time cutoff authority, A1/B1 closure, equivalence, FORMULA reference-only boundary, read-only transaction 및 zero-side-effect 계약은 유지한다. API 단독 clarification으로 Schema revision 1.7·Tier A·API count는 불변이다. Owner value 불요; schema DDL·migration 014·runtime/test 변경·provider/audio·P1 activation·human-data collection을 승인하지 않으며 Runtime B1 validation/closure 또는 main-integration eligibility를 선언하지 않는다. |
 | 1.29 | 2026-09-08 | VI P1 Measurement Readiness METRIC_RESULT Common Contract + Retention First Reducer Tier C 사용자 승인 반영 — §13.10.11.1 직후 §13.10.11.2에 internal `queryMetricResult(pool, input)`(synthetic P0 Retention v1 전용, `queryRawEvidenceForMetricRebuild()`를 호출하지 않는 별도 DB-backed operation)를 정의. Exact 5-key input(`formulaId`/`formulaVersion`/`analysisCutoff`/`aggregationGrain`/`filters`)과 exact 5-key filters(`assignmentIds`/`attemptIds` 금지, `enrollmentIds`/`conditionReferences` 중 하나 이상 nonempty 필수), 구조화 `conditionReferences`/`itemFamilyReferences` reference exactness, 고정 aggregation grain·group key·group ordering, 14-key closed FORMULA definition v1(`populationPolicy` 미허용), candidate admission·denominator eligibility·attempt/completion integrity를 FIRST_MATCH exclusion(14-step precedence, 10-bucket 상호배타 partition)과 명시적으로 분리해 정의한다. Retention numerator/denominator, timeliness(EARLY/ON_TIME/LATE 경계 포함) 규칙과 synthetic fixture 값(`minimumSample=2`, `earlyToleranceMs=lateToleranceMs=3600000`, 실제 P1 calibration 아님을 명시)을 확정하고, exact 7-key output envelope·19-key group row·fixed 6-decimal HALF_UP ratio·group/top-level OK·INSUFFICIENT status contract·per-group/response-wide `sourceRebuildReference`(`exposureIds=[]` 고정)를 정의한다. 정확히 하나의 `REPEATABLE READ`/`READ ONLY` transaction에서 frozen source로부터 reduction하며 zero side effect다. 기존 five-code registry만 사용, 신규 error code 없음. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract·RAW_SOURCE input/output/`empty_result`는 semantically 불변이다. Unseen-transfer metric(F-MR-ARCH-06)은 계속 OPEN/DEFERRED다. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)·test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection을 승인하지 않으며 F-MR-ARCH-01~05를 포함한 어떤 finding도 이 patch로 close하지 않는다. |
-| 1.30 | 2026-09-11 | VI P1 Measurement Readiness METRIC_RESULT Unseen Transfer Tier C 사용자 승인 반영 — §13.10.11.2 직후 §13.10.11.3에 동일 internal `queryMetricResult(pool, input)`의 FORMULA `definitionVersion` 기반 dispatch(`definitionVersion 1`=RETENTION 불변, `definitionVersion 2`=UNSEEN_TRANSFER 신설, 상호 배타·closed)를 정의한다. Exact six-axis aggregation grain(`ITEM_FAMILY` 추가)·nine-key group key, assignment-time immutable lineage authority(`resolved_item_lineage`/`exposure_history_cutoff_ordinal`/same-enrollment first-exposure history, `DIFFERENT_ITEM_FAMILY` primary eligibility, null lineage 비변환), 4-value lineage priority(fuzzy/edit-distance/token-overlap/transitive inference 금지), 별도 node-level prior target exposure 요건(`NODE_PRIOR_EXPOSURE_ABSENT` 정상 bucket, source contradiction만 `CONTRACT_VIOLATION`)을 정의하고, scenario를 별도 stratification axis로 유지(1차 eligibility·grain·groupKey에서 제외, stratified output deferred)한다. Exact 16-rule FIRST_MATCH 순서(rule 15/16이 rule 1–14 생존 candidate에만 적용됨을 명시)와 numerator/denominator, `itemFamilyId`/`itemFamilyVersion` 확장 groupKey·`lineageNotDifferentCount`/`noPriorNodeExposureCount` 2개 count 추가 group row, exposureIds가 `[]`로 고정되지 않는 provenance 확장, 동일 `REPEATABLE READ`/`READ ONLY` 단일 transaction·zero side effect·기존 five-code registry를 정의한다. Exact 16-key closed FORMULA v2(`lineagePolicy`/`scenarioPolicy` subobject 포함)와 optional versioned ITEM `lineageAuthority`(신규 `reference_kind` 없음, `EXACT_REPEAT`/`SURFACE_VARIANT`/`SAME_ITEM_FAMILY`/`DIFFERENT_ITEM_FAMILY` 우선순위, fuzzy inference 금지) 계약을 확정한다. BIGINT(`exposure_ordinal`/`exposure_history_cutoff_ordinal`) exactness(JS `Number` 비교/정렬/영속/round-trip 금지)와 stored/recomputed lineage null-safe 비교, candidate filter가 lineage 재계산에 필요한 same-enrollment 이력을 truncate하지 않는 source/filter 분리 경계를 명시한다. Retention v1(§13.10.11.2, `definitionVersion 1`, 5-axis grain, 7-key envelope, 19-key group row, 10-bucket exclusion count, `exposureIds=[]`, 상태/수치/transaction/error semantics)은 문서 레벨에서 완전히 보존되며 이 patch로 silently mutate되지 않는다. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract는 semantically 불변이다. 기존 five-code registry만 사용, 신규 error code 없음. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)/test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection, scenario-stratified reducer, efficacy 결론을 승인하지 않으며 `F-MR-ARCH-06`·`F-MR-UT-01`–`F-MR-UT-09`를 포함한 어떤 finding도 이 patch로 close하지 않는다(CANONICAL GAP ADDRESSED BY CANDIDATE / PENDING INDEPENDENT REVIEW). |
+| 1.30 | 2026-09-11 | VI P1 Measurement Readiness METRIC_RESULT Unseen Transfer Tier C 사용자 승인 반영 — §13.10.11.2 직후 §13.10.11.3에 동일 internal `queryMetricResult(pool, input)`의 FORMULA `definitionVersion` 기반 dispatch(`definitionVersion 1`=RETENTION 불변, `definitionVersion 2`=UNSEEN_TRANSFER 신설, 상호 배타·closed)를 정의한다. Exact six-axis aggregation grain(`ITEM_FAMILY` 추가)·nine-key group key, assignment-time immutable lineage authority(`resolved_item_lineage`/`exposure_history_cutoff_ordinal`/same-enrollment first-exposure history, `DIFFERENT_ITEM_FAMILY` primary eligibility, null lineage 비변환), 4-value lineage priority(fuzzy/edit-distance/token-overlap/transitive inference 금지), 별도 node-level prior target exposure 요건(`NODE_PRIOR_EXPOSURE_ABSENT` 정상 bucket, source contradiction만 `CONTRACT_VIOLATION`)을 정의하고, scenario를 별도 stratification axis로 유지(1차 eligibility·grain·groupKey에서 제외, stratified output deferred)한다. Exact 16-rule FIRST_MATCH 순서(rule 15/16이 rule 1–14 생존 candidate에만 적용됨을 명시)와 numerator/denominator, `itemFamilyId`/`itemFamilyVersion` 확장 groupKey·`lineageNotDifferentCount`/`noPriorNodeExposureCount` 2개 count 추가 group row, exposureIds가 `[]`로 고정되지 않는 provenance 확장, 동일 `REPEATABLE READ`/`READ ONLY` 단일 transaction·zero side effect·기존 five-code registry를 정의한다. Exact 16-key closed FORMULA v2(`lineagePolicy`/`scenarioPolicy` subobject 포함)와 optional versioned ITEM `lineageAuthority`(신규 `reference_kind` 없음, `EXACT_REPEAT`/`SURFACE_VARIANT`/`SAME_ITEM_FAMILY`/`DIFFERENT_ITEM_FAMILY` 우선순위, fuzzy inference 금지) 계약을 확정한다. BIGINT(`exposure_ordinal`/`exposure_history_cutoff_ordinal`) exactness(JS `Number` 비교/정렬/영속/round-trip 금지)와 stored/recomputed lineage null-safe 비교, candidate filter가 lineage 재계산에 필요한 same-enrollment 이력을 truncate하지 않는 source/filter 분리 경계를 명시한다. Retention v1(§13.10.11.2, `definitionVersion 1`, 5-axis grain, 7-key envelope, 19-key group row, 10-bucket exclusion count, `exposureIds=[]`, 상태/수치/transaction/error semantics)은 문서 레벨에서 완전히 보존되며 이 patch로 silently mutate되지 않는다. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract는 semantically 불변이다. 기존 five-code registry만 사용, 신규 error code 없음. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)/test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection, scenario-stratified reducer, efficacy 결론을 승인하지 않으며 `F-MR-ARCH-06`·`F-MR-UT-01`–`F-MR-UT-09`를 포함한 어떤 finding도 이 patch로 close하지 않는다. |
