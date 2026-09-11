@@ -4710,6 +4710,245 @@ NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Correction Design Complete / User Approval Pending
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record Unseen Transfer Tier C correction design`,
+  parent `647a121d4464b246c00a4a13be883a4a818ed3aa`) that a fresh GPT-6
+  Astra Architecture correction-design session completed a correction
+  design for `F-MR-UT-IR-01`–`06` against exact current `main`, exact
+  candidate `74f5eeccf26bf90ceff8e4040b8596ed2abac833` (validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-
+  schema19-20260911`), and that Control Tower has accepted that
+  correction design. This record does not modify the candidate, does not
+  modify `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not run Runtime/tests/
+  migrations/DDL, does not run PostgreSQL, and does not create a
+  correction commit. Repository mutation caused by this update: limited
+  to `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline unchanged
+  before this update: `main` / `origin/main`
+  `647a121d4464b246c00a4a13be883a4a818ed3aa`, tree
+  `60f9d9b3d5e0a4406fc074a4872852702eb1f6b7`, parent
+  `80cec0e479011c2e374474acf316a07a9ea22397`, subject `Record Unseen
+  Transfer Tier C independent review correction request`, Current State
+  blob `a32b3db5a4484f31803a839223c7e144e592ebcc`; worktree/index clean,
+  no untracked files. Candidate identity re-confirmed unchanged:
+  validation branch `validation/vi-p1-metric-result-unseen-transfer-
+  tierc-api130-schema19-20260911`, tip
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, tree
+  `cb6dd609e01d85ef7cb52727f5fd4a54f982d4a7`, parent
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`, exact two-file scope
+  (`API_CONTRACT.md` blob `34052b53fbd88839222e77cd7d5172916b5254eb`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blob
+  `8737be2c618775a51501ff385c1f0b2430782a2d`). Candidate status remains
+  `REQUEST CORRECTION / MAIN-INTEGRATION NOT ELIGIBLE / NOT CANONICAL ON
+  MAIN`, not mutated by this record. Canonical on `main` remains Backlog
+  `1.75` (blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`), API `1.29`
+  (blob `a498d5536ea1d228d133610780ff06d77a9d403f`), Schema `1.8` (blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`); candidate API `1.30` /
+  Schema `1.9` remain `NOT CANONICAL ON MAIN`.
+
+###### Correction Design Result
+
+- Architecture correction design: `COMPLETE`. Repository mutation: `0`.
+  Candidate mutation: `0`. Baseline: `PASS`.
+- `F-MR-UT-IR-01` correction determined: `YES` (derived, no new user
+  semantic choice). `F-MR-UT-IR-02` user decision required: `YES`.
+  `F-MR-UT-IR-03` user decision required: `YES`.
+- Provenance membership: `FULLY SPECIFIED CONDITIONAL ON UT-C2 / UT-C3
+  APPROVAL`.
+- Corrected target revisions: API `1.30` / Schema `1.9` (unchanged from
+  the prior candidate proposal). Proposed correction files exactly:
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`.
+- Owner value required: `NO`. Tier A impact: `NO`. Physical schema
+  sufficient: `YES`. Migration required: `NO`. DDL required: `NO`.
+- Repository correction authorized: `NO`. Runtime implementation
+  authorized: `NO`. P1 activated: `NO`. Efficacy verified: `NO`.
+
+###### IR-01 — Derived Correction (No New User Choice)
+
+`F-MR-UT-IR-01` = `CORRECTION DESIGN COMPLETE / STILL OPEN UNTIL
+RE-REVIEW`. The correction design derives, without a new user semantic
+choice, exact cutoff-witness/history-completeness terms: `E(A)` = owning
+enrollment; `C(A)` = stored exact `BIGINT` `exposure_history_cutoff_
+ordinal`; `H(A)` = all same-enrollment authoritative first-exposure rows
+with `exposure_ordinal <= C(A)`; `W(A)` = when `C(A) > 0`, the unique
+exposure row whose ordinal equals `C(A)`; `R(A)` = the target-relevant
+subset of `H(A)` using full immutable target-node sets; `N(A,n)` =
+`R(A)` rows whose owner target-node set contains candidate node `n`;
+`L(A)` = distinct ITEM pairs pinned by `A` and owners in `R(A)`.
+Assignment-level lineage validation `V(A)` requires: (1) if `C(A) > 0`,
+`W(A)` exists and belongs to `E(A)`; (2) no `H(A)` row is owned by `A`
+itself; (3) each `H(A)` owner has an immutable snapshot with a nonempty
+snapshot-node set; (4) consumed ITEM / ITEM_FAMILY / `lineageAuthority`
+references exist and are valid; (5) recomputed lineage matches stored
+`resolved_item_lineage` null-safely. Failure of stored authoritative
+source integrity is `CONTRACT_VIOLATION`, not `INVALID_ID` and not an
+exclusion bucket; caller-supplied unknown references retain existing
+`INVALID_ID` semantics. Global ordinal gaps remain legal. History
+ordering authority is the exact `BIGINT` `exposure_ordinal`; timestamp is
+NOT exposure-history ordering authority. The lineage-history `H(A)` used
+to verify the immutable assignment cutoff must not be truncated by
+`analysisCutoff`/`exposed_at` timestamps.
+
+###### IR-02 — User Decision Packet (UT-C1 / UT-C1-a / UT-C1-b)
+
+Three exact decisions are presented for explicit user approval or
+rejection; none is decided by this record.
+
+- **UT-C1 — surface-variant relation semantics.** Options: (A)
+  `CURRENT-ITEM-DIRECTED` — `SV(X,Y)` iff `X` directly references `Y`;
+  (B) `EITHER-DIRECTION DIRECT` — `SV(X,Y)` iff `X` directly references
+  `Y` OR `Y` directly references `X`, with no reciprocal stored edge
+  required and no transitive closure; (C) `RECIPROCAL-REQUIRED` —
+  `SV(X,Y)` only if both directly reference each other. Control Tower
+  recommendation: **B — EITHER-DIRECTION DIRECT**, because it supports
+  adding a new immutable ITEM without republishing an old version, one
+  direct declaration works regardless of assessment order, the
+  writer/reader rule stays deterministic with no transitive relation, and
+  it avoids one-sided declarations silently falling through to
+  `DIFFERENT_ITEM_FAMILY`.
+- **UT-C1-a — self-reference.** Options: `PROHIBIT`, `IGNORE`,
+  `ACCEPT-REDUNDANT`. Control Tower recommendation: **PROHIBIT** — a
+  `surfaceVariantReferences` entry equal to the ITEM's own exact
+  `(itemId, itemVersion)` is `CONTRACT_VIOLATION`; the same `itemId` with
+  a different version remains allowed.
+- **UT-C1-b — `lineageAuthority` validation scope.** Options: (1)
+  `WHOLE-OBJECT` validation for every ITEM in `L(A)`; (2)
+  `RELEVANT-ENTRIES-ONLY`; (3) all `H(A)` owners' ITEM definitions.
+  Control Tower recommendation: **WHOLE-OBJECT VALIDATION ON `L(A)`** —
+  every ITEM definition actually consumed by lineage reconstruction must
+  have its complete `lineageAuthority` object validated, including every
+  direct surface-variant reference; ITEMs outside `L(A)` are not
+  validated for this lineage operation.
+
+Derived sub-rules (do not require additional user choice unless the user
+rejects the package): absent `lineageAuthority` is valid, equivalent to
+no declared canonical stimulus relation and empty
+`surfaceVariantReferences` for lineage evaluation; explicit
+`lineageAuthority: null` is `CONTRACT_VIOLATION`; `canonicalStimulusId`
+is a nonempty string or null, with no trim/case-fold/Unicode
+normalization, exact code-unit equality, and null never establishing
+equality; an exact duplicate `(itemId, itemVersion)` relation is
+`CONTRACT_VIOLATION`; a referenced ITEM pair's existence is validated
+when consumed in the same transaction snapshot; a dangling stored
+relation is `CONTRACT_VIOLATION`; writer and reader consume identical
+relation semantics and priority.
+
+###### IR-03 — User Decision Packet (UT-C2 / UT-C3)
+
+- **UT-C2 — lineage validation timing.** Options: `EAGER` — `V(A)` runs
+  for every admitted candidate before `FIRST_MATCH` lifecycle
+  classification; `LAZY` — rules 1–14 run first, and `V(A)` is required
+  only for candidates that survive rules 1–14 and reach lineage
+  processing. Control Tower recommendation: **LAZY FIRST_MATCH LINEAGE
+  VALIDATION** — for candidate `(A,n)` that survives rules 1–14: (1)
+  run/require `V(A)`; (2) if stored lineage is not
+  `DIFFERENT_ITEM_FAMILY`, rule 15 `ITEM_LINEAGE_NOT_DIFFERENT`; (3) else
+  if `N(A,n)` is empty, rule 16 `NODE_PRIOR_EXPOSURE_ABSENT`; (4) else
+  eligible. Candidates classified by rules 1–14 do not require `V(A)`.
+  Prefetch may not change error outcome or provenance. Reason: matches
+  the Retention branch-level dereference precedent, preserves
+  `FIRST_MATCH` failure scope, and avoids unrelated corrupted lineage
+  history aborting candidates already excluded by lifecycle/QC rules.
+- **UT-C3 — provenance exposure membership.** Options: `P1 FULL-HISTORY`
+  — each `V(A)`-required candidate contributes `H(A)`; `P2 RELEVANT +
+  WITNESS` — each contributes `R(A)` union `W(A)`; `P3 RELEVANT ONLY` —
+  each contributes `R(A)`. Control Tower recommendation: **P1 —
+  FULL-HISTORY `H(A)` PROVENANCE**. Exact proposed membership per group:
+  `exposureIds` = union of `H(A)` for all candidates in that group for
+  which `V(A)` is required; rules 1–14 exclusions contribute no exposure
+  history; if `C(A)=0`, `A` contributes no exposure ID; if `C(A)>0`,
+  `W(A)` is automatically included because `W(A)` is in `H(A)`;
+  non-target-relevant `H(A)` rows are included because `V(A)` consumes
+  them to verify complete history/node authority and non-relevance.
+  `assignmentIds` = all candidate assignments union owners of every
+  listed `exposureId`. `attemptIds`/`evaluationIds` = existing
+  logical-dereference rules. Every output ID array is unique IDs in
+  canonical existing string ordering; response-wide provenance is the
+  per-array set union of group provenance.
+
+###### IR-04 / IR-05 / IR-06 — Correction Design
+
+- `F-MR-UT-IR-04` = `CORRECTION DESIGN COMPLETE / OPEN UNTIL RE-REVIEW`.
+  Correction: remove lifecycle-state wording ("candidate", "validation
+  candidate", "PENDING INDEPENDENT REVIEW", "CANONICAL GAP ADDRESSED BY
+  CANDIDATE") from would-be canonical API/Schema text and replace with
+  stable semantic contract wording only; finding/review lifecycle stays
+  in Current State / Backlog governance.
+- `F-MR-UT-IR-05` = `CORRECTION DESIGN COMPLETE / OPEN UNTIL RE-REVIEW`.
+  Correction: FORMULA v2 itself has exactly 16 required top-level keys,
+  all required subobject fields, no optional FORMULA v2 field, and no
+  nullable FORMULA v2 field; any null anywhere inside the FORMULA v2
+  definition is `CONTRACT_VIOLATION`. ITEM `lineageAuthority.
+  canonicalStimulusId` nullable behavior is a separate ITEM definition
+  contract and is NOT a FORMULA v2 null exception.
+- `F-MR-UT-IR-06` = `CORRECTION DESIGN COMPLETE / OPEN UNTIL RE-REVIEW`.
+  Correction package includes: reconciling old API non-null-only
+  mismatch wording with the final null-safe rule; the Schema common
+  METRIC_RESULT input label covering v1/v2 dispatch rather than
+  Retention-only; a writer-section cross-reference to exact
+  `lineageAuthority` / `BIGINT` / history-source obligations; and an
+  explicit closed 21-key Unseen group row (`groupKey`, `status`,
+  `numerator`, `denominator`, `value`, `candidateCount`,
+  `eligibleCount`, `excludedCount`, `missingCount`,
+  `technicalFailureCount`, `withdrawnCount`, `unscorableCount`,
+  `normalEmptyCount`, `earlyCount`, `lateCount`, `supersededCount`,
+  `nonterminalCount`, `postCutoffCompletionCount`,
+  `lineageNotDifferentCount`, `noPriorNodeExposureCount`,
+  `sourceRebuildReference`); `groupKey` remains the exact nine-key
+  object.
+- `F-MR-UT-IR-07`/`08` preserved: `NOTE / OPEN / NO CORRECTION
+  REQUIRED`.
+
+###### Corrected Revision Strategy
+
+Corrected target remains API `1.30` / Schema `1.9`, because neither
+candidate revision became canonical on `main`. Any future correction
+must be a separate correction commit on the same validation branch, with
+parent `74f5eeccf26bf90ceff8e4040b8596ed2abac833` — no amend, no
+force-push, and no `1.31`/`1.10` merely for correcting this unintegrated
+candidate. Repository correction is NOT yet authorized.
+
+###### Finding State
+
+- `F-MR-ARCH-06`: `OPEN`. `F-MR-UT-01`–`09`: `OPEN`.
+  `F-MR-UT-IR-01`–`08`: `OPEN`. No finding is closed by this record.
+
+###### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record.
+
+###### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE IMPLEMENTED / INDEPENDENT REVIEW = REQUEST
+CORRECTION / MAIN-INTEGRATION NOT ELIGIBLE / CORRECTION DESIGN COMPLETE /
+USER APPROVAL PENDING / CORRECTION COMMIT NOT AUTHORIZED / RUNTIME NOT
+AUTHORIZED / NOT CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`.
+
+###### Non-Claims
+
+This record does not mean: a correction commit created — NOT CLAIMED;
+the corrected candidate independently reviewed — NOT CLAIMED;
+main-integration eligible — NOT CLAIMED (`NO CURRENTLY`); API `1.30`
+canonical on `main` — NOT CLAIMED; Schema `1.9` canonical on `main` — NOT
+CLAIMED; Runtime authorized — NOT CLAIMED; Runtime implemented — NOT
+CLAIMED; Runtime validated — NOT CLAIMED; P1 activated — NOT CLAIMED;
+human-data collection authorized — NOT CLAIMED; efficacy verified — NOT
+CLAIMED; `B-3` resolved — NOT CLAIMED; METRIC_RESULT / Retention v1
+Runtime reopened — NOT CLAIMED; UT-C1/UT-C1-a/UT-C1-b/UT-C2/UT-C3
+approved or decided — NOT CLAIMED (all five remain pending explicit user
+approval or rejection).
+
+###### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -5608,6 +5847,32 @@ This bootstrap does not rerun PostgreSQL or tests.
   Correction" for full detail; the sole Next Action is now a fresh GPT-6
   Astra Architecture read-only correction-design session for
   `F-MR-UT-IR-01`–`06` (§10).
+- A fresh GPT-6 Astra Architecture correction-design session for
+  `F-MR-UT-IR-01`–`06` has since completed (repository mutation `0`,
+  candidate mutation `0`, baseline `PASS`), ACCEPTED by Control Tower.
+  `F-MR-UT-IR-01` is derived without a new user semantic choice (exact
+  cutoff-witness/history-completeness terms `E(A)`/`C(A)`/`H(A)`/`W(A)`/
+  `R(A)`/`N(A,n)`/`L(A)` and validation `V(A)`). `F-MR-UT-IR-02`/`03`
+  require explicit user approval of five exact decisions — `UT-C1`
+  (surface-variant relation semantics; Control Tower recommends
+  `EITHER-DIRECTION DIRECT`), `UT-C1-a` (self-reference; recommends
+  `PROHIBIT`), `UT-C1-b` (`lineageAuthority` validation scope; recommends
+  `WHOLE-OBJECT` on `L(A)`), `UT-C2` (lineage validation timing;
+  recommends `LAZY FIRST_MATCH`), `UT-C3` (provenance exposure
+  membership; recommends `P1 FULL-HISTORY H(A)`). `F-MR-UT-IR-04`/`05`/
+  `06` are folded into the same corrected two-file proposal (API `1.30` /
+  Schema `1.9`, unchanged target revisions). `F-MR-UT-IR-07`/`08` remain
+  notes. No finding is closed by this record; `F-MR-ARCH-06` and
+  `F-MR-UT-01`–`09` remain `OPEN`. `METRIC_RESULT` / Retention v1 Runtime
+  remains `REVIEW-RECORDED / CLOSED`, not reopened. Repository
+  correction, Runtime implementation, and P1 activation remain
+  unauthorized; no correction commit is created by this record.
+  Repository mutation by this update is limited to
+  `LLE_CURRENT_STATE.md`. See §4 "METRIC_RESULT Unseen Transfer Tier C —
+  Correction Design Complete / User Approval Pending" for full detail;
+  the sole Next Action is now explicit user approval or rejection of the
+  exact `UT-C1`/`UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decision packet
+  (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -5661,7 +5926,18 @@ ledger does not claim:
   candidate is corrected, re-reviewed, approved, or canonical on `main`
   — `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`; API `1.30` /
   Schema `1.9` remain `NOT CANONICAL ON MAIN`; canonical `main` remains
-  API `1.29` / Schema `1.8`; Runtime remains `NOT AUTHORIZED`
+  API `1.29` / Schema `1.8`; Runtime remains `NOT AUTHORIZED`. Since
+  then: a fresh GPT-6 Astra Architecture correction-design session
+  completed (repository/candidate mutation `0`) producing a corrected
+  two-file proposal targeting the same API `1.30` / Schema `1.9`, with
+  `F-MR-UT-IR-01` derived without a new user choice and `F-MR-UT-IR-02`/
+  `03` resolved into an exact five-item decision packet (`UT-C1`,
+  `UT-C1-a`, `UT-C1-b`, `UT-C2`, `UT-C3`, each with a Control Tower
+  recommendation; see §4/§8) pending explicit user approval or
+  rejection. This is NOT a claim that any decision is approved, that a
+  correction commit exists, that the candidate is re-reviewed, or that
+  it is canonical on `main` — repository correction and Runtime
+  implementation remain `NOT AUTHORIZED`
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -6814,24 +7090,10 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Fresh GPT-6 Astra Architecture read-only correction-design session for
-  `F-MR-UT-IR-01` through `F-MR-UT-IR-06` against exact current `main`,
-  exact candidate `74f5eeccf26bf90ceff8e4040b8596ed2abac833` (validation
-  branch `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-
-  schema19-20260911`), the Independent Review result recorded in §4
-  ("METRIC_RESULT Unseen Transfer Tier C Documentation Candidate —
-  Independent Review Result / Request Correction"), and the
-  user-approved Current State contract; the session must: repository
-  mutation `0`; not modify the validation candidate; not commit/push;
-  preserve `F-MR-UT-IR-07`/`08` as notes; derive an exact
-  cutoff-witness/history-completeness correction for `F-MR-UT-IR-01`;
-  present exact alternatives and a recommended contract for
-  `F-MR-UT-IR-02`; present exact alternatives and a recommended contract
-  for `F-MR-UT-IR-03`; fold `F-MR-UT-IR-04`/`05`/`06` into the corrected
-  two-file text proposal; identify exactly which new semantics require
-  user approval; require no owner value unless genuinely discovered;
-  preserve Tier A `NO`; preserve migration/DDL `NO` unless evidence
-  disproves it; return the smallest corrected API `1.30` / Schema `1.9`
-  proposal; and make no Runtime/P1/efficacy claims. No repository
-  correction is authorized until the resulting corrected Tier C proposal
-  is explicitly approved by the user.
+- User approval or rejection of the exact Unseen Transfer Tier C
+  correction decision packet: `UT-C1` = `B — EITHER-DIRECTION DIRECT
+  RELATION`; `UT-C1-a` = `PROHIBIT SELF-REFERENCE`; `UT-C1-b` =
+  `WHOLE-OBJECT VALIDATION ON L(A)`; `UT-C2` = `LAZY FIRST_MATCH LINEAGE
+  VALIDATION`; `UT-C3` = `P1 FULL-HISTORY H(A) PROVENANCE`. The user may
+  approve all five together or reject/override any specific item. No
+  repository correction is authorized before explicit user approval.
