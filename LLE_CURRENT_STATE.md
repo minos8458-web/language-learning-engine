@@ -5147,6 +5147,162 @@ Runtime reopened — NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Documentation Correction Implemented on Validation Branch / Independent Re-Review Pending
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record Unseen Transfer Tier C documentation
+  correction`, parent `a498d372812d88083117fc25a51192b2877995b3`) that a
+  separate documentation correction commit implementing the
+  user-approved `UT-C1`/`UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decision
+  packet, the derived `F-MR-UT-IR-01` contract, and the
+  `F-MR-UT-IR-04`/`05`/`06` cleanup has been created and pushed on the
+  existing validation branch, and Control Tower has live-verified its
+  remote identity/scope/blobs. This record does not modify
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` itself, does not modify the
+  validation branch, does not run Runtime/tests/db/migrations, does not
+  run PostgreSQL, and does not perform Independent Re-Review. Repository
+  mutation caused by this update: limited to `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline unchanged
+  before this update: `main` / `origin/main`
+  `a498d372812d88083117fc25a51192b2877995b3`, tree
+  `c3ec516ba948c670ce46599deee181a5f0b7d5b3`, parent
+  `30ad66d5e93735810ca31c72d136d501bad43d70`, subject `Record Unseen
+  Transfer Tier C correction decisions`, Current State blob
+  `62ea7fda4545aecfc40879455335c6003c89a81b`; Backlog blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b` (`1.75`), canonical `main`
+  API `1.29` blob `a498d5536ea1d228d133610780ff06d77a9d403f`, canonical
+  `main` Schema `1.8` blob `a0e4037db07f7416109e53ed72c10a12b7c433bb`
+  unchanged; worktree/index clean, no untracked files.
+
+###### Correction Commit — Live-Verified Identity
+
+- Validation branch (unchanged):
+  `validation/vi-p1-metric-result-unseen-transfer-
+  tierc-api130-schema19-20260911`.
+- Correction commit / new branch tip:
+  `1246e912a9de5f88cb8a24522992e857574815e9`.
+- Tree: `c85541fd6c7803aeac4cb94b8e6f24972ba9e2b3`.
+- Parent (exact prior candidate tip, unchanged):
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`.
+- Subject: `Correct METRIC_RESULT Unseen Transfer Tier C contract`.
+- Changed paths exactly two: `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`. No other path touched.
+- Commit stats: `201` insertions, `65` deletions.
+- Corrected API `1.30` blob: `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`.
+- Corrected Schema `1.9` blob: `aa009da313c3298186537f7aa641c98ea721b15f`.
+- This is exactly ONE separate correction commit on the validation
+  branch; the original candidate commit
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833` and its own parent
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e` remain unamended and
+  unrebased.
+
+###### Correction Content Implemented
+
+- `F-MR-UT-IR-01` — exact derived history vocabulary implemented: exact
+  `E(A)`, `C(A)`, `H(A)`, `W(A)`, `R(A)`, `N(A,n)`, `L(A)`, and the
+  five-condition `V(A)` validation; stored-source contradiction maps to
+  `CONTRACT_VIOLATION` (not `INVALID_ID`, not `OUT_OF_RANGE_VALUE`, not
+  an exclusion bucket); caller-supplied unknown reference remains
+  `INVALID_ID`; global exposure ordinal gaps are legal; history ordering
+  authority is exact `BIGINT` `exposure_ordinal`, not timestamp; `H(A)`
+  is not truncated by `analysisCutoff`/`exposed_at`/`created_at`
+  timestamps; lineage comparison between stored and recomputed values is
+  null-safe.
+- `UT-C1` = `B — EITHER-DIRECTION DIRECT RELATION` implemented.
+- `UT-C1-a` = `PROHIBIT SELF-REFERENCE` implemented.
+- `UT-C1-b` = `WHOLE-OBJECT VALIDATION ON L(A)` implemented.
+- `UT-C2` = `LAZY FIRST_MATCH LINEAGE VALIDATION` implemented.
+- `UT-C3` = `P1 FULL-HISTORY H(A) PROVENANCE` implemented.
+- `F-MR-UT-IR-04` — canonical lifecycle/review-state wording cleanup
+  implemented.
+- `F-MR-UT-IR-05` — FORMULA `definitionVersion` 2 closed contract
+  implemented: exactly 16 required top-level keys, all defined
+  subobject keys required, no optional/nullable FORMULA v2 field, any
+  null anywhere inside FORMULA v2 is `CONTRACT_VIOLATION`.
+- `F-MR-UT-IR-06` implemented: old non-null-only lineage mismatch
+  wording reconciled to the null-safe rule; Schema common METRIC_RESULT
+  input wording now covers both Retention v1 and Unseen v2; a
+  writer-obligation cross-reference was added; an explicit closed
+  21-required-key Unseen group row was added to both documents.
+
+###### Static Documentation Evidence (Recorded, Not Runtime)
+
+- Correction commit parent exact: `74f5eeccf26bf90ceff8e4040b8596ed2abac833`.
+- Changed files exactly two.
+- API `1.29` ×1, API `1.30` ×1, API `1.31` ×0.
+- Schema `1.8` ×1, Schema `1.9` ×1, Schema `1.10` ×0.
+- Exact 21-key Unseen row present in both documents.
+- Stable lifecycle-neutral Unseen headings confirmed.
+- `UT-C1`/`UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` semantic markers present.
+- `BIGINT`/history authority present.
+- Null-safe lineage rule present.
+- Full `H(A)` provenance present.
+- Retention documentation non-regression reported.
+- `RAW_SOURCE` semantic non-change reported.
+- API/Schema consistency reported.
+- `git diff --check` `PASS`.
+- PostgreSQL/tests: `NOT RUN — DOCUMENTATION CORRECTION`.
+- This static documentation evidence is recorded as documentation/static
+  evidence only and is NOT elevated to Runtime evidence.
+
+###### Canonical Main (Unchanged)
+
+Canonical on `main` remains Backlog `1.75` (blob
+`82cc08c77dd8d43014560a5f2cec26d7c619f00b`), API `1.29` (blob
+`a498d5536ea1d228d133610780ff06d77a9d403f`), Schema `1.8` (blob
+`a0e4037db07f7416109e53ed72c10a12b7c433bb`). Corrected API `1.30` /
+Schema `1.9` remain `NOT CANONICAL ON MAIN`.
+
+###### Finding State
+
+- `F-MR-ARCH-06`: `OPEN`. `F-MR-UT-01`–`09`: `OPEN`.
+- `F-MR-UT-IR-01` = `CORRECTION IMPLEMENTED ON VALIDATION BRANCH /
+  PENDING INDEPENDENT RE-REVIEW / OPEN`.
+- `F-MR-UT-IR-02` = `USER-APPROVED SEMANTICS IMPLEMENTED ON VALIDATION
+  BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`.
+- `F-MR-UT-IR-03` = `USER-APPROVED SEMANTICS IMPLEMENTED ON VALIDATION
+  BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`.
+- `F-MR-UT-IR-04`/`05`/`06` = `CORRECTION IMPLEMENTED ON VALIDATION
+  BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`.
+- `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`.
+- No finding is closed by this record.
+
+###### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record.
+
+###### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / ORIGINAL TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE IMPLEMENTED / FIRST INDEPENDENT REVIEW = REQUEST
+CORRECTION / CORRECTION DESIGN COMPLETE / CORRECTION DECISIONS
+USER-APPROVED / DOCUMENTATION CORRECTION IMPLEMENTED ON VALIDATION
+BRANCH / INDEPENDENT RE-REVIEW PENDING / MAIN-INTEGRATION NOT ELIGIBLE
+YET / MAIN-INTEGRATION NOT AUTHORIZED / RUNTIME NOT AUTHORIZED / NOT
+CANONICAL ON MAIN / NOT VALIDATED / NOT CLOSED`.
+
+###### Non-Claims
+
+This record does not mean: the corrected candidate independently
+re-reviewed — NOT CLAIMED; Independent Re-Review `PASS` — NOT CLAIMED;
+main-integration eligible — NOT CLAIMED (`NO CURRENTLY`); API `1.30`
+canonical on `main` — NOT CLAIMED; Schema `1.9` canonical on `main` — NOT
+CLAIMED; review-recorded — NOT CLAIMED; `F-MR-ARCH-06` closed — NOT
+CLAIMED; any `F-MR-UT` finding closed — NOT CLAIMED; Runtime authorized
+— NOT CLAIMED; Runtime implemented — NOT CLAIMED; Runtime validated —
+NOT CLAIMED; P1 activated — NOT CLAIMED; human-data collection
+authorized — NOT CLAIMED; efficacy verified — NOT CLAIMED; `B-3`
+resolved — NOT CLAIMED; METRIC_RESULT / Retention v1 Runtime reopened —
+NOT CLAIMED.
+
+###### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6095,6 +6251,35 @@ This bootstrap does not rerun PostgreSQL or tests.
   Documentation Correction Authorized" for full detail; the sole Next
   Action is now a fresh Windows Claude Architecture documentation
   correction session for the approved decision packet (§10).
+- A separate documentation correction commit implementing the
+  user-approved `UT-C1`/`UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decision
+  packet, the derived `F-MR-UT-IR-01` contract, and the
+  `F-MR-UT-IR-04`/`05`/`06` cleanup has since been created and pushed on
+  the same validation branch (`1246e912a9de5f88cb8a24522992e857574815e9`,
+  tree `c85541fd6c7803aeac4cb94b8e6f24972ba9e2b3`, parent exact
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`, exact two-file scope —
+  corrected API `1.30` blob `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
+  corrected Schema `1.9` blob `aa009da313c3298186537f7aa641c98ea721b15f`
+  — `201` insertions/`65` deletions), and Control Tower has live-verified
+  its remote identity/scope/blobs. `F-MR-UT-IR-01` = `CORRECTION
+  IMPLEMENTED ON VALIDATION BRANCH / PENDING INDEPENDENT RE-REVIEW /
+  OPEN`; `F-MR-UT-IR-02`/`03` = `USER-APPROVED SEMANTICS IMPLEMENTED ON
+  VALIDATION BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`;
+  `F-MR-UT-IR-04`/`05`/`06` = `CORRECTION IMPLEMENTED ON VALIDATION
+  BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`; `F-MR-UT-IR-07`/`08`
+  remain `NOTE / OPEN / NO CORRECTION REQUIRED`. No finding is closed by
+  this record; `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`.
+  `METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+  CLOSED`, not reopened. Canonical `main` remains Backlog `1.75`, API
+  `1.29`, Schema `1.8`, unchanged; corrected API `1.30` / Schema `1.9`
+  remain `NOT CANONICAL ON MAIN`. PostgreSQL/tests `NOT RUN —
+  DOCUMENTATION CORRECTION`. Repository mutation by this update is
+  limited to `LLE_CURRENT_STATE.md`. See §4 "METRIC_RESULT Unseen
+  Transfer Tier C — Documentation Correction Implemented on Validation
+  Branch / Independent Re-Review Pending" for full detail; the sole Next
+  Action is now a fresh Claude Opus 5 Independent Re-Review of the exact
+  corrected documentation candidate (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -6168,7 +6353,19 @@ ledger does not claim:
   YET CREATED` (see §4/§8). This is NOT a claim that a correction commit
   exists, that the candidate is re-reviewed, or that it is canonical on
   `main` — correction commit creation, Runtime implementation, and main
-  integration remain `NOT AUTHORIZED`
+  integration remain `NOT AUTHORIZED`. Since then: exactly ONE separate
+  documentation correction commit implementing the approved decision
+  packet has been created and pushed on the same validation branch
+  (`1246e912a9de5f88cb8a24522992e857574815e9`, parent exact
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, exact two-file scope,
+  corrected API `1.30` blob `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
+  corrected Schema `1.9` blob `aa009da313c3298186537f7aa641c98ea721b15f`),
+  and Control Tower has live-verified its remote identity/scope/blobs
+  (see §4/§8). This is NOT a claim that the corrected candidate has been
+  independently re-reviewed, that any finding is closed, or that it is
+  canonical on `main` — Independent Re-Review remains `NOT YET
+  PERFORMED`, `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`, and
+  main integration remains `NOT AUTHORIZED`
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -7347,24 +7544,63 @@ historical ledger does not.
   Claude Architecture documentation correction session on the existing
   validation branch to create exactly one separate correction commit
   implementing the approved decision packet (§10)
+- the prior recorded Next Action ("Fresh Windows Claude Architecture
+  documentation correction session on existing validation branch...to
+  create exactly ONE separate correction commit...") has been fulfilled:
+  exactly ONE separate documentation correction commit
+  (`1246e912a9de5f88cb8a24522992e857574815e9`, tree
+  `c85541fd6c7803aeac4cb94b8e6f24972ba9e2b3`, parent exact
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`) has been created and
+  pushed on the same validation branch, exact two-file scope
+  (`API_CONTRACT.md` corrected blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` corrected blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`, `201` insertions/`65`
+  deletions), and Control Tower has live-verified its remote identity/
+  scope/blobs. `F-MR-UT-IR-01` = `CORRECTION IMPLEMENTED ON VALIDATION
+  BRANCH / PENDING INDEPENDENT RE-REVIEW / OPEN`; `F-MR-UT-IR-02`/`03` =
+  `USER-APPROVED SEMANTICS IMPLEMENTED ON VALIDATION BRANCH / PENDING
+  INDEPENDENT RE-REVIEW / OPEN`; `F-MR-UT-IR-04`/`05`/`06` = `CORRECTION
+  IMPLEMENTED ON VALIDATION BRANCH / PENDING INDEPENDENT RE-REVIEW /
+  OPEN`; `F-MR-UT-IR-07`/`08` remain notes. No finding is closed.
+  `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`. `METRIC_RESULT` /
+  Retention v1 Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened.
+  Canonical `main` remains Backlog `1.75`, API `1.29`, Schema `1.8`,
+  unchanged; corrected API `1.30` / Schema `1.9` remain `NOT CANONICAL ON
+  MAIN`. PostgreSQL/tests `NOT RUN — DOCUMENTATION CORRECTION`. See
+  "METRIC_RESULT Unseen Transfer Tier C — Documentation Correction
+  Implemented on Validation Branch / Independent Re-Review Pending"
+  above (§4) for full detail; the sole Next Action is now a fresh Claude
+  Opus 5 Independent Re-Review of the exact corrected documentation
+  candidate (§10)
 
 ## 10. Next Action
 
-- Fresh Windows Claude Architecture documentation correction session on
-  existing validation branch `validation/vi-p1-metric-result-unseen-
-  transfer-tierc-api130-schema19-20260911` at exact starting tip
-  `74f5eeccf26bf90ceff8e4040b8596ed2abac833` to create exactly ONE
-  separate correction commit implementing the approved `UT-C1`/
-  `UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` semantics, the derived
-  `F-MR-UT-IR-01` contract, and the `F-MR-UT-IR-04`/`05`/`06` cleanup, in
-  exactly `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`. The
-  future correction session must not modify Current State, not modify
-  Backlog, not modify Runtime/tests/db/migrations, not modify Tier A or
-  pilot documents, not merge/rebase current `main` into the branch, not
-  amend the original candidate, must create one separate correction
-  commit with parent exact `74f5eeccf26bf90ceff8e4040b8596ed2abac833`,
-  push only the validation branch normally, not integrate `main`, not
-  declare any finding `CLOSED`, not declare Runtime authorized, not
-  claim P1 activation or efficacy, must report exact correction SHA/
-  tree/blobs/diff/static evidence, and must leave the next lifecycle
-  step as fresh Independent Re-Review pending.
+- Fresh Claude Opus 5 Independent Re-Review, in a new session, of exact
+  corrected documentation candidate
+  `1246e912a9de5f88cb8a24522992e857574815e9` on validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-
+  tierc-api130-schema19-20260911`, against: exact correction parent
+  `74f5eeccf26bf90ceff8e4040b8596ed2abac833`; original candidate parent
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`; current `main`
+  user-approval/correction-decision authority; the original user-approved
+  Unseen Transfer Tier C contract; the accepted Independent Review
+  findings `F-MR-UT-IR-01`–`08`; and the exact user-approved `UT-C1`/
+  `UT-C1-a`/`UT-C1-b`/`UT-C2`/`UT-C3` decisions. The reviewer must be
+  fresh and read-only: repository mutation `0`. No correction. No main
+  integration. No review-record. The reviewer must specifically verify:
+  exact two-file correction scope; correction parent/subject/tree/blobs;
+  `F-MR-UT-IR-01` fully corrected; `UT-C1` either-direction direct
+  relation; `UT-C1-a` self-reference prohibition; `UT-C1-b` whole-object
+  validation on `L(A)`; `UT-C2` lazy `FIRST_MATCH` validation timing;
+  `UT-C3` full `H(A)` provenance; exact `H`/`W`/`R`/`N`/`L`/`V`
+  definitions and internal consistency; history/time authority;
+  null-safe lineage; source/filter separation; exact 16-rule
+  `FIRST_MATCH` precedence; exact closed 21-key Unseen row; FORMULA v2
+  closed/no-null contract; provenance determinism; writer/reader
+  semantic parity; stable lifecycle-neutral canonical text; API/Schema
+  consistency; Retention v1 non-regression; `RAW_SOURCE` non-regression;
+  physical schema sufficiency; no migration/DDL/Tier A/Runtime/P1
+  authorization leak; prior `F-MR-UT-IR-01`–`06` correction sufficiency;
+  and `F-MR-UT-IR-07`/`08` note preservation.
