@@ -5575,6 +5575,124 @@ by this status-sync is limited to `LLE_CURRENT_STATE.md` only.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Documentation Review-Record Complete / Bounded Lifecycle Closed
+
+##### Preflight / Scope
+
+- This is a status/governance closure-sync only. It does not authorize or
+  implement Runtime, does not activate P1, does not claim efficacy, does
+  not create another Backlog review-record, and does not modify
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, Runtime source, tests,
+  migrations, DB artifacts, Tier A documents, or pilot documents.
+  Repository mutation caused by this closure-sync: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before this
+  update: `main` / `origin/main` `ffe2fd4234a1bb7898e4df167f8d978b98e83613`,
+  tree `c841a58e61d273ced10ff2239b31ab5cb13b0721`, parent
+  `495134df76211c4fcb32f8bb058bcd2c6c66c9ec`, subject `Record Unseen
+  Transfer Tier C documentation review-record`; worktree/index clean, no
+  untracked files. Validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-schema19-20260911`
+  confirmed unmoved at tip `1246e912a9de5f88cb8a24522992e857574815e9`.
+
+##### Review-Record Now Complete
+
+- Review-record commit `ffe2fd4234a1bb7898e4df167f8d978b98e83613`, parent
+  `495134df76211c4fcb32f8bb058bcd2c6c66c9ec`, tree
+  `c841a58e61d273ced10ff2239b31ab5cb13b0721`, subject `Record Unseen
+  Transfer Tier C documentation review-record`, changed file exactly
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (no other file), remote-verified
+  on `main`.
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md` now revision `1.76`, blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`; revision `1.75` preserved
+  exactly once; revision `1.77` absent.
+- Canonical `API_CONTRACT.md` revision `1.30`, blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`, unchanged by this
+  review-record.
+- Canonical `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.9`, blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`, unchanged by this
+  review-record.
+- Validation branch remains unchanged at tip
+  `1246e912a9de5f88cb8a24522992e857574815e9`.
+- Independent Re-Review (used by the review-record, not re-run here):
+  `APPROVE WITH NON-BLOCKING NOTES`, main-integration eligibility
+  `ELIGIBLE`.
+- Post-integration documentation/static verification: `PASS`.
+
+##### Evidence Boundary (Preserved)
+
+- Documentation integration PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY
+  INTEGRATION`. Documentation integration Runtime/npm tests: `NOT RUN —
+  DOCUMENTATION-ONLY INTEGRATION`.
+- Review-record PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY
+  REVIEW-RECORD`. Review-record Runtime/npm tests: `NOT RUN —
+  DOCUMENTATION-ONLY REVIEW-RECORD`.
+- This closure-sync itself: PostgreSQL `NOT RUN — STATUS/GOVERNANCE
+  CLOSURE-SYNC`; Runtime/npm tests `NOT RUN — STATUS/GOVERNANCE
+  CLOSURE-SYNC`. No `NOT RUN` above is reinterpreted as `PASS`, and no
+  prior Retention Runtime PostgreSQL evidence is copied into this Unseen
+  Transfer documentation lifecycle.
+
+##### Finding State (Synchronized to Backlog Revision 1.76)
+
+- `F-MR-ARCH-06` = `CLOSED — CANONICAL CONTRACT GAP ADDRESSED /
+  USER-APPROVED / INDEPENDENTLY RE-REVIEWED / INTEGRATED ON MAIN /
+  POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED`.
+- `F-MR-UT-01`–`F-MR-UT-09` = `CLOSED — APPROVED TIER C CONTRACT /
+  DOCUMENTATION-RUNTIME-READINESS GAP ADDRESSED / INDEPENDENTLY
+  RE-REVIEWED / INTEGRATED ON MAIN / REVIEW-RECORDED`. For `F-MR-UT-08`
+  and `F-MR-UT-09` this closes only their bounded
+  documentation/runtime-readiness CONTRACT gap — it does NOT mean
+  Runtime implementation or Runtime validation occurred.
+- `F-MR-UT-IR-01`–`F-MR-UT-IR-06` = `CLOSED — CORRECTED / INDEPENDENTLY
+  RE-REVIEWED / INTEGRATED ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED`.
+- `F-MR-UT-IR-07` remains `NOTE / OPEN / NO CORRECTION REQUIRED`.
+- `F-MR-UT-IR-08` remains `NOTE / OPEN / TRACEABILITY LIMIT / NO
+  CORRECTION REQUIRED`.
+- `F-MR-UT-RR2-01`–`04` remain `OPEN / NON-BLOCKING`; `F-MR-UT-RR2-02`
+  remains specifically `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING
+  CLEANUP`. No RR2 finding is closed or corrected by this closure-sync.
+- No unrelated finding is closed by this closure-sync.
+
+##### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened or reinterpreted by this record.
+
+##### Lifecycle (Current, Bounded)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` Tier C API
+`1.30` / Schema `1.9` documentation-contract lifecycle state:
+
+`USER-APPROVED / CORRECTED / INDEPENDENTLY RE-REVIEWED — APPROVE WITH
+NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED`.
+
+This `CLOSED` applies ONLY to this bounded documentation-contract
+lifecycle.
+
+##### Non-Claims
+
+This record does not mean: Unseen Transfer Runtime authorized — NOT
+CLAIMED (`NOT AUTHORIZED`); Runtime implemented — NOT CLAIMED (`NOT
+IMPLEMENTED`); Runtime validated — NOT CLAIMED (`NOT VALIDATED`); VI P1
+Measurement Readiness overall complete — NOT CLAIMED; P1 eligible or
+activated — NOT CLAIMED (`NOT ACTIVATED`); human-data collection
+authorized — NOT CLAIMED (`NOT AUTHORIZED`); efficacy verified — NOT
+CLAIMED (`NOT VERIFIED`); actual-provider complete — NOT CLAIMED; audio
+path complete — NOT CLAIMED; GitHub Actions `PASS` — NOT CLAIMED;
+Validation Level 3 §10 overall `PASS` — NOT CLAIMED; Evidence Foundation
+overall complete — NOT CLAIMED; `B-3` resolved — NOT CLAIMED;
+`METRIC_RESULT` / Retention v1 Runtime reopened — NOT CLAIMED.
+Repository mutation caused by this closure-sync is limited to
+`LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6588,6 +6706,34 @@ This bootstrap does not rerun PostgreSQL or tests.
   Post-Merge Documentation Static Verification PASS" for full detail;
   the sole Next Action is now a separate METRIC_RESULT Unseen Transfer
   Tier C documentation review-record step (§10).
+- The METRIC_RESULT Unseen Transfer Tier C documentation review-record has
+  since been completed and remote-verified (Backlog revision `1.76`, blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`, commit
+  `ffe2fd4234a1bb7898e4df167f8d978b98e83613`, parent
+  `495134df76211c4fcb32f8bb058bcd2c6c66c9ec`, subject `Record Unseen
+  Transfer Tier C documentation review-record`, changed file exactly
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`). Canonical `API_CONTRACT.md`
+  `1.30` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.9` are unchanged. This
+  closure-sync (this update) synchronizes Current State to that
+  review-record: `F-MR-ARCH-06`, `F-MR-UT-01`–`09`, and
+  `F-MR-UT-IR-01`–`06` are now `CLOSED` exactly as recorded in Backlog
+  `1.76` (see §4 "METRIC_RESULT Unseen Transfer Tier C — Documentation
+  Review-Record Complete / Bounded Lifecycle Closed"); `F-MR-UT-IR-07`/
+  `08` remain `NOTE / OPEN`; `F-MR-UT-RR2-01`–`04` remain `OPEN /
+  NON-BLOCKING` (`F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE BOUNDED
+  WORDING CLEANUP`), none closed or corrected by this record. The bounded
+  documentation-contract lifecycle is now `USER-APPROVED / CORRECTED /
+  INDEPENDENTLY RE-REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL
+  ON MAIN / POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED /
+  REVIEW-RECORDED / CLOSED`, bounded strictly to that documentation
+  contract. This closure-sync does not authorize or implement Runtime,
+  does not activate P1, does not claim efficacy, and does not create
+  another Backlog review-record; `METRIC_RESULT` / Retention v1 Runtime
+  remains `REVIEW-RECORDED / CLOSED`, not reopened. PostgreSQL/tests:
+  `NOT RUN — STATUS/GOVERNANCE CLOSURE-SYNC`. Repository mutation by this
+  update is limited to `LLE_CURRENT_STATE.md`. See §4 for full detail; the
+  sole Next Action is now Control Tower milestone-transition
+  reconciliation (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -6601,7 +6747,19 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.75` (blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`);
+revision `1.76` (blob `746b8d687fe681c0b7908450133cf2d0d79ea012`); bounded
+METRIC_RESULT Unseen Transfer Tier C documentation-contract lifecycle
+(API `1.30` / Schema `1.9`) `USER-APPROVED / CORRECTED / INDEPENDENTLY
+RE-REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
+POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED /
+CLOSED` (review-record commit `ffe2fd4234a1bb7898e4df167f8d978b98e83613`,
+parent `495134df76211c4fcb32f8bb058bcd2c6c66c9ec`, subject `Record Unseen
+Transfer Tier C documentation review-record`, remote-verified on `main`;
+see §4 "METRIC_RESULT Unseen Transfer Tier C — Documentation
+Review-Record Complete / Bounded Lifecycle Closed" and §8; this `CLOSED`
+is bounded strictly to that documentation-contract lifecycle and does
+NOT mean Unseen Transfer Runtime is authorized, implemented, or
+validated);
 METRIC_RESULT Retention v1 Runtime now integrated on
 `main` as `22508147625090af84af141ac0ec574792369115` (via cherry-picks
 `533685347ab3ee83e8d4323fbd64c41c7f7fab81` ->
@@ -6718,7 +6876,30 @@ ledger does not claim:
   review-record for this now-integrated contract remains `PENDING`;
   Runtime remains `NOT AUTHORIZED` (see §4/§8; the sole Next Action is
   now a separate METRIC_RESULT Unseen Transfer Tier C documentation
-  review-record step, §10)
+  review-record step, §10). Since then: that documentation review-record
+  has been completed and remote-verified (Backlog revision `1.76`, blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`, commit
+  `ffe2fd4234a1bb7898e4df167f8d978b98e83613`, parent
+  `495134df76211c4fcb32f8bb058bcd2c6c66c9ec`, subject `Record Unseen
+  Transfer Tier C documentation review-record`, changed file exactly
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`; see §4/§8). `F-MR-ARCH-06`,
+  `F-MR-UT-01`–`09`, and `F-MR-UT-IR-01`–`06` are now `CLOSED` exactly as
+  recorded in Backlog `1.76`; `F-MR-UT-IR-07`/`08` remain `NOTE / OPEN`;
+  `F-MR-UT-RR2-01`–`04` remain `OPEN / NON-BLOCKING` (`F-MR-UT-RR2-02` =
+  `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING CLEANUP`), none closed or
+  corrected by this closure-sync. The bounded documentation-contract
+  lifecycle is now `USER-APPROVED / CORRECTED / INDEPENDENTLY RE-REVIEWED
+  — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED`, bounded
+  strictly to that documentation contract. This is NOT a claim that
+  Unseen Transfer Runtime is authorized, implemented, or validated, that
+  P1 is activated, that human-data collection is authorized, or that
+  efficacy is verified — Runtime remains `NOT AUTHORIZED / NOT
+  IMPLEMENTED / NOT VALIDATED`, P1 remains `NOT ACTIVATED`, human-data
+  collection remains `NOT AUTHORIZED`, efficacy remains `NOT VERIFIED`;
+  `METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+  CLOSED`, not reopened (see §4/§8; the sole Next Action is now Control
+  Tower milestone-transition reconciliation, §10)
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -7954,23 +8135,28 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- A separate METRIC_RESULT Unseen Transfer Tier C documentation
-  review-record step for the now-integrated API `1.30` / Schema `1.9`
-  contract, using the existing Independent Re-Review (`APPROVE WITH
-  NON-BLOCKING NOTES` / `ELIGIBLE`) and the post-integration
-  documentation/static verification evidence (`PASS`) recorded above.
-  That future step: (1) is documentation/governance only — it writes a
-  review-record, it does not implement or modify Runtime, tests,
-  migrations, DB artifacts, Tier A documents, or pilot documents; (2)
-  must fresh-verify then-current `origin/main` (live fetch, exact
-  branch/HEAD/tree/parent/subject and canonical blob confirmation)
-  before writing anything; (3) must not authorize or implement Runtime;
-  (4) must not activate P1; (5) must not claim efficacy; (6) must not
-  reinterpret the PostgreSQL `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`
-  or Runtime/npm tests `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`
-  boundary as `PASS`; and (7) must adjudicate finding closure only
-  within that review-record's supported bounded documentation
-  lifecycle — it may close only findings the documentation record and
-  Independent Re-Review actually settle, and must not close, or claim
-  closure of, any finding beyond that bounded scope. This status-sync
-  does not create that review-record.
+- Control Tower milestone-transition reconciliation. Control Tower must:
+  (1) live-verify this closure-sync commit (the commit introducing this
+  update to `LLE_CURRENT_STATE.md`) against exact remote `origin/main`
+  (live `git fetch origin`, exact branch/HEAD/tree/parent/subject
+  confirmation); (2) re-read exact current `LLE_CURRENT_STATE.md` and
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.76` (blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`); (3) confirm the bounded
+  METRIC_RESULT Unseen Transfer Tier C API `1.30` / Schema `1.9`
+  documentation-contract lifecycle is `USER-APPROVED / CORRECTED /
+  INDEPENDENTLY RE-REVIEWED — APPROVE WITH NON-BLOCKING NOTES /
+  CANONICAL ON MAIN / POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED /
+  REVIEW-RECORDED / CLOSED`; (4) preserve all Runtime/P1/human-data/
+  efficacy nonclaims (Runtime `NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+  VALIDATED`; P1 `NOT ACTIVATED`; human-data collection `NOT
+  AUTHORIZED`; efficacy `NOT VERIFIED`) and all still-open findings
+  (`F-MR-UT-IR-07` = `NOTE / OPEN / NO CORRECTION REQUIRED`;
+  `F-MR-UT-IR-08` = `NOTE / OPEN / TRACEABILITY LIMIT / NO CORRECTION
+  REQUIRED`; `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`, with
+  `F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING
+  CLEANUP`); and (5) then select exactly one next bounded VI P1
+  Measurement Readiness / P0 roadmap action. This closure-sync itself
+  does NOT authorize Runtime implementation, does NOT select or create
+  or start a Runtime implementation branch, and does NOT perform Runtime
+  implementation-readiness analysis. Selection authority for the next
+  bounded action returns to Control Tower.
