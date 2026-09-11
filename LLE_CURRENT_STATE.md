@@ -3880,6 +3880,162 @@ closure claim — NOT CLAIMED; VI P1 Measurement Readiness complete = `NO`;
 `B-3` resolved = `NO`; P1 eligible/activated = `NO`; human-data authorized
 = `NO`; efficacy verified = `NO`; actual-provider/audio authorized = `NO`.
 
+#### METRIC_RESULT Retention v1 Runtime — Main Integration Complete / Post-Merge Windows-Local PostgreSQL 17.10 Validation PASSED (VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED)
+
+- Role: Validation/Integration session record of (1) cherry-pick
+  integration of the exact RR3-approved, Control-Tower-eligible
+  validation-branch Runtime history onto `main`, (2) push, and (3)
+  mandatory post-merge Windows-local PostgreSQL `17.10` validation of the
+  actual merged `origin/main` SHA. This session performed real repository
+  mutation: three Runtime integration commits pushed to `main`, plus this
+  status commit to `LLE_CURRENT_STATE.md`. It did not modify Runtime
+  source beyond the exact approved cherry-picks, did not modify any
+  canonical document, and did not write a review-record.
+- Starting main (preflight-verified against live `origin/main`):
+  `93ae61e77665424812fb3522544393248cc7da8e` (tree
+  `d549b9478ca893147ca0c0606cbd61c91387de88`, Current State blob
+  `78a831a9b454a6df57b14b5968dc4b4e8f8bb221`). Main drift gate
+  (`8c60cbcbdf358f17c0d8249447b08c264946fc51..origin/main`): exactly
+  `LLE_CURRENT_STATE.md`, no Runtime/source/test/package/schema/migration
+  drift.
+- Validation branch confirmed unmoved at integration time:
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` =
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` (tip tree
+  `1b19a279d01a37d027a3d3baa79e22e04bb6be1c`, tip parent
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e`); history
+  `2a6ab261a287f0cca4a2af5956a207c3b525ec54` ->
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` ->
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` verified with exact required
+  parent relationships and subjects.
+
+##### Main Integration (Three Cherry-Picks, No Squash)
+
+- Cherry-pick 1: source `2a6ab261a287f0cca4a2af5956a207c3b525ec54`
+  (`Implement METRIC_RESULT Retention v1 runtime`) -> main commit
+  `533685347ab3ee83e8d4323fbd64c41c7f7fab81`, parent
+  `93ae61e77665424812fb3522544393248cc7da8e`, changed paths exactly
+  `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`.
+- Cherry-pick 2: source `e1390eedb75137cc7c45027ac75b02f614e3a34e`
+  (`Correct METRIC_RESULT Retention v1 review findings`) -> main commit
+  `457d5a4bb89164b691d409c3ba64388b3b2559e0`, parent
+  `533685347ab3ee83e8d4323fbd64c41c7f7fab81`, changed paths exactly
+  `src/instrumentation/evidenceMetrics.js`,
+  `tests/viP1MetricResultRuntime.test.js`.
+- Cherry-pick 3: source `316df38ef03c5256fbdab598da0df73c3be4e7e0`
+  (`Correct METRIC_RESULT Retention timestamp contradictions`) -> main
+  commit `22508147625090af84af141ac0ec574792369115`, parent
+  `457d5a4bb89164b691d409c3ba64388b3b2559e0`, changed paths exactly
+  `src/instrumentation/evidenceMetrics.js`,
+  `tests/viP1MetricResultRuntime.test.js`. No conflicts on any of the
+  three cherry-picks.
+- Cumulative diff `93ae61e77665424812fb3522544393248cc7da8e..HEAD`:
+  exactly `src/instrumentation/evidenceMetrics.js`,
+  `src/instrumentation/evidenceValidation.js`,
+  `tests/viP1MetricResultRuntime.test.js`. Final blobs:
+  `evidenceMetrics.js` = `6ce1347dee91b8310da17ed092f6b58fdddbeb54`,
+  `evidenceValidation.js` = `fadee158da77693fba319976001d43f43c784196`,
+  `viP1MetricResultRuntime.test.js` =
+  `1f21704b64cb184f0b25a24d8b0696af90628143`. Canonical
+  `API_CONTRACT.md` (`a498d5536ea1d228d133610780ff06d77a9d403f`),
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  (`a0e4037db07f7416109e53ed72c10a12b7c433bb`), and
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+  (`e83254e6b1b21ee9a2b7052ddaac823bc3de13a2`) blobs unchanged. NUL byte
+  count in `evidenceMetrics.js`: `3`. `git diff --check`: `PASS`.
+- Pre-push remote gate re-verified `origin/main` still
+  `93ae61e77665424812fb3522544393248cc7da8e` and validation tip still
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` immediately before push.
+  Pushed `main` normally (no force, no PR). Post-push fetch confirmed
+  `origin/main` = local `HEAD` =
+  `22508147625090af84af141ac0ec574792369115`
+  (`METRIC_RESULT_POSTMERGE_RUNTIME_SHA`).
+
+##### Post-Merge Windows-Local PostgreSQL 17.10 Validation
+
+- Environment: Windows-local repository
+  `C:\Users\atomy\Documents\GitHub\language-learning-engine`; PostgreSQL
+  server `17.10` (verified live via `SELECT version()`); Node
+  `v24.18.0`; npm `11.16.0`. Environment gate: `PASS`.
+- Isolated database:
+  `lle_pm_metric_result_retention_20260911095529`, created fresh for this
+  session. Dual routing proof: Windows `psql` `SELECT
+  current_database()` and repository `db/pool.js` `SELECT
+  current_database()` both returned
+  `lle_pm_metric_result_retention_20260911095529`. `lle_dev` was never
+  used as a target.
+- Migrations: `001`–`013` applied, `13` applied / `0` skipped; `013`
+  (`013_add_vi_p1_item_lineage.sql`) recorded exactly once in
+  `schema_migrations`; `014` absent. No migration file changes, no DDL
+  changes, no view/materialized-view changes.
+- Post-merge static content gate re-verified on exact
+  `22508147625090af84af141ac0ec574792369115`: Runtime blobs
+  (`6ce1347d...`, `fadee158...`, `1f21704b...`), canonical doc blobs, and
+  NUL count `3` all unchanged/exact.
+- Post-merge test gate 1 (`tests/viP1MetricResultRuntime.test.js` +
+  `tests/viP1RawSourceRuntime.test.js`): `tests 182`, `pass 182`, `fail
+  0`, `cancelled 0`, `skipped 0`, `todo 0`, `suites 2`, real process exit
+  `0`.
+- Post-merge test gate 2 (`dbPool.healthcheck`, `migrations`,
+  `evidenceFoundationMigration`, `evidenceFoundationRepository`,
+  `viP1ItemLineageRuntime`, `viP1RawSourceRuntime`,
+  `viP1MetricResultRuntime`): `tests 326`, `pass 326`, `fail 0`,
+  `cancelled 0`, `skipped 0`, `todo 0`, `suites 9`, real process exit `0`.
+- Post-merge test gate 3 (`npm test`, real npm exit code captured
+  directly, no pipe-masking): `tests 556`, `pass 556`, `fail 0`,
+  `cancelled 0`, `skipped 0`, `todo 0`, `suites 56`, real npm exit `0`.
+- Correction-specific proof (`T100`–`T125`) reconfirmed green on the
+  merged main SHA: `due_at = ±infinity` -> `CONTRACT_VIOLATION`;
+  `finalized_at = ±infinity` -> `CONTRACT_VIOLATION`; prior
+  extreme-finite `22008` case -> `CONTRACT_VIOLATION`; large valid finite
+  gap -> normal classification (`LATE`); `±1` microsecond boundaries ->
+  exact; `Number.MAX_SAFE_INTEGER` tolerance -> exact/deterministic. No
+  raw PostgreSQL `0A000`/`22008` leaked as a returned error code (both
+  appear only in explanatory source comments, not in emitted error
+  codes).
+- Non-regression confirmed: RAW_SOURCE `PASS`/unchanged; FORMULA `PASS`;
+  candidate admission `PASS`; FIRST_MATCH `PASS`; grouping/order `PASS`;
+  `HALF_UP` `PASS`; provenance `PASS`; the operation runs in exactly one
+  `REPEATABLE READ READ ONLY` transaction; zero side effects `PASS`;
+  five-code error surface (`MISSING_REQUIRED_FIELD`,
+  `CONTRACT_VIOLATION`, `OUT_OF_RANGE_VALUE`, `INVALID_ID`,
+  `UNAUTHORIZED_CALLER`) `PASS`. No provider/audio calls. No sequence
+  advance.
+- Cleanup: all pools/connections closed; temp database
+  `lle_pm_metric_result_retention_20260911095529` dropped; post-drop
+  `pg_database` count for that name = `0`; `lle_dev` confirmed present
+  and unmodified.
+
+##### Open Non-Blocking Findings (Preserved Unchanged)
+
+`F-MR-RR3-01`, `F-MR-RR3-02`, `F-MR-RR3-03` = `NOTE / OPEN /
+NON-BLOCKING`; `F-MR-RR2-02` = `NOTE / OPEN / PRE-EXISTING RAW_SOURCE
+SCOPE`; `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08` = `LOW / OPEN /
+NON-BLOCKING`; `F-MR-IR-01`–`F-MR-IR-04` = `LOW / OPEN / NON-BLOCKING`;
+`F-MR-ARCH-06` = `OPEN / DEFERRED`. None resolved, closed, or otherwise
+altered by this session.
+
+##### Lifecycle
+
+METRIC_RESULT / Retention v1 Runtime = `INDEPENDENT REVIEW PASSED /
+CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
+VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`.
+
+##### Non-Claims
+
+This record does not mean: VI P1 Measurement Readiness overall complete
+— NOT CLAIMED (`NO`); P1 activated — NOT CLAIMED (`NO`); human-data
+collection authorized — NOT CLAIMED (`NO`); efficacy verified — NOT
+CLAIMED (`NO`); actual-provider/audio path complete — NOT CLAIMED (`NO`);
+GitHub Actions / CI PASS — NOT CLAIMED (not run by this session); a
+review-record was written — NOT CLAIMED (`NO`); this candidate is
+`CLOSED` — NOT CLAIMED (`NO`); any canonical document
+(`API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`) was modified — NOT CLAIMED
+(`NO`); any Runtime source was modified beyond the exact three approved
+cherry-picks — NOT CLAIMED (`NO`).
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -4573,13 +4729,20 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.74`; METRIC_RESULT Retention v1 Runtime RR2-01-corrected
-candidate `316df38ef03c5256fbdab598da0df73c3be4e7e0` (parent
-`e1390eedb75137cc7c45027ac75b02f614e3a34e`) `DEVELOPMENT CANDIDATE +
-CORRECTIONS COMPLETE / INDEPENDENT REVIEW PASSED — APPROVE WITH
-NON-BLOCKING NOTES / CONTROL TOWER MAIN-INTEGRATION ELIGIBLE / NOT YET
-CANONICAL ON MAIN / NOT YET POST-MERGE VALIDATED / NOT REVIEW-RECORDED /
-NOT CLOSED`), this ledger does not claim:
+revision `1.74`; METRIC_RESULT Retention v1 Runtime now integrated on
+`main` as `22508147625090af84af141ac0ec574792369115` (via cherry-picks
+`533685347ab3ee83e8d4323fbd64c41c7f7fab81` ->
+`457d5a4bb89164b691d409c3ba64388b3b2559e0` ->
+`22508147625090af84af141ac0ec574792369115` of validation-branch commits
+`2a6ab261a287f0cca4a2af5956a207c3b525ec54` ->
+`e1390eedb75137cc7c45027ac75b02f614e3a34e` ->
+`316df38ef03c5256fbdab598da0df73c3be4e7e0`) with post-merge Windows-local
+PostgreSQL `17.10` validation `PASS` (`182/182`, `326/326`, `556/556`),
+lifecycle `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
+WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / NOT
+REVIEW-RECORDED / NOT CLOSED` (see §4 "Main Integration Complete /
+Post-Merge Windows-Local PostgreSQL 17.10 Validation PASSED")), this
+ledger does not claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) implemented or
   validated — NOT CLAIMED; `NOT IMPLEMENTED / NOT VALIDATED`
@@ -5531,24 +5694,5 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Fresh Windows Claude Validation/Integration session. That session must:
-  (1) live-fetch origin and verify then-current `main`; (2) verify all
-  `main` drift since `8c60cbcbdf358f17c0d8249447b08c264946fc51` remains
-  limited exactly to `LLE_CURRENT_STATE.md` status/governance commits; (3)
-  verify the validation branch
-  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` remains
-  exactly `316df38ef03c5256fbdab598da0df73c3be4e7e0`; (4) integrate exactly
-  these Runtime commits, in this order:
-  `2a6ab261a287f0cca4a2af5956a207c3b525ec54`,
-  `e1390eedb75137cc7c45027ac75b02f614e3a34e`,
-  `316df38ef03c5256fbdab598da0df73c3be4e7e0`; (5) use normal cherry-pick
-  only; (6) do NOT squash/amend/rebase; (7) stop on any conflict or
-  unexpected path; (8) after successful integration, run mandatory
-  post-merge Windows-local PostgreSQL `17.10` validation on the actual
-  resulting `origin/main` SHA; (9) use a fresh isolated PostgreSQL DB,
-  never `lle_dev`; (10) rerun focused `182`, broader `326`, full `556`
-  expected gates; (11) verify migrations `001`–`013`, `013` exactly once,
-  `014` absent; (12) verify cleanup count `0`; (13) do not write a
-  review-record until post-merge validation succeeds; (14) do not claim
-  `CLOSED` until the review-record lifecycle is complete. This status
-  updater does not perform the integration itself.
+- Control Tower live verification of the METRIC_RESULT Runtime main integration
+  and post-merge validation evidence before review-record authorization.
