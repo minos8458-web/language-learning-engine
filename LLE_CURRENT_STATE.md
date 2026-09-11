@@ -4364,6 +4364,146 @@ Runtime reopened — NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C Documentation Candidate — Created / Pushed / Pending Independent Review
+
+- Role: Control Tower status-only record (this Current State update
+  itself, subject `Record Unseen Transfer Tier C documentation candidate`,
+  parent `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`) that the user-approved
+  METRIC_RESULT Unseen Transfer Tier C documentation candidate has been
+  created and pushed to a validation branch, and that Control Tower has
+  live-verified the candidate's remote identity and scope. This record
+  does not perform an Independent Review, does not integrate the
+  candidate onto `main`, and does not modify `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `ARCHITECTURE_CLARIFICATION_
+  BACKLOG.md`, Runtime, tests, or the database. Repository mutation
+  caused by this update: limited to `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline unchanged
+  before this update: `main` / `origin/main`
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`, tree
+  `c66524068e8fabf1751926bec78eda128f06fac5`, parent
+  `7ae70c7dcade810a44d4ccca4fdad8ebbd768863`, subject `Record Unseen
+  Transfer Tier C approval`, Current State blob
+  `b397adb6e671c890583ae560baf04b7636dd5092`, Backlog revision `1.75`
+  blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`; worktree/index clean,
+  no untracked files.
+
+###### Candidate Identity
+
+- Validation branch:
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-schema19-20260911`
+- Candidate SHA (remote branch tip): `74f5eeccf26bf90ceff8e4040b8596ed2abac833`
+- Candidate parent: `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e` (exact
+  main)
+- Candidate tree: `cb6dd609e01d85ef7cb52727f5fd4a54f982d4a7`
+- Candidate subject: `Add METRIC_RESULT Unseen Transfer Tier C contract`
+- Exact changed files (two-file scope, no other file):
+  - `API_CONTRACT.md` — blob `34052b53fbd88839222e77cd7d5172916b5254eb`
+    (revision `1.29` -> proposed `1.30`)
+  - `EVIDENCE_FOUNDATION_P0_SCHEMA.md` — blob
+    `8737be2c618775a51501ff385c1f0b2430782a2d` (revision `1.8` -> proposed
+    `1.9`)
+- Candidate `LLE_CURRENT_STATE.md` and `ARCHITECTURE_CLARIFICATION_
+  BACKLOG.md` on the candidate branch: byte-unchanged — blobs
+  `b397adb6e671c890583ae560baf04b7636dd5092` and
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b` respectively, identical to
+  the main baseline above.
+- Candidate status: `CREATED / PUSHED TO VALIDATION BRANCH / REMOTE
+  IDENTITY AND SCOPE LIVE-VERIFIED BY CONTROL TOWER / NOT INDEPENDENTLY
+  REVIEWED / NOT CANONICAL ON MAIN`.
+- Canonical on `main` remains API `1.29` / Schema `1.8`
+  (`a498d5536ea1d228d133610780ff06d77a9d403f` /
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`); candidate API `1.30` /
+  Schema `1.9` are `NOT YET CANONICAL ON MAIN`.
+
+###### Candidate Evidence Reported (Documentation/Static Only — Not Runtime Evidence)
+
+The Architecture documentation candidate reports the following
+static/documentation checks. None of these is Runtime evidence, and none
+is elevated to Runtime evidence by this record:
+
+- API revision `1.30` present exactly once; API `1.29` preserved; API
+  `1.31` absent.
+- Schema revision `1.9` present exactly once; Schema `1.8` preserved;
+  Schema `1.10` absent.
+- FORMULA v2 key names/constants mirrored between the two documents.
+- `lineagePolicy` mirrored; ITEM `lineageAuthority` mirrored.
+- Exact 16-rule `FIRST_MATCH` order mirrored between the two documents.
+- `BIGINT` exactness made explicit in both documents; rules 15/16
+  precedence made explicit.
+- Source contradictions remain `CONTRACT_VIOLATION`.
+- Scenario remains a separate stratification axis.
+- Physical schema sufficiency claim: `YES`. Migration/DDL: `NO`.
+- Retention v1 documentation semantics preserved; `RAW_SOURCE` semantics
+  unchanged.
+- `git diff --check`: `PASS`.
+- PostgreSQL/tests: `NOT RUN — DOCUMENTATION CANDIDATE ONLY`.
+
+###### Process Note (Non-Blocking, Preserved as History)
+
+The Architecture documentation session began editing the two approved
+documents while its local checkout was still on `main`, then created the
+validation branch from exact main SHA
+`3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e` with the uncommitted changes
+carried into that branch. No commit or push was made to local/remote
+`main` with those changes; the candidate commit's parent is exact main
+`3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`; remote `main` remained
+unchanged before and after the candidate push; no reset, rebase, amend,
+force-push, or history rewrite occurred. Disposition: `NON-BLOCKING
+PROCESS DEVIATION / PRESERVE AS HISTORY / NO CANDIDATE INVALIDATION`.
+
+###### Finding State
+
+- `F-MR-ARCH-06` = `TIER C DOCUMENTATION CANDIDATE IMPLEMENTED /
+  USER-APPROVED CONTRACT REFLECTED / PENDING INDEPENDENT REVIEW / RUNTIME
+  NOT AUTHORIZED / NOT CANONICAL ON MAIN / NOT CLOSED`.
+- Preserved, all `OPEN`, none closed by this record:
+  - `F-MR-UT-01` = `BLOCKER / CONTRACT / OPEN`
+  - `F-MR-UT-02` = `HIGH / CONTRACT / OPEN`
+  - `F-MR-UT-03` = `HIGH / CONTRACT / OPEN`
+  - `F-MR-UT-04` = `HIGH / CONTRACT / OPEN`
+  - `F-MR-UT-05` = `HIGH / CONTRACT / OPEN`
+  - `F-MR-UT-06` = `HIGH / CONTRACT / OPEN`
+  - `F-MR-UT-07` = `MEDIUM / DOCUMENTATION / OPEN`
+  - `F-MR-UT-08` = `NOTE / RUNTIME-READINESS / OPEN`
+  - `F-MR-UT-09` = `HIGH / RUNTIME-READINESS / OPEN`
+- No finding is closed by this record.
+
+###### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record. No Retention finding is reopened.
+
+###### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE IMPLEMENTED / PENDING INDEPENDENT REVIEW / NOT
+CANONICAL ON MAIN / RUNTIME NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+VALIDATED / NOT CLOSED`.
+
+###### Non-Claims
+
+This record does not mean: `API_CONTRACT.md` or `EVIDENCE_FOUNDATION_
+P0_SCHEMA.md` modified on `main` — NOT CLAIMED (repository mutation by
+this update limited to `LLE_CURRENT_STATE.md`; the two-file candidate
+change exists only on the validation branch); revision `1.30`/`1.9`
+canonical on `main` — NOT CLAIMED; `F-MR-UT-01`–`F-MR-UT-09` or
+`F-MR-ARCH-06` closed — NOT CLAIMED (all remain `OPEN`); an Independent
+Review of the candidate performed — NOT CLAIMED (`PENDING`); Runtime
+implementation authorized or started — NOT CLAIMED (`RUNTIME NOT
+AUTHORIZED`); the Backlog modified — NOT CLAIMED; migration/DDL created
+— NOT CLAIMED; PostgreSQL or tests run — NOT CLAIMED (`NOT RUN`); P1
+activated — NOT CLAIMED; human-data collection authorized — NOT CLAIMED;
+efficacy verified — NOT CLAIMED; `B-3` resolved — NOT CLAIMED;
+METRIC_RESULT / Retention v1 Runtime reopened — NOT CLAIMED; the
+recorded process deviation invalidates the candidate — NOT CLAIMED
+(`NON-BLOCKING`).
+
+###### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -5194,6 +5334,43 @@ This bootstrap does not rerun PostgreSQL or tests.
   this record; PostgreSQL/tests `NOT RUN — STATUS-ONLY APPROVAL RECORD`.
   See §4 "Control Tower User Approval Record — METRIC_RESULT Unseen
   Transfer Tier C Contract (F-MR-ARCH-06)" for full detail.
+- The user-approved METRIC_RESULT Unseen Transfer Tier C documentation
+  candidate has been created and pushed to validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-schema19-20260911`
+  (tip `74f5eeccf26bf90ceff8e4040b8596ed2abac833`, parent exact main
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`, tree
+  `cb6dd609e01d85ef7cb52727f5fd4a54f982d4a7`), and Control Tower has
+  live-verified the candidate's remote identity and exact two-file scope
+  (`API_CONTRACT.md` blob `34052b53fbd88839222e77cd7d5172916b5254eb`,
+  revision `1.30`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` blob
+  `8737be2c618775a51501ff385c1f0b2430782a2d`, revision `1.9`). `F-MR-
+  ARCH-06` = `TIER C DOCUMENTATION CANDIDATE IMPLEMENTED / USER-APPROVED
+  CONTRACT REFLECTED / PENDING INDEPENDENT REVIEW / RUNTIME NOT
+  AUTHORIZED / NOT CANONICAL ON MAIN / NOT CLOSED`. `F-MR-UT-01`
+  (`BLOCKER / CONTRACT / OPEN`), `F-MR-UT-02`–`F-MR-UT-06` (`HIGH /
+  CONTRACT / OPEN`), `F-MR-UT-07` (`MEDIUM / DOCUMENTATION / OPEN`),
+  `F-MR-UT-08` (`NOTE / RUNTIME-READINESS / OPEN`), `F-MR-UT-09` (`HIGH /
+  RUNTIME-READINESS / OPEN`) all remain `OPEN`; none is closed by this
+  record. `METRIC_RESULT` / Retention v1 Runtime remains
+  `REVIEW-RECORDED / CLOSED`, not reopened; `B-3` remains `UNRESOLVED`.
+  Reported candidate evidence (API/Schema revision identities, FORMULA
+  v2/`lineagePolicy`/ITEM `lineageAuthority`/16-rule `FIRST_MATCH`
+  mirroring, `BIGINT` exactness, rules 15/16 precedence, physical schema
+  sufficiency, `git diff --check` `PASS`) is documentation/static only —
+  PostgreSQL/tests `NOT RUN — DOCUMENTATION CANDIDATE ONLY`, and is not
+  elevated to Runtime evidence by this record. A non-blocking process
+  deviation is preserved: the documentation session began editing while
+  on `main`, then branched from exact main
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e` carrying the uncommitted
+  changes; no commit/push to `main`, no reset/rebase/amend/force-push/
+  history rewrite occurred; disposition `NON-BLOCKING PROCESS DEVIATION /
+  PRESERVE AS HISTORY / NO CANDIDATE INVALIDATION`. Repository mutation
+  by this update is limited to `LLE_CURRENT_STATE.md`; no candidate
+  correction; no main integration; no review-record. See §4
+  "METRIC_RESULT Unseen Transfer Tier C Documentation Candidate — Created
+  / Pushed / Pending Independent Review" for full detail; the sole Next
+  Action is now a fresh Claude Opus 5 Independent Review of the exact
+  documentation candidate (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -5735,6 +5912,33 @@ remain true and are established in §4/§8 and elsewhere in this document:
   (remains `REVIEW-RECORDED / CLOSED`). The recorded Next Action is now a
   fresh Windows Claude Architecture documentation session to create the
   exact user-approved two-file Tier C validation candidate (§10)
+
+- this record (Control Tower status-sync for the METRIC_RESULT Unseen
+  Transfer Tier C documentation candidate): recorded that the
+  user-approved two-file candidate was created and pushed to validation
+  branch `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-
+  schema19-20260911` (tip `74f5eeccf26bf90ceff8e4040b8596ed2abac833`,
+  parent exact main `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e`), and that
+  Control Tower live-verified the candidate's remote identity and exact
+  two-file scope. This does NOT mean: `API_CONTRACT.md` or
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` modified on `main` — NOT CLAIMED
+  (repository mutation by this update limited to `LLE_CURRENT_STATE.md`);
+  revision `1.30`/`1.9` canonical on `main` — NOT CLAIMED; `F-MR-ARCH-06`
+  or any of `F-MR-UT-01`–`F-MR-UT-09` closed — NOT CLAIMED (all remain
+  `OPEN`); an Independent Review of the candidate performed — NOT CLAIMED
+  (`PENDING`); Runtime implementation authorized or started — NOT CLAIMED
+  (`RUNTIME NOT AUTHORIZED`); the Backlog modified — NOT CLAIMED;
+  migration/DDL created — NOT CLAIMED; PostgreSQL or tests run — NOT
+  CLAIMED (`NOT RUN — DOCUMENTATION CANDIDATE ONLY`); METRIC_RESULT /
+  Retention v1 Runtime reopened — NOT CLAIMED (remains `REVIEW-RECORDED /
+  CLOSED`); the recorded non-blocking process deviation (documentation
+  session began editing on `main`, then branched from exact main carrying
+  the uncommitted changes; no commit/push to `main`, no reset/rebase/
+  amend/force-push/history rewrite) invalidates the candidate — NOT
+  CLAIMED. The recorded Next Action is now a fresh Claude Opus 5
+  Independent Review, in a new session, of the exact documentation
+  candidate against its exact parent and the user-approved Current State
+  contract (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -6338,16 +6542,26 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Fresh Windows Claude Architecture documentation session to create the
-  exact user-approved two-file Tier C validation candidate
-  (`API_CONTRACT.md` `1.30`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.9`) on
-  a new validation branch from the then-current exact `main`; the session
-  must: modify exactly those two files; implement only the approved
-  contract recorded in §4 ("Control Tower User Approval Record —
-  METRIC_RESULT Unseen Transfer Tier C Contract (F-MR-ARCH-06)"); include
-  BIGINT exactness; include the 16-rule `FIRST_MATCH` precedence
-  clarification; create no Runtime/test/migration/DDL changes; not modify
-  the Backlog or `LLE_CURRENT_STATE.md`; make exactly one documentation
-  candidate commit; push the validation branch only; not integrate
-  `main`; not declare any finding `CLOSED`; not declare implementation
-  authorized; not claim P1 activation or efficacy.
+- Fresh Claude Opus 5 Independent Review, in a new session, of exact
+  documentation candidate `74f5eeccf26bf90ceff8e4040b8596ed2abac833`
+  (validation branch `validation/vi-p1-metric-result-unseen-transfer-
+  tierc-api130-schema19-20260911`) against exact parent
+  `3a66c27bf51575b2c78bfca2c3c259a0cd09ff6e` and the user-approved
+  Current State contract recorded in §4 ("Control Tower User Approval
+  Record — METRIC_RESULT Unseen Transfer Tier C Contract
+  (F-MR-ARCH-06)"); the reviewer must be read-only (repository mutation
+  `0`) and must verify at minimum: exact two-file scope; API `1.30` /
+  Schema `1.9` identities; user-approved contract fidelity; API/Schema
+  consistency; FORMULA v1 Retention non-regression; FORMULA v2 Unseen
+  exactness; six-axis grain / nine-key group key; ITEM `lineageAuthority`
+  contract; same-enrollment immutable lineage authority; null-safe
+  lineage recomputation; node-level prior exposure; source/filter-history
+  separation; `BIGINT` exactness; exact 16-rule `FIRST_MATCH` order and
+  precedence; source contradiction error semantics; scenario
+  stratification boundary; group row/count/provenance/status/numeric
+  semantics; one `REPEATABLE READ` / `READ ONLY` transaction contract;
+  five-code registry; physical schema sufficiency claim; no migration/
+  DDL/Tier A/Runtime/P1 authorization leak; and the candidate process
+  deviation disposition (`NON-BLOCKING`) recorded in §4/§8/§9; the
+  reviewer must not correct the candidate, must not integrate `main`, and
+  must not create a review-record.
