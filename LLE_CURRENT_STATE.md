@@ -5462,6 +5462,119 @@ Runtime reopened — NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer Tier C — Main Integration Complete / Post-Merge Documentation Static Verification PASS
+
+- Role: status-only post-merge Current State synchronization. This
+  record documents an already-completed main integration; it does not
+  itself modify `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  or `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not modify the
+  validation branch, does not run PostgreSQL or Runtime/npm tests, does
+  not create a review-record, and does not touch Runtime source, tests,
+  migrations, DB artifacts, Tier A documents, or pilot documents.
+  Repository mutation caused by this status-sync: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before
+  this update: `main` / `origin/main`
+  `f7a26457c34d2a293415086ae43358896780250a`, tree
+  `e3b94505d050e9504ca0d21fa3e4c9fc6b883274`, parent
+  `a981f4f081d5d662cfd59fe57b625d240d1e52f5`, subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`; worktree/index clean,
+  no untracked files. Validation branch
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-schema19-20260911`
+  confirmed unmoved at tip `1246e912a9de5f88cb8a24522992e857574815e9`.
+
+##### Main Integration Chain (Two Previously Authorized Cherry-Picks, No Squash)
+
+- Repository mutation for the completed integration itself: exactly two
+  previously authorized main cherry-pick commits, touching exactly
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`.
+- Pre-integration main: `6cdb94570166a88d2f0f539ecb470a57aecc524b`.
+- First main cherry-pick: `a981f4f081d5d662cfd59fe57b625d240d1e52f5`,
+  parent `6cdb94570166a88d2f0f539ecb470a57aecc524b`, subject `Add
+  METRIC_RESULT Unseen Transfer Tier C contract`.
+- Final main integration: `f7a26457c34d2a293415086ae43358896780250a`,
+  parent `a981f4f081d5d662cfd59fe57b625d240d1e52f5`, subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`.
+- Final integrated tree: `e3b94505d050e9504ca0d21fa3e4c9fc6b883274`.
+
+##### Canonical Main Document State (Now Current)
+
+- `API_CONTRACT.md` revision `1.30`, blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa` — now canonical on `main`.
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.9`, blob
+  `aa009da313c3298186537f7aa641c98ea721b15f` — now canonical on `main`.
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md` remains revision `1.75`, blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b`, unchanged by this
+  integration.
+- Validation branch remains unchanged:
+  `validation/vi-p1-metric-result-unseen-transfer-tierc-api130-schema19-20260911`,
+  tip `1246e912a9de5f88cb8a24522992e857574815e9`.
+
+##### Independent Re-Review (Preserved, Unchanged)
+
+The Independent Re-Review recorded above ("METRIC_RESULT Unseen
+Transfer Tier C — Independent Re-Review Result / Approve with
+Non-Blocking Notes") remains `APPROVE WITH NON-BLOCKING NOTES`;
+main-integration eligibility was `ELIGIBLE`. This status-sync does not
+re-run or alter that review; it only confirms the eligible candidate
+has since been integrated onto `main` exactly as reviewed.
+
+##### Post-Merge Documentation/Static Verification
+
+- Verification: `PASS`. Verified the exact integrated `main` SHA
+  `f7a26457c34d2a293415086ae43358896780250a`, final tree
+  `e3b94505d050e9504ca0d21fa3e4c9fc6b883274`, and that the cumulative
+  two-commit integration touches exactly `API_CONTRACT.md` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, matching the reviewed candidate
+  blobs exactly.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Runtime/npm
+  tests: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Neither `NOT RUN`
+  is reinterpreted as `PASS`.
+
+##### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record.
+
+##### Finding State (All Preserved, None Closed)
+
+- `F-MR-ARCH-06` = `OPEN`.
+- `F-MR-UT-01`–`09` = `OPEN`.
+- `F-MR-UT-IR-01`–`06` = `CORRECTED / MAIN-INTEGRATION BLOCKING = NO /
+  OPEN UNTIL LIFECYCLE GOVERNANCE COMPLETES`.
+- `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`.
+- `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`.
+- No finding is closed by this status-sync.
+
+##### Lifecycle (Current, Bounded)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / TIER C PATCH USER-APPROVED /
+CORRECTED DOCUMENTATION INDEPENDENTLY RE-REVIEWED — APPROVE WITH
+NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORD PENDING / RUNTIME NOT
+AUTHORIZED / RUNTIME NOT IMPLEMENTED / RUNTIME NOT VALIDATED / P1 NOT
+ACTIVATED / EFFICACY NOT VERIFIED / NOT CLOSED`.
+
+##### Non-Claims
+
+This record does not mean: Runtime authorized — NOT CLAIMED; Runtime
+implemented — NOT CLAIMED; Runtime validated — NOT CLAIMED; P1
+activated — NOT CLAIMED; human-data collection authorized — NOT
+CLAIMED; efficacy verified — NOT CLAIMED; actual-provider/audio path
+complete — NOT CLAIMED; Validation Level 3 §10 overall `PASS` — NOT
+CLAIMED; Evidence Foundation overall complete — NOT CLAIMED; a
+review-record exists for this integration — NOT CLAIMED (`review-record
+PENDING`); any `F-MR-UT`, `F-MR-UT-IR`, `F-MR-UT-RR2`, or `F-MR-ARCH-06`
+finding is closed — NOT CLAIMED (all remain `OPEN`); `METRIC_RESULT` /
+Retention v1 Runtime reopened — NOT CLAIMED. Repository mutation caused
+by this status-sync is limited to `LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6439,6 +6552,42 @@ This bootstrap does not rerun PostgreSQL or tests.
   Branch / Independent Re-Review Pending" for full detail; the sole Next
   Action is now a fresh Claude Opus 5 Independent Re-Review of the exact
   corrected documentation candidate (§10).
+- The corrected, independently re-reviewed (`APPROVE WITH NON-BLOCKING
+  NOTES` / `ELIGIBLE`) METRIC_RESULT Unseen Transfer Tier C documentation
+  candidate has since been integrated onto `main` via exactly two
+  previously authorized cherry-picks — pre-integration main
+  `6cdb94570166a88d2f0f539ecb470a57aecc524b`, first cherry-pick
+  `a981f4f081d5d662cfd59fe57b625d240d1e52f5` (subject `Add
+  METRIC_RESULT Unseen Transfer Tier C contract`), final integration
+  `f7a26457c34d2a293415086ae43358896780250a` (subject `Correct
+  METRIC_RESULT Unseen Transfer Tier C contract`), final tree
+  `e3b94505d050e9504ca0d21fa3e4c9fc6b883274` — touching exactly
+  `API_CONTRACT.md` (now revision `1.30`, blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`, canonical on `main`) and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` (now revision `1.9`, blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`, canonical on `main`).
+  Backlog remains revision `1.75` (blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b`), unchanged. Validation
+  branch remains unchanged at tip
+  `1246e912a9de5f88cb8a24522992e857574815e9`. Control Tower has
+  performed post-merge documentation/static verification of the exact
+  integrated SHA: `PASS`. PostgreSQL and Runtime/npm tests are `NOT
+  RUN — DOCUMENTATION-ONLY INTEGRATION`, and neither `NOT RUN` is
+  reinterpreted as `PASS`. `METRIC_RESULT` / Retention v1 Runtime
+  remains `REVIEW-RECORDED / CLOSED`, not reopened. No finding is
+  closed by this status-sync: `F-MR-ARCH-06` and `F-MR-UT-01`–`09`
+  remain `OPEN`; `F-MR-UT-IR-01`–`06` = `CORRECTED / MAIN-INTEGRATION
+  BLOCKING = NO / OPEN UNTIL LIFECYCLE GOVERNANCE COMPLETES`;
+  `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION REQUIRED`;
+  `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`. This record does not
+  authorize or implement Runtime, does not activate P1, does not claim
+  efficacy, and does not create a review-record — a review-record for
+  this now-integrated contract remains `PENDING`. Repository mutation
+  by this status-sync is limited to `LLE_CURRENT_STATE.md`. See §4
+  "METRIC_RESULT Unseen Transfer Tier C — Main Integration Complete /
+  Post-Merge Documentation Static Verification PASS" for full detail;
+  the sole Next Action is now a separate METRIC_RESULT Unseen Transfer
+  Tier C documentation review-record step (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -6533,14 +6682,43 @@ ledger does not claim:
   were recorded (`F-MR-UT-RR2-01`–`04`, all `OPEN`, none blocking, none
   requiring correction to the reviewed candidate before main
   integration; `F-MR-UT-RR2-02` is tracked for a future bounded wording
-  cleanup only). This is NOT a claim that any finding is closed, that
-  API `1.30` or Schema `1.9` is canonical on `main`, that main
-  integration has been performed, or that a review-record exists —
-  `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remain `OPEN`; canonical `main`
-  remains API `1.29` / Schema `1.8`; main integration remains
-  `NOT YET PERFORMED`; Runtime remains `NOT AUTHORIZED` (see §4/§8; the
-  sole Next Action is now a fresh Windows Claude Validation/Integration
-  session, §10)
+  cleanup only). At that time this was NOT a claim that any finding was
+  closed, that API `1.30` or Schema `1.9` was canonical on `main`, that
+  main integration had been performed, or that a review-record existed
+  — `F-MR-ARCH-06` and `F-MR-UT-01`–`09` remained `OPEN`; canonical
+  `main` at that time remained API `1.29` / Schema `1.8`; main
+  integration at that time remained `NOT YET PERFORMED`; Runtime
+  remained `NOT AUTHORIZED` (see §4/§8). Since then: exactly two
+  previously authorized main cherry-pick commits have integrated the
+  corrected, independently re-reviewed candidate onto `main`
+  (pre-integration main `6cdb94570166a88d2f0f539ecb470a57aecc524b`,
+  first cherry-pick `a981f4f081d5d662cfd59fe57b625d240d1e52f5`, subject
+  `Add METRIC_RESULT Unseen Transfer Tier C contract`, final
+  integration `f7a26457c34d2a293415086ae43358896780250a`, subject
+  `Correct METRIC_RESULT Unseen Transfer Tier C contract`, final tree
+  `e3b94505d050e9504ca0d21fa3e4c9fc6b883274`), touching exactly
+  `API_CONTRACT.md` and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, and Control
+  Tower has live-verified the integration and performed post-merge
+  documentation/static verification: `PASS`. Canonical `main` now is
+  API `1.30` (blob `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`) and
+  Schema `1.9` (blob `aa009da313c3298186537f7aa641c98ea721b15f`);
+  Backlog remains `1.75` (blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b`), unchanged. Validation
+  branch remains unchanged at tip
+  `1246e912a9de5f88cb8a24522992e857574815e9`. PostgreSQL and Runtime/npm
+  tests remain `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`; neither `NOT
+  RUN` is reinterpreted as `PASS`. This is NOT a claim that any finding
+  is closed, that Runtime is authorized, implemented, or validated,
+  that P1 is activated, that efficacy is verified, or that a
+  review-record exists for this integration — `F-MR-ARCH-06` and
+  `F-MR-UT-01`–`09` remain `OPEN`; `F-MR-UT-IR-01`–`06` = `CORRECTED /
+  MAIN-INTEGRATION BLOCKING = NO / OPEN UNTIL LIFECYCLE GOVERNANCE
+  COMPLETES`; `F-MR-UT-IR-07`/`08` = `NOTE / OPEN / NO CORRECTION
+  REQUIRED`; `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`; a
+  review-record for this now-integrated contract remains `PENDING`;
+  Runtime remains `NOT AUTHORIZED` (see §4/§8; the sole Next Action is
+  now a separate METRIC_RESULT Unseen Transfer Tier C documentation
+  review-record step, §10)
 - Runtime implementation authorized or started by the earlier closure-sync
   session — NOT CLAIMED; at that time it remained `NOT AUTHORIZED`. Runtime
   implementation authorization has since changed by a later Control Tower
@@ -7776,28 +7954,23 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- A fresh Windows Claude Validation/Integration session that: (1) starts
-  from exact then-current clean `main` after a live fetch and requires
-  that no non-status canonical/API/Schema drift has occurred; (2)
-  sequentially cherry-picks ONLY these two approved documentation
-  commits, in order, performing no squash/rebase/amend/merge — first
-  `74f5eeccf26bf90ceff8e4040b8596ed2abac833` (subject `Add
-  METRIC_RESULT Unseen Transfer Tier C contract`), then
-  `1246e912a9de5f88cb8a24522992e857574815e9` (subject `Correct
-  METRIC_RESULT Unseen Transfer Tier C contract`); (3) verifies final
-  `main` docs equal the exact corrected candidate blobs —
-  `API_CONTRACT.md` = `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`,
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
-  `aa009da313c3298186537f7aa641c98ea721b15f`; (4) verifies cumulative
-  integration touches only `API_CONTRACT.md` and
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`; (5) verifies canonical revision
-  identities API `1.30` and Schema `1.9`; (6) performs
-  documentation/static post-merge verification, does NOT run
-  PostgreSQL/runtime tests merely to claim documentation `PASS` (they
-  may remain `NOT RUN` for this docs-only integration); (7) records
-  post-merge state in a separate Current State status commit only after
-  the exact main-integration SHA is pushed and verified; (8) does not
-  create a review-record yet unless separately authorized later; (9)
-  does not authorize Runtime/P1/efficacy; and (10) preserves all
-  `F-MR-UT-IR-01`–`08` and `F-MR-UT-RR2-01`–`04` findings `OPEN`. No
-  additional correction commit is authorized before this integration.
+- A separate METRIC_RESULT Unseen Transfer Tier C documentation
+  review-record step for the now-integrated API `1.30` / Schema `1.9`
+  contract, using the existing Independent Re-Review (`APPROVE WITH
+  NON-BLOCKING NOTES` / `ELIGIBLE`) and the post-integration
+  documentation/static verification evidence (`PASS`) recorded above.
+  That future step: (1) is documentation/governance only — it writes a
+  review-record, it does not implement or modify Runtime, tests,
+  migrations, DB artifacts, Tier A documents, or pilot documents; (2)
+  must fresh-verify then-current `origin/main` (live fetch, exact
+  branch/HEAD/tree/parent/subject and canonical blob confirmation)
+  before writing anything; (3) must not authorize or implement Runtime;
+  (4) must not activate P1; (5) must not claim efficacy; (6) must not
+  reinterpret the PostgreSQL `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`
+  or Runtime/npm tests `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`
+  boundary as `PASS`; and (7) must adjudicate finding closure only
+  within that review-record's supported bounded documentation
+  lifecycle — it may close only findings the documentation record and
+  Independent Re-Review actually settle, and must not close, or claim
+  closure of, any finding beyond that bounded scope. This status-sync
+  does not create that review-record.
