@@ -4760,6 +4760,61 @@ This bootstrap does not rerun PostgreSQL or tests.
   governing lifecycle remains unchanged: `INDEPENDENT REVIEW PASSED /
   CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
   VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`.
+- METRIC_RESULT Retention v1 Runtime Review-Record and Bounded Lifecycle
+  Closure (two-phase status-only session; Phase A repository mutation
+  limited to `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, Phase B repository
+  mutation limited to `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN —
+  REVIEW-RECORD/CLOSURE ARE DOCUMENTATION-ONLY`): Phase A additively
+  appended Backlog revision `1.75` (commit
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, tree
+  `d50238984acefb4202e52ca76a962700fd17987b`, parent
+  `6c4f013f3f12ecc9aeda1284134791e4e18bb270`, subject `Record
+  METRIC_RESULT Retention runtime review-record`, exactly one changed
+  file, new Backlog blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`),
+  recording the complete bounded METRIC_RESULT Retention v1 Runtime
+  implementation lifecycle — validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909`,
+  candidate/correction chain `2a6ab261a287f0cca4a2af5956a207c3b525ec54` ->
+  `e1390eedb75137cc7c45027ac75b02f614e3a34e` ->
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`, the original `REQUEST
+  CORRECTION` review and its five findings, the first corrected-tip
+  re-review and `F-MR-RR2-01` discovery/Control-Tower reclassification,
+  the residual correction, and the final RR3 `APPROVE WITH NON-BLOCKING
+  NOTES` Independent Re-Review — as a Runtime implementation
+  review-record explicitly distinct from, and not superseding, Tier C
+  documentation review-record `1.74`. This commit was pushed to `main`
+  and remote-verified (`origin/main` = local `HEAD`, parent
+  `6c4f013f3f12ecc9aeda1284134791e4e18bb270`, subject exact, changed path
+  exactly `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, Backlog `1.75` exactly
+  once, API `1.29` blob `a498d5536ea1d228d133610780ff06d77a9d403f`
+  unchanged, Schema `1.8` blob `a0e4037db07f7416109e53ed72c10a12b7c433bb`
+  unchanged, Runtime blobs
+  (`6ce1347dee91b8310da17ed092f6b58fdddbeb54`,
+  `fadee158da77693fba319976001d43f43c784196`,
+  `1f21704b64cb184f0b25a24d8b0696af90628143`) unchanged, validation branch
+  tip `316df38ef03c5256fbdab598da0df73c3be4e7e0` unmoved, worktree clean)
+  before this Phase B closure-sync record was written. `F-MR-RR-01`,
+  `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`, and
+  `F-MR-RR2-01` are now `CLOSED — CORRECTED / INDEPENDENTLY RE-REVIEWED /
+  INTEGRATED / POST-MERGE VALIDATED`, with this review-record as
+  provenance. `F-MR-RR3-01`, `F-MR-RR3-02`, `F-MR-RR3-03`, `F-MR-RR2-02`,
+  `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08`, `F-MR-IR-01`–`F-MR-IR-04`
+  remain `OPEN / NON-BLOCKING`; `F-MR-ARCH-06` remains `OPEN / DEFERRED`;
+  `F-MR-ARCH-01`–`F-MR-ARCH-05` remain `CLOSED`. No other Runtime
+  Foundation B1 or Evidence Foundation finding is altered. METRIC_RESULT
+  / Retention v1 Runtime's bounded lifecycle is now `INDEPENDENT REVIEW
+  PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10
+  VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED`. This `CLOSED` applies
+  only to this bounded Runtime implementation milestone; it does NOT
+  mean VI P1 Measurement Readiness overall complete (`NO`), `B-3`
+  resolved (`NO`), P1 eligible/activated (`NO`), human-data collection
+  authorized (`NO`), efficacy verified (`NO`), actual-provider/audio
+  complete (`NO`), GitHub Actions PASS (NOT CLAIMED), Validation Level 3
+  §10 overall PASS (NOT CLAIMED), Evidence Foundation overall complete
+  (NOT CLAIMED), unseen transfer implemented (NOT IMPLEMENTED /
+  DEFERRED), `F-MR-ARCH-06` resolved (`NO`), or any open non-blocking
+  finding resolved (`NO`). PostgreSQL and tests were `NOT RUN` for this
+  documentation/status-only review-record and closure-sync pair.
 
 ## 9. Lifecycle Non-Claims
 
@@ -4773,7 +4828,8 @@ REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
 POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED / CLOSED`; API `1.29`
 and Schema `1.8` each `USER-APPROVED / INDEPENDENTLY REVIEWED / CANONICAL
 ON MAIN / POST-INTEGRATION DOCUMENT VERIFIED / REVIEW-RECORDED`; Backlog
-revision `1.74`; METRIC_RESULT Retention v1 Runtime now integrated on
+revision `1.75` (blob `82cc08c77dd8d43014560a5f2cec26d7c619f00b`);
+METRIC_RESULT Retention v1 Runtime now integrated on
 `main` as `22508147625090af84af141ac0ec574792369115` (via cherry-picks
 `533685347ab3ee83e8d4323fbd64c41c7f7fab81` ->
 `457d5a4bb89164b691d409c3ba64388b3b2559e0` ->
@@ -4782,10 +4838,15 @@ revision `1.74`; METRIC_RESULT Retention v1 Runtime now integrated on
 `e1390eedb75137cc7c45027ac75b02f614e3a34e` ->
 `316df38ef03c5256fbdab598da0df73c3be4e7e0`) with post-merge Windows-local
 PostgreSQL `17.10` validation `PASS` (`182/182`, `326/326`, `556/556`),
-lifecycle `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
-WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / NOT
-REVIEW-RECORDED / NOT CLOSED` (see §4 "Main Integration Complete /
-Post-Merge Windows-Local PostgreSQL 17.10 Validation PASSED")), this
+and its bounded implementation review-record complete (commit
+`3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, subject `Record METRIC_RESULT
+Retention runtime review-record`, remote-verified on `main`), lifecycle
+`INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
+WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED /
+REVIEW-RECORDED / CLOSED` (see §4 "Main Integration Complete /
+Post-Merge Windows-Local PostgreSQL 17.10 Validation PASSED" and §8
+"METRIC_RESULT Retention v1 Runtime Review-Record and Bounded Lifecycle
+Closure")), this
 ledger does not claim:
 
 - METRIC_RESULT Runtime (`queryMetricResult(pool, input)`) or the Retention
@@ -4857,7 +4918,15 @@ ledger does not claim:
   itself a formal `CLOSED` disposition of the overall candidate lifecycle
   (see §4/§8). The three non-blocking findings `F-MR-RR-05`, `F-MR-RR-07`,
   `F-MR-RR-08` were NOT corrected and remain `LOW / OPEN / NON-BLOCKING`
-  exactly as before (see §4 for exact detail)
+  exactly as before (see §4 for exact detail). That "not itself a formal
+  `CLOSED` disposition" stage has since been superseded: the METRIC_RESULT
+  Retention Runtime review-record (Backlog revision `1.75`, commit
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`) HAS since formally closed
+  `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04` as
+  `CLOSED — CORRECTED / INDEPENDENTLY RE-REVIEWED / INTEGRATED /
+  POST-MERGE VALIDATED` (see §4/§8 and the governing lifecycle above).
+  `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08` remain `LOW / OPEN /
+  NON-BLOCKING`, unaffected by this review-record
 - `F-MR-RR2-01` is formally `CLOSED` — NOT CLAIMED. A Windows-local
   Development correction session implemented a targeted fix (commit
   `316df38ef03c5256fbdab598da0df73c3be4e7e0`, parent
@@ -4871,7 +4940,13 @@ ledger does not claim:
   INDEPENDENTLY CORRECTED`, reviewer verdict `APPROVE WITH NON-BLOCKING
   NOTES / MAIN-INTEGRATION ELIGIBLE`. This is a re-review determination,
   not itself a formal `CLOSED` disposition of the finding or the overall
-  candidate lifecycle (see §4/§8 for full reasoning)
+  candidate lifecycle (see §4/§8 for full reasoning). That stage has since
+  been superseded: the same METRIC_RESULT Retention Runtime review-record
+  (Backlog revision `1.75`, commit
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`) HAS since formally closed
+  `F-MR-RR2-01` as `CLOSED — CORRECTED / INDEPENDENTLY RE-REVIEWED /
+  INTEGRATED / POST-MERGE VALIDATED` (see §4/§8 and the governing
+  lifecycle above)
 - `F-MR-RR2-02` is a blocker, or was fixed by this or any prior record —
   NOT CLAIMED; it is `NOTE / OPEN / PRE-EXISTING RAW_SOURCE SCOPE`,
   intentionally preserved, and must NOT be silently fixed as part of the
@@ -4885,7 +4960,10 @@ ledger does not claim:
   stage has since been superseded: main integration HAS since been
   performed and post-merge Windows-local PostgreSQL `17.10` validation HAS
   since PASSED (see §4/§8 and the governing lifecycle above). Review-record
-  complete and Runtime `CLOSED` remain NOT CLAIMED (`NO`)
+  complete and Runtime `CLOSED` remained NOT CLAIMED (`NO`) at that stage;
+  both HAVE since occurred (Backlog revision `1.75` review-record commit
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, bounded Runtime lifecycle now
+  `REVIEW-RECORDED / CLOSED`; see §4/§8 and the governing lifecycle above)
 - the RR3 reviewer's environment (Linux container, PostgreSQL `17.10`,
   Node `v22.22.2`, npm `10.9.7`, `psql` `16.15`) is Windows-local, or that
   this Independent Re-Review was itself same-environment Independent
@@ -4899,14 +4977,29 @@ ledger does not claim:
   Architecture decision, or an owner value, or are anything other than
   `NOTE / OPEN / NON-BLOCKING` — NOT CLAIMED; all three are optional future
   considerations only (see §4/§8)
-- METRIC_RESULT / Retention v1 Runtime `CLOSED` or review-recorded — NOT
-  CLAIMED; neither has occurred. `VALIDATED`, canonical on `main`, and
-  post-merge verified HAVE since occurred (main integration performed,
-  post-merge Windows-local PostgreSQL `17.10` validation PASSED; see §4/§8
-  and the governing lifecycle above); main-integration eligibility
-  (`ELIGIBLE`, established at the RR3 stage) is distinct from, and was
-  established earlier than, this later validated/canonical/post-merge-
-  verified status
+- At the post-merge-validation stage, METRIC_RESULT / Retention v1 Runtime
+  `CLOSED` or review-recorded was NOT CLAIMED; neither had yet occurred.
+  `VALIDATED`, canonical on `main`, and post-merge verified HAD by then
+  occurred (main integration performed, post-merge Windows-local
+  PostgreSQL `17.10` validation PASSED; see §4/§8 and the governing
+  lifecycle above); main-integration eligibility (`ELIGIBLE`, established
+  at the RR3 stage) is distinct from, and was established earlier than,
+  that validated/canonical/post-merge-verified status. That stage has
+  since been superseded: the METRIC_RESULT Retention Runtime review-record
+  (Backlog revision `1.75`, commit
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, remote-verified on `main`)
+  HAS since been completed, and the bounded Runtime implementation
+  milestone is now `REVIEW-RECORDED / CLOSED` (see §4/§8 and the governing
+  lifecycle above). This bounded `CLOSED` applies only to the
+  METRIC_RESULT / Retention v1 Runtime implementation milestone; it does
+  NOT mean VI P1 Measurement Readiness overall complete (`NO`), `B-3`
+  resolved (`NO`), P1 eligible/activated (`NO`), human-data collection
+  authorized (`NO`), efficacy verified (`NO`), actual-provider/audio
+  complete (`NO`), GitHub Actions PASS (NOT CLAIMED), Validation Level 3
+  §10 overall PASS (NOT CLAIMED), Evidence Foundation overall complete
+  (NOT CLAIMED), unseen transfer implemented (NOT IMPLEMENTED /
+  DEFERRED), `F-MR-ARCH-06` resolved (`NO`), or any open non-blocking
+  finding resolved (`NO`)
 - the earlier reviewer's environment (PostgreSQL `16.15`, Node `v22.22.2`) is the
   same as, or upgrades, the Development-session environment (PostgreSQL
   `17.10`, Node `v24.18.0`) evidence, or that the reviewer's rerun is
@@ -5812,5 +5905,6 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Control Tower live verification of this Current State reconciliation
-  before METRIC_RESULT Retention Runtime review-record authorization.
+- Control Tower live verification of the METRIC_RESULT Retention Runtime
+  review-record and bounded lifecycle closure before selecting the next
+  milestone action.
