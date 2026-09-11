@@ -4166,6 +4166,204 @@ tests were run by this session — NOT CLAIMED (`NOT RUN`).
 
 See §10.
 
+#### Control Tower User Approval Record — METRIC_RESULT Unseen Transfer Tier C Contract (F-MR-ARCH-06)
+
+##### Role
+
+Status-only Control Tower record. The user has explicitly approved a
+corrected Tier C canonical documentation patch for `F-MR-ARCH-06`
+(METRIC_RESULT Unseen Transfer). This record captures the user approval
+only. It does NOT modify any canonical document, Runtime source, test
+file, or the backlog. Repository mutation by this record is limited to
+`LLE_CURRENT_STATE.md`. PostgreSQL/tests: `NOT RUN — STATUS-ONLY APPROVAL
+RECORD`.
+
+##### Preflight Verification (Live, `git fetch origin`)
+
+- Branch `main`. `origin/main` = local `HEAD` =
+  `7ae70c7dcade810a44d4ccca4fdad8ebbd768863` (exact match).
+- Tree `df87c076a59030f977db77c301ce6f07dc18756e` (exact match).
+- Parent `c4e452d762d70fa57db61856b37b04a16d43df92` (exact match).
+- Subject `Select METRIC_RESULT Unseen Transfer architecture review` (exact
+  match).
+- Current State blob `5473d40070c78cda4cd5942ae5599109602cde7f` (exact
+  match).
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.75`, blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b` (exact match, unchanged).
+- `API_CONTRACT.md`: revision `1.29`, blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f` (exact match; not yet
+  modified).
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.8`, blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb` (exact match; not yet
+  modified).
+- Worktree clean, index clean, untracked none.
+- Precondition gate: `PASS`. No pull/merge/reset/stash/rebase/amend/
+  cherry-pick/force-push performed or required.
+
+##### Architecture Gap Review Outcome (F-MR-ARCH-06)
+
+The fresh Architecture gap review of `F-MR-ARCH-06` (selected as the prior
+milestone; see "Control Tower Live Verification — METRIC_RESULT Retention
+v1 Runtime Closure Confirmed / METRIC_RESULT Unseen Transfer Architecture
+Gap Review Selected" above) has completed with a canonical-gap-confirmed
+result and a corrected Tier C patch proposal, now user-approved for
+documentation scope only:
+
+`F-MR-ARCH-06` = `CANONICAL GAP CONFIRMED / TIER C PATCH USER-APPROVED /
+DOCUMENTATION IMPLEMENTATION PENDING / RUNTIME NOT AUTHORIZED`.
+
+New Architecture findings established by that review. All are `OPEN`;
+none is closed by this record, and none is closed until the patch review
+lifecycle completes:
+
+- `F-MR-UT-01` = `BLOCKER / CONTRACT`
+- `F-MR-UT-02` = `HIGH / CONTRACT`
+- `F-MR-UT-03` = `HIGH / CONTRACT`
+- `F-MR-UT-04` = `HIGH / CONTRACT`
+- `F-MR-UT-05` = `HIGH / CONTRACT`
+- `F-MR-UT-06` = `HIGH / CONTRACT`
+- `F-MR-UT-07` = `MEDIUM / DOCUMENTATION`
+- `F-MR-UT-08` = `NOTE / RUNTIME-READINESS`
+- `F-MR-UT-09` = `HIGH / RUNTIME-READINESS`
+
+##### User-Approved Documentation Scope (Exact)
+
+The user has explicitly approved exactly the following two-file Tier C
+documentation scope, and no other canonical file:
+
+- `API_CONTRACT.md`: revision `1.29` -> proposed `1.30`
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.8` -> proposed `1.9`
+
+Not approved for modification by this record: `VI_EMPIRICAL_EVIDENCE_
+CONTRACT.md`, `VI_EMPIRICAL_PILOT_SPEC.md`, `VI_PILOT_ITEM_FAMILY_
+MANIFEST.md`, any Tier A document, `ARCHITECTURE_CLARIFICATION_
+BACKLOG.md`. No migration. No DDL. No Runtime. No tests. No P1 activation.
+No human-data authorization. No efficacy conclusion.
+
+##### Approved Contract Package (Summary; Full Detail Owned By the Future Documentation Session)
+
+The user approved the following exact contract package for the future
+two-file documentation candidate. This is recorded here for status
+traceability only; this record does not itself author canonical text:
+
+1. Reuses existing internal operation `queryMetricResult(pool, input)`; no
+   new public API, no new Engine, no API count change.
+2. Exact five top-level input keys (`formulaId`, `formulaVersion`,
+   `analysisCutoff`, `aggregationGrain`, `filters`) and exact five filter
+   keys (`enrollmentIds`, `conditionReferences`, `targetTimepoints`,
+   `nodeIds`, `itemFamilyReferences`); no `assignmentIds`, `attemptIds`,
+   scenario filter, or top-level `metricKind`.
+3. FORMULA `definitionVersion 1` remains RETENTION-only; new closed
+   FORMULA `definitionVersion 2` is UNSEEN_TRANSFER-only; the two are
+   mutually exclusive.
+4. UNSEEN_TRANSFER `aggregationGrain` exactly `["PARTICIPANT",
+   "TARGET_NODE", "ITEM_FAMILY", "ASSESSMENT_TIMEPOINT", "CONDITION",
+   "FORMULA_VERSION"]` with the exact nine-key group key
+   (`participantId`, `nodeId`, `itemFamilyId`, `itemFamilyVersion`,
+   `targetTimepoint`, `conditionId`, `conditionVersion`, `formulaId`,
+   `formulaVersion`).
+5. Unseen authority is assignment-time immutable lineage
+   (`resolved_item_lineage`, `exposure_history_cutoff_ordinal`,
+   same-enrollment authoritative first-exposure history); primary
+   eligibility requires `DIFFERENT_ITEM_FAMILY`; null lineage is never
+   converted to `DIFFERENT_ITEM_FAMILY`; `primary_unseen_candidate`/
+   held-out label/design proof is design intent only, not actual
+   participant lineage authority.
+6. Each evaluated node additionally requires actual prior
+   target-relevant exposure for that exact node under the assignment's
+   stored exposure-history cutoff.
+7. Scenario is a separate stratification axis, not a primary eligibility
+   gate; no scenario filter or scenario group dimension in the first
+   reducer; scenario-stratified output remains deferred.
+8. First reducer timepoint scope `DAY_7`/`DAY_30`; primary analysis
+   `ON_TIME`; `minimumSample`/`earlyToleranceMs`/`lateToleranceMs` remain
+   versioned FORMULA parameters; no invented P1 timing calibration
+   values.
+9. Exact 16-rule `FIRST_MATCH` exclusion order (`1 ASSIGNMENT_SUPERSEDED`
+   … `16 NODE_PRIOR_EXPOSURE_ABSENT`), with rules 15–16 applying only to
+   candidates that reach those rules after rules 1–14 (not raw counts of
+   every non-different/no-prior-exposure assignment); source-integrity
+   contradiction is always `CONTRACT_VIOLATION`, never an exclusion
+   bucket.
+10. Numerator = correct eligible held-out-family node evaluations;
+    denominator = all eligible scorable held-out-family node
+    evaluations.
+11. Unseen group row extends the Retention row with item-family
+    identity/version in `groupKey` plus `lineageNotDifferentCount`/
+    `noPriorNodeExposureCount`; Retention output remains unchanged.
+12. Common `OK`/`INSUFFICIENT`, `minimumSample`, six-decimal ratio,
+    `HALF_UP` semantics remain unchanged.
+13. Unseen provenance must include the actual same-enrollment
+    exposure-history facts consumed to verify lineage; the existing
+    `sourceRebuildReference` shape (`enrollmentIds`, `assignmentIds`,
+    `attemptIds`, `exposureIds`, `evaluationIds`) remains unchanged.
+14. Exactly one `REPEATABLE READ` / `READ ONLY` transaction; zero side
+    effects; existing five-code error registry only.
+15. New optional versioned ITEM lineage authority definition
+    (`EXACT_REPEAT`, `SURFACE_VARIANT`, `SAME_ITEM_FAMILY`,
+    `DIFFERENT_ITEM_FAMILY`) sufficient to represent canonical stimulus
+    identity and explicit direct surface-variant ITEM references only;
+    no fuzzy inference, no edit-distance/token-overlap inference, no
+    transitive relation inference; the assignment writer and the metric
+    lineage-rebuild reader must consume the same canonical priority.
+16. BIGINT exactness clarification, USER-APPROVED: `exposure_ordinal` and
+    `exposure_history_cutoff_ordinal` are PostgreSQL `BIGINT` exact
+    authorities and must NEVER use JavaScript `Number` as comparison
+    authority, ordering authority, persistence authority, or round-trip
+    authority — this applies to assignment creation cutoff resolution,
+    lineage rebuild, cutoff witness validation, ordering, and provenance;
+    exact representations (PostgreSQL BIGINT/numeric operations,
+    `BigInt`, exact decimal strings) may be used as appropriate; no
+    migration or DDL is required by this clarification.
+
+Approved FORMULA v2 shape (closed, exactly 16 top-level keys:
+`definitionType`, `definitionVersion`, `executionScope`, `metricKind`,
+`aggregationGrain`, `minimumSample`, `candidateAdmissionPolicy`,
+`denominatorEligibilityPolicy`, `numeratorRule`, `denominatorRule`,
+`timeliness`, `sourceCompatibility`, `exclusionPolicy`,
+`valueProjection`, `lineagePolicy`, `scenarioPolicy`); fixed
+`definitionType = EVIDENCE_METRIC_FORMULA`, `definitionVersion = 2`,
+`executionScope = SYNTHETIC_P0`, `metricKind = UNSEEN_TRANSFER`; only
+variable numeric parameters are `minimumSample` (safe integer
+`1..9007199254740991`), `earlyToleranceMs`/`lateToleranceMs` (safe
+integer `0..9007199254740991`), with no defaults; unknown/missing/null/
+wrong-type/range/unsupported constants = `CONTRACT_VIOLATION`; no
+arbitrary expression DSL.
+
+##### Retention State (Preserved)
+
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`. Not reopened by this record. Retention findings are not
+reopened.
+
+##### Lifecycle (Current)
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer` state:
+
+`ARCHITECTURE GAP REVIEW COMPLETE / TIER C PATCH USER-APPROVED /
+DOCUMENTATION CANDIDATE NOT YET CREATED / NOT INDEPENDENTLY REVIEWED /
+NOT CANONICAL ON MAIN / RUNTIME NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+VALIDATED / NOT CLOSED`.
+
+##### Non-Claims
+
+This record does not mean: `API_CONTRACT.md` or
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` modified — NOT CLAIMED (repository
+mutation limited to `LLE_CURRENT_STATE.md`); revision `1.30`/`1.9` exist
+on any branch — NOT CLAIMED; `F-MR-UT-01`–`F-MR-UT-09` or `F-MR-ARCH-06`
+closed — NOT CLAIMED (all remain `OPEN`); Runtime implementation
+authorized or started — NOT CLAIMED (`RUNTIME NOT AUTHORIZED`); the
+Backlog modified — NOT CLAIMED; migration/DDL created — NOT CLAIMED;
+PostgreSQL or tests run — NOT CLAIMED (`NOT RUN`); P1 activated — NOT
+CLAIMED; human-data collection authorized — NOT CLAIMED; efficacy
+verified — NOT CLAIMED; VI P1 Measurement Readiness overall complete —
+NOT CLAIMED; `B-3` resolved — NOT CLAIMED; METRIC_RESULT / Retention v1
+Runtime reopened — NOT CLAIMED.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -4977,6 +5175,25 @@ This bootstrap does not rerun PostgreSQL or tests.
 - Repository mutation by this update is limited to
   `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN`; no implementation
   authorization; no P1 activation; no efficacy claim.
+- Fresh Architecture gap review of `F-MR-ARCH-06` (METRIC_RESULT Unseen
+  Transfer) completed with a canonical-gap-confirmed result and a
+  corrected Tier C patch proposal; the user has explicitly approved that
+  proposal's documentation scope only. `F-MR-ARCH-06` = `CANONICAL GAP
+  CONFIRMED / TIER C PATCH USER-APPROVED / DOCUMENTATION IMPLEMENTATION
+  PENDING / RUNTIME NOT AUTHORIZED`. New Architecture findings established
+  by that review, all `OPEN`, none closed by this record: `F-MR-UT-01`
+  (`BLOCKER / CONTRACT`), `F-MR-UT-02`–`F-MR-UT-06` (`HIGH / CONTRACT`),
+  `F-MR-UT-07` (`MEDIUM / DOCUMENTATION`), `F-MR-UT-08` (`NOTE /
+  RUNTIME-READINESS`), `F-MR-UT-09` (`HIGH / RUNTIME-READINESS`). The
+  user-approved documentation scope is exactly `API_CONTRACT.md`
+  (`1.29` -> proposed `1.30`) and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  (`1.8` -> proposed `1.9`); no other canonical file is approved for
+  modification. `METRIC_RESULT` / Retention v1 Runtime remains
+  `REVIEW-RECORDED / CLOSED`, not reopened; `B-3` remains `UNRESOLVED`.
+  No migration, DDL, Runtime, or test change is made or authorized by
+  this record; PostgreSQL/tests `NOT RUN — STATUS-ONLY APPROVAL RECORD`.
+  See §4 "Control Tower User Approval Record — METRIC_RESULT Unseen
+  Transfer Tier C Contract (F-MR-ARCH-06)" for full detail.
 
 ## 9. Lifecycle Non-Claims
 
@@ -5498,6 +5715,26 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Transfer Runtime remains `NOT IMPLEMENTED / DEFERRED`. The recorded
   Next Action is now a fresh GPT-6 Astra Architecture read-only gap
   review of `F-MR-ARCH-06` (§10)
+
+- this record (Control Tower user-approval status-sync for
+  `F-MR-ARCH-06`): recorded the user's explicit approval of a corrected
+  Tier C documentation patch for METRIC_RESULT Unseen Transfer, scoped to
+  exactly `API_CONTRACT.md` (`1.29` -> proposed `1.30`) and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` (`1.8` -> proposed `1.9`), following
+  the Architecture gap review's canonical-gap-confirmed result and new
+  findings `F-MR-UT-01`–`F-MR-UT-09`. This does NOT mean: either canonical
+  document was modified — NOT CLAIMED (repository mutation limited to
+  `LLE_CURRENT_STATE.md`); revision `1.30`/`1.9` exist on any branch — NOT
+  CLAIMED; `F-MR-ARCH-06` or any of `F-MR-UT-01`–`F-MR-UT-09` is closed —
+  NOT CLAIMED (all remain `OPEN`); Runtime implementation is authorized or
+  started — NOT CLAIMED (`RUNTIME NOT AUTHORIZED`); the Backlog was
+  modified — NOT CLAIMED; migration/DDL was created — NOT CLAIMED;
+  PostgreSQL/tests were run — NOT CLAIMED (`NOT RUN`); P1 activation,
+  human-data authorization, or efficacy verification occurred — NOT
+  CLAIMED; METRIC_RESULT / Retention v1 Runtime was reopened — NOT CLAIMED
+  (remains `REVIEW-RECORDED / CLOSED`). The recorded Next Action is now a
+  fresh Windows Claude Architecture documentation session to create the
+  exact user-approved two-file Tier C validation candidate (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -6101,14 +6338,16 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Fresh GPT-6 Astra Architecture read-only gap review of
-  `F-MR-ARCH-06` / METRIC_RESULT Unseen Transfer against exact current
-  `origin/main`, API `1.29`, Schema `1.8`, Backlog `1.75`, VI empirical
-  evidence/pilot authorities, and existing Runtime source; the session
-  must: mutate repository = `0`; make no implementation changes; make no
-  canonical patch before user approval; return exact gap findings;
-  determine whether a Tier C patch is required; propose the smallest
-  exact contract scope if required; identify owner-value requirements;
-  identify migration/DDL requirements; define future acceptance
-  criteria; preserve Retention Runtime `CLOSED` state; preserve `B-3`
-  unresolved state; make no P1 activation or efficacy claim.
+- Fresh Windows Claude Architecture documentation session to create the
+  exact user-approved two-file Tier C validation candidate
+  (`API_CONTRACT.md` `1.30`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.9`) on
+  a new validation branch from the then-current exact `main`; the session
+  must: modify exactly those two files; implement only the approved
+  contract recorded in §4 ("Control Tower User Approval Record —
+  METRIC_RESULT Unseen Transfer Tier C Contract (F-MR-ARCH-06)"); include
+  BIGINT exactness; include the 16-rule `FIRST_MATCH` precedence
+  clarification; create no Runtime/test/migration/DDL changes; not modify
+  the Backlog or `LLE_CURRENT_STATE.md`; make exactly one documentation
+  candidate commit; push the validation branch only; not integrate
+  `main`; not declare any finding `CLOSED`; not declare implementation
+  authorized; not claim P1 activation or efficacy.
