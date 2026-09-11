@@ -4036,6 +4036,136 @@ review-record was written — NOT CLAIMED (`NO`); this candidate is
 (`NO`); any Runtime source was modified beyond the exact three approved
 cherry-picks — NOT CLAIMED (`NO`).
 
+#### Control Tower Live Verification — METRIC_RESULT Retention v1 Runtime Closure Confirmed / METRIC_RESULT Unseen Transfer Architecture Gap Review Selected
+
+- Role: status-only Control Tower record. This session live-verified the
+  METRIC_RESULT Retention v1 Runtime final review-record and bounded
+  lifecycle closure against exact remote `origin/main`, then selected the
+  next measurement-first bounded milestone. Repository mutation by this
+  record is limited to `LLE_CURRENT_STATE.md`. No Architecture gap review
+  was performed; no canonical contract, Runtime code, or backlog was
+  modified; PostgreSQL/tests were `NOT RUN`; P1 was not activated.
+
+##### Preflight Verification (Live, `git fetch origin`)
+
+- Branch `main`. `origin/main` = local `HEAD` =
+  `c4e452d762d70fa57db61856b37b04a16d43df92` (exact match).
+- Tree `c038dc1484d8014669d11b9f8598beb1d0e90a18` (exact match).
+- Parent `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9` (exact match).
+- Subject `Close METRIC_RESULT Retention runtime lifecycle` (exact match).
+- Current State blob `03ba1e427f8ac40f1b479a936c78f30573b7c908` (exact
+  match).
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.75`, blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b` (exact match).
+- Runtime review-record commit `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`
+  (subject `Record METRIC_RESULT Retention runtime review-record`, exact
+  match).
+- `API_CONTRACT.md`: revision `1.29`, blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f` (exact match).
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.8`, blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb` (exact match).
+- Runtime blobs: `src/instrumentation/evidenceMetrics.js` =
+  `6ce1347dee91b8310da17ed092f6b58fdddbeb54`;
+  `src/instrumentation/evidenceValidation.js` =
+  `fadee158da77693fba319976001d43f43c784196`;
+  `tests/viP1MetricResultRuntime.test.js` =
+  `1f21704b64cb184f0b25a24d8b0696af90628143` (all exact match).
+- Validation branch
+  `validation/vi-p1-metric-result-retention-v1-runtime-20260909` tip:
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` (exact match).
+- Worktree: clean. Index: clean. Untracked: none.
+- Precondition gate: `PASS`. No `BLOCKED` condition triggered; no
+  pull/merge/reset/stash/rebase/amend/cherry-pick/force-push performed or
+  required.
+
+##### Closed Retention Runtime Milestone — Confirmed
+
+METRIC_RESULT / Retention v1 Runtime final bounded lifecycle, confirmed
+unchanged and exactly as recorded by the review-record/closure commits
+above: `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
+WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED /
+CLOSED`.
+
+- Runtime main integration SHA: `22508147625090af84af141ac0ec574792369115`.
+- Runtime blobs unchanged (listed above). Validation branch tip unchanged:
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0`.
+- Closed findings, preserved with review-record `1.75` provenance, not
+  reopened: `F-MR-RR-01`, `F-MR-RR-02`, `F-MR-RR-06`, `F-MR-RR-03`,
+  `F-MR-RR-04`, `F-MR-RR2-01`.
+- Open findings, preserved unchanged: `F-MR-RR3-01` = `NOTE / OPEN /
+  NON-BLOCKING`; `F-MR-RR3-02` = `NOTE / OPEN / NON-BLOCKING`;
+  `F-MR-RR3-03` = `NOTE / OPEN / NON-BLOCKING`; `F-MR-RR2-02` = `NOTE /
+  OPEN / PRE-EXISTING RAW_SOURCE SCOPE`; `F-MR-RR-05` = `LOW / OPEN /
+  NON-BLOCKING`; `F-MR-RR-07` = `LOW / OPEN / NON-BLOCKING`; `F-MR-RR-08`
+  = `LOW / OPEN / NON-BLOCKING`; `F-MR-IR-01`–`F-MR-IR-04` = `LOW / OPEN /
+  NON-BLOCKING`; `F-MR-ARCH-06` = `OPEN / DEFERRED` (now additionally
+  `SELECTED FOR ARCHITECTURE REVIEW`, see below — selection is not
+  adjudication or closure).
+- `B-3` remains `UNRESOLVED`.
+
+##### Control Tower Next-Milestone Selection
+
+Selected next bounded milestone: `VI P1 Measurement Readiness —
+METRIC_RESULT Unseen Transfer Architecture Gap Review (F-MR-ARCH-06)`.
+
+- Classification: `ARCHITECTURE / CONTRACT GAP REVIEW ONLY`.
+- Status: `SELECTED / NOT YET ARCHITECTURE-ADJUDICATED / NOT APPROVED FOR
+  IMPLEMENTATION`.
+- Reasoning: (1) Retention measurement Runtime is now review-recorded and
+  `CLOSED`. (2) The project requires measurement foundations before
+  learning interventions and before efficacy claims. (3) `F-MR-ARCH-06` /
+  Unseen Transfer remains explicitly `OPEN / DEFERRED` and Runtime is
+  `NOT IMPLEMENTED`. (4) Novel-context generation transfer is a required
+  efficacy evidence axis; Retention alone is insufficient for the
+  eventual VI efficacy pilot. (5) Therefore the smallest next measurement
+  slice is a fresh Architecture gap review to determine the exact Unseen
+  Transfer contract before any implementation authorization.
+- This selection does NOT reorder the approved P0 sequence.
+- Not started by this selection: modality-state intervention,
+  Lexico-Construction intervention, mixed scheduler, bounded
+  conversation, AI audit.
+
+##### What the Future Architecture Review Must Decide (Scope Only, Not Decided Contract)
+
+The fresh Architecture session must determine from current canonical
+authority whether `F-MR-ARCH-06` requires a Tier C patch and, if so, the
+smallest exact patch for METRIC_RESULT Unseen Transfer. It must
+fresh-read at minimum: `API_CONTRACT.md` `1.29`,
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.8`,
+`VI_EMPIRICAL_EVIDENCE_CONTRACT.md`, `VI_EMPIRICAL_PILOT_SPEC.md`,
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.75`, `LLE_CURRENT_STATE.md`,
+and relevant existing Runtime source/tests. It must determine, without
+inventing owner values: exact measurement construct; relationship to
+common METRIC_RESULT operation; candidate admission; denominator/
+eligibility; held-out/unseen authority; scenario vs item-family holdout
+authority; target node/timepoint semantics; reducer/value semantics;
+provenance; exclusion/error semantics; minimum sample;
+`analysisCutoff`/snapshot behavior; whether existing physical schema is
+sufficient; whether migration/DDL is required; whether owner decision is
+required; exact smallest documentation scope; exact acceptance criteria
+for a future Runtime slice. No implementation is authorized merely by
+this selection.
+
+##### Non-Claims
+
+This record does not mean: VI P1 Measurement Readiness overall complete
+— NOT CLAIMED (`NO`); `B-3` resolved — NOT CLAIMED (`NO`); P1 eligible —
+NOT CLAIMED (`NO`); P1 activated — NOT CLAIMED (`NO`); human-data
+collection authorized — NOT CLAIMED (`NO`); efficacy verified — NOT
+CLAIMED (`NO`); actual-provider path complete — NOT CLAIMED (`NO`); audio
+path complete — NOT CLAIMED (`NO`); GitHub Actions PASS — NOT CLAIMED;
+Validation Level 3 §10 overall PASS — NOT CLAIMED; Evidence Foundation
+overall complete — NOT CLAIMED; Unseen Transfer Runtime implemented —
+`NOT IMPLEMENTED / DEFERRED`; this session performed the Architecture gap
+review itself — NOT CLAIMED; this session modified any canonical
+document, Runtime source, test file, or the backlog — NOT CLAIMED
+(repository mutation limited to `LLE_CURRENT_STATE.md`); PostgreSQL or
+tests were run by this session — NOT CLAIMED (`NOT RUN`).
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -4816,6 +4946,38 @@ This bootstrap does not rerun PostgreSQL or tests.
   finding resolved (`NO`). PostgreSQL and tests were `NOT RUN` for this
   documentation/status-only review-record and closure-sync pair.
 
+- Control Tower live-verified (`git fetch origin`) the METRIC_RESULT
+  Retention v1 Runtime review-record/closure against exact remote
+  `origin/main` (`c4e452d762d70fa57db61856b37b04a16d43df92`, tree
+  `c038dc1484d8014669d11b9f8598beb1d0e90a18`, parent
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, Current State blob
+  `03ba1e427f8ac40f1b479a936c78f30573b7c908`, Backlog `1.75` blob
+  `82cc08c77dd8d43014560a5f2cec26d7c619f00b`, API `1.29` blob
+  `a498d5536ea1d228d133610780ff06d77a9d403f`, Schema `1.8` blob
+  `a0e4037db07f7416109e53ed72c10a12b7c433bb`, Runtime blobs and
+  validation-branch tip `316df38ef03c5256fbdab598da0df73c3be4e7e0` all
+  exact); worktree/index clean, no untracked files. Confirmed unchanged:
+  METRIC_RESULT / Retention v1 Runtime = `INDEPENDENT REVIEW PASSED /
+  CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED
+  / VALIDATED / REVIEW-RECORDED / CLOSED`; `F-MR-RR-01`, `F-MR-RR-02`,
+  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`, `F-MR-RR2-01` remain `CLOSED`
+  with review-record `1.75` provenance, not reopened; `F-MR-RR3-01`–
+  `F-MR-RR3-03`, `F-MR-RR2-02`, `F-MR-RR-05`, `F-MR-RR-07`, `F-MR-RR-08`,
+  `F-MR-IR-01`–`F-MR-IR-04` remain `OPEN / NON-BLOCKING` as previously
+  classified; `B-3` remains `UNRESOLVED`.
+- `F-MR-ARCH-06` remains `OPEN / DEFERRED`; Control Tower has now
+  additionally selected it as the scope of the next bounded milestone,
+  `SELECTED / NOT YET ARCHITECTURE-ADJUDICATED / NOT APPROVED FOR
+  IMPLEMENTATION`. This selection does not close, reopen, downgrade, or
+  adjudicate `F-MR-ARCH-06`, and does not itself perform the Architecture
+  gap review. See "Control Tower Live Verification — METRIC_RESULT
+  Retention v1 Runtime Closure Confirmed / METRIC_RESULT Unseen Transfer
+  Architecture Gap Review Selected" above (§4) for full reasoning and
+  future-review scope.
+- Repository mutation by this update is limited to
+  `LLE_CURRENT_STATE.md`; PostgreSQL/tests `NOT RUN`; no implementation
+  authorization; no P1 activation; no efficacy claim.
+
 ## 9. Lifecycle Non-Claims
 
 ### 9.1 Current Non-Claims (governing; as of this update)
@@ -5302,6 +5464,40 @@ remain true and are established in §4/§8 and elsewhere in this document:
   reconciliation. The governing lifecycle remains unchanged: `INDEPENDENT
   REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL
   17.10 VERIFIED / VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`
+
+- this record (Control Tower live verification / next-milestone
+  selection): live-verified, via `git fetch origin`, that the
+  METRIC_RESULT Retention v1 Runtime review-record and bounded lifecycle
+  closure (commit `c4e452d762d70fa57db61856b37b04a16d43df92`, subject
+  `Close METRIC_RESULT Retention runtime lifecycle`, parent
+  `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`) are exactly reflected on
+  live `origin/main`, with Backlog `1.75`, API `1.29`, Schema `1.8`, all
+  Runtime blobs, and validation-branch tip
+  `316df38ef03c5256fbdab598da0df73c3be4e7e0` unchanged, and worktree/
+  index clean. This does NOT reopen, close, or otherwise alter any
+  finding; the six closed findings (`F-MR-RR-01`, `F-MR-RR-02`,
+  `F-MR-RR-06`, `F-MR-RR-03`, `F-MR-RR-04`, `F-MR-RR2-01`) remain
+  `CLOSED`, all open findings remain `OPEN` exactly as classified, and
+  `B-3` remains `UNRESOLVED`. Control Tower then selected the next
+  measurement-first bounded milestone: `VI P1 Measurement Readiness —
+  METRIC_RESULT Unseen Transfer Architecture Gap Review (F-MR-ARCH-06)`,
+  classification `ARCHITECTURE / CONTRACT GAP REVIEW ONLY`, status
+  `SELECTED / NOT YET ARCHITECTURE-ADJUDICATED / NOT APPROVED FOR
+  IMPLEMENTATION` (see §4/§8 for full reasoning and future-review
+  scope). This selection does NOT reorder the approved P0 sequence and
+  does NOT start modality-state intervention, Lexico-Construction
+  intervention, mixed scheduler, bounded conversation, or AI audit. This
+  record performed no Architecture gap review itself, modified no
+  canonical document, Runtime source, test file, or the backlog, and did
+  not run PostgreSQL or tests; repository mutation is limited to
+  `LLE_CURRENT_STATE.md`. VI P1 Measurement Readiness overall complete,
+  `B-3` resolved, P1 eligible, P1 activated, human-data collection
+  authorized, efficacy verified, Actual-provider complete, audio
+  complete, GitHub Actions PASS, Validation Level 3 §10 overall PASS, and
+  Evidence Foundation overall complete all remain NOT CLAIMED; Unseen
+  Transfer Runtime remains `NOT IMPLEMENTED / DEFERRED`. The recorded
+  Next Action is now a fresh GPT-6 Astra Architecture read-only gap
+  review of `F-MR-ARCH-06` (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -5905,6 +6101,14 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Control Tower live verification of the METRIC_RESULT Retention Runtime
-  review-record and bounded lifecycle closure before selecting the next
-  milestone action.
+- Fresh GPT-6 Astra Architecture read-only gap review of
+  `F-MR-ARCH-06` / METRIC_RESULT Unseen Transfer against exact current
+  `origin/main`, API `1.29`, Schema `1.8`, Backlog `1.75`, VI empirical
+  evidence/pilot authorities, and existing Runtime source; the session
+  must: mutate repository = `0`; make no implementation changes; make no
+  canonical patch before user approval; return exact gap findings;
+  determine whether a Tier C patch is required; propose the smallest
+  exact contract scope if required; identify owner-value requirements;
+  identify migration/DDL requirements; define future acceptance
+  criteria; preserve Retention Runtime `CLOSED` state; preserve `B-3`
+  unresolved state; make no P1 activation or efficacy claim.
