@@ -6142,6 +6142,153 @@ RUN`). Repository mutation caused by this adjudication is limited to
 
 See §10.
 
+#### BIGINT Writer/Digest/Output Representation — D1–D5 User Approval Recorded / Canonical Patch Pending
+
+##### Preflight / Scope
+
+- This is a status/decision-sync record only. It records the user's
+  explicit approval of the revised BIGINT Writer/Digest/Output
+  Representation `D1`–`D5` canonical decisions. It does not create the
+  Tier C canonical patch, does not modify `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not modify Runtime source,
+  tests, migrations, DB artifacts, Tier A documents, or pilot documents,
+  does not authorize Development, does not implement the writer
+  correction, does not implement Unseen Transfer Runtime, and does not run
+  PostgreSQL or npm tests. Repository mutation caused by this record:
+  exactly `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before this
+  update: `main` / `origin/main`
+  `a4cbdadd045b16bd50416b190668490bbf458518`, tree
+  `b5b91b5e8e168164d4dfe6efd940035bc498160f`, parent
+  `7238feeb0168fd89973b92862536e94afd3d1bb9`, subject `Record BIGINT
+  canonical clarification requirement`; worktree/index clean, no untracked
+  files. Backlog revision `1.76` (blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`); API `1.30` (blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`); Schema `1.9` (blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`);
+  `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`);
+  `src/instrumentation/evidenceNormalization.js`
+  (`7a8ea912a2f5b5890a3f128a22dc50fbcaa32514`) confirmed exactly.
+
+##### Latest Explicit User Approval
+
+The user explicitly approved: "D1–D5 수정안 승인". This is now the
+highest-authority decision record for the four previously-unresolved WHAT
+decisions (A–D) and the historical-data policy boundary (D5) identified by
+the prior BIGINT Writer Source-Authority Correction-Design / Impact
+Analysis recorded above in this §4.
+
+##### D1 — Approved (Digest Semantic Representation)
+
+For assignment snapshot digest semantic content,
+`exposure_history_cutoff_ordinal` MUST be represented as an exact base-10
+decimal string (example semantic value: `"9007199254740993"`). JavaScript
+`Number` is prohibited. This approval applies to the assignment snapshot
+digest semantic payload.
+
+##### D2 — Approved (Normalization-Version / Backward-Compatibility Posture)
+
+The existing generic `evidence-semantic-v1` normalization-version
+identifier remains frozen and unchanged; it must NOT be globally
+redefined or globally replaced. Corrected assignment-snapshot digesting
+uses the exact canonical normalization-version identifier
+`evidence-assignment-snapshot-v2`. This exact literal is an approved
+canonical WHAT; it is NOT deferred to Development as implementation HOW.
+Scope: assignment snapshot digesting only; this does NOT globally replace
+the shared `NORMALIZATION_VERSION = 'evidence-semantic-v1'`, and does NOT
+silently change experiment/reference/other generic semantic digest
+domains. Historical assignment snapshots carrying `evidence-semantic-v1`
+remain authoritative under the original serialization rule and original
+persisted digest bytes; no automatic re-digest, rewrite, or backfill is
+authorized. Future corrected assignment snapshots use
+`evidence-assignment-snapshot-v2` with `D1`'s exact decimal-string cutoff
+representation.
+
+##### D3 — Approved (`createAssignment` Returned Snapshot Cutoff Representation)
+
+`createAssignment` returned `snapshot.exposure_history_cutoff_ordinal`
+MUST be an exact base-10 decimal string; never a JavaScript `Number`.
+
+##### D4 — Approved (`recordAssignmentItemExposure` Returned `exposureOrdinal` Representation)
+
+`recordAssignmentItemExposure` returned `exposureOrdinal` MUST be an
+exact base-10 decimal string; never a JavaScript `Number`. `D3` and `D4`
+intentionally use the same representation because they represent the
+same BIGINT ordinal domain.
+
+##### D5 — Approved (Historical-Data Policy Boundary)
+
+Historical data state remains `UNKNOWN / NOT INSPECTED`. No assumption is
+made that affected rows exist; no assumption is made that affected rows
+do not exist. No automatic rewrite/backfill is authorized. Canonical
+correction for future writes may proceed after the approved canonical
+documentation lifecycle is completed, independently of any
+historical-data inspection. Any historical-data assessment requires a
+separate explicit, privacy-safe authorization. If affected rows are later
+proven to exist, any remediation requires a separate correction-policy
+decision. This approval does NOT authorize learner-data inspection or
+mutation.
+
+##### Governing State After Approval
+
+`D1`–`D5` = `USER-APPROVED`. The prior decision gap `CANONICAL
+CLARIFICATION REQUIRED` is now resolved at the USER-DECISION level only.
+Canonical documents are NOT claimed to be already synchronized. Current
+governing readiness: `USER-APPROVED / CANONICAL PATCH PENDING /
+DEVELOPMENT NOT AUTHORIZED`. Runtime remains `NOT AUTHORIZED / NOT
+IMPLEMENTED / NOT VALIDATED`. The writer correction is NOT called
+`IMPLEMENTED`, `VALIDATED`, or `CLOSED`. Unseen Transfer Runtime is NOT
+called `IMPLEMENTED`, `VALIDATED`, or `CLOSED`.
+
+##### F-R02
+
+Foundation finding `F-R02` remains `OPEN / NON-BLOCKING`. The user
+decision needed to address `F-R02` now exists, but the corresponding
+canonical Tier C patch has not yet been created, independently reviewed,
+integrated, or review-recorded. This status-only record does not close or
+reclassify `F-R02`. No new finding ID is created by this record.
+
+##### Historical-Data Evidence Boundary
+
+No PostgreSQL or data inspection was authorized or performed by this
+record. Governing data state remains `UNKNOWN / NOT INSPECTED`, per `D5`.
+
+##### Preserved Governing State (Unchanged By This Approval Record)
+
+The bounded Unseen Transfer Tier C documentation lifecycle remains
+`REVIEW-RECORDED / CLOSED`, not reopened; this new BIGINT writer
+representation clarification is a new bounded canonical clarification
+lifecycle layered on top of it. `METRIC_RESULT` / Retention v1 Runtime
+remains `REVIEW-RECORDED / CLOSED`. P1 remains `NOT ACTIVATED`. Human-data
+collection remains `NOT AUTHORIZED`. Efficacy remains `NOT VERIFIED`.
+Existing Unseen open findings remain unchanged: `F-MR-UT-IR-07`,
+`F-MR-UT-IR-08`, `F-MR-UT-RR2-01`–`04`.
+
+##### Non-Claims
+
+This record does not mean: the Tier C canonical patch has been created —
+NOT CLAIMED; `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` patched — NOT CLAIMED (all
+unchanged); the writer correction implemented — NOT CLAIMED; Development
+authorized — NOT CLAIMED; Runtime authorized — NOT CLAIMED (`NOT
+AUTHORIZED`); Runtime implemented — NOT CLAIMED (`NOT IMPLEMENTED`);
+Runtime validated — NOT CLAIMED (`NOT VALIDATED`); Unseen Transfer Runtime
+implemented, validated, or closed — NOT CLAIMED; P1 activated — NOT
+CLAIMED (`NOT ACTIVATED`); human-data collection authorized — NOT CLAIMED
+(`NOT AUTHORIZED`); efficacy verified — NOT CLAIMED (`NOT VERIFIED`);
+`F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+NON-BLOCKING`); any historical-data fact established — NOT CLAIMED
+(`UNKNOWN / NOT INSPECTED`); the Unseen Transfer Tier C documentation
+lifecycle reopened — NOT CLAIMED (remains `CLOSED`); PostgreSQL or tests
+run — NOT CLAIMED (`NOT RUN`). Repository mutation caused by this record
+is limited to `LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -7278,6 +7425,55 @@ This bootstrap does not rerun PostgreSQL or tests.
   Clarification Required" for full detail; the sole Next Action is now a
   fresh Architecture BIGINT Writer/Digest/Output Representation Canonical
   Clarification Decision Packet (§10).
+- That fresh Architecture `BIGINT Writer/Digest/Output Representation
+  Canonical Clarification Decision Packet` preparation has since concluded
+  with the user's explicit approval: `D1–D5 수정안 승인`. `D1` (digest
+  semantic representation): `exposure_history_cutoff_ordinal` MUST be an
+  exact base-10 decimal string in assignment snapshot digest semantic
+  content; JavaScript `Number` prohibited. `D2` (normalization-version
+  posture): generic `evidence-semantic-v1` remains frozen and unchanged
+  (no global redefinition/replacement); corrected assignment-snapshot
+  digesting uses the exact canonical literal
+  `evidence-assignment-snapshot-v2`, scoped to assignment snapshot
+  digesting only; historical `evidence-semantic-v1` assignment snapshots
+  remain authoritative under original serialization/bytes; no automatic
+  re-digest/rewrite/backfill authorized. `D3`: `createAssignment` returned
+  `snapshot.exposure_history_cutoff_ordinal` MUST be an exact base-10
+  decimal string, never `Number`. `D4`: `recordAssignmentItemExposure`
+  returned `exposureOrdinal` MUST be an exact base-10 decimal string,
+  never `Number` (same BIGINT ordinal domain as `D3`). `D5`: historical
+  data state remains `UNKNOWN / NOT INSPECTED`; no assumption either way
+  on affected rows; no automatic rewrite/backfill; canonical correction
+  for future writes may proceed after the canonical documentation
+  lifecycle completes, independent of historical-data inspection; any
+  historical-data assessment requires separate explicit privacy-safe
+  authorization; this approval does NOT authorize learner-data inspection
+  or mutation. `D1`–`D5` = `USER-APPROVED`. Governing state:
+  `USER-APPROVED / CANONICAL PATCH PENDING / DEVELOPMENT NOT AUTHORIZED`.
+  Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`; the
+  writer correction is not called `IMPLEMENTED`/`VALIDATED`/`CLOSED`;
+  Unseen Transfer Runtime is not called
+  `IMPLEMENTED`/`VALIDATED`/`CLOSED`. Foundation finding `F-R02` remains
+  `OPEN / NON-BLOCKING`, not closed or reclassified — the user decision
+  now exists but the corresponding canonical Tier C patch has not yet been
+  created, independently reviewed, integrated, or review-recorded; no new
+  finding ID is created. The bounded Unseen Transfer Tier C
+  documentation-contract lifecycle remains `REVIEW-RECORDED / CLOSED`
+  (documentation-contract scope only, not reopened); this new BIGINT
+  writer representation clarification is a new bounded canonical
+  clarification lifecycle layered on top of it. `METRIC_RESULT` /
+  Retention v1 Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened.
+  P1 remains `NOT ACTIVATED`; human-data collection remains `NOT
+  AUTHORIZED`; efficacy remains `NOT VERIFIED`; historical data remains
+  `UNKNOWN / NOT INSPECTED`. Existing Unseen open findings remain
+  unchanged: `F-MR-UT-IR-07`, `F-MR-UT-IR-08`, `F-MR-UT-RR2-01`–`04`.
+  PostgreSQL/tests: `NOT RUN — STATUS / DECISION SYNC ONLY`. Repository
+  mutation by this record is limited to `LLE_CURRENT_STATE.md`. See §4
+  "BIGINT Writer/Digest/Output Representation — D1–D5 User Approval
+  Recorded / Canonical Patch Pending" for full detail; the sole Next
+  Action is now a fresh Architecture canonical Tier C patch candidate
+  preparation for the USER-APPROVED `D1`–`D5` decisions, classification
+  `ARCHITECTURE CANONICAL PATCH PREPARATION` (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8018,6 +8214,36 @@ remain true and are established in §4/§8 and elsewhere in this document:
   ADJUDICATION` (see §4/§8; the sole Next Action is now a fresh read-only
   BIGINT writer source-authority prerequisite correction-design / impact
   analysis, §10)
+
+- Since then: the user has explicitly approved the `D1`–`D5` decision
+  packet (`D1–D5 수정안 승인`) resolving decisions A–D and the
+  historical-data policy boundary: `D1` exact base-10 decimal string for
+  digest semantic `exposure_history_cutoff_ordinal`; `D2` exact canonical
+  literal `evidence-assignment-snapshot-v2` for corrected
+  assignment-snapshot digesting only, with generic `evidence-semantic-v1`
+  frozen/unchanged and no automatic re-digest/rewrite/backfill of
+  historical snapshots; `D3` exact base-10 decimal string for
+  `createAssignment`'s returned snapshot cutoff; `D4` exact base-10
+  decimal string for `recordAssignmentItemExposure`'s returned
+  `exposureOrdinal`; `D5` historical data remains `UNKNOWN / NOT
+  INSPECTED`, no assumption either way, no automatic remediation, future
+  canonical correction may proceed independent of historical-data
+  inspection, any historical-data assessment requires separate explicit
+  privacy-safe authorization. This does NOT mean: the Tier C canonical
+  patch has been created, applied, independently reviewed, or integrated
+  — NOT CLAIMED (all remain pending); `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` modified — NOT CLAIMED
+  (repository mutation by this update limited to
+  `LLE_CURRENT_STATE.md`); Development authorized — NOT CLAIMED; the
+  writer correction or Unseen Transfer Runtime implemented, validated, or
+  closed — NOT CLAIMED; `F-R02` closed or reclassified — NOT CLAIMED
+  (remains `OPEN / NON-BLOCKING`); any historical-data fact established —
+  NOT CLAIMED (`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run — NOT
+  CLAIMED (`NOT RUN`). Governing state is now `USER-APPROVED / CANONICAL
+  PATCH PENDING / DEVELOPMENT NOT AUTHORIZED` (see §4/§8; the sole Next
+  Action is now a fresh Architecture canonical Tier C patch candidate
+  preparation for the USER-APPROVED `D1`–`D5` decisions, §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -8770,38 +8996,64 @@ historical ledger does not.
   Representation Canonical Clarification Decision Packet, classification
   `READ-ONLY ARCHITECTURE DECISION PREPARATION`, future repository
   mutation `0` (§10)
+- the prior recorded Next Action ("A fresh Architecture `BIGINT
+  Writer/Digest/Output Representation Canonical Clarification Decision
+  Packet`...") has been fulfilled: the decision packet was prepared and
+  the user explicitly approved it in full (`D1–D5 수정안 승인`). `D1`–`D5`
+  = `USER-APPROVED` exactly as recorded in §4/§8. This status/
+  decision-sync record does not create the Tier C canonical patch, does
+  not modify `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, does not modify Runtime source/
+  tests/migrations/DB/Tier A/pilot documents, does not authorize
+  Development, does not implement the writer correction, does not
+  implement Unseen Transfer Runtime, and does not run PostgreSQL or npm
+  tests. Governing state: `USER-APPROVED / CANONICAL PATCH PENDING /
+  DEVELOPMENT NOT AUTHORIZED`. Runtime remains `NOT AUTHORIZED / NOT
+  IMPLEMENTED / NOT VALIDATED`. Foundation finding `F-R02` remains `OPEN /
+  NON-BLOCKING`, not closed or reclassified; no new finding ID is
+  created. Historical-data state remains `UNKNOWN / NOT INSPECTED`. The
+  bounded Unseen Transfer Tier C documentation-contract lifecycle remains
+  `REVIEW-RECORDED / CLOSED`, not reopened; `METRIC_RESULT` / Retention v1
+  Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened; P1 remains
+  `NOT ACTIVATED`; human-data collection remains `NOT AUTHORIZED`;
+  efficacy remains `NOT VERIFIED`; existing Unseen open findings remain
+  unchanged (`F-MR-UT-IR-07`, `F-MR-UT-IR-08`, `F-MR-UT-RR2-01`–`04`).
+  `API_CONTRACT.md` (`1.30`), `EVIDENCE_FOUNDATION_P0_SCHEMA.md` (`1.9`),
+  and `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (`1.76`) are unchanged by
+  this record. PostgreSQL/tests: `NOT RUN — STATUS / DECISION SYNC ONLY`.
+  Repository mutation by this record is limited to
+  `LLE_CURRENT_STATE.md`. See "BIGINT Writer/Digest/Output Representation
+  — D1–D5 User Approval Recorded / Canonical Patch Pending" above (§4)
+  for full detail; the sole Next Action is now a fresh Architecture
+  canonical Tier C patch candidate preparation for the USER-APPROVED
+  BIGINT Writer/Digest/Output Representation `D1`–`D5` decisions,
+  classification `ARCHITECTURE CANONICAL PATCH PREPARATION`, future
+  repository mutation `0` (§10)
 
 ## 10. Next Action
 
-- A fresh Architecture `BIGINT Writer/Digest/Output Representation
-  Canonical Clarification Decision Packet`, classification `READ-ONLY
-  ARCHITECTURE DECISION PREPARATION`, repository mutation `0`. This next
-  action: (1) must fresh-verify exact then-current `origin/main` (live
-  `git fetch origin`, exact branch/HEAD/tree/parent/subject and canonical
-  blob confirmation) before reading anything else; (2) must read current
-  `LLE_CURRENT_STATE.md`; `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision
-  `1.76` and `F-R02` provenance; `API_CONTRACT.md` §13.10.4 / §13.10.4.1 /
-  §13.10.11.1 / §13.10.11.3; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §5.9 and
-  its BIGINT-exactness clause; and
-  `src/instrumentation/evidenceNormalization.js` normalization semantics;
-  (3) must prepare, but NOT apply, an exact decision packet for: `D1`
-  canonical digest input representation for
-  `exposure_history_cutoff_ordinal`; `D2` normalization-version /
-  backward-compatibility rule; `D3` exact `createAssignment` returned
-  snapshot cutoff representation; `D4` exact
-  `recordAssignmentItemExposure` `exposureOrdinal` representation; `D5`
-  whether historical affected-row remediation remains a separate
-  conditional decision after evidence, with data state currently `UNKNOWN
-  / NOT INSPECTED`; (4) must present bounded options and implications for
-  each of `D1`–`D5`; (5) must distinguish mandatory WHAT decisions from
-  implementation HOW; (6) may recommend one option set but must NOT
-  silently approve it on behalf of the user; (7) must identify exact Tier
-  C documents/sections that would require patching after user approval;
-  (8) must NOT patch `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
-  or any other canonical document; (9) must NOT modify
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`; (10) must NOT authorize
-  Development, must NOT authorize or implement Unseen Transfer Runtime,
-  must NOT activate P1, and must NOT claim efficacy; and (11) must return
-  the completed decision packet to Control Tower/the user for explicit
-  approval — this next action does NOT itself decide `D1`–`D5`, does NOT
-  patch any canonical document, and does NOT authorize Development.
+- A fresh Architecture canonical Tier C patch candidate preparation for
+  the USER-APPROVED `BIGINT Writer/Digest/Output Representation` `D1`–`D5`
+  decisions, classification `ARCHITECTURE CANONICAL PATCH PREPARATION`.
+  This next action must: (1) fresh-verify exact then-current `origin/main`
+  (live `git fetch origin`, exact branch/HEAD/tree/parent/subject and
+  canonical blob confirmation) before reading or editing anything; (2)
+  create a validation branch only after that preflight passes; (3) patch
+  only the exact approved Tier C canonical documentation scope
+  (`API_CONTRACT.md` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, exactly as
+  required to encode `D1`–`D5`); (4) encode `D1`–`D5` exactly, without
+  changing any of the approved values; (5) pin the exact literal
+  `evidence-assignment-snapshot-v2` for corrected assignment-snapshot
+  digesting only; (6) keep the generic `evidence-semantic-v1`
+  normalization-version identifier unchanged, not globally redefined or
+  replaced; (7) preserve RAW_SOURCE `BIGINT -> exact base-10 decimal
+  string` projection semantics; (8) preserve historical-data state
+  `UNKNOWN / NOT INSPECTED` and authorize no automatic re-digest,
+  rewrite, or backfill; (9) NOT authorize Development; (10) NOT modify
+  Runtime source, tests, migrations, DB artifacts, Tier A documents, or
+  pilot documents; (11) prepare an independently reviewable documentation
+  candidate only, and NOT apply it to `main`; and (12) return exact
+  commit/tree/blob/diff evidence to Control Tower before any Independent
+  Review. This next action does NOT itself authorize Development, does
+  NOT implement the writer correction, and does NOT implement Unseen
+  Transfer Runtime.
