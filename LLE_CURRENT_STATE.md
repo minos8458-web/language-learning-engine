@@ -6624,6 +6624,150 @@ limited to `LLE_CURRENT_STATE.md` only.
 
 See §10.
 
+#### BIGINT Writer/Digest/Output Representation Tier C — Canonical Main Integration Complete / Review-Record Pending
+
+##### Preflight / Scope
+
+- This is a status-only sync record documenting completion of the
+  documentation-only main integration of the already-reviewed BIGINT
+  Writer/Digest/Output Representation Tier C candidate. It does not
+  create the review-record, does not modify
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, Runtime source, tests, or
+  migrations, does not mutate PostgreSQL, does not authorize
+  Development, does not implement the writer correction, does not
+  implement Unseen Transfer Runtime, does not close `F-R02` or
+  `F-BIGINT-IR-01`–`03`, and does not declare this lifecycle `CLOSED`.
+  Repository mutation caused by this record: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before
+  this update: `main` / `origin/main`
+  `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5`, tree
+  `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`, parent
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, subject `Clarify BIGINT
+  writer digest output contract`; worktree/index clean, no untracked
+  files. Current State blob `2e5cedaf08eb8394e5866b4f9145558ef37c2a75`;
+  Backlog blob `746b8d687fe681c0b7908450133cf2d0d79ea012` (revision
+  `1.76`); `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`);
+  `src/instrumentation/evidenceNormalization.js`
+  (`7a8ea912a2f5b5890a3f128a22dc50fbcaa32514`) confirmed exactly. Remote
+  validation branch
+  `origin/validation/bigint-writer-digest-output-tierc-20260912`
+  fresh-verified still at exactly
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`.
+
+##### Completed Main Integration (Exact)
+
+- Reviewed candidate: `1350884a1b7b40f6b715c1a2867998de142c2f40`, parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`, validation branch
+  `validation/bigint-writer-digest-output-tierc-20260912`.
+- Independent Review authority: evidence gate `12/12 PASS`; correction
+  required `NO`; owner value required `NO`; final verdict `APPROVE WITH
+  NON-BLOCKING NOTES`; main-integration eligibility `ELIGIBLE`; Control
+  Tower adjudication `REVIEW VERDICT ACCEPTED`.
+- Pre-integration main: `c768d3cba1cc930c8465aae1078c927d0bc552d5`.
+- Integration method: ordinary `git cherry-pick
+  1350884a1b7b40f6b715c1a2867998de142c2f40` onto that exact
+  pre-integration main. No conflict; no manual resolution; no squash; no
+  amend; no rebase; no force-push; no manual reconstruction of the
+  candidate.
+- `INTEGRATION_COMMIT`: `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5`
+- `INTEGRATION_PARENT`: `c768d3cba1cc930c8465aae1078c927d0bc552d5`
+  (exactly the pre-integration main tip)
+- `INTEGRATION_TREE`: `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`
+- Integration subject: `Clarify BIGINT writer digest output contract`
+  (unchanged from the reviewed candidate)
+- Exact changed files in the integration commit, relative to its parent:
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`. No other file.
+- Canonical `main` blobs after integration: `API_CONTRACT.md` =
+  `e60afa6bda3356051c24b36a823fb325761b9b42` (revision `1.31`);
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `de244476e56dfcab59dcd899a25091a2b1452e31` (revision `1.10`).
+- Byte equivalence to the reviewed candidate blobs: `CONFIRMED`.
+- Exact integration diff: `API_CONTRACT.md` +5/-0;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` +37/-0; total 2 files changed, 42
+  insertions, 0 deletions — identical to the reviewed candidate's own
+  diff against its parent.
+- Post-integration documentation/static verification: `COMPLETED`.
+  `git diff --check` (`INTEGRATION_PARENT`..`INTEGRATION_COMMIT`):
+  `PASS`. Zero deletions confirms no interference with any pre-existing
+  RAW_SOURCE/Retention v1/Unseen Transfer/physical-schema section.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Runtime/npm
+  tests: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Neither is called
+  `PASS`.
+- Push: ordinary `git push origin main`, no force. Post-push:
+  local `HEAD` == `origin/main` == `INTEGRATION_COMMIT`; ahead/behind
+  `0/0`; validation branch not pushed to or mutated, remaining exactly
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`.
+
+##### Governing State
+
+`D1`–`D5` remain `USER-APPROVED`. Canonical `main` API revision is now
+`1.31`; canonical `main` Schema revision is now `1.10`. Bounded
+documentation lifecycle state is now: `USER-APPROVED / INDEPENDENTLY
+REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
+POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORD PENDING /
+DEVELOPMENT NOT AUTHORIZED`. This is NOT `CLOSED`. Main integration is
+`COMPLETE`. The review-record in
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` is `NOT YET CREATED`. This
+lifecycle is `NOT CLOSED`.
+
+##### Findings
+
+`F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03` all remain `NOTE /
+OPEN / NON-BLOCKING`; none is closed, corrected, or reclassified by this
+integration. No new finding ID is created by this record.
+
+##### F-R02
+
+Foundation finding `F-R02` remains `OPEN / NON-BLOCKING`. This
+integration record does not close or reclassify `F-R02`. The candidate
+being integrated to `main` does not establish Runtime correction or
+Runtime validation.
+
+##### Historical-Data Evidence Boundary
+
+No PostgreSQL or data inspection was authorized or performed by this
+record or by the integration itself. Governing data state remains
+`UNKNOWN / NOT INSPECTED`, per `D5`.
+
+##### Preserved Governing State (Unchanged By This Record)
+
+The bounded Unseen Transfer Tier C documentation lifecycle remains
+`REVIEW-RECORDED / CLOSED`, not reopened. `METRIC_RESULT` / Retention v1
+Runtime remains `REVIEW-RECORDED / CLOSED`. P1 remains `NOT ACTIVATED`.
+Human-data collection remains `NOT AUTHORIZED`. Efficacy remains `NOT
+VERIFIED`. Historical data remains `UNKNOWN / NOT INSPECTED`. Existing
+Unseen open findings remain unchanged: `F-MR-UT-IR-07`, `F-MR-UT-IR-08`,
+`F-MR-UT-RR2-01`–`04`. Development authorization remains `NO`. Writer
+correction remains `NOT IMPLEMENTED / NOT VALIDATED`. Unseen Transfer
+Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`.
+
+##### Non-Claims
+
+This record does not mean: the review-record has been created — NOT
+CLAIMED (`NOT YET CREATED`); this lifecycle is `CLOSED` — NOT CLAIMED
+(`NOT CLOSED`); `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+`API_CONTRACT.md`, or `EVIDENCE_FOUNDATION_P0_SCHEMA.md` modified by
+this record — NOT CLAIMED (all unchanged by this status-sync;
+`API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md` were modified only
+by the separate integration commit `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5`
+recorded above); Development authorized — NOT CLAIMED; the writer
+correction implemented or validated — NOT CLAIMED; Unseen Transfer
+Runtime implemented, validated, or closed — NOT CLAIMED; `F-R02` closed
+or reclassified — NOT CLAIMED (remains `OPEN / NON-BLOCKING`);
+`F-BIGINT-IR-01`/`02`/`03` closed — NOT CLAIMED (all remain `OPEN NOTE /
+NON-BLOCKING`); any historical-data fact established — NOT CLAIMED
+(`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run — NOT CLAIMED (`NOT
+RUN`). Repository mutation caused by this record is limited to
+`LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -7849,6 +7993,35 @@ This bootstrap does not rerun PostgreSQL or tests.
   Complete / APPROVE WITH NON-BLOCKING NOTES / Main Integration
   ELIGIBLE" for full detail; the sole Next Action is now the
   documentation-only main integration of the reviewed candidate (§10).
+- Since then: the documentation-only main integration of the reviewed
+  BIGINT Writer/Digest/Output Representation Tier C candidate has
+  completed. Ordinary `git cherry-pick` of reviewed candidate
+  `1350884a1b7b40f6b715c1a2867998de142c2f40` onto pre-integration main
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5` produced integration commit
+  `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5` (parent
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, tree
+  `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`, subject `Clarify BIGINT
+  writer digest output contract`) with no conflict and no manual
+  resolution. Exact changed files `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` only; canonical blobs
+  `e60afa6bda3356051c24b36a823fb325761b9b42` (API `1.31`) and
+  `de244476e56dfcab59dcd899a25091a2b1452e31` (Schema `1.10`), byte-equivalent to
+  the reviewed candidate; diff exactly `+42/-0` across those two files;
+  `git diff --check` `PASS`. Pushed to `origin/main` with no force; post-push
+  `HEAD`/`origin/main` equal, ahead/behind `0/0`; validation branch
+  untouched at `1350884a1b7b40f6b715c1a2867998de142c2f40`. PostgreSQL
+  `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`; Runtime/npm tests `NOT RUN
+  — DOCUMENTATION-ONLY INTEGRATION`. `F-BIGINT-IR-01`–`03` remain `NOTE /
+  OPEN / NON-BLOCKING`; `F-R02` remains `OPEN / NON-BLOCKING`; none
+  closed by this integration. Development authorization remains `NO`.
+  Bounded lifecycle state is now `USER-APPROVED / INDEPENDENTLY REVIEWED
+  — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN /
+  POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORD PENDING
+  / DEVELOPMENT NOT AUTHORIZED` — explicitly `NOT CLOSED`. See §4
+  "BIGINT Writer/Digest/Output Representation Tier C — Canonical Main
+  Integration Complete / Review-Record Pending" for full detail; the
+  sole Next Action is now the bounded documentation review-record in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8668,6 +8841,31 @@ remain true and are established in §4/§8 and elsewhere in this document:
   sole Next Action is now the documentation-only main integration of the
   reviewed candidate, §10)
 
+- Since then: the documentation-only main integration of the reviewed
+  BIGINT Writer/Digest/Output Representation Tier C candidate
+  (`1350884a1b7b40f6b715c1a2867998de142c2f40`) has completed via ordinary
+  cherry-pick onto pre-integration main
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, producing integration
+  commit `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5` with byte-equivalent
+  canonical blobs (API `e60afa6bda3356051c24b36a823fb325761b9b42` = `1.31`;
+  Schema `de244476e56dfcab59dcd899a25091a2b1452e31` = `1.10`), no
+  conflict, `git diff --check` `PASS`, and a clean push to `origin/main`
+  (ahead/behind `0/0`). This does NOT mean: the review-record has been
+  created — NOT CLAIMED (`NOT YET CREATED`); this lifecycle is `CLOSED`
+  — NOT CLAIMED (`NOT CLOSED`); Development authorized — NOT CLAIMED;
+  the writer correction or Unseen Transfer Runtime implemented,
+  validated, or closed — NOT CLAIMED; `F-R02` closed or reclassified —
+  NOT CLAIMED (remains `OPEN / NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03`
+  closed — NOT CLAIMED (all remain `OPEN NOTE / NON-BLOCKING`); any
+  historical-data fact established — NOT CLAIMED (`UNKNOWN / NOT
+  INSPECTED`); PostgreSQL or tests run — NOT CLAIMED (`NOT RUN`).
+  Governing state is now `USER-APPROVED / INDEPENDENTLY REVIEWED —
+  APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORD PENDING / DEVELOPMENT
+  NOT AUTHORIZED` (see §4/§8; the sole Next Action is now the bounded
+  documentation review-record in `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+  §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -9455,41 +9653,36 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Validation/Integration main integration of the exact reviewed BIGINT
-  Writer/Digest/Output Representation Tier C documentation candidate,
-  classification `DOCUMENTATION-ONLY MAIN INTEGRATION`. Target: exact
-  reviewed candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40`
-  from validation branch
-  `validation/bigint-writer-digest-output-tierc-20260912`, exact parent
-  `b486c3cd1e36faa492f627dd4439708562913c65`. This next action must: (1)
-  fresh-fetch `origin`; (2) verify the exact then-current `main` after
-  this review-status sync; (3) verify the candidate ref remains exactly
-  `1350884a1b7b40f6b715c1a2867998de142c2f40`; (4) verify the reviewed
-  candidate tree/blobs are unchanged (tree
-  `14d12e1884f093c772bde880a2beedfc831f872b`; `API_CONTRACT.md` =
-  `e60afa6bda3356051c24b36a823fb325761b9b42`;
+- Create the bounded BIGINT Writer/Digest/Output Representation Tier C
+  documentation review-record in
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, classification
+  `DOCUMENTATION REVIEW-RECORD`. This next action must: fresh-verify the
+  exact then-current `origin/main` after this status-sync; modify
+  exactly `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (not Current State in
+  the review-record step itself); record the user-approved `D1`–`D5`
+  decisions; record the reviewed candidate's exact commit
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`, parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`, and blobs
+  (`API_CONTRACT.md` = `e60afa6bda3356051c24b36a823fb325761b9b42`;
   `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
-  `de244476e56dfcab59dcd899a25091a2b1452e31`); (5) verify the review
-  verdict recorded as `APPROVE WITH NON-BLOCKING NOTES` / eligibility
-  `ELIGIBLE` / correction required `NO`; (6) cherry-pick exactly
-  candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40` onto the
-  exact then-current `main`; (7) no squash, amend, rebase, or
-  force-push; (8) if conflict or any ref mismatch, STOP as `BLOCKED`;
-  (9) post-integration verify the changed canonical files from the
-  cherry-pick are exactly `API_CONTRACT.md` and
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`; (10) verify resulting canonical
-  content is byte-equivalent to the reviewed candidate blobs (API
-  `e60afa6bda3356051c24b36a823fb325761b9b42`; Schema
-  `de244476e56dfcab59dcd899a25091a2b1452e31`); (11) run
-  documentation/static checks only (`git diff --check`, object/blob/tree
-  verification); (12) PostgreSQL `NOT RUN — DOCUMENTATION-ONLY
-  INTEGRATION`; (13) Runtime/npm tests `NOT RUN — DOCUMENTATION-ONLY
-  INTEGRATION`; (14) do NOT call either `PASS`; (15) do NOT authorize
-  Development; (16) do NOT implement the writer correction; (17) do NOT
-  implement Unseen Transfer Runtime; (18) preserve historical data
-  `UNKNOWN / NOT INSPECTED`; (19) preserve `F-R02` `OPEN /
-  NON-BLOCKING`; and (20) return the exact integration
-  commit/parent/tree/blobs and post-push remote evidence to Control
-  Tower. This status-sync record does NOT itself perform the
-  integration, does NOT authorize Development, does NOT implement the
-  writer correction, and does NOT implement Unseen Transfer Runtime.
+  `de244476e56dfcab59dcd899a25091a2b1452e31`) with revisions API `1.31` /
+  Schema `1.10`; record the Independent Review outcome `APPROVE WITH
+  NON-BLOCKING NOTES` / eligibility `ELIGIBLE` / correction required
+  `NO`; record `F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03` as
+  `NOTE / OPEN / NON-BLOCKING`; record the exact main-integration commit
+  `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5` (parent
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, tree
+  `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`); record canonical `main`
+  API `1.31` / Schema `1.10`; record that documentation/static
+  verification was completed and that PostgreSQL and Runtime/npm tests
+  were `NOT RUN`; preserve `F-R02` `OPEN / NON-BLOCKING`; preserve
+  historical data `UNKNOWN / NOT INSPECTED`; preserve Development
+  authorization `NO`; not authorize or implement any Runtime; and not
+  close this lifecycle by itself — closure requires a later Current
+  State closure-sync step that verifies the review-record commit. That
+  future review-record step must return exact commit/tree/blob evidence
+  to Control Tower. This status-sync record does NOT itself perform the
+  review-record, does NOT authorize Development, does NOT implement the
+  writer correction, does NOT implement Unseen Transfer Runtime, and
+  does NOT declare this lifecycle `CLOSED`.
