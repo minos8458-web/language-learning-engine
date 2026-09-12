@@ -6768,6 +6768,172 @@ RUN`). Repository mutation caused by this record is limited to
 
 See §10.
 
+#### BIGINT Writer/Digest/Output Representation Tier C — Review-Recorded / Bounded Documentation Lifecycle CLOSED
+
+##### Preflight / Scope
+
+- Classification: `DOCUMENTATION LIFECYCLE CLOSURE-SYNC`. This is a
+  status-only sync record closing ONLY the bounded BIGINT
+  Writer/Digest/Output Representation Tier C documentation-clarification
+  lifecycle, after verifying the exact review-record now exists on
+  `main`. It does not modify `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+  `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, Runtime source,
+  tests, or migrations, does not mutate PostgreSQL, does not inspect
+  historical learner/human data, does not implement the writer
+  correction, does not implement Unseen Transfer Runtime, does not close
+  `F-R02` or `F-BIGINT-IR-01`–`03`, and does not claim P1 activation,
+  human-data authorization, efficacy, actual-provider/audio completion,
+  VL3 §10 overall PASS, or Evidence Foundation overall completion.
+  Repository mutation caused by this record: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before
+  this update: `main` / `origin/main`
+  `623eaf94328a5145adf62aaff52c6b23689d4efe`, tree
+  `920a9e7b36ce70b773d94d63977687de6c106e14`, parent
+  `475d9b8a465b55a4d7d6b83a0433ee7749d40ddf`, subject `Record BIGINT
+  Tier C documentation review-record`; worktree/index clean, no
+  untracked files. Current State blob
+  `d0a8e811bc6a5e51e9e815dc830227c2809c90d5`;
+  `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`);
+  `src/instrumentation/evidenceNormalization.js`
+  (`7a8ea912a2f5b5890a3f128a22dc50fbcaa32514`) confirmed exactly. Remote
+  validation branch
+  `origin/validation/bigint-writer-digest-output-tierc-20260912`
+  fresh-verified still at exactly
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`.
+
+##### Review-Record Verified (Exact)
+
+- Review-record commit: `623eaf94328a5145adf62aaff52c6b23689d4efe`
+  (parent `475d9b8a465b55a4d7d6b83a0433ee7749d40ddf`, tree
+  `920a9e7b36ce70b773d94d63977687de6c106e14`, subject `Record BIGINT
+  Tier C documentation review-record`).
+- Exact changed path in the review-record commit: exactly
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, no other file.
+- Resulting Backlog blob: `f6c5119b78c5c460a5c3b821630599bd33225461`;
+  revision `1.77` present exactly once; prior revision `1.76` preserved
+  byte-identically as historical record (the review-record diff was
+  purely additive, `+1/-0`, zero deletions).
+- Verified the `1.77` row explicitly contains: user-approved `D1`–`D5`;
+  exact candidate provenance
+  (`1350884a1b7b40f6b715c1a2867998de142c2f40`, parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`, blobs, `+42/-0`); the
+  fresh Independent Review outcome (evidence gate `12/12 PASS`,
+  correction required `NO`, owner value required `NO`, final verdict
+  `APPROVE WITH NON-BLOCKING NOTES`, main-integration eligibility
+  `ELIGIBLE`, Control Tower `REVIEW VERDICT ACCEPTED`); `F-BIGINT-IR-01`–
+  `03` as `NOTE / OPEN / NON-BLOCKING` (finding totals
+  `0`/`0`/`0`/`0`/`3`); the exact main-integration commit
+  `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5`; canonical `main` API
+  `1.31` / Schema `1.10`; documentation/static verification `PASS`;
+  PostgreSQL `NOT RUN`; Runtime/npm tests `NOT RUN`; `F-R02` `OPEN /
+  NON-BLOCKING`; historical data `UNKNOWN / NOT INSPECTED`; Development
+  authorization `NO`; and, prior to this closure-sync, an explicit
+  `THIS IS NOT CLOSED YET` statement naming exactly one remaining
+  lifecycle action — this separate `LLE_CURRENT_STATE.md` closure-sync.
+
+##### Candidate / Integration / Canonical Evidence (Re-Confirmed)
+
+- Reviewed candidate: `1350884a1b7b40f6b715c1a2867998de142c2f40`, parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`, validation branch
+  `validation/bigint-writer-digest-output-tierc-20260912` — confirmed
+  still exactly this tip; not mutated by this closure-sync.
+- Integration commit `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5` (parent
+  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, tree
+  `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`, subject `Clarify BIGINT
+  writer digest output contract`), ordinary conflict-free cherry-pick,
+  no squash/amend/rebase/force-push/manual reconstruction.
+- Canonical `main` blobs: `API_CONTRACT.md` =
+  `e60afa6bda3356051c24b36a823fb325761b9b42` (revision `1.31`);
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `de244476e56dfcab59dcd899a25091a2b1452e31` (revision `1.10`). Byte
+  equivalence to the reviewed candidate: `CONFIRMED`.
+- Post-integration documentation/static verification: `PASS`.
+  PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Runtime/npm
+  tests: `NOT RUN — DOCUMENTATION-ONLY INTEGRATION`. Neither `NOT RUN`
+  is reinterpreted as `PASS`.
+
+##### Closure Declared
+
+Because every preflight gate above passed, the bounded BIGINT
+Writer/Digest/Output Representation Tier C documentation-clarification
+lifecycle is now: `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE
+WITH NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED`. This `CLOSED`
+state applies ONLY to this bounded documentation-clarification
+lifecycle. It does NOT mean any Runtime correction is implemented or
+validated, and it does NOT authorize Development by itself — see
+§10 for the Control-Tower-verification-gated next action.
+
+##### Findings — Not Closed By This Record
+
+`F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03` remain `NOTE / OPEN
+/ NON-BLOCKING`; none is closed, corrected, or reclassified by this
+closure-sync.
+
+##### F-R02 — Remains OPEN / NON-BLOCKING
+
+Foundation finding `F-R02` remains `OPEN / NON-BLOCKING`. This closure
+record does not close or reclassify `F-R02`. Reason recorded explicitly:
+the canonical representation/source-authority WHAT is now approved,
+reviewed, integrated, and review-recorded, but the Runtime writer still
+carries the pre-existing PostgreSQL `BIGINT` → JavaScript `Number`
+precision defect (`src/instrumentation/evidenceRepository.js`
+`Number(cutoffRows[0].cutoff)` / `Number(exposureRow.exposure_ordinal)`),
+and the approved writer correction has NOT been implemented or
+validated.
+
+##### Development Authorization Boundary
+
+At the start of this closure-sync, Development authorization was `NO`.
+This closure-sync commit does not implement Runtime, does not start
+Development, and does not change writer-correction state to
+`IMPLEMENTED`. Development remains `NOT STARTED`. Only after Control
+Tower independently verifies this closure-sync commit may Control Tower
+issue the bounded Development execution packet named in §10.
+
+##### Preserved Nonclaims
+
+Writer correction remains `NOT IMPLEMENTED / NOT VALIDATED`. Unseen
+Transfer Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+VALIDATED`. Historical data remains `UNKNOWN / NOT INSPECTED` — no
+historical learner-data inspection or remediation is authorized. P1
+remains `NOT ACTIVATED`. Human-data collection remains `NOT
+AUTHORIZED`. Efficacy remains `NOT VERIFIED`. Actual-provider work
+remains `NOT COMPLETE`. Audio work remains `NOT COMPLETE`. VL3 §10
+overall is `NOT CLAIMED PASS`. Evidence Foundation overall is `NOT
+CLAIMED COMPLETE`. `B-3` remains `UNRESOLVED`. The bounded Unseen
+Transfer prior Tier C documentation lifecycle remains `REVIEW-RECORDED
+/ CLOSED`, not reopened. `METRIC_RESULT` / Retention v1 Runtime remains
+`REVIEW-RECORDED / CLOSED`, not reopened.
+
+##### Non-Claims
+
+This record does not mean: any Runtime correction is implemented or
+validated — NOT CLAIMED; Development has started — NOT CLAIMED (`NOT
+STARTED`); `F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN
+/ NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed — NOT CLAIMED (all
+remain `NOTE / OPEN / NON-BLOCKING`); Unseen Transfer Runtime
+implemented, validated, or closed — NOT CLAIMED; P1 activated — NOT
+CLAIMED; human-data collection authorized — NOT CLAIMED; efficacy
+verified — NOT CLAIMED; actual-provider or audio work complete — NOT
+CLAIMED; VL3 §10 overall PASS — NOT CLAIMED; Evidence Foundation
+overall completion — NOT CLAIMED; `B-3` resolved — NOT CLAIMED; any
+historical-data fact established — NOT CLAIMED (`UNKNOWN / NOT
+INSPECTED`); PostgreSQL or tests run for this closure-sync — NOT
+CLAIMED (`NOT RUN — STATUS / CLOSURE SYNC ONLY`); earlier lifecycle
+records rewritten to look retrospectively closed at earlier times — NOT
+CLAIMED (§9.2 historical ledger preserved verbatim). Repository
+mutation caused by this record is limited to `LLE_CURRENT_STATE.md`
+only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -8022,6 +8188,34 @@ This bootstrap does not rerun PostgreSQL or tests.
   Integration Complete / Review-Record Pending" for full detail; the
   sole Next Action is now the bounded documentation review-record in
   `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (§10).
+- Since then: the bounded documentation review-record was created and
+  verified — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`
+  (blob `f6c5119b78c5c460a5c3b821630599bd33225461`), review-record
+  commit `623eaf94328a5145adf62aaff52c6b23689d4efe` (parent
+  `475d9b8a465b55a4d7d6b83a0433ee7749d40ddf`), exact changed path
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, purely additive `+1/-0`
+  with prior revision `1.76` preserved byte-identically — and this
+  status-only closure-sync now declares the bounded BIGINT
+  Writer/Digest/Output Representation Tier C documentation-clarification
+  lifecycle `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH
+  NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED`. This
+  `CLOSED` state is bounded strictly to the documentation-clarification
+  lifecycle. `F-BIGINT-IR-01`–`03` remain `NOTE / OPEN / NON-BLOCKING`;
+  `F-R02` remains `OPEN / NON-BLOCKING` because the canonical WHAT is
+  now approved/reviewed/integrated/review-recorded but the Runtime
+  writer's pre-existing BIGINT→`Number` precision defect has not been
+  corrected or validated. Writer correction remains `NOT IMPLEMENTED /
+  NOT VALIDATED`; Unseen Transfer Runtime remains `NOT AUTHORIZED / NOT
+  IMPLEMENTED / NOT VALIDATED`; historical data remains `UNKNOWN / NOT
+  INSPECTED`; Development authorization remains `NO`; Development
+  remains `NOT STARTED`. PostgreSQL/tests for this closure-sync: `NOT
+  RUN — STATUS / CLOSURE SYNC ONLY`. See §4 "BIGINT Writer/Digest/Output
+  Representation Tier C — Review-Recorded / Bounded Documentation
+  Lifecycle CLOSED" for full detail; the sole Next Action is now a
+  Control-Tower-verification-gated bounded Development implementation
+  candidate for the approved BIGINT Writer Source-Authority Prerequisite
+  Correction (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8866,6 +9060,38 @@ remain true and are established in §4/§8 and elsewhere in this document:
   documentation review-record in `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
   §10)
 
+- Since then: the bounded documentation review-record
+  (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`, blob
+  `f6c5119b78c5c460a5c3b821630599bd33225461`, commit
+  `623eaf94328a5145adf62aaff52c6b23689d4efe`) has been verified, and this
+  status-only closure-sync declares the bounded BIGINT
+  Writer/Digest/Output Representation Tier C documentation-clarification
+  lifecycle `USER-APPROVED / INDEPENDENTLY REVIEWED — APPROVE WITH
+  NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED`. This does
+  NOT mean: any Runtime correction implemented or validated — NOT
+  CLAIMED; Development started — NOT CLAIMED (`NOT STARTED`); `F-R02`
+  closed or reclassified — NOT CLAIMED (remains `OPEN /
+  NON-BLOCKING`, because the canonical WHAT is now settled but the
+  Runtime writer's pre-existing BIGINT→`Number` precision defect has not
+  been corrected or validated); `F-BIGINT-IR-01`/`02`/`03` closed — NOT
+  CLAIMED (all remain `NOTE / OPEN / NON-BLOCKING`); Unseen Transfer
+  Runtime implemented, validated, or closed — NOT CLAIMED; P1 activated
+  — NOT CLAIMED; human-data collection authorized — NOT CLAIMED;
+  efficacy verified — NOT CLAIMED; actual-provider/audio work complete
+  — NOT CLAIMED; VL3 §10 overall PASS — NOT CLAIMED; Evidence Foundation
+  overall completion — NOT CLAIMED; `B-3` resolved — NOT CLAIMED; any
+  historical-data fact established — NOT CLAIMED (`UNKNOWN / NOT
+  INSPECTED`); PostgreSQL or tests run for this closure-sync — NOT
+  CLAIMED (`NOT RUN`). Governing state is now `USER-APPROVED /
+  INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL
+  ON MAIN / POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED /
+  REVIEW-RECORDED / CLOSED (bounded to this documentation-clarification
+  lifecycle only) / DEVELOPMENT NOT AUTHORIZED` (see §4/§8; the sole
+  Next Action is now a Control-Tower-verification-gated bounded
+  Development implementation candidate for the approved BIGINT Writer
+  Source-Authority Prerequisite Correction, §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -9653,36 +9879,30 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- Create the bounded BIGINT Writer/Digest/Output Representation Tier C
-  documentation review-record in
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md`, classification
-  `DOCUMENTATION REVIEW-RECORD`. This next action must: fresh-verify the
-  exact then-current `origin/main` after this status-sync; modify
-  exactly `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (not Current State in
-  the review-record step itself); record the user-approved `D1`–`D5`
-  decisions; record the reviewed candidate's exact commit
-  `1350884a1b7b40f6b715c1a2867998de142c2f40`, parent
-  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
-  `14d12e1884f093c772bde880a2beedfc831f872b`, and blobs
-  (`API_CONTRACT.md` = `e60afa6bda3356051c24b36a823fb325761b9b42`;
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
-  `de244476e56dfcab59dcd899a25091a2b1452e31`) with revisions API `1.31` /
-  Schema `1.10`; record the Independent Review outcome `APPROVE WITH
-  NON-BLOCKING NOTES` / eligibility `ELIGIBLE` / correction required
-  `NO`; record `F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03` as
-  `NOTE / OPEN / NON-BLOCKING`; record the exact main-integration commit
-  `a8fc4d072bc1c3e070e0828794838db8e4c5d0c5` (parent
-  `c768d3cba1cc930c8465aae1078c927d0bc552d5`, tree
-  `1f1ce4e91b52e4bfe7331746e088feb1551d1e51`); record canonical `main`
-  API `1.31` / Schema `1.10`; record that documentation/static
-  verification was completed and that PostgreSQL and Runtime/npm tests
-  were `NOT RUN`; preserve `F-R02` `OPEN / NON-BLOCKING`; preserve
-  historical data `UNKNOWN / NOT INSPECTED`; preserve Development
-  authorization `NO`; not authorize or implement any Runtime; and not
-  close this lifecycle by itself — closure requires a later Current
-  State closure-sync step that verifies the review-record commit. That
-  future review-record step must return exact commit/tree/blob evidence
-  to Control Tower. This status-sync record does NOT itself perform the
-  review-record, does NOT authorize Development, does NOT implement the
-  writer correction, does NOT implement Unseen Transfer Runtime, and
-  does NOT declare this lifecycle `CLOSED`.
+- After Control Tower verifies this closure-sync commit, start a fresh,
+  bounded Development implementation candidate for the approved BIGINT
+  Writer Source-Authority Prerequisite Correction, classification
+  `RUNTIME PREREQUISITE IMPLEMENTATION CANDIDATE`. This is NOT the
+  Unseen Transfer reader/reducer implementation. The future Development
+  task must be limited to implementing the already-approved `D1`–`D5`
+  writer/normalization/output contract and its focused regression
+  coverage. That future Development task must: fresh-verify the exact
+  then-current `main` and source/test blobs; create a dedicated
+  validation branch; preserve generic `evidence-semantic-v1`; implement
+  assignment-snapshot-specific `evidence-assignment-snapshot-v2`; remove
+  JavaScript `Number` authority from the affected BIGINT writer/output
+  paths (`snapshot.exposure_history_cutoff_ordinal`, `exposureOrdinal`,
+  and the assignment-snapshot digest semantic payload); preserve the
+  PostgreSQL `BIGINT` physical schema (no migration/DDL); include exact
+  `> Number.MAX_SAFE_INTEGER` regression coverage; preserve historical
+  data `UNKNOWN / NOT INSPECTED` and perform no automatic historical
+  re-digest/rewrite/backfill; not implement Unseen Transfer
+  query/reducer Runtime; not activate P1; not authorize human-data
+  collection; not self-declare `VALIDATED` or `CLOSED`; and return exact
+  implementation commit/tree/blob/test evidence to Control Tower.
+  Development remains `NOT STARTED` until Control Tower independently
+  verifies this closure-sync and issues the bounded Development
+  execution packet. This status-sync record does NOT itself implement
+  Runtime, does NOT start Development, does NOT change writer-correction
+  state to `IMPLEMENTED`, and does NOT authorize or implement Unseen
+  Transfer Runtime.
