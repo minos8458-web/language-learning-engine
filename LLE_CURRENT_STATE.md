@@ -6289,6 +6289,160 @@ is limited to `LLE_CURRENT_STATE.md` only.
 
 See §10.
 
+#### BIGINT Writer/Digest/Output Representation Tier C — Documentation Candidate Prepared / Pending Fresh Independent Review
+
+##### Preflight / Scope
+
+- This is a status-only sync record documenting completion of the
+  Architecture bounded Tier C canonical documentation patch authoring for
+  the USER-APPROVED `D1`–`D5` decisions. It does not perform Independent
+  Review, does not integrate/cherry-pick the candidate to `main`, does not
+  authorize Development, does not implement the writer correction, does
+  not implement Unseen Transfer Runtime, and does not run PostgreSQL or
+  npm tests. Repository mutation caused by this record: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before this
+  update: `main` / `origin/main`
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `71d31474518f026bbf9229a55b1ee2c158f7ba57`, parent
+  `a4cbdadd045b16bd50416b190668490bbf458518`, subject `Record BIGINT D1-D5
+  user approval`; worktree/index clean, no untracked files. Backlog blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`; API `1.30` (blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`); Schema `1.9` (blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`);
+  `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`);
+  `src/instrumentation/evidenceNormalization.js`
+  (`7a8ea912a2f5b5890a3f128a22dc50fbcaa32514`) confirmed exactly. Remote
+  candidate branch
+  `origin/validation/bigint-writer-digest-output-tierc-20260912`
+  fresh-verified at exactly `1350884a1b7b40f6b715c1a2867998de142c2f40`.
+
+##### Candidate Created (Architecture Session, Separate From This Record)
+
+A separate Architecture session (bounded Tier C canonical documentation
+patch author) created and pushed an independently reviewable
+documentation candidate encoding the USER-APPROVED `D1`–`D5` decisions,
+on validation branch `validation/bigint-writer-digest-output-tierc-20260912`.
+
+- Candidate commit: `1350884a1b7b40f6b715c1a2867998de142c2f40`
+- Candidate parent: `b486c3cd1e36faa492f627dd4439708562913c65` (exactly
+  the pre-candidate `main` tip)
+- Candidate tree: `14d12e1884f093c772bde880a2beedfc831f872b`
+- Candidate subject: `Clarify BIGINT writer digest output contract`
+- Exact changed files (two only): `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+- Candidate blobs: `API_CONTRACT.md` =
+  `e60afa6bda3356051c24b36a823fb325761b9b42`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `de244476e56dfcab59dcd899a25091a2b1452e31`
+- Candidate revisions: API `1.31`; Schema `1.10`
+- Exact diff stat: `API_CONTRACT.md` +5/-0;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` +37/-0; total 2 files changed, 42
+  insertions, 0 deletions
+- Candidate preparation mechanics: `PASS` (`git diff --check` PASS;
+  exactly the two allowed files changed; no untracked files)
+
+##### Candidate Content — D1–D5 Encoded
+
+- `D1`: assignment snapshot digest semantic content
+  `exposure_history_cutoff_ordinal` MUST be represented as an exact
+  base-10 decimal string. JavaScript `Number` is prohibited as digest
+  semantic authority.
+- `D2`: generic `evidence-semantic-v1` remains frozen and unchanged;
+  corrected assignment-snapshot digesting only uses the exact canonical
+  literal `evidence-assignment-snapshot-v2`; historical assignment
+  snapshots carrying `evidence-semantic-v1` remain authoritative under
+  their original persisted digest bytes and original serialization rule;
+  no automatic re-digest, rewrite, or backfill is authorized.
+- `D3`: `createAssignment` returned
+  `snapshot.exposure_history_cutoff_ordinal` MUST be an exact base-10
+  decimal string, never a JavaScript `Number`.
+- `D4`: `recordAssignmentItemExposure` returned `exposureOrdinal` MUST be
+  an exact base-10 decimal string, never a JavaScript `Number` (same
+  BIGINT ordinal domain as `D3`).
+- `D5`: historical data state remains `UNKNOWN / NOT INSPECTED`; no
+  assumption that affected rows exist; no assumption that affected rows
+  do not exist; no automatic rewrite/backfill; historical-data inspection
+  and remediation require separate explicit future authorization; this
+  candidate does not authorize learner/human-data inspection.
+- RAW_SOURCE `BIGINT -> exact base-10 decimal string` projection
+  semantics (API §13.10.11.1 / Schema §12.3.1) are unchanged by this
+  candidate.
+- Retention v1 contract (API §13.10.11.2 / Schema §12.3.4/§12.4.1) is
+  unchanged by this candidate.
+- Unseen Transfer METRIC_RESULT reducer contract (API §13.10.11.3 /
+  Schema §12.3.5/§12.4.2) is unchanged by this candidate except for the
+  minimum writer-representation cross-reference added to
+  `API_CONTRACT.md` §13.10.4/§13.10.4.1 pointing at the Schema §5.9
+  clarification.
+- Physical BIGINT schema
+  (`evidence_assignment_snapshots.exposure_history_cutoff_ordinal` column
+  type) is unchanged; no migration/DDL is included or authorized by this
+  candidate.
+
+##### Evidence Classification
+
+- Candidate preparation mechanics: `PASS`.
+- PostgreSQL: `NOT RUN — DOCUMENTATION-ONLY CANDIDATE`.
+- Runtime/npm tests: `NOT RUN — DOCUMENTATION-ONLY CANDIDATE`.
+- Independent Review: `NOT YET RUN`.
+- Candidate status: `PREPARED / PENDING INDEPENDENT REVIEW`. This record
+  does NOT call the candidate `APPROVED`, `VALIDATED`, `ELIGIBLE`,
+  `CLOSED`, or `CANONICAL ON MAIN`.
+- Main integration: `NOT PERFORMED`.
+- Development authorization: `NO`.
+- Unseen Transfer Runtime: `NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+  VALIDATED`.
+
+##### F-R02
+
+Foundation finding `F-R02` remains `OPEN / NON-BLOCKING`. The candidate
+now exists on a pushed validation branch, but it has not yet been
+independently reviewed, integrated to `main`, or review-recorded. This
+status-only record does not close or reclassify `F-R02`. No new finding
+ID is created by this record.
+
+##### Historical-Data Evidence Boundary
+
+No PostgreSQL or data inspection was authorized or performed by this
+record or by the candidate itself. Governing data state remains `UNKNOWN
+/ NOT INSPECTED`, per `D5`.
+
+##### Preserved Governing State (Unchanged By This Record)
+
+The bounded Unseen Transfer Tier C documentation lifecycle remains
+`REVIEW-RECORDED / CLOSED`, not reopened. `METRIC_RESULT` / Retention v1
+Runtime remains `REVIEW-RECORDED / CLOSED`. P1 remains `NOT ACTIVATED`.
+Human-data collection remains `NOT AUTHORIZED`. Efficacy remains `NOT
+VERIFIED`. Existing Unseen open findings remain unchanged:
+`F-MR-UT-IR-07`, `F-MR-UT-IR-08`, `F-MR-UT-RR2-01`–`04`. Canonical `main`
+API/Schema revisions remain `1.30`/`1.9` (unchanged by this record; the
+candidate's `1.31`/`1.10` are NOT canonical on `main`).
+
+##### Non-Claims
+
+This record does not mean: the candidate has been independently
+reviewed — NOT CLAIMED (`NOT YET RUN`); the candidate is approved,
+validated, eligible, or closed — NOT CLAIMED; the candidate is
+integrated or cherry-picked to `main` — NOT CLAIMED (`NOT PERFORMED`);
+canonical `main` API/Schema revisions are now `1.31`/`1.10` — NOT
+CLAIMED (remain `1.30`/`1.9`); `API_CONTRACT.md`,
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` modified on `main` by this
+record — NOT CLAIMED (all unchanged on `main`); Development authorized —
+NOT CLAIMED; the writer correction implemented — NOT CLAIMED; Unseen
+Transfer Runtime implemented, validated, or closed — NOT CLAIMED;
+`F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+NON-BLOCKING`); any historical-data fact established — NOT CLAIMED
+(`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run — NOT CLAIMED (`NOT
+RUN`). Repository mutation caused by this record is limited to
+`LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -7474,6 +7628,26 @@ This bootstrap does not rerun PostgreSQL or tests.
   Action is now a fresh Architecture canonical Tier C patch candidate
   preparation for the USER-APPROVED `D1`–`D5` decisions, classification
   `ARCHITECTURE CANONICAL PATCH PREPARATION` (§10).
+- Since then: the Architecture session's canonical Tier C patch candidate
+  preparation for the USER-APPROVED `D1`–`D5` decisions has completed. A
+  documentation candidate (`1350884a1b7b40f6b715c1a2867998de142c2f40`,
+  parent exactly `b486c3cd1e36faa492f627dd4439708562913c65`, validation
+  branch `validation/bigint-writer-digest-output-tierc-20260912`, exact
+  two-file scope `API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+  blobs `e60afa6bda3356051c24b36a823fb325761b9b42`/
+  `de244476e56dfcab59dcd899a25091a2b1452e31`, revisions API `1.31`/Schema
+  `1.10`, diff `+42/-0` across exactly those two files) has been created
+  and pushed. Candidate preparation mechanics: `PASS`; PostgreSQL/tests:
+  `NOT RUN — DOCUMENTATION-ONLY CANDIDATE`; Independent Review: `NOT YET
+  RUN`. This is NOT a claim that the candidate is reviewed, approved, or
+  canonical on `main` — candidate status is `PREPARED / PENDING
+  INDEPENDENT REVIEW`; main integration `NOT PERFORMED`; canonical `main`
+  API/Schema remain `1.30`/`1.9`. `F-R02` remains `OPEN / NON-BLOCKING`,
+  not closed or reclassified by this record. See §4 "BIGINT
+  Writer/Digest/Output Representation Tier C — Documentation Candidate
+  Prepared / Pending Fresh Independent Review" for full detail; the sole
+  Next Action is now a fresh read-only Independent Review of the
+  candidate (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8244,6 +8418,32 @@ remain true and are established in §4/§8 and elsewhere in this document:
   PATCH PENDING / DEVELOPMENT NOT AUTHORIZED` (see §4/§8; the sole Next
   Action is now a fresh Architecture canonical Tier C patch candidate
   preparation for the USER-APPROVED `D1`–`D5` decisions, §10)
+
+- Since then: an Architecture bounded Tier C canonical documentation
+  patch author has created and pushed an independently reviewable
+  documentation candidate encoding the USER-APPROVED `D1`–`D5` decisions
+  on validation branch
+  `validation/bigint-writer-digest-output-tierc-20260912` (candidate
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`, parent exactly
+  `b486c3cd1e36faa492f627dd4439708562913c65`, tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`, exact two-file scope
+  `API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md`, blobs
+  `e60afa6bda3356051c24b36a823fb325761b9b42`/
+  `de244476e56dfcab59dcd899a25091a2b1452e31`, revisions API `1.31`/Schema
+  `1.10`, diff exactly `+42/-0` across those two files, `git diff --check`
+  `PASS`). This does NOT mean: the candidate has been independently
+  reviewed — NOT CLAIMED (`NOT YET RUN`); the candidate is integrated,
+  cherry-picked, or canonical on `main` — NOT CLAIMED (`NOT PERFORMED`;
+  canonical `main` API/Schema remain `1.30`/`1.9`); Development
+  authorized — NOT CLAIMED; the writer correction or Unseen Transfer
+  Runtime implemented, validated, or closed — NOT CLAIMED; `F-R02` closed
+  or reclassified — NOT CLAIMED (remains `OPEN / NON-BLOCKING`); any
+  historical-data fact established — NOT CLAIMED (`UNKNOWN / NOT
+  INSPECTED`); PostgreSQL or tests run — NOT CLAIMED (`NOT RUN —
+  DOCUMENTATION-ONLY CANDIDATE`). Governing state is now `USER-APPROVED /
+  CANONICAL PATCH PREPARED / PENDING INDEPENDENT REVIEW / DEVELOPMENT NOT
+  AUTHORIZED` (see §4/§8; the sole Next Action is now a fresh read-only
+  Independent Review of the candidate, §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -9032,28 +9232,30 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- A fresh Architecture canonical Tier C patch candidate preparation for
-  the USER-APPROVED `BIGINT Writer/Digest/Output Representation` `D1`–`D5`
-  decisions, classification `ARCHITECTURE CANONICAL PATCH PREPARATION`.
-  This next action must: (1) fresh-verify exact then-current `origin/main`
-  (live `git fetch origin`, exact branch/HEAD/tree/parent/subject and
-  canonical blob confirmation) before reading or editing anything; (2)
-  create a validation branch only after that preflight passes; (3) patch
-  only the exact approved Tier C canonical documentation scope
-  (`API_CONTRACT.md` / `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, exactly as
-  required to encode `D1`–`D5`); (4) encode `D1`–`D5` exactly, without
-  changing any of the approved values; (5) pin the exact literal
-  `evidence-assignment-snapshot-v2` for corrected assignment-snapshot
-  digesting only; (6) keep the generic `evidence-semantic-v1`
-  normalization-version identifier unchanged, not globally redefined or
-  replaced; (7) preserve RAW_SOURCE `BIGINT -> exact base-10 decimal
-  string` projection semantics; (8) preserve historical-data state
-  `UNKNOWN / NOT INSPECTED` and authorize no automatic re-digest,
-  rewrite, or backfill; (9) NOT authorize Development; (10) NOT modify
-  Runtime source, tests, migrations, DB artifacts, Tier A documents, or
-  pilot documents; (11) prepare an independently reviewable documentation
-  candidate only, and NOT apply it to `main`; and (12) return exact
-  commit/tree/blob/diff evidence to Control Tower before any Independent
-  Review. This next action does NOT itself authorize Development, does
-  NOT implement the writer correction, and does NOT implement Unseen
-  Transfer Runtime.
+- A fresh read-only Independent Review of the BIGINT
+  Writer/Digest/Output Representation Tier C documentation candidate,
+  classification `DOCUMENTATION-ONLY INDEPENDENT REVIEW`. Target:
+  validation branch `validation/bigint-writer-digest-output-tierc-20260912`,
+  exact candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40`, exact
+  parent `b486c3cd1e36faa492f627dd4439708562913c65`. This next action
+  must: (1) cause zero repository mutation; (2) fresh-fetch remote refs
+  before reviewing; (3) review the exact pinned candidate commit, not any
+  moving branch tip/prose; (4) verify exact tree/blobs/diff against the
+  exact parent `b486c3cd1e36faa492f627dd4439708562913c65` only; (5)
+  verify the candidate encodes the exact USER-APPROVED `D1`–`D5`
+  decisions; (6) check `API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  internal consistency; (7) check that the generic `evidence-semantic-v1`
+  normalization-version identifier remains isolated/frozen and is not
+  globally redefined; (8) check the exact canonical literal
+  `evidence-assignment-snapshot-v2` is used correctly and scoped to
+  assignment-snapshot digesting only; (9) check the historical-data
+  `UNKNOWN / NOT INSPECTED` boundary is preserved with no automatic
+  re-digest/rewrite/backfill authorized; (10) check
+  RAW_SOURCE/Retention v1/Unseen Transfer non-interference; (11) check
+  that `F-R02` is not prematurely closed or reclassified; (12) check that
+  no Development/Runtime implementation authorization is claimed or
+  implied; and (13) return a formal review verdict and main-integration
+  eligibility determination to Control Tower. This next action does NOT
+  itself authorize Development, does NOT implement the writer correction,
+  does NOT implement Unseen Transfer Runtime, and does NOT integrate the
+  candidate to `main`.
