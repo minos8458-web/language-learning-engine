@@ -5853,6 +5853,124 @@ caused by this selection is limited to `LLE_CURRENT_STATE.md` only.
 
 See §10.
 
+#### Control Tower Adjudication — METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness Pre-Analysis / READY Rejected / Governing Verdict NOT READY
+
+##### Preflight / Scope
+
+- This is a status-only adjudication recording. It does not perform the
+  BIGINT correction-design, does not authorize Runtime, does not implement
+  Runtime, does not modify Runtime source, tests, `API_CONTRACT.md`,
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+  migrations, DB artifacts, Tier A documents, or pilot documents, and does
+  not run PostgreSQL or npm tests. Repository mutation caused by this
+  record: exactly `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before this
+  update, matching the pinned pre-analysis baseline exactly: `main` /
+  `origin/main` `3a8bb70659bfbf88ab4b9112319f969cc272aa5c`, tree
+  `c4b41f3a538ddb4d4eb37adb8884fab13f7db930`, parent
+  `6cc3072f77fadc1267020197fc1fa39ea26a0b1a`, subject `Select Unseen
+  Transfer runtime readiness pre-analysis`; worktree/index clean, no
+  untracked files. Backlog revision `1.76` (blob
+  `746b8d687fe681c0b7908450133cf2d0d79ea012`); API `1.30` (blob
+  `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`); Schema `1.9` (blob
+  `aa009da313c3298186537f7aa641c98ea721b15f`);
+  `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`) confirmed exactly.
+
+##### Pre-Analysis Result Received
+
+A fresh read-only Implementation-Readiness Analyst completed the selected
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+Implementation-Readiness Pre-Analysis` against the exact pinned baseline
+above: repository mutation `0`, preflight `PASS`, PostgreSQL/tests `NOT
+RUN`, final analyst verdict `READY`. The analyst correctly identified,
+with exact citations, that current
+`src/instrumentation/evidenceRepository.js` `createAssignment` computes
+`const exposureHistoryCutoffOrdinal = Number(cutoffRows[0].cutoff);` and
+uses that converted JavaScript `Number` (1) as the bound for
+`exposure.exposure_ordinal <= $2` during `resolved_item_lineage`
+reconstruction, (2) inside `snapshotForDigest` as
+`exposureHistoryCutoffOrdinal`, and (3) as the value persisted into
+`evidence_assignment_snapshots.exposure_history_cutoff_ordinal`; and that
+`projectExposureResult` additionally computes
+`exposureOrdinal: Number(exposureRow.exposure_ordinal)`. The analyst
+classified this as non-blocking on the rationale that P0 synthetic-pilot
+scale is unlikely to approach `2^53`.
+
+##### Control Tower Adjudication
+
+Control Tower does **not** accept the analyst's `READY` verdict as
+governing. Disposition: `READY NOT ACCEPTED`. Governing verdict:
+`NOT READY`.
+
+Reason: canonical `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.9` states
+that `exposure_ordinal` and `exposure_history_cutoff_ordinal` are exact
+PostgreSQL `BIGINT` authority, that JavaScript `Number` MUST NOT be used as
+comparison, ordering, persistence, or round-trip authority for them, and
+that this rule explicitly applies to assignment-creation cutoff
+resolution, lineage rebuild, cutoff-witness validation, ordering, and
+provenance. Current `createAssignment` converts `MAX(exposure_ordinal)` to
+JavaScript `Number` before using it as lineage-comparison authority,
+snapshot-digest authority, and `exposure_history_cutoff_ordinal`
+persistence authority; `projectExposureResult` additionally converts
+`exposure_ordinal` to `Number` for round-trip projection. This is a direct
+violation of the Schema `1.9` exactness boundary. The analyst's "safe in
+practice at P0 scale" rationale is explicitly rejected as non-canonical:
+no canonical safe-scale exception, no `<= Number.MAX_SAFE_INTEGER`
+exposure-ordinal cap, and no permission to use `Number` for these BIGINT
+authorities exists anywhere in canonical text. This is therefore a real
+implementation prerequisite, not an accepted risk.
+
+Classification: `NOT READY`, not `BLOCKED` — the canonical WHAT is
+deterministic (Schema `1.9`'s BIGINT-exactness rule is exact and
+unambiguous); there is no unresolved semantic owner/Architecture choice
+identified here. The problem is that current source does not yet satisfy
+that deterministic canonical requirement.
+
+Exact classification recorded: `SOURCE IMPLEMENTATION PREREQUISITE` /
+`CANONICAL WHAT IS DETERMINISTIC` / `DEVELOPMENT NOT YET AUTHORIZED`.
+
+PostgreSQL/tests: `NOT RUN — READ-ONLY PRE-ANALYSIS / STATUS-ONLY
+ADJUDICATION`.
+
+##### Preserved Governing State (Unchanged By This Adjudication)
+
+Bounded METRIC_RESULT Unseen Transfer Tier C documentation lifecycle:
+`USER-APPROVED / CORRECTED / INDEPENDENTLY RE-REVIEWED — APPROVE WITH
+NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED` (documentation-
+contract scope only; not reopened by this adjudication). Unseen Transfer
+Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`. P1
+remains `NOT ACTIVATED`. Human-data collection remains `NOT AUTHORIZED`.
+Efficacy remains `NOT VERIFIED`. `F-MR-UT-IR-07` = `NOTE / OPEN / NO
+CORRECTION REQUIRED`; `F-MR-UT-IR-08` = `NOTE / OPEN / TRACEABILITY LIMIT
+/ NO CORRECTION REQUIRED`; `F-MR-UT-RR2-01`–`04` = `OPEN / NON-BLOCKING`,
+with `F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE BOUNDED WORDING
+CLEANUP` — none closed, reclassified, or corrected by this adjudication.
+No new Backlog finding ID is created by this record. `METRIC_RESULT` /
+Retention v1 Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened.
+
+##### Non-Claims
+
+This record does not mean: the analyst's `READY` verdict is governing —
+NOT CLAIMED (explicitly rejected); Runtime authorized — NOT CLAIMED (`NOT
+AUTHORIZED`); Runtime implemented — NOT CLAIMED (`NOT IMPLEMENTED`);
+Runtime validated — NOT CLAIMED (`NOT VALIDATED`); the BIGINT correction
+performed or designed — NOT CLAIMED; a Runtime branch created — NOT
+CLAIMED; P1 activated — NOT CLAIMED (`NOT ACTIVATED`); human-data
+collection authorized — NOT CLAIMED (`NOT AUTHORIZED`); efficacy verified
+— NOT CLAIMED (`NOT VERIFIED`); any finding closed, reclassified, or newly
+created by this adjudication — NOT CLAIMED (all findings above remain
+exactly as preserved); the Unseen Transfer Tier C documentation lifecycle
+reopened — NOT CLAIMED (remains `CLOSED`, documentation-contract scope
+only); `METRIC_RESULT` / Retention v1 Runtime reopened — NOT CLAIMED.
+PostgreSQL or tests run — NOT CLAIMED (`NOT RUN`). Repository mutation
+caused by this adjudication is limited to `LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -6915,6 +7033,38 @@ This bootstrap does not rerun PostgreSQL or tests.
   Implementation-Readiness Pre-Analysis Selected" for full detail; the
   sole Next Action is now that fresh read-only implementation-readiness
   pre-analysis (§10).
+- That fresh read-only pre-analysis has since been completed (repository
+  mutation `0`, preflight `PASS`, PostgreSQL/tests `NOT RUN`) with final
+  analyst verdict `READY`. Control Tower has reviewed and adjudicated that
+  result: the analyst `READY` verdict is **rejected** (`READY NOT
+  ACCEPTED`); the governing verdict is `NOT READY`. Reason: current
+  `src/instrumentation/evidenceRepository.js` (`createAssignment` /
+  `projectExposureResult`) converts the exact PostgreSQL `BIGINT`
+  `exposure_ordinal`/`exposure_history_cutoff_ordinal` authority to
+  JavaScript `Number` for lineage-comparison, snapshot-digest, persistence,
+  and round-trip purposes, in direct violation of the `EVIDENCE_FOUNDATION_
+  P0_SCHEMA.md` `1.9` BIGINT-exactness boundary; the analyst's "safe in
+  practice at P0 scale" rationale is not a canonical exception. This is
+  classified `SOURCE IMPLEMENTATION PREREQUISITE / CANONICAL WHAT IS
+  DETERMINISTIC / DEVELOPMENT NOT YET AUTHORIZED` — `NOT READY`, not
+  `BLOCKED` (no unresolved semantic/Architecture choice is involved). No
+  finding is closed, reclassified, or newly created by this adjudication:
+  `F-MR-UT-IR-07`/`08` remain `NOTE / OPEN`; `F-MR-UT-RR2-01`–`04` remain
+  `OPEN / NON-BLOCKING` (`F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE
+  BOUNDED WORDING CLEANUP`). The bounded Unseen Transfer Tier C
+  documentation-contract lifecycle remains `REVIEW-RECORDED / CLOSED`
+  (documentation-contract scope only, not reopened). Unseen Transfer
+  Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`; P1
+  remains `NOT ACTIVATED`; human-data collection remains `NOT AUTHORIZED`;
+  efficacy remains `NOT VERIFIED`; `METRIC_RESULT` / Retention v1 Runtime
+  remains `REVIEW-RECORDED / CLOSED`, not reopened. PostgreSQL/tests: `NOT
+  RUN — READ-ONLY PRE-ANALYSIS / STATUS-ONLY ADJUDICATION`. Repository
+  mutation by this record is limited to `LLE_CURRENT_STATE.md`. See §4
+  "Control Tower Adjudication — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness Pre-Analysis / READY Rejected / Governing
+  Verdict NOT READY" for full detail; the sole Next Action is now a fresh
+  read-only BIGINT writer source-authority prerequisite correction-design
+  / impact analysis (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -7607,6 +7757,54 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Independent Review, in a new session, of the exact documentation
   candidate against its exact parent and the user-approved Current State
   contract (§10)
+
+- Runtime implementation-readiness confirmed or the pre-analysis's `READY`
+  verdict accepted as governing by this closure-sync/milestone-transition
+  session — NOT CLAIMED. Since then: the selected fresh read-only `VI P1
+  Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness Pre-Analysis` has been completed (repository
+  mutation `0`, preflight `PASS` against exact `main`
+  `3a8bb70659bfbf88ab4b9112319f969cc272aa5c`, PostgreSQL/tests `NOT RUN`)
+  with final analyst verdict `READY`. Control Tower has reviewed that
+  result and does **not** accept it as governing: disposition `READY NOT
+  ACCEPTED`; governing verdict `NOT READY`. The analyst correctly
+  identified that current `src/instrumentation/evidenceRepository.js`
+  `createAssignment` converts the stored exact PostgreSQL `BIGINT`
+  `MAX(exposure_ordinal)` cutoff to JavaScript `Number`
+  (`Number(cutoffRows[0].cutoff)`) before using it as (1) the
+  `exposure.exposure_ordinal <= $2` lineage-comparison bound, (2) snapshot
+  digest input (`snapshotForDigest.exposureHistoryCutoffOrdinal`), and (3)
+  the persisted `evidence_assignment_snapshots.exposure_history_cutoff_
+  ordinal` value, and that `projectExposureResult` additionally converts
+  `exposure_ordinal` to `Number` for round-trip projection
+  (`exposureOrdinal: Number(exposureRow.exposure_ordinal)`); the analyst
+  classified this as non-blocking on a "safe in practice at P0 scale"
+  rationale. Control Tower rejects that rationale as non-canonical:
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.9` states `exposure_ordinal`/
+  `exposure_history_cutoff_ordinal` are exact PostgreSQL `BIGINT`
+  authority and that JavaScript `Number` MUST NOT be comparison/ordering/
+  persistence/round-trip authority for them — applying explicitly to
+  assignment-creation cutoff resolution, lineage rebuild, cutoff-witness
+  validation, ordering, and provenance — and no canonical safe-scale
+  exception, `Number.MAX_SAFE_INTEGER` cap, or `Number`-use permission
+  exists. This is classified `SOURCE IMPLEMENTATION PREREQUISITE /
+  CANONICAL WHAT IS DETERMINISTIC / DEVELOPMENT NOT YET AUTHORIZED` —
+  `NOT READY` (not `BLOCKED`: the canonical WHAT is deterministic and no
+  unresolved semantic/Architecture owner-choice is involved). This is NOT
+  a claim that any finding is closed, reclassified, or newly created —
+  `F-MR-UT-IR-07`/`08` remain `NOTE / OPEN`; `F-MR-UT-RR2-01`–`04` remain
+  `OPEN / NON-BLOCKING` (`F-MR-UT-RR2-02` = `LOW / NON-BLOCKING / FUTURE
+  BOUNDED WORDING CLEANUP`); the bounded Unseen Transfer Tier C
+  documentation-contract lifecycle remains `REVIEW-RECORDED / CLOSED`
+  (documentation-contract scope only, not reopened by this adjudication);
+  `METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+  CLOSED`, not reopened; Unseen Transfer Runtime remains `NOT AUTHORIZED /
+  NOT IMPLEMENTED / NOT VALIDATED`; P1 remains `NOT ACTIVATED`; human-data
+  collection remains `NOT AUTHORIZED`; efficacy remains `NOT VERIFIED`.
+  PostgreSQL/tests remain `NOT RUN — READ-ONLY PRE-ANALYSIS / STATUS-ONLY
+  ADJUDICATION` (see §4/§8; the sole Next Action is now a fresh read-only
+  BIGINT writer source-authority prerequisite correction-design / impact
+  analysis, §10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -8316,51 +8514,49 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- A fresh READ-ONLY `VI P1 Measurement Readiness — METRIC_RESULT Unseen
-  Transfer v2 Runtime Implementation-Readiness Pre-Analysis`. This next
-  action: (1) requires fresh exact-main verification (live `git fetch
-  origin`, exact branch/HEAD/tree/parent/subject and canonical blob
+- A fresh READ-ONLY `BIGINT Writer Source-Authority Prerequisite
+  Correction-Design / Impact Analysis` for the METRIC_RESULT Unseen
+  Transfer v2 Runtime prerequisite identified by Control Tower's
+  adjudication of the Implementation-Readiness Pre-Analysis (§4/§8/§9.1).
+  This next action: (1) requires fresh exact-main verification (live `git
+  fetch origin`, exact branch/HEAD/tree/parent/subject and canonical blob
   confirmation) before reading anything else; (2) repository mutation =
   `0` — no branch creation, no file edits, no commit, no push, no PR, no
-  migrations, no PostgreSQL mutation; (3) must NOT authorize Runtime,
-  must NOT implement Runtime, must NOT claim Runtime validation, must NOT
-  activate P1, and must NOT claim efficacy; (4) must fresh-read exact
-  then-current `main` (`API_CONTRACT.md` §13.10.11.2/§13.10.11.3,
-  relevant `EVIDENCE_FOUNDATION_P0_SCHEMA.md` METRIC_RESULT sections,
-  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.76`,
-  `LLE_CURRENT_STATE.md`, and current Runtime —
-  `src/instrumentation/evidenceMetrics.js`,
-  `src/instrumentation/evidenceValidation.js`,
-  `src/instrumentation/evidenceRepository.js`,
-  `src/instrumentation/index.js`,
-  `tests/viP1MetricResultRuntime.test.js`, and relevant Evidence
-  Foundation tests/migrations/schema sources); (5) must answer, without
-  implementing, exactly the 29 pinned questions recorded above in §4
-  "Control Tower Milestone-Transition Selection — METRIC_RESULT Unseen
-  Transfer v2 Runtime Implementation-Readiness Pre-Analysis Selected"
-  (Runtime gap vs. Retention v1; `definitionVersion`-dispatch safety;
-  exact minimal implementation/test file scope; new-vs-extended test
-  suite; FORMULA v2 exact 16-key validation plan; Retention v1 helper
-  reuse/non-reuse boundary; `H(A)`/`W(A)`/`R(A)`/`N(A,n)`/`L(A)`/`V(A)`/
-  `rho(A)` source plan; BIGINT exactness plan; ITEM `lineageAuthority`
-  read/validation plan; lazy `FIRST_MATCH` requirement; rule 15
-  `ITEM_LINEAGE_NOT_DIFFERENT`; rule 16 `NODE_PRIOR_EXPOSURE_ABSENT`;
-  exact 21-key Unseen group output plan; `ITEM_FAMILY` group-key/order
-  extension; full-history `H(A)` provenance plan; response-wide
-  provenance union/order; source contradiction/error-code mapping; single
-  `REPEATABLE READ`/`READ ONLY` transaction ownership; zero-side-effect
-  proof; Retention v1 non-regression strategy; RAW_SOURCE
-  non-interference strategy; synthetic PostgreSQL fixture matrix;
-  focused/full regression gate plan; migration/DDL requirement — expected
-  `NO`, `BLOCKED` if contradicted; remaining canonical ambiguity; and the
-  RAW_SOURCE timestamp-cutoff-vs-`exposure_ordinal`-authority reuse
-  warning — which existing helpers are semantically safe to reuse and
-  which are NOT); (6) must reach exactly one final verdict — `READY` /
-  `NOT READY` / `BLOCKED`; any canonical ambiguity found means `BLOCKED`,
-  not invented or guessed; (7) if `READY`, must state exact allowed
-  files, exact forbidden files, exact branch recommendation, and exact
-  acceptance criteria for future Development and Independent Review; if
-  `NOT READY`/`BLOCKED`, must state the exact canonical/runtime gap and
-  the required prior action; and (8) Control Tower must review the
-  completed pre-analysis before any Development authorization is
-  considered. This selection record does not perform that pre-analysis.
+  migrations, no PostgreSQL mutation; (3) must NOT authorize Runtime, must
+  NOT implement Runtime or the correction, must NOT claim Runtime
+  validation, must NOT activate P1, and must NOT claim efficacy; (4) must
+  fresh-read exact then-current `main` at minimum:
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` BIGINT-exactness authority;
+  `API_CONTRACT.md` relevant assignment-exposure/snapshot contracts;
+  `src/instrumentation/evidenceRepository.js`;
+  `src/instrumentation/evidenceNormalization.js` if digest semantics
+  matter; relevant item-lineage/runtime/repository tests; migrations
+  `012`/`013`; and `LLE_CURRENT_STATE.md`/Backlog lifecycle provenance;
+  (5) must inventory every conversion of `exposure_ordinal` and
+  `exposure_history_cutoff_ordinal` through JavaScript `Number` across
+  current source/tests; (6) must determine the exact canonical-compatible
+  representation for: `MAX(exposure_ordinal)` result; `createAssignment`
+  cutoff comparison bind; resolved-lineage computation; snapshot digest
+  representation; `exposure_history_cutoff_ordinal` INSERT;
+  `createAssignment`'s returned snapshot; `recordAssignmentItemExposure`'s
+  returned `exposureOrdinal`; and any round-trip/equality/order
+  assertions; (7) must determine whether current API/Tier C output
+  contract already fixes the public type/shape of `exposureOrdinal`/
+  cutoff fields, and if current canonical does NOT determine a required
+  externally observable representation, must report that ambiguity rather
+  than inventing one; (8) must determine whether the correction can be
+  implementation-only or requires a canonical clarification; (9) must
+  determine exact impacted prior lifecycle(s) and what must be
+  revalidated/re-reviewed if `evidenceRepository.js` changes (including
+  Runtime Foundation A/B1 and `METRIC_RESULT` / Retention v1 Runtime
+  provenance, without reopening their `CLOSED` status merely by this
+  analysis); (10) must determine exact minimal source/test correction
+  scope; (11) must determine migration/DDL/data-correction implications
+  without inventing or running a migration; (12) must return exactly one
+  final correction-design verdict — `CORRECTION READY` / `CANONICAL
+  CLARIFICATION REQUIRED` / `BLOCKED`; (13) if `CORRECTION READY`, must
+  state exact allowed files, exact forbidden files, branch
+  recommendation, test/PostgreSQL requirements, Independent Review
+  requirements, and stop conditions; and (14) Control Tower must
+  adjudicate the completed correction-design before any code write —
+  this next action does NOT itself authorize or implement the correction.
