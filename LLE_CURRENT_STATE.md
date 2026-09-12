@@ -6443,6 +6443,187 @@ RUN`). Repository mutation caused by this record is limited to
 
 See §10.
 
+#### BIGINT Writer/Digest/Output Representation Tier C — Fresh Independent Review Complete / APPROVE WITH NON-BLOCKING NOTES / Main Integration ELIGIBLE
+
+##### Preflight / Scope
+
+- This is a status-only sync record documenting completion of a fresh,
+  read-only Independent Review of the BIGINT Writer/Digest/Output
+  Representation Tier C documentation candidate. It does not
+  integrate/cherry-pick the candidate to `main`, does not authorize
+  Development, does not implement the writer correction, does not
+  implement Unseen Transfer Runtime, and does not run PostgreSQL or npm
+  tests. Repository mutation caused by this record: exactly
+  `LLE_CURRENT_STATE.md` only.
+- Preflight confirmed (live `git fetch origin`) exact baseline before
+  this update: `main` / `origin/main`
+  `7c0495f4b008abd4bb25d1c4caeb490275747655`, tree
+  `1db92645ca4670e4ff50c4dae8dc696c371edca9`, parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`, subject `Record BIGINT
+  Tier C documentation candidate`; worktree/index clean, no untracked
+  files. Backlog blob `746b8d687fe681c0b7908450133cf2d0d79ea012`; API
+  `1.30` (blob `a36eea9882c6cc03b7da98a10aeee3c8afa6c8aa`); Schema `1.9`
+  (blob `aa009da313c3298186537f7aa641c98ea721b15f`);
+  `src/instrumentation/evidenceRepository.js`
+  (`9792ff414febb0878b04d031145a8b2dafab2623`);
+  `src/instrumentation/evidenceNormalization.js`
+  (`7a8ea912a2f5b5890a3f128a22dc50fbcaa32514`) confirmed exactly. Remote
+  candidate branch
+  `origin/validation/bigint-writer-digest-output-tierc-20260912`
+  fresh-verified at exactly `1350884a1b7b40f6b715c1a2867998de142c2f40`.
+
+##### Review Target (Exact)
+
+- Validation branch: `validation/bigint-writer-digest-output-tierc-20260912`
+- Candidate commit: `1350884a1b7b40f6b715c1a2867998de142c2f40`
+- Candidate parent: `b486c3cd1e36faa492f627dd4439708562913c65` (exact
+  pre-candidate `main` tip; the candidate was reviewed against this exact
+  parent, not against the later Current-State-only main commit
+  `7c0495f4b008abd4bb25d1c4caeb490275747655`)
+- Candidate tree: `14d12e1884f093c772bde880a2beedfc831f872b`
+- Candidate subject: `Clarify BIGINT writer digest output contract`
+- Candidate blobs: `API_CONTRACT.md` =
+  `e60afa6bda3356051c24b36a823fb325761b9b42` (revision `1.31`);
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `de244476e56dfcab59dcd899a25091a2b1452e31` (revision `1.10`)
+- Exact diff: `API_CONTRACT.md` +5/-0; `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  +37/-0; total 2 files changed, 42 insertions, 0 deletions
+
+##### Reviewer / Evidence Gate
+
+- Fresh independent reviewer session; did not author the candidate;
+  reviewer-reported mode `Fable 5 reviewer mode`; visible Claude Code
+  model identity `Sonnet 5`. The visible Sonnet 5 identity does not
+  invalidate this review: Opus 5 was a Control Tower recommendation, not
+  a hard review evidence-gate condition.
+- Repository mutation caused by the review itself: `0` (exact-object
+  reads only — `git show`/`git diff`/`git rev-parse`/`git cat-file`/
+  `git ls-tree`/`git ls-remote`; no edit, branch, checkout, stage,
+  commit, push, merge, cherry-pick, rebase, reset, stash, or amend).
+- Evidence gate: `12/12 PASS` (fetch; top-level; exact main HEAD; main
+  tree/parent/subject; clean worktree/no untracked; exact Current State
+  blob; exact remote candidate tip; exact candidate parent/tree/subject;
+  exact candidate blobs; exact changed paths and `+42/-0` diff; exactly
+  one commit on top of the pinned parent; `git diff --check` clean; no
+  candidate file outside the two expected paths).
+- PostgreSQL: `NOT RUN`. Runtime/npm tests: `NOT RUN`. Neither is called
+  `PASS`.
+
+##### Review Result
+
+- `D1` fidelity: confirmed — exact base-10 decimal string, JSON string
+  type, `0` = `"0"`, positive digits-only, no leading `+`/exponent/
+  decimal point/whitespace/signed-negative form/tagged object/JSON-native
+  BigInt, JavaScript `Number` explicitly disclaimed, physical `BIGINT`
+  column type explicitly stated unchanged.
+- `D2` isolation: confirmed — `evidence-assignment-snapshot-v2` scoped to
+  assignment-snapshot digesting only; generic `evidence-semantic-v1`
+  explicitly preserved frozen/unredefined; experiment/reference/
+  attempt-open/other generic `digestSemanticPayload` domains, RAW_SOURCE
+  projection (§12.3.1), and `evidence-finalization-v1` explicitly
+  excluded from scope.
+- Historical-v1 semantics: confirmed preserved — no rewrite/re-digest/
+  backfill requirement created; historical rows remain authoritative
+  under originally persisted digest bytes/original serialization rule;
+  data state `UNKNOWN / NOT INSPECTED`.
+- `D3` fidelity: confirmed — `snapshot.exposure_history_cutoff_ordinal`
+  unambiguously fixed to exact base-10 decimal string.
+- `D4` fidelity: confirmed — `exposureOrdinal` unambiguously fixed to
+  exact base-10 decimal string; the shared generic `0` = `"0"` encoding
+  clause does not create a blocking ambiguity given the existing
+  unmodified positive-unique-ordinal authority (see
+  `F-BIGINT-IR-01`/`F-BIGINT-IR-02`, both non-blocking).
+- API/Schema consistency, revision sequencing (API `1.30` → `1.31`;
+  Schema `1.9` → `1.10`, both sequential, no duplicates), RAW_SOURCE/
+  Retention v1/Unseen Transfer non-interference, physical/migration
+  boundary (no DDL, no migration 014, no column/type change, no new
+  table/view), `F-R02` non-closure, Development/Runtime authorization
+  boundary, and exact two-file scope isolation were all independently
+  verified with no blocking defect.
+
+##### Findings
+
+- `F-BIGINT-IR-01` — NOTE — `API_CONTRACT.md` §13.10.4.1 new paragraph:
+  the generic decimal-string encoding grammar includes `0` = `"0"` even
+  though existing (unmodified) authority independently constrains
+  `exposureOrdinal` to a positive unique ordinal. Correction before
+  integration: `NO`. Owner value required: `NO`. Disposition: `OPEN
+  NOTE / NON-BLOCKING`.
+- `F-BIGINT-IR-02` — NOTE — `API_CONTRACT.md` §13.10.4.1 new paragraph:
+  "same BIGINT ordinal domain" expresses the shared representation even
+  though `exposureOrdinal` is positive while
+  `exposure_history_cutoff_ordinal` may be `0`. Correction before
+  integration: `NO`. Owner value required: `NO`. Disposition: `OPEN
+  NOTE / NON-BLOCKING`.
+- `F-BIGINT-IR-03` — NOTE — `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §5.9 new
+  clarification: historical v1 "original serialization rule" is not
+  re-spelled in canonical prose (it lives implicitly in existing Runtime
+  behavior); no operative ambiguity because no historical re-digest/
+  rewrite/backfill is authorized. Correction before integration: `NO`.
+  Owner value required: `NO`. Disposition: `OPEN NOTE / NON-BLOCKING`.
+- Finding totals: BLOCKER `0`; HIGH `0`; MEDIUM `0`; LOW `0`; NOTE `3`.
+  None of the three NOTE findings is closed by this record; none
+  requires correction before main integration; none requires owner
+  value.
+
+##### Formal Review Outcome
+
+- Correction required: `NO`.
+- Owner value required: `NO`.
+- Final verdict: `APPROVE WITH NON-BLOCKING NOTES`.
+- Main-integration eligibility: `ELIGIBLE`.
+- Control Tower adjudication: `REVIEW VERDICT ACCEPTED`.
+
+##### F-R02
+
+Foundation finding `F-R02` remains `OPEN / NON-BLOCKING`. This
+Independent Review does not close or reclassify `F-R02`; the candidate
+being documentation-review-eligible does not establish Runtime
+correction or Runtime validation. No new finding ID beyond
+`F-BIGINT-IR-01`–`03` is created by this record.
+
+##### Historical-Data Evidence Boundary
+
+No PostgreSQL or data inspection was authorized or performed by this
+record or by the review itself. Governing data state remains `UNKNOWN /
+NOT INSPECTED`, per `D5`.
+
+##### Preserved Governing State (Unchanged By This Record)
+
+The bounded Unseen Transfer Tier C documentation lifecycle remains
+`REVIEW-RECORDED / CLOSED`, not reopened. `METRIC_RESULT` / Retention v1
+Runtime remains `REVIEW-RECORDED / CLOSED`. P1 remains `NOT ACTIVATED`.
+Human-data collection remains `NOT AUTHORIZED`. Efficacy remains `NOT
+VERIFIED`. Historical data remains `UNKNOWN / NOT INSPECTED`. Existing
+Unseen open findings remain unchanged: `F-MR-UT-IR-07`, `F-MR-UT-IR-08`,
+`F-MR-UT-RR2-01`–`04`. Canonical `main` API/Schema revisions remain
+`1.30`/`1.9` (unchanged by this record; the candidate's `1.31`/`1.10`
+are NOT canonical on `main`). Development authorization remains `NO`.
+Main integration remains `NOT YET PERFORMED`. Writer correction remains
+`NOT IMPLEMENTED / NOT VALIDATED`. Unseen Transfer Runtime remains `NOT
+AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`.
+
+##### Non-Claims
+
+This record does not mean: the candidate is integrated or cherry-picked
+to `main` — NOT CLAIMED (`NOT YET PERFORMED`); canonical `main`
+API/Schema revisions are now `1.31`/`1.10` — NOT CLAIMED (remain
+`1.30`/`1.9`); `API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`, or
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` modified on `main` by this
+record — NOT CLAIMED (all unchanged on `main`); Development authorized —
+NOT CLAIMED; the writer correction implemented or validated — NOT
+CLAIMED; Unseen Transfer Runtime implemented, validated, or closed — NOT
+CLAIMED; `F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed — NOT CLAIMED (all
+remain `OPEN NOTE / NON-BLOCKING`); any historical-data fact established
+— NOT CLAIMED (`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run — NOT
+CLAIMED (`NOT RUN`). Repository mutation caused by this record is
+limited to `LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -7648,6 +7829,26 @@ This bootstrap does not rerun PostgreSQL or tests.
   Prepared / Pending Fresh Independent Review" for full detail; the sole
   Next Action is now a fresh read-only Independent Review of the
   candidate (§10).
+- Since then: a fresh, read-only Independent Review (repository mutation
+  `0`) of the BIGINT Writer/Digest/Output Representation Tier C
+  documentation candidate (`1350884a1b7b40f6b715c1a2867998de142c2f40`,
+  parent `b486c3cd1e36faa492f627dd4439708562913c65`) has completed.
+  Evidence gate `12/12 PASS`; PostgreSQL `NOT RUN`; Runtime/npm tests
+  `NOT RUN`. New findings `F-BIGINT-IR-01`, `F-BIGINT-IR-02`,
+  `F-BIGINT-IR-03`, all NOTE / OPEN / NON-BLOCKING / no correction
+  required / no owner value required; totals BLOCKER `0`, HIGH `0`,
+  MEDIUM `0`, LOW `0`, NOTE `3`. Formal outcome: correction required
+  `NO`; owner value required `NO`; final verdict `APPROVE WITH
+  NON-BLOCKING NOTES`; main-integration eligibility `ELIGIBLE`. Control
+  Tower adjudication: `REVIEW VERDICT ACCEPTED`. `F-R02` remains `OPEN /
+  NON-BLOCKING`, not closed or reclassified by this record. Main
+  integration remains `NOT YET PERFORMED`; canonical `main` API/Schema
+  remain `1.30`/`1.9`; the candidate's `1.31`/`1.10` are not yet
+  canonical; Development authorization remains `NO`. See §4 "BIGINT
+  Writer/Digest/Output Representation Tier C — Fresh Independent Review
+  Complete / APPROVE WITH NON-BLOCKING NOTES / Main Integration
+  ELIGIBLE" for full detail; the sole Next Action is now the
+  documentation-only main integration of the reviewed candidate (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -8445,6 +8646,28 @@ remain true and are established in §4/§8 and elsewhere in this document:
   AUTHORIZED` (see §4/§8; the sole Next Action is now a fresh read-only
   Independent Review of the candidate, §10)
 
+- Since then: a fresh, read-only Independent Review (repository mutation
+  `0`) of the BIGINT Writer/Digest/Output Representation Tier C
+  documentation candidate (`1350884a1b7b40f6b715c1a2867998de142c2f40`,
+  parent exactly `b486c3cd1e36faa492f627dd4439708562913c65`) has
+  completed with evidence gate `12/12 PASS`, findings `F-BIGINT-IR-01`–
+  `03` (all NOTE / OPEN / NON-BLOCKING), correction required `NO`, owner
+  value required `NO`, final verdict `APPROVE WITH NON-BLOCKING NOTES`,
+  and main-integration eligibility `ELIGIBLE`; Control Tower adjudication
+  `REVIEW VERDICT ACCEPTED`. This does NOT mean: the candidate is
+  integrated, cherry-picked, or canonical on `main` — NOT CLAIMED (`NOT
+  YET PERFORMED`; canonical `main` API/Schema remain `1.30`/`1.9`);
+  Development authorized — NOT CLAIMED; the writer correction or Unseen
+  Transfer Runtime implemented, validated, or closed — NOT CLAIMED;
+  `F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+  NON-BLOCKING`); any historical-data fact established — NOT CLAIMED
+  (`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run — NOT CLAIMED
+  (`NOT RUN`). Governing state is now `USER-APPROVED / INDEPENDENTLY
+  REVIEWED — APPROVE WITH NON-BLOCKING NOTES / MAIN-INTEGRATION ELIGIBLE
+  / NOT YET INTEGRATED / DEVELOPMENT NOT AUTHORIZED` (see §4/§8; the
+  sole Next Action is now the documentation-only main integration of the
+  reviewed candidate, §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -9232,30 +9455,41 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- A fresh read-only Independent Review of the BIGINT
+- Validation/Integration main integration of the exact reviewed BIGINT
   Writer/Digest/Output Representation Tier C documentation candidate,
-  classification `DOCUMENTATION-ONLY INDEPENDENT REVIEW`. Target:
-  validation branch `validation/bigint-writer-digest-output-tierc-20260912`,
-  exact candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40`, exact
-  parent `b486c3cd1e36faa492f627dd4439708562913c65`. This next action
-  must: (1) cause zero repository mutation; (2) fresh-fetch remote refs
-  before reviewing; (3) review the exact pinned candidate commit, not any
-  moving branch tip/prose; (4) verify exact tree/blobs/diff against the
-  exact parent `b486c3cd1e36faa492f627dd4439708562913c65` only; (5)
-  verify the candidate encodes the exact USER-APPROVED `D1`–`D5`
-  decisions; (6) check `API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md`
-  internal consistency; (7) check that the generic `evidence-semantic-v1`
-  normalization-version identifier remains isolated/frozen and is not
-  globally redefined; (8) check the exact canonical literal
-  `evidence-assignment-snapshot-v2` is used correctly and scoped to
-  assignment-snapshot digesting only; (9) check the historical-data
-  `UNKNOWN / NOT INSPECTED` boundary is preserved with no automatic
-  re-digest/rewrite/backfill authorized; (10) check
-  RAW_SOURCE/Retention v1/Unseen Transfer non-interference; (11) check
-  that `F-R02` is not prematurely closed or reclassified; (12) check that
-  no Development/Runtime implementation authorization is claimed or
-  implied; and (13) return a formal review verdict and main-integration
-  eligibility determination to Control Tower. This next action does NOT
-  itself authorize Development, does NOT implement the writer correction,
-  does NOT implement Unseen Transfer Runtime, and does NOT integrate the
-  candidate to `main`.
+  classification `DOCUMENTATION-ONLY MAIN INTEGRATION`. Target: exact
+  reviewed candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40`
+  from validation branch
+  `validation/bigint-writer-digest-output-tierc-20260912`, exact parent
+  `b486c3cd1e36faa492f627dd4439708562913c65`. This next action must: (1)
+  fresh-fetch `origin`; (2) verify the exact then-current `main` after
+  this review-status sync; (3) verify the candidate ref remains exactly
+  `1350884a1b7b40f6b715c1a2867998de142c2f40`; (4) verify the reviewed
+  candidate tree/blobs are unchanged (tree
+  `14d12e1884f093c772bde880a2beedfc831f872b`; `API_CONTRACT.md` =
+  `e60afa6bda3356051c24b36a823fb325761b9b42`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` =
+  `de244476e56dfcab59dcd899a25091a2b1452e31`); (5) verify the review
+  verdict recorded as `APPROVE WITH NON-BLOCKING NOTES` / eligibility
+  `ELIGIBLE` / correction required `NO`; (6) cherry-pick exactly
+  candidate commit `1350884a1b7b40f6b715c1a2867998de142c2f40` onto the
+  exact then-current `main`; (7) no squash, amend, rebase, or
+  force-push; (8) if conflict or any ref mismatch, STOP as `BLOCKED`;
+  (9) post-integration verify the changed canonical files from the
+  cherry-pick are exactly `API_CONTRACT.md` and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md`; (10) verify resulting canonical
+  content is byte-equivalent to the reviewed candidate blobs (API
+  `e60afa6bda3356051c24b36a823fb325761b9b42`; Schema
+  `de244476e56dfcab59dcd899a25091a2b1452e31`); (11) run
+  documentation/static checks only (`git diff --check`, object/blob/tree
+  verification); (12) PostgreSQL `NOT RUN — DOCUMENTATION-ONLY
+  INTEGRATION`; (13) Runtime/npm tests `NOT RUN — DOCUMENTATION-ONLY
+  INTEGRATION`; (14) do NOT call either `PASS`; (15) do NOT authorize
+  Development; (16) do NOT implement the writer correction; (17) do NOT
+  implement Unseen Transfer Runtime; (18) preserve historical data
+  `UNKNOWN / NOT INSPECTED`; (19) preserve `F-R02` `OPEN /
+  NON-BLOCKING`; and (20) return the exact integration
+  commit/parent/tree/blobs and post-push remote evidence to Control
+  Tower. This status-sync record does NOT itself perform the
+  integration, does NOT authorize Development, does NOT implement the
+  writer correction, and does NOT implement Unseen Transfer Runtime.
