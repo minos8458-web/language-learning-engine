@@ -589,6 +589,42 @@ Named constraints:
 
 `exposure_history_cutoff_ordinal`과 `resolved_item_lineage`는 snapshot digest semantic content에 포함한다.
 
+**BIGINT writer/digest output representation clarification(사용자 승인, 2026-09-12):**
+
+기존 generic normalization identifier `evidence-semantic-v1`은 계속 frozen이며 이 clarification으로 재정의·대체·supersede하지 않는다. Corrected assignment-snapshot digesting에는 별도 canonical `normalization_version` = `evidence-assignment-snapshot-v2`를 사용한다. Scope는 assignment snapshot digesting뿐이며, experiment version digest, condition/reference definition digest, attempt-open generic digest, 다른 generic `digestSemanticPayload` domain, RAW_SOURCE projection semantic(§12.3.1), finalization normalization semantic(`evidence-finalization-v1`)을 변경하지 않는다.
+
+`evidence-assignment-snapshot-v2` 아래에서 corrected assignment snapshot을 digesting할 때, snapshot digest semantic payload에 포함되는 `exposureHistoryCutoffOrdinal`(physical column: `exposure_history_cutoff_ordinal`)은 해당 PostgreSQL BIGINT 값의 exact base-10 decimal string인 JSON string이어야 한다.
+
+* Leading `+` 없음
+* Exponent 표기 없음
+* Decimal point 없음
+* Whitespace 없음
+* `0`은 `"0"`
+* Positive 값은 decimal digit만 포함(signed-negative form은 정의하지 않는다 — physical cutoff는 nonnegative)
+* Tagged object나 JSON-native BigInt 표현을 사용하지 않는다
+* JavaScript `Number`는 이 digest semantic 권위가 아니다
+
+Snapshot의 다른 semantic content(`resolvedItemLineage` 포함)는 이 clarification으로 변경되지 않는다. 이 clarification은 physical schema/column type을 변경하지 않는다 — `evidence_assignment_snapshots.exposure_history_cutoff_ordinal`은 계속 BIGINT다.
+
+기존 저장된 assignment snapshot row 중 `normalization_version = evidence-semantic-v1`인 row는 원래 저장된 digest byte와 원래 serialization 규칙 아래 계속 authoritative다. 이 clarification은 그러한 historical row에 대해 자동 re-digest, rewrite 또는 backfill을 승인하지 않는다. High BIGINT 값에 대해 그러한 historical row의 정확성 여부를 주장하지 않는다 — 해당 row의 data state는 `UNKNOWN / NOT INSPECTED`로 남는다.
+
+이 clarification의 정책 경계는 다음과 같다.
+
+* Affected row가 존재한다고 가정하지 않는다.
+* Affected row가 존재하지 않는다고 가정하지 않는다.
+* 자동 historical re-digest를 승인하지 않는다.
+* 자동 rewrite를 승인하지 않는다.
+* 자동 backfill을 승인하지 않는다.
+* 이 clarification은 future corrected writer behavior만 규율한다.
+* Historical-data inspection은 별도 명시적 authorization을 필요로 하며, 이 clarification은 그 authorization을 부여하지 않는다.
+* 이 clarification은 learner/human-data inspection을 승인하지 않는다.
+* Affected row가 존재한다고 추후 증명되면, remediation은 별도 correction-policy 결정을 필요로 한다.
+* 현재 max `exposure_ordinal` 값을 주장하지 않는다.
+
+이 clarification은 다음을 승인하지 않는다: writer Runtime correction, Unseen Transfer Runtime 구현, Runtime/test 변경, migration/DDL, historical-data inspection, historical-data remediation, human-data collection, P1 activation, efficacy 주장, actual-provider/audio 작업, Retention v1 재검토, 기존 Unseen documentation lifecycle 재검토. 이 clarification은 Runtime Foundation A finding `F-R02`가 `CLOSED`/`RESOLVED`/corrected/validated되었다고 주장하지 않는다 — `F-R02`는 계속 `OPEN`/`NON-BLOCKING`이다.
+
+`createAssignment`가 반환하는 `snapshot.exposure_history_cutoff_ordinal`과 `recordAssignmentItemExposure`가 반환하는 `exposureOrdinal`의 caller-visible 표현은 `API_CONTRACT.md` §13.10.4·§13.10.4.1이 정의한다. 두 값은 동일 BIGINT ordinal domain이며 동일 base-10 decimal string 표현을 공유한다.
+
 Reference-kind validity는 assignment-creation transaction이 검증한다.
 
 각 snapshot field는 다음 고정 kind로 `evidence_reference_versions`의 exact ID/version을 조회한다.
@@ -4205,3 +4241,4 @@ Approval does not permit or declare:
 | 1.7 | 2026-09-05 | F-RB1-03/F-RB1-04 Architecture disambiguation 동기화 — §12.2 RAW_SOURCE root selection과 closure에 API §13.10.11.1과 정확히 동일한 clarification(assignment-level secondary filter/predicate가 `conditionReferences` 포함 네 개 전부, assignment 존재는 `analysisCutoff` 이하 `created_at` 기준)을 추가. 신규 physical object/column 없음, 기존 §5 physical schema 및 물리 계약은 불변. |
 | 1.8 | 2026-09-08 | VI P1 Measurement Readiness METRIC_RESULT Common Contract + Retention First Reducer Tier C 사용자 승인 반영 — API §13.10.11.2 `queryMetricResult(pool, input)`(synthetic P0 Retention v1) 동기화. §12.2 METRIC_RESULT 최소 input을 exact 5-key input/5-key filters(`assignmentIds`/`attemptIds` 금지, `enrollmentIds`/`conditionReferences` 중 하나 이상 nonempty) pointer로 교체하고, §12.3에 기존 conceptual 필드 목록이 exact runtime projection이 아님을 명시. §12.3.4(exact envelope/19-key group row/status/zero-candidate/ordering/counts/fixed 6-decimal HALF_UP ratio/source provenance)와 §12.4.1(14-key closed FORMULA definition v1, `populationPolicy` 미허용)을 신설. §12.5 Retention subsection을 candidate admission·denominator eligibility·completion integrity·FIRST_MATCH exclusion(14-step)·numerator/denominator·timeliness·mutable lifecycle·count/status·source provenance·transaction/non-authority로 재작성(Unseen transfer subsection 불변). §18.11 끝에 Retention v1 synthetic conformance fixture 목록(`minimumSample=2`, `earlyToleranceMs=lateToleranceMs=3600000`, 실제 P1 calibration 아님)을 추가. RAW_SOURCE input/output/`empty_result`·§5 physical schema·migration·Unseen-transfer(F-MR-ARCH-06, OPEN/DEFERRED)는 불변이며 Runtime/test 구현, human-data collection, 실제 P1 timing calibration/anchor 확정을 승인하지 않고 어떤 finding도 close하지 않는다. |
 | 1.9 | 2026-09-11 | VI P1 Measurement Readiness METRIC_RESULT Unseen Transfer Tier C 사용자 승인 반영 — API §13.10.11.3 `queryMetricResult(pool, input)`(synthetic P0 Unseen Transfer v2, `definitionVersion` 기반 dispatch, `definitionVersion 1`=RETENTION 불변) 동기화. §12.2 METRIC_RESULT 최소 input에 `definitionVersion`별 aggregation grain 분기(v2 six-axis, `ITEM_FAMILY` 추가)를 명시. §12.3.5(exact envelope/group row 확장·`itemFamilyId`/`itemFamilyVersion` groupKey·`lineageNotDifferentCount`/`noPriorNodeExposureCount`·status/zero-candidate/ordering/12-bucket counts/fixed 6-decimal HALF_UP ratio/`exposureIds` 비고정 provenance)와 §12.4.2(16-key closed FORMULA definition v2, `lineagePolicy`/`scenarioPolicy` subobject, 16-rule `exclusionPolicy.ruleOrder`)를 신설. §5.5에 optional versioned ITEM `lineageAuthority` extension(신규 `reference_kind` 없음, `EXACT_REPEAT`/`SURFACE_VARIANT`/`SAME_ITEM_FAMILY`/`DIFFERENT_ITEM_FAMILY` 우선순위, fuzzy/edit-distance/token-overlap/transitive inference 금지)을 추가. §12.5 Unseen transfer subsection을 dispatch·grain/groupKey·primary lineage eligibility·node-level prior exposure(`NODE_PRIOR_EXPOSURE_ABSENT` 정상 bucket)·lineage recomputation(null-safe stored/recomputed 비교)·source/filter separation·BIGINT exactness(`exposure_ordinal`/`exposure_history_cutoff_ordinal`, JS `Number` 비교/정렬/영속/round-trip 금지)·scenario·16-rule FIRST_MATCH(rule 15/16이 rule 1–14 생존 candidate에만 적용)·numerator/denominator·group output/count invariants·provenance·transaction/non-authority·physical schema sufficiency(`PHYSICAL SCHEMA SUFFICIENT = YES`, 신규 table/column/view/materialized view/migration 014/DDL 없음)·non-scope로 재작성(기존 9개 bullet의 semantic content 보존, 확장). Retention v1(§12.3.4/§12.4.1/§12.5 Retention subsection, 5-axis grain, 7-key envelope, 19-key group row, 10-bucket exclusion count, `exposureIds=[]`)은 완전히 보존되며 이 patch로 silently mutate되지 않는다. RAW_SOURCE input/output/`empty_result`(§12.2/§12.3)는 semantically 불변이다. 신규 physical object/column/view/migration 없음. Owner value 불요; Runtime/test 구현, human-data collection, 실제 P1 timing calibration/anchor 확정, scenario-stratified reducer, efficacy 결론을 승인하지 않으며 `F-MR-ARCH-06`·`F-MR-UT-01`–`F-MR-UT-09`를 포함한 어떤 finding도 이 patch로 close하지 않는다. |
+| 1.10 | 2026-09-12 | BIGINT writer/digest output representation D1–D5 사용자 승인 반영 — §5.9에 corrected assignment-snapshot digest normalization version(`evidence-assignment-snapshot-v2`, 기존 generic `evidence-semantic-v1`은 frozen 유지, scope는 assignment snapshot digesting뿐)과 digest semantic payload 내 `exposureHistoryCutoffOrdinal`의 exact base-10 decimal string encoding(leading `+`/exponent/decimal point/whitespace 금지, `0`은 `"0"`, signed-negative form 미정의, tagged object/JSON-native BigInt 금지, JS `Number`는 권위 아님)을 정의. 기존 저장된 `normalization_version = evidence-semantic-v1` assignment snapshot row는 원래 digest byte 아래 authoritative로 유지되며 자동 re-digest·rewrite·backfill을 승인하지 않고 해당 row의 data state는 `UNKNOWN / NOT INSPECTED`로 남는다(affected row 존재/부재 가정 없음, historical-data inspection·human-data collection 별도 미승인). `API_CONTRACT.md` §13.10.4(`createAssignment` 반환 `snapshot.exposure_history_cutoff_ordinal`)·§13.10.4.1(`recordAssignmentItemExposure` 반환 `exposureOrdinal`)과 동기화 — 두 값은 동일 BIGINT ordinal domain, 동일 base-10 decimal string 표현. RAW_SOURCE projection normalization(§12.3.1)·Retention v1(§12.3.4/§12.4.1)·Unseen Transfer v2(§12.3.5/§12.4.2)·물리 스키마(BIGINT column type 불변)·migration은 변경 없음. Runtime Foundation A finding `F-R02`는 계속 `OPEN`/`NON-BLOCKING`이며 이 patch로 close하지 않는다. Owner value 불요; Tier A·migration/DDL·Runtime(`src/instrumentation/evidenceNormalization.js`/`evidenceRepository.js` 포함)/test 변경, historical-data inspection/remediation, human-data collection, P1 activation, efficacy 결론을 승인하지 않는다. |
