@@ -297,6 +297,76 @@ function assignmentInput(overrides = {}) {
   return { ...input, ...overrides };
 }
 
+// Test-file-only, INDEPENDENT reconstruction of the assignment-snapshot
+// digest contract (API_CONTRACT.md revision 1.31 / EVIDENCE_FOUNDATION_P0_
+// SCHEMA.md revision 1.10, D2/B). This intentionally does NOT call
+// normalizeSemanticValue/digestSemanticPayload/digestAssignmentSnapshotPayload
+// from production -- it hand-rolls the same documented normalized-JSON +
+// SHA-256 shape so a test comparison against the persisted digest is not
+// merely the production helper checked against itself.
+function independentNormalize(value) {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => independentNormalize(item));
+  }
+  if (value && typeof value === 'object') {
+    const normalized = {};
+    for (const key of Object.keys(value).sort()) {
+      normalized[key] = independentNormalize(value[key]);
+    }
+    return normalized;
+  }
+  throw new Error('independentNormalize: unsupported value');
+}
+
+function independentDigest(value) {
+  return createHash('sha256')
+    .update(JSON.stringify(independentNormalize(value)), 'utf8')
+    .digest('hex');
+}
+
+// Mirrors evidenceRepository.js's createAssignment `snapshotForDigest` shape
+// exactly, for the fixed EXP_EVIDENCE_P0/COND_EVIDENCE_P0/REFERENCES/
+// assignmentInput() default fixture used below, with only
+// exposureHistoryCutoffOrdinal (and, for ASSESSMENT, resolvedItemLineage)
+// varying.
+function expectedAssignmentSnapshotDigestInput({ cutoffOrdinal, resolvedItemLineage = null }) {
+  return {
+    operationCategory: 'ASSIGNMENT_SNAPSHOT',
+    snapshot: {
+      experimentId: 'EXP_EVIDENCE_P0',
+      experimentVersion: 1,
+      conditionId: 'COND_EVIDENCE_P0',
+      conditionVersion: 1,
+      itemId: REFERENCES.itemId,
+      itemVersion: REFERENCES.itemVersion,
+      contentId: null,
+      contentVersion: null,
+      scenarioId: REFERENCES.scenarioId,
+      scenarioVersion: REFERENCES.scenarioVersion,
+      itemFamilyId: REFERENCES.itemFamilyId,
+      itemFamilyVersion: REFERENCES.itemFamilyVersion,
+      lexicalManifestId: REFERENCES.lexicalManifestId,
+      lexicalManifestVersion: REFERENCES.lexicalManifestVersion,
+      rubricId: REFERENCES.rubricId,
+      rubricVersion: REFERENCES.rubricVersion,
+      formulaId: REFERENCES.formulaId,
+      formulaVersion: REFERENCES.formulaVersion,
+      schedulerProtocolId: REFERENCES.schedulerProtocolId,
+      schedulerProtocolVersion: REFERENCES.schedulerProtocolVersion,
+      instrumentationProtocolId: REFERENCES.instrumentationProtocolId,
+      instrumentationProtocolVersion: REFERENCES.instrumentationProtocolVersion,
+      exposureHistoryCutoffOrdinal: cutoffOrdinal,
+      resolvedItemLineage,
+      plannedStimulusModalities: ['TEXT'],
+      plannedResponseModalities: ['TEXT_ENTRY'],
+    },
+    targetNodeIds: ['NODE_EVIDENCE_A', 'NODE_EVIDENCE_B'],
+  };
+}
+
 function attemptInput(idempotencyIdentity, openPayload, overrides = {}) {
   return {
     assignmentId: baseAssignment.assignment.assignment_id,
@@ -712,6 +782,111 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
       snapshots: before.snapshots + 1,
       nodes: before.nodes + 2,
     });
+  });
+
+  test('assignment-snapshot digest is scoped evidence-assignment-snapshot-v2, differentiates unsafe-range adjacent BIGINT ordinals, and matches an independently computed SHA-256; the generic evidence-semantic-v1 digest domain is unaffected', async () => {
+    // Independent proof that an EXISTING generic digest domain
+    // (registerExperimentVersion -> digestSemanticPayload) continues to
+    // persist evidence-semantic-v1, exercised through an existing generic
+    // repository path -- not merely a constant inspection.
+    const genericRegistration = await repository.registerExperimentVersion(pool, {
+      experimentId: 'EXP_EVIDENCE_GENERIC_DIGEST_PROOF',
+      version: 1,
+      definition: { protocol: 'GENERIC_DIGEST_PROOF' },
+    });
+    assert.equal(genericRegistration.replayed, false);
+    assert.equal(genericRegistration.row.normalization_version, 'evidence-semantic-v1');
+    assert.equal(
+      genericRegistration.row.normalization_version,
+      evidence.evidenceNormalization.NORMALIZATION_VERSION
+    );
+
+    // Two self-contained enrollments so the shared, global
+    // evidence_assignment_item_exposure_ordinal_seq sequence can be driven
+    // to the unsafe range adjacent to Number.MAX_SAFE_INTEGER
+    // (9007199254740991) without affecting any other test in this file.
+    const digestProofParticipant = await repository.createParticipant(pool, {});
+    const enrollmentLow = await repository.createEnrollment(pool, {
+      participantId: digestProofParticipant.participant_id,
+      experimentId: 'EXP_EVIDENCE_P0',
+      experimentVersion: 1,
+      conditionId: 'COND_EVIDENCE_P0',
+      conditionVersion: 1,
+    });
+    const enrollmentHigh = await repository.createEnrollment(pool, {
+      participantId: digestProofParticipant.participant_id,
+      experimentId: 'EXP_EVIDENCE_P0',
+      experimentVersion: 1,
+      conditionId: 'COND_EVIDENCE_P0',
+      conditionVersion: 1,
+    });
+
+    await pool.query(
+      "SELECT setval('evidence_assignment_item_exposure_ordinal_seq', 9007199254740991, true)"
+    );
+
+    const lowHistoryAssignment = await repository.createAssignment(
+      pool,
+      assignmentInput({ enrollmentId: enrollmentLow.enrollment_id, assignmentType: 'LEARNING' })
+    );
+    const lowExposure = await repository.recordAssignmentItemExposure(pool, {
+      assignmentId: lowHistoryAssignment.assignment.assignment_id,
+    });
+    assert.equal(lowExposure.exposureOrdinal, '9007199254740992');
+
+    const highHistoryAssignment = await repository.createAssignment(
+      pool,
+      assignmentInput({ enrollmentId: enrollmentHigh.enrollment_id, assignmentType: 'LEARNING' })
+    );
+    const highExposure = await repository.recordAssignmentItemExposure(pool, {
+      assignmentId: highHistoryAssignment.assignment.assignment_id,
+    });
+    assert.equal(highExposure.exposureOrdinal, '9007199254740993');
+
+    // These two adjacent exact BIGINT ordinals collapse to the identical JS
+    // Number under Number(...) round-trip -- the exact defect this
+    // correction removes.
+    assert.notEqual(lowExposure.exposureOrdinal, highExposure.exposureOrdinal);
+    assert.equal(Number(lowExposure.exposureOrdinal), Number(highExposure.exposureOrdinal));
+
+    const snapshotLow = await repository.createAssignment(
+      pool,
+      assignmentInput({ enrollmentId: enrollmentLow.enrollment_id, assignmentType: 'LEARNING' })
+    );
+    const snapshotHigh = await repository.createAssignment(
+      pool,
+      assignmentInput({ enrollmentId: enrollmentHigh.enrollment_id, assignmentType: 'LEARNING' })
+    );
+
+    assert.equal(typeof snapshotLow.snapshot.exposure_history_cutoff_ordinal, 'string');
+    assert.equal(typeof snapshotHigh.snapshot.exposure_history_cutoff_ordinal, 'string');
+    assert.equal(snapshotLow.snapshot.exposure_history_cutoff_ordinal, '9007199254740992');
+    assert.equal(snapshotHigh.snapshot.exposure_history_cutoff_ordinal, '9007199254740993');
+    assert.equal(snapshotLow.snapshot.normalization_version, 'evidence-assignment-snapshot-v2');
+    assert.equal(snapshotHigh.snapshot.normalization_version, 'evidence-assignment-snapshot-v2');
+    assert.equal(
+      snapshotLow.snapshot.normalization_version,
+      evidence.evidenceNormalization.ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION
+    );
+
+    // The assignment-snapshot digest differentiates the two exact adjacent
+    // unsafe-range ordinals, even though they are indistinguishable through
+    // JS Number.
+    assert.notEqual(snapshotLow.snapshot.snapshot_digest, snapshotHigh.snapshot.snapshot_digest);
+
+    // Independent reconstruction (no call into digestSemanticPayload,
+    // digestAssignmentSnapshotPayload, or normalizeSemanticValue): hand-build
+    // the documented ASSIGNMENT_SNAPSHOT semantic payload and its
+    // normalized-JSON/SHA-256 digest, then compare byte-for-byte to the
+    // persisted digest.
+    assert.equal(
+      snapshotLow.snapshot.snapshot_digest,
+      independentDigest(expectedAssignmentSnapshotDigestInput({ cutoffOrdinal: '9007199254740992' }))
+    );
+    assert.equal(
+      snapshotHigh.snapshot.snapshot_digest,
+      independentDigest(expectedAssignmentSnapshotDigestInput({ cutoffOrdinal: '9007199254740993' }))
+    );
   });
 
   test('unknown fixed-kind reference rejects the complete assignment aggregate', async () => {
@@ -2508,6 +2683,49 @@ describe('Evidence Foundation P0 repository', { concurrency: false }, () => {
     assert.doesNotMatch(openAttemptSource, /\bUPDATE\s+evidence_assignments\b/i);
     const createAssignmentSource = extractFunctionSource(repositorySource, 'createAssignment');
     assert.doesNotMatch(createAssignmentSource, /\bUPDATE\s+evidence_assignments\b/i);
+  });
+
+  test('BIGINT writer source authority: no Number() collapse of cutoff/exposure-ordinal BIGINT values; digest versions are correctly scoped', () => {
+    const repositorySource = fs.readFileSync(
+      path.resolve(__dirname, '../src/instrumentation/evidenceRepository.js'),
+      'utf8'
+    );
+
+    // D1/A/D: the two historical lossy-conversion defect sites must be gone
+    // from the whole file, not merely reworded.
+    assert.doesNotMatch(repositorySource, /Number\(cutoffRows\[0\]\.cutoff\)/);
+    assert.doesNotMatch(repositorySource, /Number\(exposureRow\.exposure_ordinal\)/);
+
+    // D2/D3/B: createAssignment's snapshot digest call site uses the scoped
+    // assignment-snapshot digest helper, not the generic one.
+    const createAssignmentSource = extractFunctionSource(repositorySource, 'createAssignment');
+    assert.match(createAssignmentSource, /digestAssignmentSnapshotPayload\(/);
+    assert.doesNotMatch(createAssignmentSource, /\bdigestSemanticPayload\(/);
+
+    // Every other generic-digest caller in this file is untouched: the
+    // scoped correction did not globally replace digestSemanticPayload.
+    for (const name of [
+      'registerExperimentVersion',
+      'registerConditionVersion',
+      'registerReferenceVersion',
+      'openAttempt',
+    ]) {
+      const functionSource = extractFunctionSource(repositorySource, name);
+      assert.match(functionSource, /digestSemanticPayload\(/);
+    }
+
+    const normalizationSource = fs.readFileSync(
+      path.resolve(__dirname, '../src/instrumentation/evidenceNormalization.js'),
+      'utf8'
+    );
+    // The generic normalization version stays frozen and the scoped
+    // assignment-snapshot version is exactly what the approved correction
+    // requires.
+    assert.match(normalizationSource, /NORMALIZATION_VERSION = 'evidence-semantic-v1'/);
+    assert.match(
+      normalizationSource,
+      /ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION = 'evidence-assignment-snapshot-v2'/
+    );
   });
 
   test('startSession requires an ACTIVE enrollment and creates nonterminal, non-idempotent sessions', async () => {
