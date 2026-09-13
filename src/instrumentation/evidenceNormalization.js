@@ -8,7 +8,28 @@ const {
 
 const NORMALIZATION_VERSION = 'evidence-semantic-v1';
 const FINALIZATION_NORMALIZATION_VERSION = 'evidence-finalization-v1';
+// Scoped correction (API_CONTRACT.md revision 1.31,
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md revision 1.10, D1-D5): assignment-snapshot
+// digesting only. The generic NORMALIZATION_VERSION above stays frozen and
+// unrelated existing digest domains are unaffected.
+const ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION = 'evidence-assignment-snapshot-v2';
 const DIGEST_ALGORITHM = 'sha256';
+
+// BIGINT ordinal exact-authority grammar (D1): base-10 decimal string only.
+// Zero is exactly "0"; positive values are digits only with no leading zero,
+// no leading "+", no exponent, no decimal point, no whitespace, no negative
+// sign. JavaScript Number is never authoritative for this domain.
+const EXACT_BIGINT_ORDINAL_PATTERN = /^(?:0|[1-9][0-9]*)$/;
+
+function assertExactBigIntOrdinalString(value, path) {
+  if (typeof value !== 'string' || !EXACT_BIGINT_ORDINAL_PATTERN.test(value)) {
+    throw new ContractViolationError(
+      `${path} must be an exact base-10 decimal string BIGINT ordinal `
+        + '(digits only, no sign, no leading zero, no exponent, no decimal point, no whitespace)'
+    );
+  }
+  return value;
+}
 
 const SERVER_ISSUED_FIELD_NAMES = new Set([
   'createdAt',
@@ -111,6 +132,34 @@ function digestSemanticPayload(value, options = {}) {
     digest: digestSerialized(serialized),
     digestAlgorithm: DIGEST_ALGORITHM,
     normalizationVersion: NORMALIZATION_VERSION,
+  };
+}
+
+// Assignment-snapshot-only digesting (D2/D3/B in the approved correction).
+// Structurally identical to digestSemanticPayload, except: (1) it stamps the
+// scoped normalizationVersion ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION
+// instead of the generic NORMALIZATION_VERSION, and (2) it independently
+// re-asserts the exact-string BIGINT ordinal grammar on
+// snapshot.exposureHistoryCutoffOrdinal before digesting, so the digest can
+// never be computed over a value that already lost BIGINT precision.
+// digestSemanticPayload/NORMALIZATION_VERSION above are untouched by this
+// addition and remain the generic evidence-semantic-v1 digest path.
+function digestAssignmentSnapshotPayload(value) {
+  assertExactBigIntOrdinalString(
+    value?.snapshot?.exposureHistoryCutoffOrdinal,
+    '$.snapshot.exposureHistoryCutoffOrdinal'
+  );
+  const normalizedValue = normalizeSemanticValue(value);
+  if (normalizedValue === OMIT) {
+    throw new ContractViolationError('digest input 전체가 undefined일 수 없습니다');
+  }
+  const serialized = serializeNormalized(normalizedValue);
+  return {
+    normalizedValue,
+    serialized,
+    digest: digestSerialized(serialized),
+    digestAlgorithm: DIGEST_ALGORITHM,
+    normalizationVersion: ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION,
   };
 }
 
@@ -240,13 +289,17 @@ function buildFinalizationDigestInput(input) {
 }
 
 module.exports = {
+  ASSIGNMENT_SNAPSHOT_NORMALIZATION_VERSION,
   DIGEST_ALGORITHM,
+  EXACT_BIGINT_ORDINAL_PATTERN,
   FINALIZATION_NORMALIZATION_VERSION,
   NORMALIZATION_VERSION,
   SERVER_ISSUED_FIELD_NAMES,
+  assertExactBigIntOrdinalString,
   buildAttemptOpenDigestInput,
   buildFinalizationDigestInput,
   buildSnapshotDigestInput,
+  digestAssignmentSnapshotPayload,
   digestFinalizationPayload,
   digestSemanticPayload,
   normalizeFinalizationValue,

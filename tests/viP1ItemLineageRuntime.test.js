@@ -220,7 +220,12 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     assert.equal(result.replayed, false);
     assert.equal(result.assignmentId, created.assignment.assignment_id);
     assert.equal(result.enrollmentId, enrollment.enrollment_id);
-    assert.ok(Number.isInteger(result.exposureOrdinal) && result.exposureOrdinal > 0);
+    // D4: exposureOrdinal is the exact base-10 decimal string BIGINT
+    // authority, never a JS Number. Positivity/format is checked on the
+    // string itself; BigInt is used only as a lossless ">" comparator.
+    assert.equal(typeof result.exposureOrdinal, 'string');
+    assert.match(result.exposureOrdinal, /^[1-9][0-9]*$/);
+    assert.ok(BigInt(result.exposureOrdinal) > 0n);
     const rows = await readExposuresFor(created.assignment.assignment_id);
     assert.equal(rows.length, 1);
   });
@@ -248,7 +253,9 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     const enrollment = await newEnrollment();
     const first = await exposeNewAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A] });
     const second = await exposeNewAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_B] });
-    assert.ok(second.exposure.exposureOrdinal > first.exposure.exposureOrdinal);
+    // Lossless ordering: exposureOrdinal is an exact decimal-string BIGINT
+    // authority; only BigInt conversion (never Number) may compare order.
+    assert.ok(BigInt(second.exposure.exposureOrdinal) > BigInt(first.exposure.exposureOrdinal));
   });
 
   test('T05 cross-enrollment ordinal interleaving cannot affect lineage', async () => {
@@ -267,7 +274,9 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshot = await readSnapshot(assessment.assignment.assignment_id);
-    assert.equal(Number(snapshot.exposure_history_cutoff_ordinal), 0);
+    // Exact-string zero (D1): "0" is the canonical zero representation, not
+    // a JS Number comparison.
+    assert.equal(snapshot.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshot.resolved_item_lineage, null);
   });
 
@@ -275,21 +284,27 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     const enrollment = await newEnrollment();
     const first = await exposeNewAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A] });
     const second = await exposeNewAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_B] });
-    assert.ok(second.exposure.exposureOrdinal > first.exposure.exposureOrdinal);
+    // Lossless ordering: exposureOrdinal is an exact decimal-string BIGINT
+    // authority; only BigInt conversion (never Number) may compare order.
+    assert.ok(BigInt(second.exposure.exposureOrdinal) > BigInt(first.exposure.exposureOrdinal));
 
     const third = await createAssignmentFixture(enrollment.enrollment_id, {
       assignmentType: 'ASSESSMENT',
       targetNodeIds: [NODE_C],
     });
     const snapshot = await readSnapshot(third.assignment.assignment_id);
-    assert.equal(Number(snapshot.exposure_history_cutoff_ordinal), second.exposure.exposureOrdinal);
+    // Exact-string equality (D1): both sides are already exact decimal-string
+    // BIGINT authority, so no lossy Number conversion is needed or allowed.
+    assert.equal(snapshot.exposure_history_cutoff_ordinal, second.exposure.exposureOrdinal);
   });
 
   test('T07 no prior exposure gives cutoff 0', async () => {
     const enrollment = await newEnrollment();
     const created = await createAssignmentFixture(enrollment.enrollment_id);
     const snapshot = await readSnapshot(created.assignment.assignment_id);
-    assert.equal(Number(snapshot.exposure_history_cutoff_ordinal), 0);
+    // Exact-string zero (D1): "0" is the canonical zero representation, not
+    // a JS Number comparison.
+    assert.equal(snapshot.exposure_history_cutoff_ordinal, '0');
   });
 
   test('T08 non-ASSESSMENT lineage is always null', async () => {
@@ -329,7 +344,9 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshot = await readSnapshot(assessment.assignment.assignment_id);
-    assert.ok(Number(snapshot.exposure_history_cutoff_ordinal) > 0);
+    // Exact-string positivity (D1): given the canonical grammar, "not zero"
+    // is equivalent to "positive" without needing Number/BigInt at all.
+    assert.notEqual(snapshot.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshot.resolved_item_lineage, null);
   });
 
@@ -417,7 +434,9 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshot = await readSnapshot(assessment.assignment.assignment_id);
-    assert.equal(Number(snapshot.exposure_history_cutoff_ordinal), 0);
+    // Exact-string zero (D1): "0" is the canonical zero representation, not
+    // a JS Number comparison.
+    assert.equal(snapshot.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshot.resolved_item_lineage, null);
   });
 
@@ -471,7 +490,9 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshot = await readSnapshot(assessment.assignment.assignment_id);
-    assert.equal(Number(snapshot.exposure_history_cutoff_ordinal), 0);
+    // Exact-string zero (D1): "0" is the canonical zero representation, not
+    // a JS Number comparison.
+    assert.equal(snapshot.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshot.resolved_item_lineage, null);
   });
 
@@ -482,12 +503,12 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       targetNodeIds: [NODE_A],
     });
     const snapshotBefore = await readSnapshot(assignment1.assignment.assignment_id);
-    assert.equal(Number(snapshotBefore.exposure_history_cutoff_ordinal), 0);
+    assert.equal(snapshotBefore.exposure_history_cutoff_ordinal, '0');
 
     await exposeNewAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A] });
 
     const snapshotAfter = await readSnapshot(assignment1.assignment.assignment_id);
-    assert.equal(Number(snapshotAfter.exposure_history_cutoff_ordinal), 0);
+    assert.equal(snapshotAfter.exposure_history_cutoff_ordinal, '0');
   });
 
   test('T19 a later exposure does not modify an earlier assignment\'s stored lineage', async () => {
@@ -591,7 +612,7 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshotNoPrior = await readSnapshot(assignmentNoPrior.assignment.assignment_id);
-    assert.equal(Number(snapshotNoPrior.exposure_history_cutoff_ordinal), 0);
+    assert.equal(snapshotNoPrior.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshotNoPrior.resolved_item_lineage, null);
 
     const enrollmentWithPrior = await newEnrollment();
@@ -607,7 +628,7 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_MAIN,
     });
     const snapshotWithPrior = await readSnapshot(assignmentWithPrior.assignment.assignment_id);
-    assert.ok(Number(snapshotWithPrior.exposure_history_cutoff_ordinal) > 0);
+    assert.notEqual(snapshotWithPrior.exposure_history_cutoff_ordinal, '0');
     assert.equal(snapshotWithPrior.resolved_item_lineage, 'EXACT_REPEAT');
 
     assert.notEqual(snapshotWithPrior.snapshot_digest, snapshotNoPrior.snapshot_digest);
@@ -662,12 +683,13 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     ]);
 
     const snapshot = await readSnapshot(assessmentResult.assignment.assignment_id);
-    const cutoff = Number(snapshot.exposure_history_cutoff_ordinal);
+    // D1: exact decimal-string BIGINT authority throughout -- no Number().
+    const cutoff = snapshot.exposure_history_cutoff_ordinal;
 
     // The owning-enrollment lock fully serializes the two operations, so
     // exactly one of two consistent outcomes must hold -- never a torn or
     // partially-applied state.
-    if (cutoff === 0) {
+    if (cutoff === '0') {
       assert.equal(snapshot.resolved_item_lineage, null);
     } else {
       assert.equal(cutoff, exposureResult.exposureOrdinal);
@@ -744,7 +766,11 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     // Deterministic ordering: the foreign exposure was created/recorded
     // strictly before the current enrollment's own non-relevant exposure.
     // Only relative ordering is asserted -- never a fixed literal ordinal.
-    assert.ok(foreignOrdinal < currentNonRelevantOrdinal);
+    // Lossless comparison: exposureOrdinal is an exact decimal-string BIGINT
+    // authority, so plain string "<" (lexicographic) would be wrong across
+    // differing digit lengths -- BigInt conversion is used strictly inside
+    // this assertion, never as production authority.
+    assert.ok(BigInt(foreignOrdinal) < BigInt(currentNonRelevantOrdinal));
 
     // 7. ASSESSMENT in the CURRENT enrollment targeting NODE_T26_TARGET,
     // using the same item/family as the foreign exposure.
@@ -755,16 +781,18 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
       itemFamilyId: FAMILY_T26,
     });
     const snapshot = await readSnapshot(assessment.assignment.assignment_id);
-    const cutoff = Number(snapshot.exposure_history_cutoff_ordinal);
+    // D1: exact decimal-string BIGINT authority throughout -- no Number().
+    const cutoff = snapshot.exposure_history_cutoff_ordinal;
 
     // 8. Cutoff is the max prior SAME-enrollment exposure ordinal, and it
     // is POSITIVE.
     assert.equal(cutoff, currentNonRelevantOrdinal);
-    assert.ok(cutoff > 0);
+    assert.notEqual(cutoff, '0');
 
     // 9. The foreign exposure's global ordinal is <= the current positive
     // cutoff -- it is not excluded by an ordinal/cutoff argument alone.
-    assert.ok(foreignOrdinal <= cutoff);
+    // Lossless comparison: BigInt conversion strictly inside the assertion.
+    assert.ok(BigInt(foreignOrdinal) <= BigInt(cutoff));
 
     // 10. Direct proof: the CURRENT enrollment has no cutoff-bounded,
     // target-relevant prior exposure for NODE_T26_TARGET. Its only
@@ -793,5 +821,125 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     assert.notEqual(snapshot.resolved_item_lineage, 'SURFACE_VARIANT');
     assert.notEqual(snapshot.resolved_item_lineage, 'SAME_ITEM_FAMILY');
     assert.notEqual(snapshot.resolved_item_lineage, 'DIFFERENT_ITEM_FAMILY');
+  });
+
+  // T27 -- BIGINT writer source-authority correction (D1-D5) unsafe-range
+  // regression. evidence_assignment_item_exposure_ordinal_seq is the single
+  // shared, global sequence backing exposure_ordinal (013_add_vi_p1_item_
+  // lineage.sql), so setval(...) drives it to the boundary adjacent to
+  // Number.MAX_SAFE_INTEGER (9007199254740991) without inserting ~9
+  // quadrillion real rows into the disposable database. 9007199254740992
+  // (2**53) is still exactly representable as a JS double; its neighbor
+  // 9007199254740993 (2**53 + 1) is NOT and collapses to 9007199254740992
+  // under Number(...) -- the two are used here as the adjacent unsafe-range
+  // pair.
+  test('T27 exposureOrdinal and exposure_history_cutoff_ordinal survive the unsafe BIGINT range (> Number.MAX_SAFE_INTEGER) exactly, including the lineage comparison bind', async () => {
+    const NODE_T27_A = 'NODE_LINEAGE_T27_A';
+    const NODE_T27_B = 'NODE_LINEAGE_T27_B';
+    const ITEM_T27 = 'ITEM_LINEAGE_T27';
+    const FAMILY_T27 = 'FAMILY_LINEAGE_T27';
+
+    await pool.query(
+      `INSERT INTO grammar_nodes (node_id, language, concept_ids, label, difficulty)
+       VALUES
+         ($1, 'VI', '[]'::jsonb, 'Lineage T27 A', 1),
+         ($2, 'VI', '[]'::jsonb, 'Lineage T27 B', 1)`,
+      [NODE_T27_A, NODE_T27_B]
+    );
+    await registerReference('ITEM', ITEM_T27, 1);
+    await registerReference('ITEM_FAMILY', FAMILY_T27, 1);
+
+    const enrollment = await newEnrollment();
+
+    await pool.query(
+      "SELECT setval('evidence_assignment_item_exposure_ordinal_seq', 9007199254740991, true)"
+    );
+
+    // First exposure: ordinal 9007199254740992, targeting a node the
+    // upcoming ASSESSMENT will NOT target, so it is same-enrollment (raises
+    // the cutoff) but not target-relevant on its own.
+    const first = await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_T27_B],
+      itemId: ITEM_T27,
+      itemFamilyId: FAMILY_T27,
+    });
+    assert.equal(typeof first.exposure.exposureOrdinal, 'string');
+    assert.equal(first.exposure.exposureOrdinal, '9007199254740992');
+
+    // Second exposure: ordinal 9007199254740993 -- exactly what becomes the
+    // enrollment's cutoff -- targeting the node the ASSESSMENT below will
+    // target, with the exact same item, so this is the sole target-relevant
+    // prior exposure and sits exactly AT the cutoff boundary.
+    const second = await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_T27_A],
+      itemId: ITEM_T27,
+      itemFamilyId: FAMILY_T27,
+    });
+    assert.equal(typeof second.exposure.exposureOrdinal, 'string');
+    assert.equal(second.exposure.exposureOrdinal, '9007199254740993');
+
+    // 1: exact values do not collapse through JS Number rounding.
+    assert.notEqual(first.exposure.exposureOrdinal, second.exposure.exposureOrdinal);
+    assert.equal(Number(first.exposure.exposureOrdinal), Number(second.exposure.exposureOrdinal));
+    assert.ok(BigInt(first.exposure.exposureOrdinal) < BigInt(second.exposure.exposureOrdinal));
+
+    // 9: replay returns the identical exact unsafe-range string.
+    const replay = await repository.recordAssignmentItemExposure(pool, {
+      assignmentId: second.created.assignment.assignment_id,
+    });
+    assert.equal(replay.replayed, true);
+    assert.equal(replay.exposureOrdinal, second.exposure.exposureOrdinal);
+
+    // ASSESSMENT targeting NODE_T27_A/ITEM_T27/FAMILY_T27: its cutoff is the
+    // max prior same-enrollment ordinal (9007199254740993, the second
+    // exposure's own ordinal). If the cutoff comparison bind used a
+    // Number-rounded value (9007199254740992), the exact "<=" check would
+    // wrongly EXCLUDE the second exposure (its true ordinal, 9007199254740993,
+    // would no longer be <= a rounded-down cutoff), collapsing this from
+    // EXACT_REPEAT to null -- so this assertion fails under the historical
+    // defect and passes only with exact-string authority preserved through
+    // the comparison bind.
+    const assessment = await createAssignmentFixture(enrollment.enrollment_id, {
+      assignmentType: 'ASSESSMENT',
+      targetNodeIds: [NODE_T27_A],
+      itemId: ITEM_T27,
+      itemFamilyId: FAMILY_T27,
+    });
+
+    // 5: caller-visible snapshot cutoff is an exact string.
+    assert.equal(typeof assessment.snapshot.exposure_history_cutoff_ordinal, 'string');
+    assert.equal(assessment.snapshot.exposure_history_cutoff_ordinal, '9007199254740993');
+    // 3: the lineage comparison bind used the exact authority (see comment
+    // above) -- EXACT_REPEAT, not null, proves the boundary-exact prior
+    // exposure was not excluded by a rounded bind value.
+    assert.equal(assessment.snapshot.resolved_item_lineage, 'EXACT_REPEAT');
+    // 7: snapshot normalization version is the scoped assignment-snapshot
+    // version.
+    assert.equal(assessment.snapshot.normalization_version, 'evidence-assignment-snapshot-v2');
+
+    // 2/4: independent read-back proves the persisted BIGINT is exact (not
+    // merely the same in-process object returned from the INSERT).
+    const persisted = await readSnapshot(assessment.assignment.assignment_id);
+    assert.equal(persisted.exposure_history_cutoff_ordinal, '9007199254740993');
+    assert.equal(persisted.resolved_item_lineage, 'EXACT_REPEAT');
+
+    // 6: digest semantic value is exact -- an assessment built against a
+    // DIFFERENT (Number-collapsed-equivalent but textually distinct) cutoff
+    // must not share this digest. This reuses the T23-style differencing
+    // proof at the unsafe boundary itself.
+    const otherEnrollment = await newEnrollment();
+    // No prior exposure in this enrollment: cutoff is exactly "0", and with
+    // no target-relevant history the lineage is null -- deliberately
+    // different snapshot semantic content from the unsafe-range assessment
+    // above, confirming the digest is sensitive to the exact cutoff/lineage
+    // pair rather than constant.
+    const otherAssessment = await createAssignmentFixture(otherEnrollment.enrollment_id, {
+      assignmentType: 'ASSESSMENT',
+      targetNodeIds: [NODE_T27_A],
+      itemId: ITEM_T27,
+      itemFamilyId: FAMILY_T27,
+    });
+    assert.equal(otherAssessment.snapshot.exposure_history_cutoff_ordinal, '0');
+    assert.notEqual(otherAssessment.snapshot.snapshot_digest, assessment.snapshot.snapshot_digest);
   });
 });

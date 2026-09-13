@@ -42,9 +42,11 @@ const {
   validateUuid,
 } = require('./evidenceValidation');
 const {
+  assertExactBigIntOrdinalString,
   buildAttemptOpenDigestInput,
   buildFinalizationDigestInput,
   buildSnapshotDigestInput,
+  digestAssignmentSnapshotPayload,
   digestFinalizationPayload,
   digestSemanticPayload,
   normalizeFinalizationValue,
@@ -593,7 +595,17 @@ async function createAssignment(pool, input) {
           WHERE prior_assignment.enrollment_id = $1`,
         [enrollmentId]
       );
-      const exposureHistoryCutoffOrdinal = Number(cutoffRows[0].cutoff);
+      // D1/A: cutoffRows[0].cutoff arrives from the pg driver as the exact
+      // base-10 decimal string PostgreSQL BIGINT text representation (no
+      // custom type parser overrides int8 in this repository). It is used
+      // unmodified as the SAME exact string for lineage comparison bind,
+      // assignment-snapshot digest, BIGINT persistence, and the
+      // caller-visible returned snapshot -- JavaScript Number is never this
+      // value's comparison, digest, persistence, or round-trip authority.
+      const exposureHistoryCutoffOrdinal = assertExactBigIntOrdinalString(
+        cutoffRows[0].cutoff,
+        'exposureHistoryCutoffOrdinal'
+      );
 
       // resolved_item_lineage: ASSESSMENT-only, derived from cutoff-bounded,
       // same-enrollment, target-overlapping ("target-relevant") prior
@@ -671,7 +683,13 @@ async function createAssignment(pool, input) {
         plannedStimulusModalities,
         plannedResponseModalities,
       };
-      const digest = digestSemanticPayload(
+      // D2/D3/B: assignment-snapshot digesting is stamped exactly
+      // evidence-assignment-snapshot-v2, scoped to this call site only.
+      // digestSemanticPayload/evidence-semantic-v1 remain the frozen,
+      // unchanged generic digest path used by every other caller in this
+      // file (registerExperimentVersion, registerConditionVersion,
+      // registerReferenceVersion, openAttempt).
+      const digest = digestAssignmentSnapshotPayload(
         buildSnapshotDigestInput(snapshotForDigest, targetNodeIds)
       );
 
@@ -809,7 +827,14 @@ function projectExposureResult(assignment, snapshot, exposureRow, replayed) {
     exposureId: exposureRow.exposure_id,
     assignmentId: assignment.assignment_id,
     enrollmentId: assignment.enrollment_id,
-    exposureOrdinal: Number(exposureRow.exposure_ordinal),
+    // D4: exposureRow.exposure_ordinal is already the exact base-10 decimal
+    // string PostgreSQL BIGINT text representation. Initial and
+    // replayed/idempotent callers both route through this same function on
+    // the same persisted column, so both return the identical exact string.
+    exposureOrdinal: assertExactBigIntOrdinalString(
+      exposureRow.exposure_ordinal,
+      'exposureOrdinal'
+    ),
     exposedAt: new Date(exposureRow.exposed_at).toISOString(),
     itemId: snapshot.item_id,
     itemVersion: Number(snapshot.item_version),
