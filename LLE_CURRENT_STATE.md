@@ -7094,6 +7094,175 @@ verbatim). Repository mutation caused by this record is limited to
 
 See §10.
 
+#### BIGINT Writer Source-Authority Runtime Prerequisite — Implementation Candidate Prepared / Independent Regression Validation PASS / Process Nonconformance Contained / Independent Review Pending
+
+##### Preflight / Scope
+
+Role: Validation/Integration, fresh status-only synchronization session.
+Classification: `STATUS-ONLY CANDIDATE VALIDATION SYNC`. Repository
+mutation by this record is limited to `LLE_CURRENT_STATE.md` only. This
+record does not implement, modify, or integrate the candidate; does not
+run PostgreSQL or `npm`/runtime tests; and does not start Independent
+Review. Preflight independently re-verified inside `E:\Projects\LLE`:
+prior to switching, the validation worktree/index were clean with no
+untracked files; `git fetch origin` succeeded; `origin/main` =
+`2034d1a01e58a36762750156df1fd63c8e77ba9c`; remote validation branch
+`validation/bigint-writer-source-authority-runtime-20260912` =
+`303e1af9aa2c32167e7caf66527b5020bbacf882`; candidate parent/tree/scope/
+blobs confirmed exact (below). After switching to local `main`: `HEAD` =
+`origin/main` = `2034d1a01e58a36762750156df1fd63c8e77ba9c` (tree
+`845bd6b2537a9dbc05a7080baecdb5f70e173c38`, parent
+`041a384e6221dd267ac0725704c6706bafd36513`, subject `Record E workspace
+and BIGINT development blocker`); worktree/index clean; no untracked
+files; ahead/behind `0/0`; `LLE_CURRENT_STATE.md` blob =
+`e47fd6b467f832972e78fcf648d06d0aac407812`.
+
+##### Development Implementation Candidate
+
+Development candidate status: `IMPLEMENTATION CANDIDATE PREPARED`.
+
+- Validation branch:
+  `validation/bigint-writer-source-authority-runtime-20260912`
+- Candidate commit: `303e1af9aa2c32167e7caf66527b5020bbacf882`
+- Candidate parent: `2034d1a01e58a36762750156df1fd63c8e77ba9c`
+- Candidate tree: `34bed66b82f21afe5fc5e53184f6a4f8357a5146`
+- Candidate subject: `Implement BIGINT writer source-authority correction`
+- Canonical main at candidate parent:
+  `2034d1a01e58a36762750156df1fd63c8e77ba9c`
+- Exact four-file changed-path scope, no fifth file:
+  1. `src/instrumentation/evidenceNormalization.js` =
+     `948f7625275a717b8c4484f9daf2a22e6b080c45`
+  2. `src/instrumentation/evidenceRepository.js` =
+     `412385ce62b675cf55ce04bc795f0206f667ff78`
+  3. `tests/evidenceFoundationRepository.test.js` =
+     `16259b12b60b148f5c45afd26ef5a07b86497e97`
+  4. `tests/viP1ItemLineageRuntime.test.js` =
+     `5f7297422eabcce3f9ca7f40547124d046b49c04`
+- Canonical contracts unchanged by the candidate: `API_CONTRACT.md` `1.31`
+  (`e60afa6bda3356051c24b36a823fb325761b9b42`),
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10`
+  (`de244476e56dfcab59dcd899a25091a2b1452e31`).
+
+##### Independent Regression Validation — PASS
+
+A fresh Validation/Integration session independently validated exact
+candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` on an independently
+re-derived workspace (`E:\Projects\LLE`, `origin/main` =
+`2034d1a01e58a36762750156df1fd63c8e77ba9c`), independently confirming
+candidate parent, tree, exact four changed paths, and all four blob
+hashes above, and `git diff --check` = `PASS / exit 0`.
+
+Final validation verdict: `CANDIDATE REGRESSION VALIDATION PASS / NOT YET
+INDEPENDENTLY REVIEWED / NOT INTEGRATED / NOT CLOSED`.
+
+Independently confirmed: generic `evidence-semantic-v1` remained
+unchanged; the digest-version change is scoped only to
+`evidence-assignment-snapshot-v2`; historical lossy production patterns
+`Number(cutoffRows[0].cutoff)` and
+`Number(exposureRow.exposure_ordinal)` were removed; exact cutoff
+authority is preserved end-to-end (PostgreSQL `BIGINT` text → exact-string
+assertion → lineage comparison bind → digest semantic payload → `BIGINT`
+persistence → caller-visible snapshot return); `exposureOrdinal` exact
+string representation is preserved across both initial and replay paths;
+unsafe-range values `9007199254740992` and `9007199254740993` (beyond
+`Number.MAX_SAFE_INTEGER`) were independently exercised; the independent
+digest regression does not reuse the production digest helper; lineage
+`T01`–`T26` semantics are preserved (only stale lossy `Number`/
+string-order assertions were corrected, not lineage behavior), with `T27`
+added.
+
+Disposable validation database (independently created and dropped, `NEW`
+for this validation — NOT the Development candidate DB, NOT `lle_dev`,
+NOT shared, NOT learner, NOT production-like):
+`lle_bigint_writer_validation_20260914`. Dual routing proof: `psql`
+`current_database()` = `lle_bigint_writer_validation_20260914`; Node
+repository pool `current_database()` =
+`lle_bigint_writer_validation_20260914`. Environment: Windows 11 Pro
+`10.0.26200`; PostgreSQL server `17.10`; `psql` `17.10`; Node `v24.18.0`;
+npm `11.16.0`.
+
+Independent focused test evidence:
+
+- `node --test --test-concurrency=1 tests/evidenceFoundationRepository.test.js`:
+  `80 pass / 0 fail / 0 skip / 0 cancelled / 0 todo`, exit `0`.
+- `node --test --test-concurrency=1 tests/viP1ItemLineageRuntime.test.js`:
+  `27 pass / 0 fail / 0 skip / 0 cancelled / 0 todo`, exit `0`.
+- `npm test` (full regression): `559 pass / 0 fail / 0 cancelled / 0
+  skipped / 0 todo`, exit `0`.
+
+DB cleanup proof: pool/connections closed; only the validation database
+was targeted; the validation database was dropped; a post-drop existence
+check returned `0` rows; no other database was touched.
+
+This is prior independent Validation evidence, recorded here as-is. This
+status-only sync did NOT rerun PostgreSQL or `npm`/runtime tests — see
+"PostgreSQL/Tests — NOT RUN For This Status-Sync" below.
+
+##### Process Nonconformance — Confirmed / Contained / Non-Candidate-Invalidating
+
+Development had one process nonconformance: the candidate commit was
+initially created on local `main` before the validation branch had been
+created. Classification: `PROCESS NONCONFORMANCE — CONFIRMED / CONTAINED
+/ NON-CANDIDATE-INVALIDATING`. This deviation is recorded, not erased or
+minimized; process compliance is NOT claimed to have been perfect.
+
+Independent Validation independently verified containment: the local
+reflog showed the temporary local-`main` candidate-commit event; local
+`main` was restored to `origin/main`; remote branches containing the
+candidate showed only
+`origin/validation/bigint-writer-source-authority-runtime-20260912`;
+`origin/main` remained `2034d1a01e58a36762750156df1fd63c8e77ba9c`
+throughout; candidate history from `main` is exactly one commit with no
+hidden extra candidate history; and remote `main` was never observed
+changed. No Architecture decision is required from this finding. No
+owner value is required from this finding.
+
+##### F-R02
+
+`F-R02` remains `OPEN / NON-BLOCKING`. This record does not close or
+reclassify `F-R02`. `F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03`
+remain `NOTE / OPEN / NON-BLOCKING`, unchanged by this record.
+
+##### PostgreSQL/Tests — NOT RUN For This Status-Sync
+
+For this status-only sync: PostgreSQL = `NOT RUN`; runtime/`npm` tests =
+`NOT RUN`. These are NOT labeled `PASS` for this status-sync; the `80/80`,
+`27/27`, and `559/559` figures above are prior independent Validation
+evidence, not evidence generated by this record.
+
+##### Preserved State / Non-Claims
+
+This record preserves and does NOT change: Implementation candidate =
+`PREPARED`; candidate regression validation = `PASS`; Independent Review
+= `NOT YET PERFORMED`; main integration = `NOT PERFORMED`; candidate
+lifecycle = `NOT CLOSED`; `F-R02` = `OPEN / NON-BLOCKING`;
+`F-BIGINT-IR-01`–`03` = `NOTE / OPEN / NON-BLOCKING`; historical data =
+`UNKNOWN / NOT INSPECTED`; Unseen Transfer Runtime = `NOT AUTHORIZED /
+NOT IMPLEMENTED / NOT VALIDATED`; P1 = `NOT ACTIVATED`; human-data
+collection = `NOT AUTHORIZED`; efficacy = `NOT VERIFIED`.
+
+This record does not mean: the candidate is integrated onto `main` — NOT
+CLAIMED (`NOT INTEGRATED`); the candidate lifecycle is closed — NOT
+CLAIMED (`NOT CLOSED`); Independent Review has occurred — NOT CLAIMED
+(`NOT YET PERFORMED`); `F-R02` is closed or reclassified — NOT CLAIMED
+(remains `OPEN / NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed — NOT
+CLAIMED (all remain `NOTE / OPEN / NON-BLOCKING`); the process
+nonconformance did not occur or is non-blocking to disclose — NOT CLAIMED
+(recorded as `CONFIRMED / CONTAINED / NON-CANDIDATE-INVALIDATING`); any
+Architecture decision or owner value was required by the process
+nonconformance finding — NOT CLAIMED (both `NO`); PostgreSQL or tests
+were run for this status-sync — NOT CLAIMED (`NOT RUN`); Unseen Transfer
+Runtime implemented, validated, or authorized — NOT CLAIMED; P1 activated
+— NOT CLAIMED; human-data collection authorized — NOT CLAIMED; efficacy
+verified — NOT CLAIMED; any historical-data fact established — NOT
+CLAIMED (`UNKNOWN / NOT INSPECTED`); a formal milestone is `CLOSED` — NOT
+CLAIMED. Repository mutation caused by this record is limited to
+`LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -8404,6 +8573,37 @@ This bootstrap does not rerun PostgreSQL or tests.
   to `E:\Projects\LLE`" for full detail; the sole Next Action is now a
   fresh bounded Development reattempt from `E:\Projects\LLE` limited to
   the four-file allowlist (§10).
+- Since then: the bounded Development reattempt produced implementation
+  candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` (parent
+  `2034d1a01e58a36762750156df1fd63c8e77ba9c`, tree
+  `34bed66b82f21afe5fc5e53184f6a4f8357a5146`) on branch
+  `validation/bigint-writer-source-authority-runtime-20260912`, modifying
+  exactly the approved four files with no fifth file. Development
+  candidate status: `IMPLEMENTATION CANDIDATE PREPARED`. A fresh
+  Validation/Integration session independently validated this exact
+  candidate: `CANDIDATE REGRESSION VALIDATION PASS / NOT YET
+  INDEPENDENTLY REVIEWED / NOT INTEGRATED / NOT CLOSED`, with independent
+  focused evidence `80/80` (`evidenceFoundationRepository.test.js`),
+  `27/27` (`viP1ItemLineageRuntime.test.js`), and full regression
+  `559/559`, on a disposable, independently created/dropped validation
+  database (`lle_bigint_writer_validation_20260914`, dual-routing
+  confirmed, not the Development candidate DB, not `lle_dev`). One
+  process nonconformance was found and recorded: the candidate was
+  initially committed to local `main` before the validation branch
+  existed — classification `PROCESS NONCONFORMANCE — CONFIRMED /
+  CONTAINED / NON-CANDIDATE-INVALIDATING`, independently verified
+  contained (`origin/main` never observed changed; candidate reachable
+  only from
+  `origin/validation/bigint-writer-source-authority-runtime-20260912`).
+  `F-R02` and `F-BIGINT-IR-01`–`03` remain `OPEN / NON-BLOCKING`, not
+  closed or reclassified. PostgreSQL/tests for this status-sync: `NOT RUN
+  — STATUS-ONLY SYNC` (the test figures above are prior independent
+  Validation evidence, not generated by this record). See §4 "BIGINT
+  Writer Source-Authority Runtime Prerequisite — Implementation Candidate
+  Prepared / Independent Regression Validation PASS / Process
+  Nonconformance Contained / Independent Review Pending" for full detail;
+  the sole Next Action is now a fresh, read-only Independent Review of
+  the exact candidate (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -9321,6 +9521,51 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Action is now a fresh bounded Development reattempt from
   `E:\Projects\LLE`, limited to the four-file allowlist, §10)
 
+- Since then: the bounded Development reattempt produced implementation
+  candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` (parent
+  `2034d1a01e58a36762750156df1fd63c8e77ba9c`, tree
+  `34bed66b82f21afe5fc5e53184f6a4f8357a5146`, branch
+  `validation/bigint-writer-source-authority-runtime-20260912`), modifying
+  exactly the four approved files with no fifth file. Development
+  candidate status: `IMPLEMENTATION CANDIDATE PREPARED`. A fresh
+  Validation/Integration session independently validated this exact
+  candidate, yielding verdict `CANDIDATE REGRESSION VALIDATION PASS / NOT
+  YET INDEPENDENTLY REVIEWED / NOT INTEGRATED / NOT CLOSED`, with
+  independent focused evidence `80/80`, lineage evidence `27/27`, and
+  full regression `559/559`, on a disposable, independently created and
+  dropped validation database (`lle_bigint_writer_validation_20260914`,
+  dual-routing confirmed). This record also confirms one process
+  nonconformance — the candidate commit was initially made on local
+  `main` before the validation branch existed — recorded as `PROCESS
+  NONCONFORMANCE — CONFIRMED / CONTAINED / NON-CANDIDATE-INVALIDATING`,
+  independently verified contained (`origin/main` never observed changed;
+  candidate reachable only from
+  `origin/validation/bigint-writer-source-authority-runtime-20260912`).
+  This does NOT mean: the candidate is integrated onto `main` — NOT
+  CLAIMED (`NOT INTEGRATED`); the candidate lifecycle is closed — NOT
+  CLAIMED (`NOT CLOSED`); Independent Review has occurred — NOT CLAIMED
+  (`NOT YET PERFORMED`); `F-R02` closed or reclassified — NOT CLAIMED
+  (remains `OPEN / NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed —
+  NOT CLAIMED (all remain `NOTE / OPEN / NON-BLOCKING`); the process
+  nonconformance is erased, minimized, or non-candidate-invalidating in
+  a way that excuses it — NOT CLAIMED beyond `CONFIRMED / CONTAINED /
+  NON-CANDIDATE-INVALIDATING`; Unseen Transfer Runtime implemented,
+  validated, or authorized — NOT CLAIMED; P1 activated — NOT CLAIMED;
+  human-data collection authorized — NOT CLAIMED; efficacy verified —
+  NOT CLAIMED; any historical-data fact established — NOT CLAIMED
+  (`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run for this
+  status-sync — NOT CLAIMED (`NOT RUN — STATUS-ONLY SYNC`; the test
+  figures above are prior independent Validation evidence, not generated
+  by this record). Governing state is now `USER-APPROVED /
+  INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON
+  MAIN / POST-INTEGRATION DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED
+  / CLOSED (bounded to the documentation-clarification lifecycle only) /
+  IMPLEMENTATION CANDIDATE PREPARED / CANDIDATE REGRESSION VALIDATION
+  PASS / PROCESS NONCONFORMANCE CONFIRMED-CONTAINED / INDEPENDENT REVIEW
+  PENDING / NOT INTEGRATED / NOT CLOSED` (see §4/§8; the sole Next Action
+  is now a fresh, read-only Independent Review of the exact candidate,
+  §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -10108,29 +10353,16 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- After Control Tower verifies this status-sync commit, perform a fresh
-  bounded Development reattempt from `E:\Projects\LLE` for the `BIGINT
-  Writer Source-Authority Prerequisite Correction`, classification
-  `RUNTIME PREREQUISITE IMPLEMENTATION CANDIDATE`. Allowed files exactly:
-  (1) `src/instrumentation/evidenceNormalization.js`, (2)
-  `src/instrumentation/evidenceRepository.js`, (3)
-  `tests/evidenceFoundationRepository.test.js`, (4)
-  `tests/viP1ItemLineageRuntime.test.js`. No fifth file. This future
-  Development reattempt must: fresh-verify then-current `main`; create
-  dedicated validation branch
-  `validation/bigint-writer-source-authority-runtime-20260912`; implement
-  approved `D1`–`D5` only; preserve generic `evidence-semantic-v1`;
-  implement assignment-snapshot-only
-  `evidence-assignment-snapshot-v2`; remove JavaScript `Number` authority
-  from affected BIGINT production paths; update stale lineage regression
-  expectations without changing lineage semantics; include exact `>
-  Number.MAX_SAFE_INTEGER` coverage; use a new disposable synthetic
-  PostgreSQL database; run focused repository + lineage regressions; run
-  full `npm test` only after focused gates pass; perform no
-  migration/DDL; perform no historical rewrite/backfill; not implement
-  Unseen Transfer query/reducer; not integrate to `main`; not
-  self-declare `VALIDATED`/`CLOSED`; and return exact candidate/test
-  evidence to Control Tower. Development must not begin during any
-  status-sync; this record does NOT itself implement Runtime, does NOT
-  start Development, and does NOT change writer-correction state to
-  `IMPLEMENTED`.
+- After Control Tower verifies this status-sync commit, perform a fresh,
+  read-only Independent Review of exact candidate
+  `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent
+  `2034d1a01e58a36762750156df1fd63c8e77ba9c` on branch
+  `validation/bigint-writer-source-authority-runtime-20260912`. The
+  review must include: `API_CONTRACT.md` `1.31`;
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10`; the exact four-file candidate
+  diff; `D1`–`D5` compliance; regression design and unsafe-range proof;
+  digest-version scoping; lineage semantic preservation; the contained
+  process nonconformance; the independent Validation evidence; and
+  lifecycle/non-claim boundaries. The Independent Review must be
+  performed in a fresh session, read-only, using Fable 5 at high
+  reasoning, and must not modify repository state.
