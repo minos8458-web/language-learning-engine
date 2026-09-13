@@ -6934,6 +6934,166 @@ only.
 
 See §10.
 
+#### BIGINT Writer Source-Authority Runtime Prerequisite — Development Attempt BLOCKED / Four-File Scope Expansion Approved / Official Local Workspace Migrated to `E:\Projects\LLE`
+
+##### Preflight / Scope
+
+Role: Validation/Integration, fresh status/governance synchronization
+session. Classification: `STATUS-ONLY WORKSPACE-MIGRATION +
+BLOCKER/SCOPE-ADJUDICATION SYNC`. Repository mutation by this record is
+limited to `LLE_CURRENT_STATE.md` only. This record does not implement
+Runtime. Live preflight against `main` was independently re-verified
+directly inside `E:\Projects\LLE` at the start of this session: local
+`HEAD` = `origin/main` =
+`041a384e6221dd267ac0725704c6706bafd36513`, tree
+`3c97de7707b9a76ab0f137a2bf6e27dcdf15e195`, parent
+`623eaf94328a5145adf62aaff52c6b23689d4efe`, subject `Record BIGINT Tier C
+documentation closure`; branch exactly `main`; `git fetch origin`
+succeeded; worktree/index clean; no untracked files; ahead/behind `0/0`;
+required canonical blobs (`ARCHITECTURE_CLARIFICATION_BACKLOG.md`,
+`API_CONTRACT.md` `1.31`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10`,
+`src/instrumentation/evidenceRepository.js`,
+`src/instrumentation/evidenceNormalization.js`,
+`tests/evidenceFoundationRepository.test.js`,
+`tests/viP1ItemLineageRuntime.test.js`) all matched exactly; remote branch
+`validation/bigint-writer-source-authority-runtime-20260912` absent both
+remotely and locally.
+
+##### Official Local Workspace Migration
+
+The official Windows local workspace has migrated from the legacy path
+`C:\Users\atomy\Documents\GitHub\language-learning-engine` to
+`E:\Projects\LLE`. Disposition of the legacy `C:` copy: `LEGACY COPY / DO
+NOT USE FOR FUTURE EXECUTION`; it may remain present on disk but is not
+used for any Git operation from this record forward. This is a local
+operational routing value only. `GitHub remote main` (
+`minos8458-web/language-learning-engine`) remains the repository-wide
+Source of Truth, unchanged by this migration. Historical records that
+correctly cite the old `C:` path as the path used at that historical time
+are preserved verbatim and are NOT rewritten (see §9.2). `E:\Projects\LLE`
+is NOT promoted to Tier A or repository-wide canonical authority by this
+record.
+
+Operator-reported workspace migration check (labeled explicitly as
+`OPERATOR-REPORTED OPERATIONAL SMOKE EVIDENCE`, not Independent
+Validation, not new lifecycle validation, not post-merge validation, and
+not closure evidence): branch `main`; `HEAD` =
+`041a384e6221dd267ac0725704c6706bafd36513`; `origin/main` =
+`041a384e6221dd267ac0725704c6706bafd36513`; `git status` clean; `npm ci`
+`success`; `npm test` `556 PASS / 0 FAIL / 0 SKIP`. This status-sync did
+NOT rerun `npm test` or PostgreSQL — see the live preflight facts above,
+which this session independently re-derived by direct Git inspection
+rather than by re-running the test suite.
+
+##### Blocked Development Attempt — BIGINT Writer Source-Authority Prerequisite Correction
+
+A prior Development attempt at the `BIGINT Writer Source-Authority
+Prerequisite Correction` (classification `RUNTIME PREREQUISITE
+IMPLEMENTATION CANDIDATE`) ended `BLOCKED — FOURTH FILE REQUIRED`, prior
+to this status-sync session, without ever being canonically recorded
+because the legacy `C:` workspace hit `ENOSPC`. Confirmed facts from that
+attempt: repository/`main` preflight `PASS`; baseline exact; no
+validation branch created; no implementation commit exists; no push
+occurred; no disposable PostgreSQL database was created; no PostgreSQL
+operation was performed; no tests were run; no migration/DDL changed; no
+historical learner data was inspected; draft source edits were fully
+reverted; final worktree clean; `HEAD`/`origin/main` remained exactly
+`041a384e6221dd267ac0725704c6706bafd36513` throughout.
+
+Blocker — required fourth file: `tests/viP1ItemLineageRuntime.test.js`.
+Reason: the canonical API `1.31` / Schema `1.10` D3/D4 contract changes
+caller-visible BIGINT ordinal representation from JavaScript `Number`
+authority to exact base-10 decimal string. That existing Runtime
+regression file still encodes stale `Number` semantics. Confirmed stale
+patterns include: `Number.isInteger(result.exposureOrdinal)`; strict
+comparison between `Number(snapshot.exposure_history_cutoff_ordinal)` and
+caller-visible `exposureOrdinal`; and direct relational ordering of
+string-typed ordinals, which would become lexicographic instead of exact
+numeric ordinal ordering. Updating this test is necessary to preserve the
+existing lineage semantics under the approved string representation. This
+is NOT a new product contract.
+
+Therefore: candidate status = `NOT PREPARED`; writer correction = `NOT
+IMPLEMENTED / NOT VALIDATED`; Development = `NOT STARTED` after the
+reverted blocked attempt.
+
+##### Control Tower Adjudication — Blocker Accepted / Four-File Scope Expansion
+
+`BLOCKER ACCEPTED`. Blocker classification: `IMPLEMENTATION SCOPE
+PRECONDITION`. Architecture decision required: `NO`. Owner value
+required: `NO`. Canonical contract change required: `NO`. The canonical
+WHAT remains `API_CONTRACT.md` `1.31` /
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10`, unchanged by this record.
+
+Control Tower approved exactly one scope expansion. The next Development
+attempt is authorized to modify exactly these four files:
+
+1. `src/instrumentation/evidenceNormalization.js`
+2. `src/instrumentation/evidenceRepository.js`
+3. `tests/evidenceFoundationRepository.test.js`
+4. `tests/viP1ItemLineageRuntime.test.js`
+
+No fifth file is authorized. The fourth file may be changed only to:
+align stale BIGINT representation assertions with canonical string
+representation; preserve exact ordinal identity; preserve numeric-order
+semantics using lossless comparison; preserve lineage/cutoff behavior;
+preserve replay/idempotency behavior; add/adapt focused D1–D5 regression
+coverage. It must NOT redefine lineage behavior. If a fifth file is later
+required: `STOP as BLOCKED`.
+
+##### F-R02
+
+`F-R02` remains `OPEN / NON-BLOCKING`. This record does not close or
+reclassify `F-R02`; the Runtime writer still carries the pre-existing
+PostgreSQL `BIGINT` → JavaScript `Number` precision defect, and the
+approved writer correction has NOT been implemented or validated.
+
+##### Historical-Data Evidence Boundary
+
+Historical data remains `UNKNOWN / NOT INSPECTED`. No historical
+learner-data inspection or remediation is authorized by this record.
+
+##### Preserved Governing State (Unchanged By This Record)
+
+`F-BIGINT-IR-01`, `F-BIGINT-IR-02`, `F-BIGINT-IR-03` remain `NOTE / OPEN
+/ NON-BLOCKING`. Writer correction remains `NOT IMPLEMENTED / NOT
+VALIDATED`. Implementation candidate remains `NOT PREPARED`. Unseen
+Transfer Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT
+VALIDATED`. P1 remains `NOT ACTIVATED`. Human-data collection remains
+`NOT AUTHORIZED`. Efficacy remains `NOT VERIFIED`. The bounded BIGINT
+Writer/Digest/Output Representation Tier C documentation-clarification
+lifecycle remains `REVIEW-RECORDED / CLOSED` (documentation-clarification
+scope only), not reopened. All prior bounded Tier C documentation
+lifecycles referenced in §4/§9.1 remain in their previously recorded
+states, not reopened by this record.
+
+##### Non-Claims
+
+This record does not mean: `E:\Projects\LLE` is promoted to Tier A or
+repository-wide canonical authority — NOT CLAIMED (`GitHub remote main`
+remains repository-wide Source of Truth); any Runtime correction is
+implemented or validated — NOT CLAIMED; Development has started — NOT
+CLAIMED (`NOT STARTED`); the implementation candidate is prepared — NOT
+CLAIMED (`NOT PREPARED`); `F-R02` closed or reclassified — NOT CLAIMED
+(remains `OPEN / NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed — NOT
+CLAIMED (all remain `NOTE / OPEN / NON-BLOCKING`); a fifth file is
+authorized for the next Development attempt — NOT CLAIMED (none
+authorized); an Architecture decision or owner value was required or
+made — NOT CLAIMED (both `NO`); the operator-reported `npm ci`/`npm test`
+migration-check evidence is Independent Validation, new lifecycle
+validation, post-merge validation, or closure evidence — NOT CLAIMED
+(`OPERATOR-REPORTED OPERATIONAL SMOKE EVIDENCE` only); PostgreSQL or
+tests were run for this status-sync — NOT CLAIMED (`NOT RUN —
+STATUS-ONLY SYNC`); any historical-data fact established — NOT CLAIMED
+(`UNKNOWN / NOT INSPECTED`); historical records citing the legacy `C:`
+path are rewritten — NOT CLAIMED (§9.2 historical ledger preserved
+verbatim). Repository mutation caused by this record is limited to
+`LLE_CURRENT_STATE.md` only.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -8216,6 +8376,34 @@ This bootstrap does not rerun PostgreSQL or tests.
   Control-Tower-verification-gated bounded Development implementation
   candidate for the approved BIGINT Writer Source-Authority Prerequisite
   Correction (§10).
+- Since then: the official Windows local workspace has migrated from the
+  legacy path `C:\Users\atomy\Documents\GitHub\language-learning-engine`
+  (`LEGACY COPY / DO NOT USE FOR FUTURE EXECUTION`) to `E:\Projects\LLE`;
+  `GitHub remote main` remains repository-wide Source of Truth. A prior
+  Development attempt at the BIGINT Writer Source-Authority Prerequisite
+  Correction ended `BLOCKED — FOURTH FILE REQUIRED` (required fourth file
+  `tests/viP1ItemLineageRuntime.test.js`, stale `Number`-authority BIGINT
+  ordinal assertions inconsistent with canonical API `1.31`/Schema `1.10`
+  string representation); draft edits were fully reverted, no branch/
+  commit/push occurred, no PostgreSQL/tests were run, and `HEAD`/
+  `origin/main` remained exactly
+  `041a384e6221dd267ac0725704c6706bafd36513`. Control Tower adjudication:
+  `BLOCKER ACCEPTED` (`IMPLEMENTATION SCOPE PRECONDITION`; Architecture
+  decision required `NO`; owner value required `NO`), approving exactly
+  one four-file scope expansion for the next Development attempt —
+  `src/instrumentation/evidenceNormalization.js`,
+  `src/instrumentation/evidenceRepository.js`,
+  `tests/evidenceFoundationRepository.test.js`,
+  `tests/viP1ItemLineageRuntime.test.js` — with no fifth file authorized.
+  Candidate status remains `NOT PREPARED`; writer correction remains `NOT
+  IMPLEMENTED / NOT VALIDATED`; `F-R02` remains `OPEN / NON-BLOCKING`,
+  not closed or reclassified by this record. PostgreSQL/tests for this
+  status-sync: `NOT RUN — STATUS-ONLY SYNC`. See §4 "BIGINT Writer
+  Source-Authority Runtime Prerequisite — Development Attempt BLOCKED /
+  Four-File Scope Expansion Approved / Official Local Workspace Migrated
+  to `E:\Projects\LLE`" for full detail; the sole Next Action is now a
+  fresh bounded Development reattempt from `E:\Projects\LLE` limited to
+  the four-file allowlist (§10).
 
 ## 9. Lifecycle Non-Claims
 
@@ -9092,6 +9280,47 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Development implementation candidate for the approved BIGINT Writer
   Source-Authority Prerequisite Correction, §10)
 
+- Since then: the official Windows local workspace has migrated from the
+  legacy path `C:\Users\atomy\Documents\GitHub\language-learning-engine`
+  to `E:\Projects\LLE` (legacy path disposition: `LEGACY COPY / DO NOT
+  USE FOR FUTURE EXECUTION`; `GitHub remote main` unchanged as
+  repository-wide Source of Truth), and a prior Development attempt at
+  the BIGINT Writer Source-Authority Prerequisite Correction has ended
+  `BLOCKED — FOURTH FILE REQUIRED` (`tests/viP1ItemLineageRuntime.test.js`,
+  stale `Number`-authority BIGINT ordinal assertions inconsistent with
+  canonical API `1.31`/Schema `1.10` string representation), with draft
+  edits fully reverted, no branch/commit/push, no PostgreSQL/tests run,
+  and `HEAD`/`origin/main` unchanged at exactly
+  `041a384e6221dd267ac0725704c6706bafd36513`. Control Tower has adjudicated
+  `BLOCKER ACCEPTED` (`IMPLEMENTATION SCOPE PRECONDITION`; Architecture
+  decision required `NO`; owner value required `NO`; canonical contract
+  change required `NO`), approving exactly one four-file scope expansion
+  for the next Development attempt (`evidenceNormalization.js`,
+  `evidenceRepository.js`, `evidenceFoundationRepository.test.js`,
+  `viP1ItemLineageRuntime.test.js`; no fifth file authorized). This does
+  NOT mean: any Runtime correction implemented or validated — NOT
+  CLAIMED; Development started — NOT CLAIMED (`NOT STARTED`); the
+  implementation candidate prepared — NOT CLAIMED (`NOT PREPARED`);
+  `F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+  NON-BLOCKING`); `F-BIGINT-IR-01`/`02`/`03` closed — NOT CLAIMED (all
+  remain `NOTE / OPEN / NON-BLOCKING`); an Architecture decision or owner
+  value was required — NOT CLAIMED (both `NO`); `E:\Projects\LLE`
+  promoted to Tier A or repository-wide canonical authority — NOT CLAIMED;
+  the operator-reported `npm ci`/`npm test` migration-check evidence is
+  Independent Validation, new lifecycle validation, post-merge
+  validation, or closure evidence — NOT CLAIMED (`OPERATOR-REPORTED
+  OPERATIONAL SMOKE EVIDENCE` only); any historical-data fact established
+  — NOT CLAIMED (`UNKNOWN / NOT INSPECTED`); PostgreSQL or tests run for
+  this status-sync — NOT CLAIMED (`NOT RUN — STATUS-ONLY SYNC`).
+  Governing state is now `USER-APPROVED / INDEPENDENTLY REVIEWED —
+  APPROVE WITH NON-BLOCKING NOTES / CANONICAL ON MAIN / POST-INTEGRATION
+  DOCUMENTATION/STATIC VERIFIED / REVIEW-RECORDED / CLOSED (bounded to
+  the documentation-clarification lifecycle only) / DEVELOPMENT ATTEMPT
+  BLOCKED — FOURTH FILE REQUIRED / FOUR-FILE SCOPE EXPANSION APPROVED /
+  OFFICIAL LOCAL WORKSPACE = E:\Projects\LLE` (see §4/§8; the sole Next
+  Action is now a fresh bounded Development reattempt from
+  `E:\Projects\LLE`, limited to the four-file allowlist, §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -9879,30 +10108,29 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- After Control Tower verifies this closure-sync commit, start a fresh,
-  bounded Development implementation candidate for the approved BIGINT
-  Writer Source-Authority Prerequisite Correction, classification
-  `RUNTIME PREREQUISITE IMPLEMENTATION CANDIDATE`. This is NOT the
-  Unseen Transfer reader/reducer implementation. The future Development
-  task must be limited to implementing the already-approved `D1`–`D5`
-  writer/normalization/output contract and its focused regression
-  coverage. That future Development task must: fresh-verify the exact
-  then-current `main` and source/test blobs; create a dedicated
-  validation branch; preserve generic `evidence-semantic-v1`; implement
-  assignment-snapshot-specific `evidence-assignment-snapshot-v2`; remove
-  JavaScript `Number` authority from the affected BIGINT writer/output
-  paths (`snapshot.exposure_history_cutoff_ordinal`, `exposureOrdinal`,
-  and the assignment-snapshot digest semantic payload); preserve the
-  PostgreSQL `BIGINT` physical schema (no migration/DDL); include exact
-  `> Number.MAX_SAFE_INTEGER` regression coverage; preserve historical
-  data `UNKNOWN / NOT INSPECTED` and perform no automatic historical
-  re-digest/rewrite/backfill; not implement Unseen Transfer
-  query/reducer Runtime; not activate P1; not authorize human-data
-  collection; not self-declare `VALIDATED` or `CLOSED`; and return exact
-  implementation commit/tree/blob/test evidence to Control Tower.
-  Development remains `NOT STARTED` until Control Tower independently
-  verifies this closure-sync and issues the bounded Development
-  execution packet. This status-sync record does NOT itself implement
-  Runtime, does NOT start Development, does NOT change writer-correction
-  state to `IMPLEMENTED`, and does NOT authorize or implement Unseen
-  Transfer Runtime.
+- After Control Tower verifies this status-sync commit, perform a fresh
+  bounded Development reattempt from `E:\Projects\LLE` for the `BIGINT
+  Writer Source-Authority Prerequisite Correction`, classification
+  `RUNTIME PREREQUISITE IMPLEMENTATION CANDIDATE`. Allowed files exactly:
+  (1) `src/instrumentation/evidenceNormalization.js`, (2)
+  `src/instrumentation/evidenceRepository.js`, (3)
+  `tests/evidenceFoundationRepository.test.js`, (4)
+  `tests/viP1ItemLineageRuntime.test.js`. No fifth file. This future
+  Development reattempt must: fresh-verify then-current `main`; create
+  dedicated validation branch
+  `validation/bigint-writer-source-authority-runtime-20260912`; implement
+  approved `D1`–`D5` only; preserve generic `evidence-semantic-v1`;
+  implement assignment-snapshot-only
+  `evidence-assignment-snapshot-v2`; remove JavaScript `Number` authority
+  from affected BIGINT production paths; update stale lineage regression
+  expectations without changing lineage semantics; include exact `>
+  Number.MAX_SAFE_INTEGER` coverage; use a new disposable synthetic
+  PostgreSQL database; run focused repository + lineage regressions; run
+  full `npm test` only after focused gates pass; perform no
+  migration/DDL; perform no historical rewrite/backfill; not implement
+  Unseen Transfer query/reducer; not integrate to `main`; not
+  self-declare `VALIDATED`/`CLOSED`; and return exact candidate/test
+  evidence to Control Tower. Development must not begin during any
+  status-sync; this record does NOT itself implement Runtime, does NOT
+  start Development, and does NOT change writer-correction state to
+  `IMPLEMENTED`.
