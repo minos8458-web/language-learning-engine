@@ -17,12 +17,14 @@
 
 This document is pinned to the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-- **Ledger snapshot baseline**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` — the commit this reconciliation ledger was written against.
+- **Ledger snapshot baseline**: `4d5776e9a7465716e036dd58f7b550469e9b98f7` — the exact `origin/main` baseline from which this three-file synchronization candidate is prepared.
 - **Current GitHub Main**: `GitHub refs/heads/main` is the authority for current repository HEAD. No hard-coded SHA in this document replaces that ref.
-- **Current B-1 runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` — B-1b assignment completion writer, the latest B-1 runtime implementation (B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`). Detailed environment and figures are owned by `VALIDATION_STATUS.md`.
+- **Runtime Foundation B1 accepted implementation**: `6bb2bccd5abef2d10839706ffdd000285b59512d` — RAW_SOURCE rebuild runtime, independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed. Detailed validation evidence is owned by `VALIDATION_STATUS.md`.
+- **Latest accepted integrated runtime-validation milestone**: `22508147625090af84af141ac0ec574792369115` — METRIC_RESULT / Retention v1 runtime, independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed. Detailed validation evidence is owned by `VALIDATION_STATUS.md`.
 - **Production finalization implementation**: `674bd9fb46bd1d799293c0e73984672b57c8a98c` — the commit that implemented the Evidence Foundation P0 bounded finalization writer.
-- **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f` — the reviewed test-hardening commit (APPROVE WITH NON-BLOCKING NOTES; see `VALIDATION_STATUS.md` §A.3).
-- **Current documentation review record**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46 (B-1b canonical status sync independent review and main integration record).
+- **Current canonical contract context**: `API_CONTRACT.md` revision `1.31` (blob `e60afa6bda3356051c24b36a823fb325761b9b42`) and `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.10` (blob `de244476e56dfcab59dcd899a25091a2b1452e31`).
+- **Current prepared runtime candidate**: `303e1af9aa2c32167e7caf66527b5020bbacf882`, parent `2034d1a01e58a36762750156df1fd63c8e77ba9c`, on `validation/bigint-writer-source-authority-runtime-20260912` — BIGINT writer source-authority correction; prior Independent Validation PASS, Independent Review NOT YET PERFORMED, NOT INTEGRATED, NOT CLOSED.
+- **Current documentation review record**: `623eaf94328a5145adf62aaff52c6b23689d4efe` — `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`, recording the closed BIGINT Writer/Digest/Output Representation Tier C documentation lifecycle. This record is not an Independent Review of runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882`.
 
 ## Current Project Position
 
@@ -35,10 +37,20 @@ This document is pinned to the following identities. Git ref, runtime-validated 
 -   B-5 (approval-provenance scope) and B-4 (cost/operational stop conditions) governance prerequisites are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`).
 -   B-1 (assignment/session lifecycle writer) is complete as a bounded VI Empirical Pilot P1 implementation prerequisite, composed of B-1a (evidence session lifecycle writer, main `d785abfc74a669cbc472ff24df9869874a165ecb`) and B-1b (SCORABLE assignment completion writer, main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`; canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). This does not activate VI Empirical Pilot P1.
 -   B-2 (Vietnamese pilot content manifest) is complete as a bounded VI Empirical Pilot P1 implementation/data prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node Grammar Node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`). This does not activate VI Empirical Pilot P1.
+-   Runtime Foundation B1 RAW_SOURCE rebuild is an accepted, independently reviewed, main-integrated, post-merge validated, review-recorded, and closed bounded milestone (runtime main `6bb2bccd5abef2d10839706ffdd000285b59512d`; review-record `c224ff9cca5b28f96febca0e11a89608ef746a1d`; closure sync `bd64555ad30e5901467095e1d81002de433a02f8`).
+-   METRIC_RESULT / Retention v1 runtime is an accepted, independently reviewed, main-integrated, post-merge validated, review-recorded, and closed bounded milestone (runtime main `22508147625090af84af141ac0ec574792369115`; review-record `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`; closure `c4e452d762d70fa57db61856b37b04a16d43df92`).
+-   METRIC_RESULT / Unseen Transfer v2 Tier C documentation is review-recorded and closed, while its runtime remains NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED.
+-   BIGINT Writer/Digest/Output Representation Tier C documentation is review-recorded and closed; the separate BIGINT writer source-authority runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` is PREPARED and has prior Independent Validation PASS, but Independent Review is NOT YET PERFORMED and the candidate is NOT INTEGRATED / NOT CLOSED.
 
 ## Last Completed Bounded Milestone
 
-**B-2 pilot content manifest prerequisite completion** — B-2 (Vietnamese pilot content manifest) is complete as a bounded VI Empirical Pilot P1 implementation/data prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node Grammar Node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`, review-record `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.48), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`, review-record revision 1.49), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`, review-record revision 1.50), reconciled by this B-2 completion ledger reconciliation (review-record revision 1.51). This does not declare Evidence Foundation overall complete, does not resolve B-3, and does not activate VI Empirical Pilot P1. See `VALIDATION_STATUS.md` §A.8 for the full evidence chain.
+**BIGINT Writer/Digest/Output Representation Tier C documentation lifecycle** — the D1–D5 canonical clarification is integrated on main (`a8fc4d072bc1c3e070e0828794838db8e4c5d0c5`), review-recorded in `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77` (`623eaf94328a5145adf62aaff52c6b23689d4efe`), and closed by the subsequent status closure (`041a384e6221dd267ac0725704c6706bafd36513`). Canonical context is API `1.31` / Schema `1.10`. This documentation closure did not implement or validate the writer correction and did not close `F-R02`.
+
+Prior bounded milestone, preserved: METRIC_RESULT / Retention v1 runtime — runtime main `22508147625090af84af141ac0ec574792369115`, post-merge Windows-local PostgreSQL 17.10 validation PASS, review-record `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, bounded closure `c4e452d762d70fa57db61856b37b04a16d43df92`.
+
+Prior bounded milestone, preserved: Runtime Foundation B1 RAW_SOURCE rebuild — runtime main `6bb2bccd5abef2d10839706ffdd000285b59512d`, post-merge Windows-local PostgreSQL 17.10 validation PASS, review-record `c224ff9cca5b28f96febca0e11a89608ef746a1d`, bounded closure sync `bd64555ad30e5901467095e1d81002de433a02f8`.
+
+Prior bounded milestone, preserved: B-2 pilot content manifest prerequisite completion — B-2 (Vietnamese pilot content manifest) is complete as a bounded VI Empirical Pilot P1 implementation/data prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node Grammar Node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`, review-record `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.48), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`, review-record revision 1.49), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`, review-record revision 1.50), reconciled by the B-2 completion ledger reconciliation (review-record revision 1.51). This does not declare Evidence Foundation overall complete, does not resolve B-3, and does not activate VI Empirical Pilot P1. See `VALIDATION_STATUS.md` §A.8 for the full evidence chain.
 
 Prior bounded milestone, preserved: B-1 lifecycle prerequisite completion — B-1a (evidence session lifecycle writer: `startSession`/`terminalizeSession`/`restartSession`; main implementation `d785abfc74a669cbc472ff24df9869874a165ecb`, review-record main `08c6e0ca1c771398ae89f1d467e2bef4386eece3`) and B-1b (SCORABLE assignment completion writer; runtime implementation main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, runtime review-record main `ad0f892f6a4238eeb6ecf2581d21deaf82b87956`, canonical status-sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`, status-sync review-record main `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`), together completing B-1 as a bounded VI Empirical Pilot P1 implementation prerequisite.
 
@@ -52,7 +64,7 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
-None. No governance or implementation milestone is currently in progress. The next candidate is VI Empirical Pilot P1 Readiness, below, additionally gated on the remaining blocking-gap sequence.
+The BIGINT writer source-authority runtime prerequisite is at `IMPLEMENTATION CANDIDATE PREPARED / PRIOR INDEPENDENT VALIDATION PASS / INDEPENDENT REVIEW PENDING`. Exact candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` is not on main and is not closed. No implementation, review, or integration is performed by this status synchronization.
 
 ## Remaining Blocking-Gap Sequence
 
@@ -70,11 +82,11 @@ VI Empirical Pilot P1 activation remains gated on the following implementation/d
 
 VI Empirical Pilot P1 remains gated on B-3 alone; it is still not eligible to activate.
 
-## Next Product Milestone Candidate
+## Next Action
 
-**VI Empirical Pilot P1 Readiness**
+After this three-file status synchronization is separately reviewed and integrated, the sole project Next Action is a fresh, read-only Independent Review of exact candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent `2034d1a01e58a36762750156df1fd63c8e77ba9c` on branch `validation/bigint-writer-source-authority-runtime-20260912`.
 
-Activation: not started; not activated; Control Tower gate required, and additionally gated on B-3 above (B-1 and B-2 are now complete but do not by themselves activate P1). This is a candidate only and is not an active milestone.
+That Independent Review is not performed in this session. This status-sync candidate does not authorize the review on main before the status sync itself is independently reviewed and integrated.
 
 ## Explicit Non-Declarations
 
@@ -92,6 +104,11 @@ This document does not declare:
 - user app complete
 - VI Empirical Pilot P1 activated
 - human-data collection approved
+- BIGINT runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` independently reviewed
+- BIGINT runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` integrated to main
+- BIGINT runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` lifecycle closed
+
+Accordingly: BIGINT Independent Review is NOT YET PERFORMED; the BIGINT candidate is NOT INTEGRATED and NOT CLOSED; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED.
 
 ## Historical Roadmap Snapshot — §9 Closure
 

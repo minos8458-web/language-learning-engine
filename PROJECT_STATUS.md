@@ -9,11 +9,14 @@
 Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
 - **GitHub main ref**: `GitHub refs/heads/main` is the authority for current repository HEAD.
-- **Runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`)
-- **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Review-record commit**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46 — B-1b canonical status sync independent review and main integration record)
+- **Status snapshot baseline**: `4d5776e9a7465716e036dd58f7b550469e9b98f7`
+- **Latest accepted integrated runtime-validation milestone**: `22508147625090af84af141ac0ec574792369115` (METRIC_RESULT / Retention v1 runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
+- **Runtime Foundation B1 accepted implementation**: `6bb2bccd5abef2d10839706ffdd000285b59512d` (RAW_SOURCE rebuild runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
+- **Current canonical contracts**: `API_CONTRACT.md` revision `1.31`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.10`
+- **Prepared candidate awaiting Independent Review**: `303e1af9aa2c32167e7caf66527b5020bbacf882`, parent `2034d1a01e58a36762750156df1fd63c8e77ba9c`, branch `validation/bigint-writer-source-authority-runtime-20260912`; prior Independent Validation PASS, NOT INDEPENDENTLY REVIEWED, NOT INTEGRATED, NOT CLOSED
+- **Current documentation review-record commit**: `623eaf94328a5145adf62aaff52c6b23689d4efe` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`; closed BIGINT Tier C documentation lifecycle, not runtime-candidate review evidence)
 
-Detailed runtime figures (environment, test totals, migration/table counts) are owned only by `VALIDATION_STATUS.md` §A.2.
+Detailed runtime figures, lifecycle classifications, and candidate-validation totals are owned only by `VALIDATION_STATUS.md`.
 
 ## 2. Implemented Runtime Surfaces
 
@@ -21,11 +24,16 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - In-process Learning Flow transport
 - AC-018 first Mock composition
 - Fail-closed unconfigured provider adapter
-- Evidence Foundation 16-table persistence
+- Evidence Foundation 17-table persistence through migration 013; migration 014 absent
 - Bounded assignment creation, attempt open, and finalization repository operations
 - RULE-based target-node evaluation and correction aggregate persistence
 - Evidence session lifecycle (B-1a, main `d785abfc74a669cbc472ff24df9869874a165ecb`): `startSession`, `terminalizeSession`, `restartSession`
 - Bounded assignment completion (B-1b, main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`): a qualifying successful INITIAL non-replay `finalizeAttempt` with `attemptOutcome === SCORABLE` writes assignment `COMPLETED`, with `completed_at = finalizedAt` and `completion_attempt_id` set to the finalizing attempt; replay does not rewrite the recorded completion; successful non-SCORABLE finalization leaves assignment lifecycle a no-op. Assignment-level terminalization for `MISSING`/`TECHNICAL_FAILURE`/`WITHDRAWN`/`UNSCORABLE`/`NORMAL_EMPTY` outcomes remains out of this bounded scope (see §4).
+- Foundation A item-exposure/item-lineage runtime, including `evidence_assignment_item_exposures` and exact exposure ordinal persistence
+- Runtime Foundation B1 RAW_SOURCE rebuild (`queryRawEvidenceForMetricRebuild(pool, input)`), main `6bb2bccd5abef2d10839706ffdd000285b59512d`; read-only bounded runtime lifecycle is review-recorded and closed
+- METRIC_RESULT / Retention v1 reducer (`queryMetricResult(pool, input)` with FORMULA definition version 1), main `22508147625090af84af141ac0ec574792369115`; bounded runtime lifecycle is review-recorded and closed
+
+The BIGINT writer source-authority correction in candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` is not listed as an implemented main surface: it is PREPARED and independently regression-validated, but NOT INDEPENDENTLY REVIEWED, NOT INTEGRATED, and NOT CLOSED.
 
 ## 3. Product Readiness
 
@@ -34,6 +42,9 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - Evidence Foundation overall: incomplete
 - VI pilot: not started
 - VI Empirical Pilot P1 governance prerequisites B-4 (cost/operational stop conditions) and B-5 (approval-provenance scope) are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`). Implementation/data prerequisite B-1 (assignment/session lifecycle writer) is complete as a bounded prerequisite (B-1a main `d785abfc74a669cbc472ff24df9869874a165ecb`; B-1b main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). Data prerequisite B-2 (VI pilot content manifest) is complete as a bounded prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`). B-3 (human-data/privacy owner decision) remains unresolved, and P1 remains not started / not activated / still not eligible to activate.
+- Runtime Foundation B1 RAW_SOURCE and METRIC_RESULT / Retention v1 are accepted closed implementation milestones, but they do not make Evidence Foundation complete or establish product efficacy.
+- METRIC_RESULT / Unseen Transfer v2 Tier C documentation is canonical and closed; its runtime remains not authorized, not implemented, and not validated.
+- BIGINT writer source-authority runtime candidate `303e1af9aa2c32167e7caf66527b5020bbacf882`: PREPARED / PRIOR INDEPENDENT VALIDATION PASS / INDEPENDENT REVIEW NOT YET PERFORMED / NOT INTEGRATED / NOT CLOSED.
 - Client/user app: incomplete
 - Beta readiness: not ready
 
@@ -48,6 +59,8 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - human/AI-assisted evidence rating
 - actual provider
 - raw audio/acoustic processing
+- METRIC_RESULT / Unseen Transfer v2 runtime implementation and validation
+- BIGINT writer source-authority correction integration, pending fresh Independent Review
 - P1/P2 human-data operation approval
 - product UI/release completion
 
@@ -65,6 +78,18 @@ Detailed runtime figures (environment, test totals, migration/table counts) are 
 - user app complete
 - VI Empirical Pilot P1 activated
 - human-data collection approved
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` independently reviewed
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` integrated to main
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` post-integration verified
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` lifecycle closed
+
+Accordingly: BIGINT Independent Review is NOT YET PERFORMED; the BIGINT candidate is NOT INTEGRATED and NOT CLOSED; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED.
+
+### 5.1 Next Action
+
+After this three-file status synchronization is separately reviewed and integrated, the sole project Next Action is a fresh, read-only Independent Review of exact candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent `2034d1a01e58a36762750156df1fd63c8e77ba9c` on branch `validation/bigint-writer-source-authority-runtime-20260912`.
+
+That Independent Review is not performed in this session. This status-sync candidate does not claim to be independently reviewed or integrated and does not authorize the BIGINT review on main before separate status-sync review and integration.
 
 ## 6. Historical Snapshot — 2026-07-06
 

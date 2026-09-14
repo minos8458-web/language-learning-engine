@@ -10,11 +10,12 @@ This document is the **sole owner** of Validation State for the project. `BOOTST
 
 This ledger distinguishes the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-- **Ledger snapshot baseline**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964`
+- **Ledger snapshot baseline**: `4d5776e9a7465716e036dd58f7b550469e9b98f7`
 - **GitHub main ref**: `GitHub refs/heads/main` (authority for current repository HEAD; no hard-coded SHA in this document replaces it)
-- **Last runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation: `d785abfc74a669cbc472ff24df9869874a165ecb`)
-- **Independent review target**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
-- **Current review-record commit**: `2a9d2487067bd0892e8f7e8c51c7dbfb00a60964` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision 1.46)
+- **Latest accepted integrated runtime-validation milestone**: `22508147625090af84af141ac0ec574792369115` (METRIC_RESULT / Retention v1 runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
+- **Current prior-independently-validated candidate**: `303e1af9aa2c32167e7caf66527b5020bbacf882`, parent `2034d1a01e58a36762750156df1fd63c8e77ba9c`, branch `validation/bigint-writer-source-authority-runtime-20260912`
+- **Next Independent Review target**: `303e1af9aa2c32167e7caf66527b5020bbacf882` — review NOT YET PERFORMED
+- **Current documentation review-record commit**: `623eaf94328a5145adf62aaff52c6b23689d4efe` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`; BIGINT Tier C documentation lifecycle, not the runtime candidate review)
 
 ### A.1 Validation Level State
 
@@ -23,34 +24,34 @@ This ledger distinguishes the following identities. Git ref, runtime-validated i
 
 Code/artifact presence is a separate claim from validation PASS. The two are not conflated.
 
-### A.2 Evidence Foundation Bounded Runtime Evidence
+### A.2 Latest Accepted Integrated Runtime Validation — METRIC_RESULT / Retention v1
 
-**Last runtime-validated implementation**: `f6c0d1b0cb388403f2a8e636e359a099128dd8f0` (B-1b assignment completion writer; B-1a runtime implementation `d785abfc74a669cbc472ff24df9869874a165ecb`)
+**Runtime main integration**: `22508147625090af84af141ac0ec574792369115`
 
 **Environment**:
 
-- Windows PowerShell
+- Windows-local
 - PostgreSQL 17.10
-- database `lle_dev`, user `postgres`
+- Node.js 24.18.0 / npm 11.16.0
+- isolated database `lle_pm_metric_result_retention_20260911095529`; `lle_dev` was not targeted
 
 **Evidence database**:
 
-- evidence tables: 16
-- highest migration: 012
-- migration 013: absent
-- migration regression: 0 applied / 12 skipped
+- migrations 001–013: 13 applied / 0 skipped
+- migration 014: absent
 
 **Focused test result**:
 
-- tests 78, suites 1, pass 78, fail 0, cancelled 0, skipped 0, todo 0
+- METRIC_RESULT + RAW_SOURCE: tests 182, suites 2, pass 182, fail 0, cancelled 0, skipped 0, todo 0
+- Evidence/Foundation + Runtime set: tests 326, suites 9, pass 326, fail 0, cancelled 0, skipped 0, todo 0
 
 **Full test result**:
 
-- tests 338, suites 52, pass 338, fail 0, cancelled 0, skipped 0, todo 0
+- tests 556, suites 56, pass 556, fail 0, cancelled 0, skipped 0, todo 0
 
-This is the bounded B-1 (B-1a + B-1b) runtime-validation record, reflecting the latest actual post-merge B-1b runtime verification. It does not declare Evidence Foundation overall complete. The prior Evidence Foundation P0 finalization-writer runtime-validation record (`593b5a4a11fb394a3db6b47a56e2d7b6ceccda0e`) is preserved unchanged in §B.3.
+This is post-merge Validation evidence for the exact integrated runtime SHA, distinct from Development evidence and Independent Review evidence. The lifecycle was subsequently review-recorded by `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.75`) and closed by `c4e452d762d70fa57db61856b37b04a16d43df92`. It does not declare Evidence Foundation overall complete, P1 activated, human-data collection authorized, or efficacy verified.
 
-### A.3 Independent Review Evidence
+### A.3 Prior Evidence Foundation P0 Independent Review Evidence (preserved)
 
 - **Reviewed commit**: `30db1b98fc8ec02f4b9f91def0d4c4577c0bbf0f`
 - **Verdict**: APPROVE WITH NON-BLOCKING NOTES
@@ -79,6 +80,12 @@ This absence reflects that main does not retain a permanent CI workflow. It is s
 - user app complete
 - VI Empirical Pilot P1 activated
 - human-data collection approved
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` Independent Review completed
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` main integration completed
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` post-integration verification completed
+- BIGINT candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` lifecycle closed
+
+Accordingly: BIGINT Independent Review is NOT YET PERFORMED; the BIGINT candidate is NOT INTEGRATED, post-integration verification is NOT PERFORMED, and the lifecycle is NOT CLOSED; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED.
 
 ### A.6 B-5/B-4 Governance Documentation Review (no new runtime evidence)
 
@@ -150,6 +157,62 @@ B-2 (VI pilot content manifest) is recorded **COMPLETE** as a bounded VI Empiric
 - B-2: **COMPLETE** as a bounded VI Empirical Pilot P1 implementation/data prerequisite.
 
 **Remaining after B-2 completion**: B-3 (human-data/privacy owner decision) remains unresolved. VI Empirical Pilot P1 is NOT STARTED / NOT ACTIVATED / STILL NOT ELIGIBLE TO ACTIVATE. Pilot Spec document status remains Proposed; all four B-2 manifests remain `approved_for_pilot=false`.
+
+### A.9 Runtime Foundation B1 RAW_SOURCE Lifecycle (accepted later evidence)
+
+- Runtime main integration: `6bb2bccd5abef2d10839706ffdd000285b59512d` (following replay main commit `f3f7fc1fb2d1128a18be0a239ff8eb9f623bdeba`)
+- Independent Review: APPROVE WITH NON-BLOCKING NOTES
+- Post-merge Validation: Windows-local PostgreSQL 17.10 on an isolated database; migrations 001–013 applied, migration 014 absent; RAW_SOURCE suite 56/56 PASS; focused Evidence/Foundation + Runtime set 200/200 PASS across 8 suites; full regression 430/430 PASS across 55 suites; fail/cancelled/skipped/todo all 0
+- Review-record: `c224ff9cca5b28f96febca0e11a89608ef746a1d`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.73`
+- Closure sync: `bd64555ad30e5901467095e1d81002de433a02f8`
+- Final bounded lifecycle: INDEPENDENTLY REVIEWED / CANONICAL IMPLEMENTATION ON MAIN / POST-MERGE POSTGRESQL VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED
+
+This accepted lifecycle is distinct from the older B-1a/B-1b assignment/session lifecycle evidence in §A.7. It does not declare Evidence Foundation overall complete, P1 activated, human-data collection authorized, or efficacy verified.
+
+### A.10 METRIC_RESULT / Retention v1 Lifecycle (accepted later evidence)
+
+- Tier C canonical documentation: API `1.29` / Schema `1.8`, review-recorded in `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.74`
+- Runtime main integration: `22508147625090af84af141ac0ec574792369115`
+- Independent Review: APPROVE WITH NON-BLOCKING NOTES
+- Post-merge Validation: PASS, with exact figures owned by §A.2
+- Runtime review-record: `3fa4cb4b424d601f9eec3a97d8500c0a7a0e65f9`, `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.75`
+- Closure: `c4e452d762d70fa57db61856b37b04a16d43df92`
+- Final bounded lifecycle: INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED
+
+Later canonical revisions preserve Retention v1: API `1.31` and Schema `1.10`. METRIC_RESULT / Unseen Transfer v2 Tier C documentation is separately review-recorded and closed, but its runtime remains NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED.
+
+### A.11 Current Canonical Validation Context
+
+- `API_CONTRACT.md`: revision `1.31`, blob `e60afa6bda3356051c24b36a823fb325761b9b42`
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.10`, blob `de244476e56dfcab59dcd899a25091a2b1452e31`
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.77`, blob `f6c5119b78c5c460a5c3b821630599bd33225461`
+
+These identities provide validation context only. This synchronization changes no canonical contract, Architecture, Schema, or Validation Rule.
+
+### A.12 BIGINT Writer Source-Authority Runtime Candidate — Prior Independent Validation
+
+- Branch: `validation/bigint-writer-source-authority-runtime-20260912`
+- Candidate: `303e1af9aa2c32167e7caf66527b5020bbacf882`
+- Parent: `2034d1a01e58a36762750156df1fd63c8e77ba9c`
+- Candidate tree: `34bed66b82f21afe5fc5e53184f6a4f8357a5146`
+- Candidate classification: IMPLEMENTATION CANDIDATE PREPARED
+- Validation classification: PRIOR INDEPENDENT VALIDATION EVIDENCE — not Development evidence, not evidence generated in this status-sync session, and not Independent Review evidence
+- `tests/evidenceFoundationRepository.test.js`: 80 pass / 0 fail / 0 skipped / 0 cancelled / 0 todo
+- `tests/viP1ItemLineageRuntime.test.js`: 27 pass / 0 fail / 0 skipped / 0 cancelled / 0 todo
+- Full regression: 559 pass / 0 fail / 0 cancelled / 0 skipped / 0 todo
+- Independent Validation verdict: PASS
+- Independent Review: NOT YET PERFORMED
+- Main integration: NOT PERFORMED / NOT INTEGRATED
+- Post-integration verification: NOT PERFORMED
+- Lifecycle closure: NOT CLOSED
+
+No PostgreSQL, focused Node test, npm test, runtime validation, migration, or database mutation was executed for this three-file status synchronization. The figures above were generated by the prior independent Validation session and recorded on main by `4d5776e9a7465716e036dd58f7b550469e9b98f7`.
+
+### A.13 Next Action
+
+After this three-file status synchronization is separately reviewed and integrated, the sole project Next Action is a fresh, read-only Independent Review of exact candidate `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent `2034d1a01e58a36762750156df1fd63c8e77ba9c` on branch `validation/bigint-writer-source-authority-runtime-20260912`.
+
+That review is not performed in this session, and this status-sync candidate does not claim to authorize it on main before separate status-sync review and integration.
 
 ---
 
