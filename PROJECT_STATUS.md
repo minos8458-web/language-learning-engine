@@ -9,13 +9,15 @@
 Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
 - **GitHub main ref**: `GitHub refs/heads/main` is the authority for current repository HEAD.
-- **Status snapshot baseline**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` — the exact `origin/main` baseline from which this four-file post-integration status synchronization candidate is prepared
-- **Latest accepted integrated runtime-validation milestone**: `22508147625090af84af141ac0ec574792369115` (METRIC_RESULT / Retention v1 runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
+- **Status snapshot baseline**: `777f8d7dd94b9d6b5be574d6d83194688e5efaba` — the exact `origin/main` baseline from which this four-file BIGINT Runtime closure synchronization candidate is prepared
+- **Latest accepted integrated runtime-validation milestone**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (BIGINT writer source-authority runtime; independently reviewed, canonical on main, post-integration Windows-local PostgreSQL 17.10 verified, validated, review-recorded in backlog revision `1.78`, and closed)
+- **Prior accepted integrated runtime-validation milestone, preserved**: `22508147625090af84af141ac0ec574792369115` (METRIC_RESULT / Retention v1 runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
 - **Runtime Foundation B1 accepted implementation**: `6bb2bccd5abef2d10839706ffdd000285b59512d` (RAW_SOURCE rebuild runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed)
 - **Current canonical contracts**: `API_CONTRACT.md` revision `1.31`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` revision `1.10`
 - **BIGINT writer source-authority runtime — reviewed candidate**: `303e1af9aa2c32167e7caf66527b5020bbacf882`, parent `2034d1a01e58a36762750156df1fd63c8e77ba9c`, branch `validation/bigint-writer-source-authority-runtime-20260912`; prior candidate Independent Validation PASS; Independent Review APPROVE WITH NON-BLOCKING NOTES
-- **BIGINT writer source-authority runtime — canonical main integration**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (parent `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`); fresh post-integration Windows-local PostgreSQL 17.10 Validation PASS; REVIEW-RECORD PENDING / NOT CLOSED. Because it is not yet review-recorded or closed, it does not replace the accepted-milestone pointer above.
-- **Current documentation review-record commit**: `623eaf94328a5145adf62aaff52c6b23689d4efe` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`; closed BIGINT Tier C documentation lifecycle, not runtime-candidate review evidence)
+- **BIGINT writer source-authority runtime — canonical main integration**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (parent `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`); fresh post-integration Windows-local PostgreSQL 17.10 Validation PASS; REVIEW-RECORDED / CLOSED.
+- **Current runtime implementation review-record commit**: `777f8d7dd94b9d6b5be574d6d83194688e5efaba` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.78`, blob `5a9f2e43527a72355b99838cd37a820c376af6c1`; BIGINT writer source-authority Runtime implementation lifecycle)
+- **Prior documentation review-record commit, preserved**: `623eaf94328a5145adf62aaff52c6b23689d4efe` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`; closed BIGINT Tier C documentation lifecycle, not runtime-candidate review evidence)
 
 Detailed runtime figures, lifecycle classifications, and candidate-validation totals are owned only by `VALIDATION_STATUS.md`.
 
@@ -33,7 +35,7 @@ Detailed runtime figures, lifecycle classifications, and candidate-validation to
 - Foundation A item-exposure/item-lineage runtime, including `evidence_assignment_item_exposures` and exact exposure ordinal persistence
 - Runtime Foundation B1 RAW_SOURCE rebuild (`queryRawEvidenceForMetricRebuild(pool, input)`), main `6bb2bccd5abef2d10839706ffdd000285b59512d`; read-only bounded runtime lifecycle is review-recorded and closed
 - METRIC_RESULT / Retention v1 reducer (`queryMetricResult(pool, input)` with FORMULA definition version 1), main `22508147625090af84af141ac0ec574792369115`; bounded runtime lifecycle is review-recorded and closed
-- BIGINT writer source-authority correction, main `8934ccee7931b79ddc544af08dceffc97a0d7b32`: `createAssignment` snapshot `exposure_history_cutoff_ordinal` and `recordAssignmentItemExposure` `exposureOrdinal` carry exact base-10 decimal strings rather than JavaScript `Number`; corrected assignment-snapshot digesting uses `evidence-assignment-snapshot-v2`, while generic `evidence-semantic-v1` is unchanged; no migration/DDL and no historical rewrite/backfill. Bounded runtime lifecycle: INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED
+- BIGINT writer source-authority correction, main `8934ccee7931b79ddc544af08dceffc97a0d7b32`: `createAssignment` snapshot `exposure_history_cutoff_ordinal` and `recordAssignmentItemExposure` `exposureOrdinal` carry exact base-10 decimal strings rather than JavaScript `Number`; corrected assignment-snapshot digesting uses `evidence-assignment-snapshot-v2`, while generic `evidence-semantic-v1` is unchanged; no migration/DDL and no historical rewrite/backfill. Bounded runtime lifecycle: INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED
 
 The BIGINT writer source-authority correction is recorded through four distinct evidence steps, which are not merged:
 
@@ -42,7 +44,7 @@ The BIGINT writer source-authority correction is recorded through four distinct 
 3. Main integration — one guarded ordinary cherry-pick onto `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`, producing main `8934ccee7931b79ddc544af08dceffc97a0d7b32` with exactly the reviewed four files; no conflict, no force push.
 4. Fresh post-integration Validation — POST-INTEGRATION VALIDATION PASS on exact main `8934ccee7931b79ddc544af08dceffc97a0d7b32`, Windows-local PostgreSQL 17.10, on a fresh disposable database.
 
-Detailed figures for steps 1 and 4 are owned by `VALIDATION_STATUS.md` (§A.12 and §A.15). `F-R02` remains OPEN / NON-BLOCKING: the integrated runtime corrects its cited BIGINT→`Number` sites, but its formal disposition belongs to the later review-record step. `F-BIGINT-IR-01` through `F-BIGINT-IR-06` remain NOTE / OPEN / NON-BLOCKING.
+Detailed figures for steps 1 and 4 are owned by `VALIDATION_STATUS.md` (§A.12 and §A.15). The implementation review-record is `ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.78` (`777f8d7dd94b9d6b5be574d6d83194688e5efaba`). `F-R02` is CLOSED — CORRECTED / INDEPENDENTLY REVIEWED / INTEGRATED / POST-INTEGRATION VALIDATED, bounded to its cited exposure-ordinal/cutoff domain; this closure makes no claim about historical rows, which remain UNKNOWN / NOT INSPECTED. `F-BIGINT-IR-01` through `F-BIGINT-IR-06` remain NOTE / OPEN / NON-BLOCKING.
 
 ## 3. Product Readiness
 
@@ -53,7 +55,7 @@ Detailed figures for steps 1 and 4 are owned by `VALIDATION_STATUS.md` (§A.12 a
 - VI Empirical Pilot P1 governance prerequisites B-4 (cost/operational stop conditions) and B-5 (approval-provenance scope) are complete as bounded documentation prerequisites (main `e60b2fc7c88fd0d3173adc94a541b4b19dcc98c8`). Implementation/data prerequisite B-1 (assignment/session lifecycle writer) is complete as a bounded prerequisite (B-1a main `d785abfc74a669cbc472ff24df9869874a165ecb`; B-1b main `f6c0d1b0cb388403f2a8e636e359a099128dd8f0`, canonical status sync main `3fb3f0c8d325336310e1c1d82fa75458e7670f79`). Data prerequisite B-2 (VI pilot content manifest) is complete as a bounded prerequisite, composed of four recorded and main-integrated sub-components: exact 18-node inclusion/exclusion manifest and exact six pilot-scenario manifest (main `b955facad49fa1daf217b88f93174682ef04eb1b`), exact versioned lexical manifest with source/provenance/license verification (main `7f1e00a3d714bcfb96e2bc386bff0ff4acda27dc`), and exact item/item-family manifest (main `6ab85ee173b94441d95fdb6bbed8fad380f17f9a`). B-3 (human-data/privacy owner decision) remains unresolved, and P1 remains not started / not activated / still not eligible to activate.
 - Runtime Foundation B1 RAW_SOURCE and METRIC_RESULT / Retention v1 are accepted closed implementation milestones, but they do not make Evidence Foundation complete or establish product efficacy.
 - METRIC_RESULT / Unseen Transfer v2 Tier C documentation is canonical and closed; its runtime remains not authorized, not implemented, and not validated.
-- BIGINT writer source-authority runtime (main `8934ccee7931b79ddc544af08dceffc97a0d7b32`): INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED. This bounded correction does not make Evidence Foundation complete, does not establish product efficacy, and does not change Beta readiness.
+- BIGINT writer source-authority runtime (main `8934ccee7931b79ddc544af08dceffc97a0d7b32`): INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED. This bounded correction does not make Evidence Foundation complete, does not establish product efficacy, and does not change Beta readiness.
 - Client/user app: incomplete
 - Beta readiness: not ready
 
@@ -69,7 +71,7 @@ Detailed figures for steps 1 and 4 are owned by `VALIDATION_STATUS.md` (§A.12 a
 - actual provider
 - raw audio/acoustic processing
 - METRIC_RESULT / Unseen Transfer v2 runtime implementation and validation
-- BIGINT writer source-authority runtime implementation review-record, formal `F-R02` / `F-BIGINT-IR-01`–`06` disposition, and bounded lifecycle closure decision (pending the later review-record step)
+- BIGINT follow-up notes `F-BIGINT-IR-01`–`06` and review-record notes `F-BIGINT-RR-01`–`03` (non-blocking; future bounded canonical wording cleanup or test hardening) and any BIGINT historical-data inspection/remediation (requires separate explicit authorization under D5)
 - P1/P2 human-data operation approval
 - product UI/release completion
 
@@ -87,18 +89,16 @@ Detailed figures for steps 1 and 4 are owned by `VALIDATION_STATUS.md` (§A.12 a
 - user app complete
 - VI Empirical Pilot P1 activated
 - human-data collection approved
-- BIGINT writer source-authority runtime implementation review-record created
-- BIGINT writer source-authority runtime bounded lifecycle closed
-- `F-R02` closed or reclassified
 - any of `F-BIGINT-IR-01` through `F-BIGINT-IR-06` closed or reclassified
+- BIGINT historical-data inspection or remediation performed, or declared unnecessary
 
-Accordingly: the BIGINT writer source-authority runtime is independently reviewed (APPROVE WITH NON-BLOCKING NOTES), canonically integrated on main as `8934ccee7931b79ddc544af08dceffc97a0d7b32`, and freshly post-integration validated on Windows-local PostgreSQL 17.10; its implementation review-record is PENDING and its bounded lifecycle is NOT CLOSED; `F-R02` remains OPEN / NON-BLOCKING; `F-BIGINT-IR-01` through `F-BIGINT-IR-06` remain NOTE / OPEN / NON-BLOCKING; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED.
+Accordingly: the BIGINT writer source-authority runtime is independently reviewed (APPROVE WITH NON-BLOCKING NOTES), canonically integrated on main as `8934ccee7931b79ddc544af08dceffc97a0d7b32`, freshly post-integration validated on Windows-local PostgreSQL 17.10, review-recorded in backlog revision `1.78` (`777f8d7dd94b9d6b5be574d6d83194688e5efaba`), and its bounded lifecycle is CLOSED; `F-R02` is CLOSED — CORRECTED within its cited ordinal domain; `F-BIGINT-IR-01` through `F-BIGINT-IR-06` remain NOTE / OPEN / NON-BLOCKING; historical data remains UNKNOWN / NOT INSPECTED; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED.
 
 ### 5.1 Next Action
 
-Only after this four-file post-integration status synchronization candidate (branch `validation/bigint-postint-status-sync-20260915`, parent `8934ccee7931b79ddc544af08dceffc97a0d7b32`) is independently reviewed, approved, integrated onto main, and statically verified, the sole project Next Action is a fresh bounded BIGINT Runtime implementation review-record lifecycle step targeting `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only.
+Only after this four-file BIGINT Runtime closure synchronization candidate (branch `validation/bigint-runtime-closure-sync-20260916`, parent `777f8d7dd94b9d6b5be574d6d83194688e5efaba`) is independently reviewed, approved, integrated onto main, and statically verified, the sole project Next Action is a fresh read-only METRIC_RESULT / Unseen Transfer v2 Runtime implementation-readiness re-pre-analysis against then-current main (classification READ-ONLY PRE-ANALYSIS; repository mutation 0).
 
-That later review-record must independently decide the formal disposition of `F-R02` and `F-BIGINT-IR-01` through `F-BIGINT-IR-06` and whether the bounded BIGINT Runtime lifecycle is closed. This status-sync candidate does not claim to be independently reviewed or integrated, does not perform that review-record, closes no finding, and does not close the lifecycle.
+That re-pre-analysis must re-evaluate the prior governing verdict `NOT READY`, whose recorded reason was the now-closed BIGINT writer source-authority source-implementation prerequisite, without assuming READY. It must not authorize, implement, or validate Unseen Transfer Runtime. Any Unseen Transfer Runtime Development requires separate explicit authorization.
 
 ## 6. Historical Snapshot — 2026-07-06
 
