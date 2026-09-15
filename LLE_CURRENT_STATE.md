@@ -7263,6 +7263,179 @@ CLAIMED. Repository mutation caused by this record is limited to
 
 See §10.
 
+#### BIGINT Writer Source-Authority Runtime — Independently Reviewed / Integrated on Main / Post-Integration Validation PASS / Review-Record Pending / Not Closed
+
+##### Preflight / Scope
+
+Role: Validation/Integration, fresh bounded status-only synchronization
+session. Classification: `POST-INTEGRATION STATUS-ONLY SYNCHRONIZATION`,
+explicitly user-approved ("BIGINT post-integration 4파일 STATUS SYNC
+승인"). Repository tracked-file/content mutation by this record is
+limited to exactly four authority/status documents —
+`LLE_CURRENT_STATE.md`, `PROJECT_MASTER_INDEX.md`, `VALIDATION_STATUS.md`,
+`PROJECT_STATUS.md` — on validation branch
+`validation/bigint-postint-status-sync-20260915`.
+This record does not modify runtime source, tests, migrations,
+Architecture, Schema, API, Validation Rules, `BOOTSTRAP.md`, or
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`; does not integrate to `main`;
+does not create a review-record; and does not close any finding or
+lifecycle. Preflight verified inside `E:\Projects\LLE`: `git fetch origin`
+succeeded; local `HEAD` = `origin/main` = remote `main` =
+`8934ccee7931b79ddc544af08dceffc97a0d7b32` (tree
+`aa1141e0b27e4c7f24720ffa70e2ebfcb7064a00`, parent
+`a72c4a73ca711fd4fb191f43028d855ecd64e2b3`, subject `Implement BIGINT
+writer source-authority correction`); worktree/index clean; no untracked
+files; ahead/behind `0/0`; starting blobs `LLE_CURRENT_STATE.md` =
+`f29ba54bbca8e856dd9393b89a4750e042bbfa86`, `PROJECT_MASTER_INDEX.md` =
+`28df3a2692ee9456543230ab98a017d85c8b8c8d`, `VALIDATION_STATUS.md` =
+`d7a156c692463074cfaba61751adcb60090c7d50`, `PROJECT_STATUS.md` =
+`5eacfd86d01599af4b8d58aa7a620e8f50bc9f78`.
+
+##### Original Runtime Candidate (Preserved)
+
+- Validation branch:
+  `validation/bigint-writer-source-authority-runtime-20260912` (remains
+  at `303e1af9aa2c32167e7caf66527b5020bbacf882`)
+- Candidate: `303e1af9aa2c32167e7caf66527b5020bbacf882`
+- Candidate parent: `2034d1a01e58a36762750156df1fd63c8e77ba9c`
+- Candidate tree: `34bed66b82f21afe5fc5e53184f6a4f8357a5146`
+- Subject: `Implement BIGINT writer source-authority correction`
+- Exact four-file scope, no fifth file:
+  1. `src/instrumentation/evidenceNormalization.js` =
+     `948f7625275a717b8c4484f9daf2a22e6b080c45`
+  2. `src/instrumentation/evidenceRepository.js` =
+     `412385ce62b675cf55ce04bc795f0206f667ff78`
+  3. `tests/evidenceFoundationRepository.test.js` =
+     `16259b12b60b148f5c45afd26ef5a07b86497e97`
+  4. `tests/viP1ItemLineageRuntime.test.js` =
+     `5f7297422eabcce3f9ca7f40547124d046b49c04`
+- Prior candidate Independent Validation (`80/80`, `27/27`, `559/559` on
+  `lle_bigint_writer_validation_20260914`) remains recorded above as
+  prior candidate evidence; it is distinct from the Independent Review,
+  the main integration, and the fresh post-integration Validation below.
+
+##### Independent Review — APPROVE WITH NON-BLOCKING NOTES
+
+- Reviewer: Opus 5 / High. User-approved substitution for this bounded
+  review: Fable 5 / High → Opus 5 / High.
+- Review target: exact candidate
+  `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent
+  `2034d1a01e58a36762750156df1fd63c8e77ba9c`.
+- Final verdict: `APPROVE WITH NON-BLOCKING NOTES`
+- Integration eligibility: `ELIGIBLE`
+- Repository mutation during review: `0`
+- Tests/runtime/database execution during review: `NONE`
+- `git fetch` during review: `NO`
+- New Independent Review findings (all `NOTE / OPEN / NON-BLOCKING`;
+  correction required before integration `NO` for each):
+  - `F-BIGINT-IR-04`: no direct negative grammar tests for malformed
+    BIGINT strings / `Number` input.
+  - `F-BIGINT-IR-05`: one `T27` comment/digest-inequality step is
+    weak/inaccurate, while the strong unsafe-range proof exists in the
+    repository-focused regression.
+  - `F-BIGINT-IR-06`: `D3` return representation relies on default `pg`
+    int8→string parsing, but the guard/test path fails closed if that
+    assumption changes.
+
+##### Main Integration
+
+- User explicitly approved main integration.
+- Method: one guarded ordinary cherry-pick of the reviewed candidate onto
+  then-current `main`.
+- Pre-integration main: `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`
+- Main integration commit: `8934ccee7931b79ddc544af08dceffc97a0d7b32`
+- Integration tree: `aa1141e0b27e4c7f24720ffa70e2ebfcb7064a00`
+- Integration parent: `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`
+- Subject: `Implement BIGINT writer source-authority correction`
+- Conflict: `NO`; force push: `NO`
+- Integrated scope: exactly the reviewed four files, no fifth path. This
+  status-sync session read-only re-confirmed that the four integrated
+  blobs on `8934ccee7931b79ddc544af08dceffc97a0d7b32` equal the reviewed
+  candidate blobs listed above.
+
+##### Fresh Post-Integration Validation — PASS
+
+- Final verdict: `POST-INTEGRATION VALIDATION PASS`
+- Validated exact main: `8934ccee7931b79ddc544af08dceffc97a0d7b32`
+- Environment: Windows local; PostgreSQL `17.10`; Node `v24.18.0`; npm
+  `11.16.0`
+- Fresh disposable database: `lle_bigint_postint_validation_20260915`
+- Database routing proof: `psql` `current_database()` =
+  `lle_bigint_postint_validation_20260915`; Node repository pool
+  `current_database()` = `lle_bigint_postint_validation_20260915`
+- `node --test --test-concurrency=1 tests/evidenceFoundationRepository.test.js`:
+  `80 pass / 0 fail / 0 skip / 0 cancelled / 0 todo`, exit `0`
+- `node --test --test-concurrency=1 tests/viP1ItemLineageRuntime.test.js`:
+  `27 pass / 0 fail / 0 skip / 0 cancelled / 0 todo`, exit `0`
+- `npm test` (full regression): `56` suites, `559 pass / 0 fail / 0 skip /
+  0 cancelled / 0 todo`, exit `0`
+- Unsafe BIGINT `T27` freshly exercised: `PASS`
+- Cleanup: active connections to the disposable DB before drop `0`;
+  `DROP DATABASE` `PASS / exit 0`; post-drop existence count `0`; post-drop
+  DB list vs. pre-create snapshot `list_diff = 0`. No other
+  application/evidence database was used or modified. Maintenance
+  commands connected only to `postgres` for database creation, drop, and
+  catalog checks. `lle_dev` was NOT used.
+- Repository mutation / commits / pushes during validation: `0` / `0` /
+  `0`. Final repository state: clean; local `main` = `origin/main` =
+  `8934ccee7931b79ddc544af08dceffc97a0d7b32`; ahead/behind `0/0`.
+
+This is post-integration Validation evidence for the exact integrated
+main SHA. It was generated by the prior post-integration Validation
+session and is recorded here as-is; it was NOT generated by this
+status-sync record.
+
+##### Current Bounded Lifecycle
+
+`INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL
+IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10
+VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED`
+
+##### Findings — Preserved, None Closed
+
+- `F-R02`: `OPEN / NON-BLOCKING`. The integrated and freshly
+  post-integration-validated runtime corrects the cited BIGINT→`Number`
+  sites (`Number(cutoffRows[0].cutoff)` and
+  `Number(exposureRow.exposure_ordinal)`). `F-R02` nevertheless remains
+  `OPEN / NON-BLOCKING` in this record; its formal lifecycle disposition
+  belongs to the later review-record step.
+- `F-BIGINT-IR-01`: `NOTE / OPEN / NON-BLOCKING`
+- `F-BIGINT-IR-02`: `NOTE / OPEN / NON-BLOCKING`
+- `F-BIGINT-IR-03`: `NOTE / OPEN / NON-BLOCKING`
+- `F-BIGINT-IR-04`: `NOTE / OPEN / NON-BLOCKING`
+- `F-BIGINT-IR-05`: `NOTE / OPEN / NON-BLOCKING`
+- `F-BIGINT-IR-06`: `NOTE / OPEN / NON-BLOCKING`
+
+##### PostgreSQL/Tests — NOT RUN For This Status-Sync
+
+For this status-only sync: PostgreSQL = `NOT RUN`; `node --test`/`npm`
+tests = `NOT RUN`; migrations = `NOT RUN`; application runtime = `NOT
+RUN`; database creation/drop = `NOT RUN`. The figures above are prior
+Validation evidence and are not relabeled as generated by this record.
+
+##### Preserved State / Non-Claims
+
+This record does not mean: the bounded BIGINT Runtime lifecycle is closed
+— NOT CLAIMED (`NOT CLOSED`); a review-record has been created — NOT
+CLAIMED (`REVIEW-RECORD NOT YET CREATED`); `F-R02` closed or reclassified —
+NOT CLAIMED (remains `OPEN / NON-BLOCKING`); any of `F-BIGINT-IR-01`–`06`
+closed — NOT CLAIMED (all remain `NOTE / OPEN / NON-BLOCKING`); Evidence
+Foundation overall complete — NOT CLAIMED (incomplete); Validation Level 3
+§10 overall PASS — NOT CLAIMED (`NOT DECLARED`); P1 activated — NOT
+CLAIMED (`NOT ACTIVATED`); human-data collection authorized — NOT CLAIMED
+(`NOT AUTHORIZED`); efficacy verified — NOT CLAIMED (`NOT VERIFIED`); any
+historical-data fact established — NOT CLAIMED (`UNKNOWN / NOT
+INSPECTED`); Unseen Transfer Runtime authorized, implemented, or validated
+— NOT CLAIMED (`NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`);
+actual-provider milestone complete — NOT CLAIMED (incomplete);
+product/Beta readiness established — NOT CLAIMED; PostgreSQL or tests
+were run for this status-sync — NOT CLAIMED (`NOT RUN`); this status-sync
+candidate is independently reviewed or integrated to `main` — NOT CLAIMED.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -8604,6 +8777,35 @@ This bootstrap does not rerun PostgreSQL or tests.
   Nonconformance Contained / Independent Review Pending" for full detail;
   the sole Next Action is now a fresh, read-only Independent Review of
   the exact candidate (§10).
+- Since then: a fresh Independent Review (Opus 5 / High, user-approved
+  substitution for Fable 5 / High; repository mutation `0`; no
+  tests/runtime/DB; no `git fetch`) of exact candidate
+  `303e1af9aa2c32167e7caf66527b5020bbacf882` returned `APPROVE WITH
+  NON-BLOCKING NOTES`, integration `ELIGIBLE`, adding `F-BIGINT-IR-04`,
+  `F-BIGINT-IR-05`, `F-BIGINT-IR-06` (each `NOTE / OPEN / NON-BLOCKING`,
+  correction before integration `NO`). With explicit user approval, the
+  reviewed candidate was integrated by one guarded ordinary cherry-pick
+  onto `a72c4a73ca711fd4fb191f43028d855ecd64e2b3` as main commit
+  `8934ccee7931b79ddc544af08dceffc97a0d7b32` (tree
+  `aa1141e0b27e4c7f24720ffa70e2ebfcb7064a00`; conflict `NO`; force push
+  `NO`; exactly the reviewed four files). A fresh post-integration
+  Validation of exact main `8934ccee7931b79ddc544af08dceffc97a0d7b32`
+  (Windows local, PostgreSQL `17.10`, Node `v24.18.0`, npm `11.16.0`,
+  disposable DB `lle_bigint_postint_validation_20260915`, dual-routing
+  confirmed, dropped with `list_diff = 0`, `lle_dev` not used) returned
+  `POST-INTEGRATION VALIDATION PASS`: focused `80/80`, lineage `27/27`,
+  full `npm test` `559/559` across `56` suites, unsafe BIGINT `T27`
+  freshly `PASS`. The integrated runtime corrects the cited `F-R02`
+  BIGINT→`Number` sites, but `F-R02` remains `OPEN / NON-BLOCKING`
+  pending the later review-record; `F-BIGINT-IR-01`–`06` all remain
+  `NOTE / OPEN / NON-BLOCKING`. Current bounded lifecycle:
+  `INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL
+  IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL
+  17.10 VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED`.
+  PostgreSQL/tests for this status-sync: `NOT RUN — STATUS-ONLY SYNC`.
+  See §4 "BIGINT Writer Source-Authority Runtime — Independently Reviewed
+  / Integrated on Main / Post-Integration Validation PASS / Review-Record
+  Pending / Not Closed" for full detail; see §10 for the sole Next Action.
 
 ## 9. Lifecycle Non-Claims
 
@@ -9566,6 +9768,40 @@ remain true and are established in §4/§8 and elsewhere in this document:
   is now a fresh, read-only Independent Review of the exact candidate,
   §10)
 
+- Since then: exact candidate `303e1af9aa2c32167e7caf66527b5020bbacf882`
+  was independently reviewed (`APPROVE WITH NON-BLOCKING NOTES`,
+  `ELIGIBLE`; new `F-BIGINT-IR-04`–`06` all `NOTE / OPEN /
+  NON-BLOCKING`), integrated onto `main` as
+  `8934ccee7931b79ddc544af08dceffc97a0d7b32` (parent
+  `a72c4a73ca711fd4fb191f43028d855ecd64e2b3`, tree
+  `aa1141e0b27e4c7f24720ffa70e2ebfcb7064a00`), and freshly
+  post-integration validated on that exact main (`80/80`, `27/27`,
+  `559/559` across `56` suites; PostgreSQL `17.10`; disposable DB
+  `lle_bigint_postint_validation_20260915` dropped). The earlier
+  non-claims "Independent Review has occurred — NOT CLAIMED", "integrated
+  onto `main` — NOT CLAIMED", and "post-integration verification NOT
+  PERFORMED" are superseded by these recorded events. This does NOT mean:
+  the bounded BIGINT Runtime lifecycle is closed — NOT CLAIMED (`NOT
+  CLOSED`); a review-record exists — NOT CLAIMED (`REVIEW-RECORD NOT YET
+  CREATED`); `F-R02` closed or reclassified — NOT CLAIMED (remains `OPEN /
+  NON-BLOCKING`, even though the integrated runtime corrects its cited
+  BIGINT→`Number` sites; formal disposition belongs to the later
+  review-record); `F-BIGINT-IR-01`–`06` closed — NOT CLAIMED (all remain
+  `NOTE / OPEN / NON-BLOCKING`); Evidence Foundation overall complete —
+  NOT CLAIMED; Validation Level 3 §10 overall PASS — NOT CLAIMED (`NOT
+  DECLARED`); P1 activated — NOT CLAIMED; human-data collection authorized
+  — NOT CLAIMED; efficacy verified — NOT CLAIMED; any historical-data fact
+  established — NOT CLAIMED (`UNKNOWN / NOT INSPECTED`); Unseen Transfer
+  Runtime authorized, implemented, or validated — NOT CLAIMED (`NOT
+  AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`); actual-provider
+  milestone complete — NOT CLAIMED; product/Beta readiness established —
+  NOT CLAIMED; PostgreSQL or tests run for this status-sync — NOT CLAIMED
+  (`NOT RUN — STATUS-ONLY SYNC`). Governing BIGINT Runtime state is now
+  `INDEPENDENTLY REVIEWED — APPROVE WITH NON-BLOCKING NOTES / CANONICAL
+  IMPLEMENTATION ON MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL
+  17.10 VERIFIED / VALIDATED / REVIEW-RECORD PENDING / NOT CLOSED` (see
+  §4/§8; sole Next Action in §10)
+
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
 Each entry below was recorded at an earlier lifecycle stage as an accurate
@@ -10353,16 +10589,17 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- After Control Tower verifies this status-sync commit, perform a fresh,
-  read-only Independent Review of exact candidate
-  `303e1af9aa2c32167e7caf66527b5020bbacf882` against parent
-  `2034d1a01e58a36762750156df1fd63c8e77ba9c` on branch
-  `validation/bigint-writer-source-authority-runtime-20260912`. The
-  review must include: `API_CONTRACT.md` `1.31`;
-  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10`; the exact four-file candidate
-  diff; `D1`–`D5` compliance; regression design and unsafe-range proof;
-  digest-version scoping; lineage semantic preservation; the contained
-  process nonconformance; the independent Validation evidence; and
-  lifecycle/non-claim boundaries. The Independent Review must be
-  performed in a fresh session, read-only, using Fable 5 at high
-  reasoning, and must not modify repository state.
+- Only after this four-file BIGINT post-integration status-sync candidate
+  (branch `validation/bigint-postint-status-sync-20260915`, parent
+  `8934ccee7931b79ddc544af08dceffc97a0d7b32`) is (1) independently
+  reviewed, (2) approved, (3) integrated onto `main`, and (4) statically
+  verified, the sole project Next Action is a fresh bounded BIGINT Runtime
+  implementation review-record lifecycle step targeting
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only, recording the Independent
+  Review of `303e1af9aa2c32167e7caf66527b5020bbacf882`, main integration
+  `8934ccee7931b79ddc544af08dceffc97a0d7b32`, and the fresh
+  post-integration Validation PASS. That review-record must independently
+  decide the formal disposition of `F-R02` and `F-BIGINT-IR-01`–`06` and
+  whether the bounded BIGINT Runtime lifecycle is closed. This
+  status-sync record does NOT perform that review-record, does NOT close
+  any finding, and does NOT close the lifecycle.
