@@ -7580,6 +7580,140 @@ NOT CLAIMED.
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness Re-Pre-Analysis — RECONCILED / NOT READY
+
+##### Preflight / Scope
+
+Role: LLE Lead, final reconciliation of a four-worker bounded read-only
+evidence bundle. Classification: `READ-ONLY RECONCILIATION` followed by a
+separate `STATUS-ONLY DOCUMENTATION SYNC`. Repository tracked-file/content
+mutation by this status-sync record is limited to exactly one file —
+`LLE_CURRENT_STATE.md` — on validation branch
+`validation/unseen-v2-not-ready-sync-20260918`, branched from exact
+`origin/main`. This record does not modify
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `API_CONTRACT.md`,
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md`, Runtime source, tests, migrations, or
+database files, and does not run PostgreSQL, `node --test`, `npm test`,
+migrations, or application runtime. Preflight verified inside
+`E:\Projects\LLE`: `git fetch origin` succeeded; `origin/main` =
+`dc388759f4377ab9582c7eda74f8c11c7bc51a80` (tree
+`d911b76d2d26449402ffa4269476ed72db59e30b`, parent
+`777f8d7dd94b9d6b5be574d6d83194688e5efaba`, subject `Close BIGINT writer
+runtime lifecycle`); worktree/index clean; ahead/behind `0`/`0`;
+pre-update `LLE_CURRENT_STATE.md` blob
+`a3fe2a3b1c1d65b3b384c2ca4653f40b39ce676a`.
+
+##### Worker Evidence (Codex A/B/C/D)
+
+Fulfilling the prior recorded Next Action (§10, prior text), four Codex
+workers each independently produced a bounded read-only source-evidence
+packet against exact `main` `dc388759f4377ab9582c7eda74f8c11c7bc51a80`
+(tree `d911b76d2d26449402ffa4269476ed72db59e30b`, parent
+`777f8d7dd94b9d6b5be574d6d83194688e5efaba`), each independently verifying
+that same baseline via non-mutating `git ls-remote`/GitHub API against a
+stale local checkout not used as authority: Codex A (Q1–Q5, Q7, Q21, Q22 —
+Runtime dispatch scope, source/test file boundaries, Retention helper
+reuse matrix, v1/RAW_SOURCE regression preservation); Codex B (Q6, Q14,
+Q15, Q18 — FORMULA v2 closed 16-key contract, 21-key row/9-key group key,
+error registry); Codex C (Q8–Q13, Q16, Q17, plus a RAW_SOURCE reuse
+matrix — H/W/R/N/L/V/ρ source matrix, ITEM `lineageAuthority` matrix,
+writer-vs-reader consistency matrix); Codex D (Q19, Q20, Q23–Q25 —
+transaction ownership, zero-side-effect proof matrix, synthetic fixture
+matrix, regression-gate sequence, DDL/migration). Every worker reported
+repository mutation `0` and PostgreSQL/npm/node tests `NOT RUN`.
+
+##### Sonnet 5 Lead Reconciliation
+
+A Sonnet 5 Lead independently reconciled all four packets — not relying on
+worker summaries alone — against exact-main source and canonical text,
+blob-verifying every cited file (20 of 20 cited blobs matched exactly,
+including `LLE_CURRENT_STATE.md`
+`a3fe2a3b1c1d65b3b384c2ca4653f40b39ce676a` pre-update baseline,
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+`5a9f2e43527a72355b99838cd37a820c376af6c1` revision `1.78`,
+`API_CONTRACT.md` `e60afa6bda3356051c24b36a823fb325761b9b42` revision
+`1.31`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+`de244476e56dfcab59dcd899a25091a2b1452e31` revision `1.10`), and
+independently re-derived the most material conclusions directly from
+source (`src/instrumentation/evidenceMetrics.js`,
+`src/instrumentation/evidenceRepository.js`) and from
+`API_CONTRACT.md`/`EVIDENCE_FOUNDATION_P0_SCHEMA.md` text rather than
+accepting worker labels alone. All 25 questions (Q1–Q25) were reconciled
+without omission; no cross-worker disagreement was found on any material
+fact (only on non-canonical implementation-scope conventions, resolved
+below). Q26–Q29 were answered as follows.
+
+`Q26` — `NO OPERATIVE CANONICAL AMBIGUITY`. Every worker-flagged wording
+note (`F-MR-UT-RR2-02` null-position residue, `F-MR-UT-RR2-03` SV notation
+lifting, `F-MR-UT-RR2-04` provenance-ordering terminology, Schema
+§5.9/§5.9.1 stale `F-R02`/"16-table baseline" prose) resolves to a
+deterministic outcome on inspection and is not operative. The material
+issue is a source/runtime implementation gap, not a canonical ambiguity.
+Historical-data uncertainty (`UNKNOWN / NOT INSPECTED`) is state
+uncertainty, not a canonical ambiguity, and carries no inferred
+remediation obligation.
+
+`Q27` — `NOT READY`.
+
+##### Deciding Prerequisite
+
+Exact-main `src/instrumentation/evidenceRepository.js` function
+`createAssignment` does not yet implement the full canonical ITEM
+`lineageAuthority` semantics required (`API_CONTRACT.md` §13.10.11.3
+line `3334`; `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §5.5 line `383`, both
+independently re-read verbatim) to be shared with the Unseen Transfer
+reader/reducer. Exact missing behavior: `canonicalStimulusId` exact
+non-null equality within `EXACT_REPEAT`; either-direction direct
+surface-variant relation `SV(X,Y)`; whole-object
+`ITEM.definition.lineageAuthority` validation; explicit-null rejection;
+closed four-key validation; self-reference rejection; duplicate exact
+relation rejection; dangling ITEM reference rejection; and the exact
+canonical priority order `EXACT_REPEAT -> SURFACE_VARIANT ->
+SAME_ITEM_FAMILY -> DIFFERENT_ITEM_FAMILY -> null`. Current
+`createAssignment` (independently re-read verbatim) implements exact
+snapshot ITEM-pair repeat, same-family, and different-family only, and
+its own inline comment states the `SURFACE_VARIANT` branch is never
+satisfied; it does not consume `canonicalStimulusId` and performs no
+whole-object `lineageAuthority` validation. All four Codex workers
+independently surfaced this identical finding from unrelated assigned
+angles with zero dissent. The existing BIGINT writer source-authority
+correction (`exposure_ordinal`/`exposure_history_cutoff_ordinal`
+exactness) remains `CLOSED` and is **not** reopened by this finding; this
+is a distinct, additional lineage-authority prerequisite.
+`METRIC_RESULT` / Retention v1 Runtime remains `REVIEW-RECORDED /
+CLOSED`, not reopened.
+
+##### PostgreSQL/Tests — NOT RUN For This Reconciliation/Sync
+
+PostgreSQL = `NOT RUN`; `node --test`/`npm` tests = `NOT RUN`; migrations =
+`NOT RUN`; database creation/drop = `NOT RUN`, for both the worker/
+reconciliation analysis and this status-sync record.
+
+##### Non-Claims
+
+This record does not mean: Unseen Transfer Runtime authorized,
+implemented, or validated — NOT CLAIMED (`NOT AUTHORIZED / NOT
+IMPLEMENTED / NOT VALIDATED`); P1 activated — NOT CLAIMED (`NOT
+ACTIVATED`); human-data collection authorized — NOT CLAIMED (`NOT
+AUTHORIZED`); efficacy verified — NOT CLAIMED (`NOT VERIFIED`);
+actual-provider milestone complete — NOT CLAIMED (unchanged / not
+established); Validation Level 3 §10 overall PASS — NOT CLAIMED; Evidence
+Foundation overall complete — NOT CLAIMED; historical stored
+`resolved_item_lineage` data inspected, or valid, invalid, needing
+migration, needing repair, or needing backfill — NOT CLAIMED (`UNKNOWN /
+NOT INSPECTED`); Retention v1 Runtime reopened — NOT CLAIMED (remains
+`REVIEW-RECORDED / CLOSED`); BIGINT writer lifecycle reopened — NOT
+CLAIMED (remains `CLOSED`); `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
+(`1.78`), `API_CONTRACT.md` (`1.31`), or `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+(`1.10`) changed — NOT CLAIMED (unchanged by this record; no canonical
+decision is invented and no Architecture/API/Schema ambiguity is
+adjudicated); PostgreSQL or tests run for the analysis, reconciliation, or
+this record — NOT CLAIMED.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -10778,24 +10912,94 @@ historical ledger does not.
   BIGINT Writer/Digest/Output Representation `D1`–`D5` decisions,
   classification `ARCHITECTURE CANONICAL PATCH PREPARATION`, future
   repository mutation `0` (§10)
+- the prior recorded Next Action ("a fresh read-only `VI P1 Measurement
+  Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness Re-Pre-Analysis`...") has been fulfilled: four
+  Codex workers (A/B/C/D) completed Q1–Q25 as bounded read-only evidence
+  against exact `main` `dc388759f4377ab9582c7eda74f8c11c7bc51a80`,
+  repository mutation `0`, PostgreSQL/tests `NOT RUN`; a Sonnet 5 Lead
+  independently reconciled Q1–Q25 (no material disagreement found) and
+  answered `Q26`: `NO OPERATIVE CANONICAL AMBIGUITY` (worker wording notes
+  are deterministic; the material issue is a source/runtime
+  implementation gap, not a canonical ambiguity; historical-data
+  uncertainty is not a canonical ambiguity) and `Q27`: `NOT READY`. The
+  deciding prerequisite: exact-main
+  `src/instrumentation/evidenceRepository.js` function `createAssignment`
+  does not yet implement the full canonical ITEM `lineageAuthority`
+  semantics required to be shared with the Unseen Transfer reader/reducer
+  (`API_CONTRACT.md` §13.10.11.3, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  §5.5) — missing `canonicalStimulusId` exact non-null equality in
+  `EXACT_REPEAT`, either-direction direct surface-variant relation
+  `SV(X,Y)`, whole-object `ITEM.definition.lineageAuthority` validation,
+  explicit-null rejection, closed four-key validation, self-reference
+  rejection, duplicate exact relation rejection, dangling ITEM reference
+  rejection, and the exact canonical priority order `EXACT_REPEAT ->
+  SURFACE_VARIANT -> SAME_ITEM_FAMILY -> DIFFERENT_ITEM_FAMILY -> null`.
+  The existing BIGINT writer source-authority correction remains `CLOSED`
+  and is not reopened by this finding. `METRIC_RESULT` / Retention v1
+  Runtime remains `REVIEW-RECORDED / CLOSED`, not reopened. Historical
+  data remains `UNKNOWN / NOT INSPECTED` — no inference of valid,
+  invalid, needing migration, needing repair, or needing backfill is
+  made. Unseen Transfer Runtime remains `NOT AUTHORIZED / NOT IMPLEMENTED
+  / NOT VALIDATED`; P1 remains `NOT ACTIVATED`; human-data collection
+  remains `NOT AUTHORIZED`; efficacy remains `NOT VERIFIED`;
+  actual-provider remains unchanged / not established; VL3 §10 overall
+  `PASS` remains `NOT CLAIMED`; Evidence Foundation overall completeness
+  remains `NOT CLAIMED`. `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (`1.78`),
+  `API_CONTRACT.md` (`1.31`), and `EVIDENCE_FOUNDATION_P0_SCHEMA.md`
+  (`1.10`) are unchanged by this record; no canonical decision is
+  invented. Repository mutation by the worker/reconciliation analysis and
+  by this record is limited to `LLE_CURRENT_STATE.md`; PostgreSQL/tests:
+  `NOT RUN — READ-ONLY RECONCILIATION / STATUS-ONLY SYNC`. See §4
+  "METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness
+  Re-Pre-Analysis — RECONCILED / NOT READY" for full detail; the sole
+  Next Action is now a fresh, separate `ITEM Lineage-Authority Writer
+  Correction Lifecycle` Development candidate, classification
+  `PREREQUISITE RUNTIME CORRECTION`, scoped to source
+  `src/instrumentation/evidenceRepository.js` and test
+  `tests/viP1ItemLineageRuntime.test.js` only, with mandatory unchanged
+  future regression gates `tests/evidenceFoundationRepository.test.js`,
+  `tests/evidenceFoundationMigration.test.js`, `tests/migrations.test.js`,
+  and full `npm test`; migration/DDL `NONE`; NOT authorized or started by
+  this record (§10)
 
 ## 10. Next Action
 
-- Only after this four-file BIGINT Runtime closure-sync candidate (branch
-  `validation/bigint-runtime-closure-sync-20260916`, parent
-  `777f8d7dd94b9d6b5be574d6d83194688e5efaba`) is (1) independently
-  reviewed, (2) approved, (3) integrated onto `main`, and (4) statically
-  verified, the sole project Next Action is a fresh read-only
-  `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
-  Implementation-Readiness Re-Pre-Analysis` against then-current `main`,
-  classification `READ-ONLY PRE-ANALYSIS`, repository mutation `0`. It
-  must re-evaluate the prior governing verdict `NOT READY` (recorded
-  reason: the BIGINT writer source-authority source-implementation
-  prerequisite, now `CLOSED`) against the pinned pre-analysis scope in §4
-  "Control Tower Milestone-Transition Selection — METRIC_RESULT Unseen
-  Transfer v2 Runtime Implementation-Readiness Pre-Analysis Selected",
-  without assuming `READY`. It must NOT: create a branch; edit files;
-  commit; push; run migrations; mutate PostgreSQL; authorize, implement,
-  or validate Unseen Transfer Runtime; activate P1; or claim efficacy.
-  Its result must be adjudicated by Control Tower; any Unseen Transfer
-  Runtime Development requires separate explicit authorization.
+- The sole project Next Action is a fresh, separate `ITEM
+  Lineage-Authority Writer Correction Lifecycle` Development candidate,
+  classification `PREREQUISITE RUNTIME CORRECTION`. It is NOT authorized
+  or started by this record. Its bounded scope is exactly: source
+  `src/instrumentation/evidenceRepository.js` (function
+  `createAssignment`), adding `canonicalStimulusId` exact non-null
+  equality within `EXACT_REPEAT`, either-direction direct surface-variant
+  relation `SV(X,Y)`, whole-object `ITEM.definition.lineageAuthority`
+  validation (explicit-null rejection, closed four-key shape,
+  self-reference rejection, duplicate exact relation rejection, dangling
+  ITEM reference rejection), and the exact canonical priority order
+  `EXACT_REPEAT -> SURFACE_VARIANT -> SAME_ITEM_FAMILY ->
+  DIFFERENT_ITEM_FAMILY -> null`, per `API_CONTRACT.md` §13.10.11.3 and
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §5.5; and test
+  `tests/viP1ItemLineageRuntime.test.js`, extended with canonical-
+  stimulus, either-direction surface-variant, self-reference, duplicate,
+  dangling-reference, and whole-object-validation coverage. Mandatory
+  unchanged future regression gates:
+  `tests/evidenceFoundationRepository.test.js`,
+  `tests/evidenceFoundationMigration.test.js`,
+  `tests/migrations.test.js`, and full `npm test`. Migration/DDL:
+  `NONE` (physical schema already sufficient per
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.5). The existing BIGINT writer
+  source-authority correction remains `CLOSED` and is not reopened by
+  this scope. This future candidate requires its own separate Development
+  lifecycle followed by exact-SHA regression evidence, disposable
+  PostgreSQL validation, fresh Independent Review, integration/post-merge
+  validation where applicable, and review/status closure — mirroring the
+  BIGINT writer lifecycle already closed on this branch. It must NOT:
+  implement Unseen Transfer Runtime; authorize P1; authorize human-data
+  collection; or claim efficacy. Only after this prerequisite lifecycle is
+  independently reviewed, PostgreSQL-validated, and formally `CLOSED` may
+  a fresh read-only `VI P1 Measurement Readiness — METRIC_RESULT Unseen
+  Transfer v2 Runtime Implementation-Readiness` analysis be rerun against
+  then-current `main`, classification `READ-ONLY PRE-ANALYSIS`,
+  repository mutation `0`, without assuming `READY`. Its result must be
+  adjudicated by Control Tower; any Unseen Transfer Runtime Development
+  requires separate explicit authorization.
