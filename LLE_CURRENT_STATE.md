@@ -10127,6 +10127,28 @@ remain true and are established in §4/§8 and elsewhere in this document:
   MAIN / POST-INTEGRATION WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
   VALIDATED / REVIEW-RECORDED / CLOSED` (see §4/§8; sole Next Action in
   §10)
+- the prior verdict `NOT READY` awaits fresh re-pre-analysis — SUPERSEDED;
+  that re-pre-analysis has since been completed. A fresh, read-only
+  `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness` Re-Pre-Analysis (four-worker Codex A/B/C/D
+  bounded read-only evidence, repository mutation `0`, independently
+  reconciled by a Sonnet 5 Lead) has been completed against exact `main`
+  `dc388759f4377ab9582c7eda74f8c11c7bc51a80`: `Q26` = `NO OPERATIVE
+  CANONICAL AMBIGUITY`; `Q27` = `NOT READY`. The deciding prerequisite is
+  the `ITEM Lineage-Authority Writer Correction Lifecycle`, classification
+  `PREREQUISITE RUNTIME CORRECTION`; that writer correction is NOT
+  AUTHORIZED and NOT STARTED by this record. This does NOT mean: Unseen
+  Transfer Runtime authorized, implemented, or validated — NOT CLAIMED
+  (remains `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`);
+  historical-data inspected or resolved — NOT CLAIMED (remains `UNKNOWN /
+  NOT INSPECTED`); BIGINT writer lifecycle reopened — NOT CLAIMED (remains
+  `CLOSED`); Retention v1 Runtime reopened — NOT CLAIMED (remains
+  `CLOSED`); PostgreSQL or tests run for this reconciliation or this
+  record — NOT CLAIMED (`NOT RUN`). See §4 "METRIC_RESULT Unseen Transfer
+  v2 Runtime Implementation-Readiness Re-Pre-Analysis — RECONCILED / NOT
+  READY" for full detail; the sole Next Action remains the `ITEM
+  Lineage-Authority Writer Correction Lifecycle` Development candidate,
+  NOT authorized or started by this record (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
