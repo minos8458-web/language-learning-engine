@@ -16,6 +16,7 @@ const {
   RESPONSE_MODALITIES,
   STIMULUS_MODALITIES,
   assertAllowedKeys,
+  assertExactDefinitionKeys,
   assertExactKeys,
   hasOwn,
   isPlainObject,
@@ -507,6 +508,183 @@ async function assertReferenceExists(client, kind, id, version) {
   }
 }
 
+// ITEM lineage authority (API_CONTRACT.md §13.10.11.3,
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §5.5). The assignment-creation writer and
+// the METRIC_RESULT Unseen Transfer reader consume the SAME `L(A)` source
+// authority, the same `lineageAuthority` validity rules, the same direct
+// `SV` relation and the same canonical priority. Nothing below infers a
+// relation from text similarity, edit distance, token overlap or transitive
+// closure -- only explicit, versioned, stored ITEM authority counts.
+const ITEM_LINEAGE_DEFINITION_TYPE = 'EVIDENCE_ITEM_LINEAGE';
+const ITEM_LINEAGE_DEFINITION_VERSION = 1;
+const ITEM_LINEAGE_AUTHORITY_KEYS = Object.freeze([
+  'definitionType',
+  'definitionVersion',
+  'canonicalStimulusId',
+  'surfaceVariantReferences',
+]);
+const SURFACE_VARIANT_REFERENCE_KEYS = Object.freeze(['itemId', 'itemVersion']);
+const MAX_ITEM_REFERENCE_VERSION = 2147483647;
+// Absence of `lineageAuthority` is valid and means "no explicit cross-item
+// relation authority" -- never an error, and never an equality source.
+const ABSENT_ITEM_LINEAGE_AUTHORITY = Object.freeze({
+  canonicalStimulusId: null,
+  surfaceVariantReferences: Object.freeze([]),
+});
+
+function itemPairKey(itemId, itemVersion) {
+  return JSON.stringify([itemId, itemVersion]);
+}
+
+// Whole-object validation of one ITEM's `lineageAuthority`, including every
+// `surfaceVariantReferences` entry. Every failure here is a stored-source
+// contradiction, so it is always CONTRACT_VIOLATION -- never INVALID_ID and
+// never a silently ignored declaration.
+function validateItemLineageAuthority(definition, itemId, itemVersion) {
+  const label = `ITEM ${itemId}@${itemVersion} lineageAuthority`;
+  if (!isPlainObject(definition) || !hasOwn(definition, 'lineageAuthority')) {
+    return ABSENT_ITEM_LINEAGE_AUTHORITY;
+  }
+
+  const authority = definition.lineageAuthority;
+  if (authority === null) {
+    throw new ContractViolationError(
+      `${label} must be absent or a valid object -- explicit null is not allowed`
+    );
+  }
+  assertExactDefinitionKeys(authority, ITEM_LINEAGE_AUTHORITY_KEYS, label);
+
+  if (authority.definitionType !== ITEM_LINEAGE_DEFINITION_TYPE) {
+    throw new ContractViolationError(
+      `${label}.definitionType must be ${ITEM_LINEAGE_DEFINITION_TYPE}`
+    );
+  }
+  if (authority.definitionVersion !== ITEM_LINEAGE_DEFINITION_VERSION) {
+    throw new ContractViolationError(
+      `${label}.definitionVersion must be ${ITEM_LINEAGE_DEFINITION_VERSION}`
+    );
+  }
+
+  const canonicalStimulusId = authority.canonicalStimulusId;
+  if (
+    canonicalStimulusId !== null
+    && !(typeof canonicalStimulusId === 'string' && canonicalStimulusId.length > 0)
+  ) {
+    throw new ContractViolationError(
+      `${label}.canonicalStimulusId must be a nonempty string or null`
+    );
+  }
+
+  if (!Array.isArray(authority.surfaceVariantReferences)) {
+    throw new ContractViolationError(`${label}.surfaceVariantReferences must be an array`);
+  }
+
+  const selfKey = itemPairKey(itemId, itemVersion);
+  const seenKeys = new Set();
+  const surfaceVariantReferences = [];
+  for (let index = 0; index < authority.surfaceVariantReferences.length; index += 1) {
+    const entry = authority.surfaceVariantReferences[index];
+    const entryLabel = `${label}.surfaceVariantReferences[${index}]`;
+    assertExactDefinitionKeys(entry, SURFACE_VARIANT_REFERENCE_KEYS, entryLabel);
+    if (typeof entry.itemId !== 'string' || entry.itemId.length === 0) {
+      throw new ContractViolationError(`${entryLabel}.itemId must be a nonempty string`);
+    }
+    if (
+      typeof entry.itemVersion !== 'number'
+      || !Number.isInteger(entry.itemVersion)
+      || entry.itemVersion < 1
+      || entry.itemVersion > MAX_ITEM_REFERENCE_VERSION
+    ) {
+      throw new ContractViolationError(
+        `${entryLabel}.itemVersion must be an integer 1..${MAX_ITEM_REFERENCE_VERSION}`
+      );
+    }
+
+    const entryKey = itemPairKey(entry.itemId, entry.itemVersion);
+    // Self-reference is the EXACT (itemId, itemVersion) pair only -- the same
+    // itemId at another itemVersion is a legal surface-variant reference.
+    if (entryKey === selfKey) {
+      throw new ContractViolationError(`${entryLabel} must not reference the declaring ITEM itself`);
+    }
+    if (seenKeys.has(entryKey)) {
+      throw new ContractViolationError(`${entryLabel} duplicates an earlier exact ITEM pair`);
+    }
+    seenKeys.add(entryKey);
+    surfaceVariantReferences.push({ itemId: entry.itemId, itemVersion: entry.itemVersion });
+  }
+
+  return { canonicalStimulusId, surfaceVariantReferences };
+}
+
+// Exact (reference_id, version) ITEM lookup inside the caller's transaction
+// snapshot, so reference existence is validated against the same authoritative
+// state the lineage decision is taken from.
+async function queryItemReferenceRows(client, pairs) {
+  if (pairs.length === 0) return [];
+  const { rows } = await client.query(
+    `SELECT reference.reference_id AS item_id,
+            reference.version AS item_version,
+            reference.definition AS definition
+       FROM evidence_reference_versions reference
+       JOIN unnest($1::text[], $2::int[]) AS requested(item_id, item_version)
+         ON requested.item_id = reference.reference_id
+        AND requested.item_version = reference.version
+      WHERE reference.reference_kind = 'ITEM'`,
+    [pairs.map((pair) => pair.itemId), pairs.map((pair) => pair.itemVersion)]
+  );
+  return rows;
+}
+
+// L(A) whole-object validation: every ITEM pinned by A or by an R(A) owner.
+// ITEM definitions outside L(A) are NOT validated for this operation; their
+// existence is checked only where L(A) surface-variant references point at
+// them (dangling-reference rejection).
+async function loadLineageAuthoritiesForConsumedItems(client, pairs) {
+  const rows = await queryItemReferenceRows(client, pairs);
+  const authoritiesByPair = new Map();
+  for (const row of rows) {
+    const itemVersion = Number(row.item_version);
+    authoritiesByPair.set(
+      itemPairKey(row.item_id, itemVersion),
+      validateItemLineageAuthority(row.definition, row.item_id, itemVersion)
+    );
+  }
+
+  const referencedPairs = [];
+  const referencedKeys = new Set();
+  for (const pair of pairs) {
+    const authority = authoritiesByPair.get(itemPairKey(pair.itemId, pair.itemVersion));
+    if (!authority) {
+      throw new ContractViolationError(
+        `consumed lineage ITEM ${pair.itemId}@${pair.itemVersion} has no pinned ITEM authority`
+      );
+    }
+    for (const reference of authority.surfaceVariantReferences) {
+      const referenceKey = itemPairKey(reference.itemId, reference.itemVersion);
+      if (referencedKeys.has(referenceKey)) continue;
+      referencedKeys.add(referenceKey);
+      referencedPairs.push(reference);
+    }
+  }
+
+  // Dangling direct relation rejection. Missing referenced ITEM pairs are a
+  // stored-source contradiction -- they are never invented or backfilled.
+  const existingRows = await queryItemReferenceRows(client, referencedPairs);
+  const existingKeys = new Set(
+    existingRows.map((row) => itemPairKey(row.item_id, Number(row.item_version)))
+  );
+  for (const reference of referencedPairs) {
+    if (!existingKeys.has(itemPairKey(reference.itemId, reference.itemVersion))) {
+      throw new ContractViolationError(
+        `surfaceVariantReferences entry ${reference.itemId}@${reference.itemVersion} `
+          + 'does not exist as a pinned ITEM reference version'
+      );
+    }
+  }
+
+  return authoritiesByPair;
+}
+
 async function createAssignment(pool, input) {
   validateInputObject(input);
   rejectServerIssuedFieldOverrides(input, ASSIGNMENT_SERVER_FIELDS);
@@ -630,22 +808,82 @@ async function createAssignment(pool, input) {
           [enrollmentId, exposureHistoryCutoffOrdinal, targetNodeIds]
         );
 
+        // R(A) nonempty means target-relevant prior history exists, which is
+        // the only case in which L(A) is nonempty and lineage authority is
+        // consumed at all (API_CONTRACT.md §13.10.11.3).
         if (relevantRows.length > 0) {
-          const hasExactRepeat = relevantRows.some(
-            (row) => row.item_id === references.itemId
-              && Number(row.item_version) === references.itemVersion
+          const priorItems = relevantRows.map((row) => ({
+            itemId: row.item_id,
+            itemVersion: Number(row.item_version),
+            itemFamilyId: row.item_family_id,
+          }));
+
+          // L(A): the distinct pinned ITEM pairs of A itself plus every R(A)
+          // owner. Whole-object validation runs over this exact set before
+          // any lineage value is chosen, so a contradiction is reported even
+          // when a stronger relation would have won.
+          const consumedPairs = [];
+          const consumedKeys = new Set();
+          for (const pair of [{ itemId: references.itemId, itemVersion: references.itemVersion }]
+            .concat(priorItems)) {
+            const key = itemPairKey(pair.itemId, pair.itemVersion);
+            if (consumedKeys.has(key)) continue;
+            consumedKeys.add(key);
+            consumedPairs.push({ itemId: pair.itemId, itemVersion: pair.itemVersion });
+          }
+          const lineageAuthorities = await loadLineageAuthoritiesForConsumedItems(
+            client,
+            consumedPairs
           );
-          // SURFACE_VARIANT requires an explicit versioned ITEM authority
-          // relation between the current and a prior exposed item. Current
-          // repository/reference authority (registerReferenceVersion) stores
-          // an opaque ITEM definition with no such relation, so this branch
-          // is never satisfied here. It is intentionally not inferred from
-          // text similarity, edit distance, or token overlap.
-          const hasSameFamily = relevantRows.some(
-            (row) => row.item_family_id === references.itemFamilyId
+
+          const currentKey = itemPairKey(references.itemId, references.itemVersion);
+          const currentAuthority = lineageAuthorities.get(currentKey);
+          const currentSurfaceVariantKeys = new Set(
+            currentAuthority.surfaceVariantReferences.map(
+              (reference) => itemPairKey(reference.itemId, reference.itemVersion)
+            )
           );
+
+          // EXACT_REPEAT: exact snapshot ITEM pair equality, OR both consumed
+          // ITEM definitions declaring the SAME non-null canonicalStimulusId.
+          // Comparison is exact code-unit string equality -- no trim, no
+          // case folding, no Unicode normalization -- and null on either side
+          // never establishes equality.
+          const hasExactRepeat = priorItems.some((prior) => {
+            if (prior.itemId === references.itemId && prior.itemVersion === references.itemVersion) {
+              return true;
+            }
+            const priorCanonicalStimulusId = lineageAuthorities
+              .get(itemPairKey(prior.itemId, prior.itemVersion)).canonicalStimulusId;
+            return currentAuthority.canonicalStimulusId !== null
+              && priorCanonicalStimulusId !== null
+              && currentAuthority.canonicalStimulusId === priorCanonicalStimulusId;
+          });
+
+          // SURFACE_VARIANT: the direct, either-direction relation SV(A, prior)
+          // -- A referencing the prior ITEM pair OR the prior ITEM referencing
+          // A's exact pair is sufficient. Reciprocal storage is not required
+          // and the relation is never closed transitively.
+          const hasSurfaceVariant = priorItems.some((prior) => {
+            const priorKey = itemPairKey(prior.itemId, prior.itemVersion);
+            if (currentSurfaceVariantKeys.has(priorKey)) return true;
+            return lineageAuthorities.get(priorKey).surfaceVariantReferences.some(
+              (reference) => reference.itemId === references.itemId
+                && reference.itemVersion === references.itemVersion
+            );
+          });
+
+          const hasSameFamily = priorItems.some(
+            (prior) => prior.itemFamilyId === references.itemFamilyId
+          );
+
+          // Canonical priority, exactly:
+          // EXACT_REPEAT -> SURFACE_VARIANT -> SAME_ITEM_FAMILY ->
+          // DIFFERENT_ITEM_FAMILY (-> null when R(A) is empty, above).
           if (hasExactRepeat) {
             resolvedItemLineage = 'EXACT_REPEAT';
+          } else if (hasSurfaceVariant) {
+            resolvedItemLineage = 'SURFACE_VARIANT';
           } else if (hasSameFamily) {
             resolvedItemLineage = 'SAME_ITEM_FAMILY';
           } else {
