@@ -8235,6 +8235,370 @@ PostgreSQL run for this record — NOT CLAIMED (`NOT RUN`).
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness — Control Tower Adjudication READY / Bounded Development Authorization Recorded / Gated Status-Sync Candidate
+
+##### Scope
+
+Classification: `READINESS / DEVELOPMENT-AUTHORIZATION STATUS-ONLY
+DOCUMENTATION SYNC`, additive. Repository tracked-file/content mutation by
+this record is limited to exactly one file — `LLE_CURRENT_STATE.md` — on
+validation branch
+`validation/unseen-v2-readiness-dev-authorization-sync-20260920`, branched
+from exact `origin/main` `72a0a9731d9d3d877994bcc8ca4a7291969af18b` (tree
+`45921f72a5845648aec59ed037ee2bec318a2e7d`). It does not modify
+`API_CONTRACT.md`, `EVIDENCE_FOUNDATION_P0_SCHEMA.md`,
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`, Runtime source, tests, migrations,
+schema/DDL, `package.json`, lockfiles, the session map, or any other tracked
+file. Earlier historical/time-scoped entries in this document — including
+the preceding `NOT READY` re-pre-analysis entry and the writer closure
+entries — are preserved verbatim and are not rewritten by this record; they
+are superseded by it as governing status. This session performed no
+Development, no runtime implementation, no runtime correction, and no
+runtime/PostgreSQL execution. This session did not itself adjudicate
+readiness; it synchronizes an adjudication already made by Control Tower.
+
+##### Fresh Read-Only Source/Canonical Readiness Analysis (Prior Read-Only Evidence)
+
+A fresh, separate, read-only `VI P1 Measurement Readiness — METRIC_RESULT
+Unseen Transfer v2 Runtime Implementation-Readiness` analysis — the action
+recorded as the sole Next Action by the preceding post-closure status sync —
+has been completed and returned to Control Tower. That analysis was
+read-only: repository mutation `0`, no branch creation, no edit, no commit,
+no push, no merge, no PR, no migration run, and no PostgreSQL mutation. It
+examined current-`main` canonical authority and current-`main` Runtime
+source/test authority only. It did not implement, validate, or authorize the
+Unseen Transfer Runtime.
+
+Current-`main` authority against which readiness was assessed:
+
+- `API_CONTRACT.md`: revision `1.31`, blob
+  `e60afa6bda3356051c24b36a823fb325761b9b42`
+- `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.10`, blob
+  `de244476e56dfcab59dcd899a25091a2b1452e31`
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.79`, blob
+  `2502416468896eca0a7f8d17a8879a520acbd4ba`
+- `src/instrumentation/evidenceRepository.js`: blob
+  `5355c7264fa85fe6c1d963d8c8c9ed79d6b45922`
+- `src/instrumentation/evidenceMetrics.js`: blob
+  `6ce1347dee91b8310da17ed092f6b58fdddbeb54`
+- `tests/viP1MetricResultRuntime.test.js`: blob
+  `1f21704b64cb184f0b25a24d8b0696af90628143`
+- `tests/viP1ItemLineageRuntime.test.js`: blob
+  `fcb580da7203598f570c6599edaa6bfba14e8055`
+- `tests/viP1RawSourceRuntime.test.js`: blob
+  `aa7da66c4a812c8d30d45823dbc69f466a739f6d`
+- `tests/evidenceFoundationRepository.test.js`: blob
+  `16259b12b60b148f5c45afd26ef5a07b86497e97`
+- `tests/evidenceFoundationMigration.test.js`: blob
+  `1a49ca4404ea2266b2bd7e46c6dab8e04c813b0e`
+- `tests/migrations.test.js`: blob
+  `459a912c04f2734dacf52e3562d6f38b5b81b6f8`
+
+Control Tower independently rechecked the source/test authority blobs above.
+
+##### Control Tower Readiness Adjudication
+
+Control Tower adjudicated the returned read-only pre-analysis as follows:
+
+- `Q26` = `NO OPERATIVE CANONICAL AMBIGUITY`
+- `Q27` = `READY`
+
+Readiness result:
+
+`METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness = READY`
+
+`READY` means exactly one thing: the current canonical/source prerequisites
+are sufficient to BEGIN a separately bounded, separately authorized Unseen
+Transfer v2 Runtime Development lifecycle. It does NOT mean: the Runtime is
+implemented; the Runtime is validated; P1 is activated; learning efficacy is
+verified; Actual-provider validation is established; human-data collection is
+authorized; Validation Level 3 §10 overall `PASS`; or Evidence Foundation
+overall completeness.
+
+The previous governing `Q27` verdict was `NOT READY`, and its deciding
+prerequisite was the missing ITEM `lineageAuthority` writer semantics in
+`src/instrumentation/evidenceRepository.js` (`createAssignment`). Current
+`main` source now satisfies that prerequisite, which is why `Q27` moves to
+`READY`.
+
+The distinction is preserved and is not collapsed: writer prerequisite
+closure != Unseen reducer implementation. The ITEM `lineageAuthority` writer
+is present and canonical on `main`; the METRIC_RESULT Unseen Transfer v2
+reducer is not implemented and not validated.
+
+This session records the Control Tower adjudication; it does not
+independently re-adjudicate `Q26` or `Q27`.
+
+##### Q28/Q29 Wording Limitation
+
+`BLOCKED FOR Q28/Q29 WORDING`
+
+The exact authoritative standalone wording of `Q28` and `Q29` was not
+recoverable. Their wording is NOT invented, reconstructed from memory, or
+paraphrased here, and no answer text is supplied for them. `Q28` and `Q29`
+are NOT marked resolved, answered, closed, or superseded.
+
+Control Tower adjudicates this as a bounded documentation/provenance
+limitation. It does not alter, weaken, or overturn the independently
+supportable `Q27` = `READY` conclusion, which rests on the current
+canonical/source prerequisite state recorded above rather than on `Q28`/`Q29`.
+
+##### Writer Prerequisite Status — CLOSED, Not Reopened
+
+`ITEM Lineage-Authority Writer Correction Lifecycle` = `CLOSED`.
+
+The lifecycle remains closed by the Control Tower closure adjudication
+already recorded above; it is NOT reopened, reclassified, re-validated, or
+re-executed by this record, and its closure evidence chain is not restated as
+new evidence.
+
+##### Open Writer Review Notes — Preserved Unchanged
+
+- `F-IR-01`: `OPEN / NOTE / NON-BLOCKING`; correction required `NO`
+- `F-IR-02`: `OPEN / NOTE / NON-BLOCKING`; correction required `NO`
+- `F-IR-03`: `OPEN / NOTE / NON-BLOCKING`; correction required `NO`
+- `F-IR-04`: `OPEN / NOTE / NON-BLOCKING`; correction required `NO`
+- `N-IR-S1`: `OPEN / NOTE / NON-BLOCKING`; correction required `NO`;
+  preserved historical text unchanged
+
+None of them is closed, reclassified, converted into a defect, fixed, or
+silently edited by this record. `READY` does not mean any of them was
+resolved.
+
+`N-IR-P1` remains an Independent Review precision note only; it was not added
+to canonical Current State during the preceding integration. This record does
+not add, register, promote, close, or reclassify it.
+
+##### Prior Writer Runtime/PostgreSQL Evidence — Unchanged Prior Evidence
+
+The following is PRIOR evidence, already recorded above, generated by earlier
+Development/Validation/Integration sessions. It was NOT generated, rerun,
+regenerated, or relabelled by this Architecture status-sync session, and it is
+NOT evidence for the Unseen Transfer v2 Runtime:
+
+- `tests/viP1ItemLineageRuntime.test.js`: `44/44 PASS`
+- `tests/evidenceFoundationRepository.test.js`: `80/80 PASS`
+- `tests/evidenceFoundationMigration.test.js`: `24/24 PASS`
+- `tests/migrations.test.js`: `14/14 PASS`
+- Full `npm test`: `576/576 PASS` across `56` suites
+- Actual PostgreSQL server: `17.10`; disposable `lle_dev`; synthetic
+  fixtures only
+- Unsafe BIGINT `T27`: `PASS`; lineage `T28`–`T44`: `PASS`
+
+##### Historical-Data Boundary
+
+Historical stored learner/human `resolved_item_lineage`: `UNKNOWN / NOT
+INSPECTED`.
+
+No inference is drawn or authorized that this data is valid, invalid, in need
+of migration, in need of repair, in need of backfill, or in need of no
+action. No learner/human data is authorized for the prospective Development
+lifecycle.
+
+##### Runtime State After This Record
+
+- METRIC_RESULT Unseen Transfer v2 Runtime: `NOT IMPLEMENTED / NOT
+  VALIDATED`, until actual future Development and Validation provide evidence
+- VI Empirical Pilot P1: `NOT ACTIVATED`
+- Human-data collection: `NOT AUTHORIZED`
+- Learning efficacy: `NOT VERIFIED`
+- Actual-provider validation: `NOT ESTABLISHED`
+- Validation Level 3 §10 overall `PASS`: `NOT CLAIMED`
+- Evidence Foundation overall completeness: `NOT CLAIMED`
+
+##### Bounded Development Scope Approved by Control Tower (Prospective)
+
+Control Tower approves the following bounded Development scope for FUTURE
+routing only. It is prospective: no Development is authorized to start, and
+none was started, by this record. See the gate in §10.
+
+Allowed implementation file scope:
+
+- source: `src/instrumentation/evidenceMetrics.js`
+- test: `tests/viP1MetricResultRuntime.test.js`
+
+No ordinary Development edit is authorized to
+`src/instrumentation/evidenceRepository.js` or
+`src/instrumentation/index.js`.
+
+Required-unchanged regression-gate files (execution gates, NOT allowed edit
+files):
+
+- `tests/viP1ItemLineageRuntime.test.js`
+- `tests/viP1RawSourceRuntime.test.js`
+- `tests/evidenceFoundationRepository.test.js`
+- `tests/evidenceFoundationMigration.test.js`
+- `tests/migrations.test.js`
+
+If future Development discovers that any regression-gate file must be edited,
+it must STOP and return to Control Tower rather than silently widening scope.
+
+##### Authorized Prospective Implementation Purpose
+
+Within the allowed file scope above, and only after the §10 gate is
+satisfied, the future bounded Development may:
+
+- extend `queryMetricResult` FORMULA dispatch for `definitionVersion 2`
+- implement exact UNSEEN_TRANSFER FORMULA v2 validation
+- implement six-axis grain / nine-key group handling
+- implement canonical `H(A) / W(A) / R(A) / N(A,n) / L(A) / V(A) / ρ(A)`
+- consume the already-canonical ITEM `lineageAuthority`
+- add FIRST_MATCH rules `15`/`16`
+- add Unseen v2 provenance/output behavior
+- preserve Retention v1
+- preserve RAW_SOURCE
+
+It must not expand beyond canonical `API_CONTRACT.md` /
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` authority.
+
+##### Migration / DDL
+
+`NONE`. No migration `014`. The prospective Development is authorized with no
+schema, DDL, or migration change. If future implementation requires any
+schema/DDL/migration change, it must STOP and return to Control Tower.
+
+##### Future PostgreSQL Boundary
+
+Future Development/Validation requires actual PostgreSQL with synthetic
+fixtures only, against the current schema only. No human/learner data. No
+production-data experimentation.
+
+##### Required Future Regression Gates
+
+At minimum, future Development/Validation must produce:
+
+1. updated focused `tests/viP1MetricResultRuntime.test.js`
+2. complete `tests/viP1ItemLineageRuntime.test.js`
+3. complete `tests/viP1RawSourceRuntime.test.js`
+4. complete `tests/evidenceFoundationRepository.test.js`
+5. complete `tests/evidenceFoundationMigration.test.js`
+6. complete `tests/migrations.test.js`
+7. full `npm test`
+
+These gates do not yet exist as Unseen v2 evidence. Prior writer evidence
+(`44/44`, `80/80`, `24/24`, `14/14`, `576/576` across `56` suites,
+PostgreSQL `17.10`, `T27`–`T44` `PASS`) is PRIOR evidence only and must not
+be presented as satisfying these future gates.
+
+##### Future Development Stop Conditions
+
+Future Development must STOP and return to Control Tower if:
+
+- `origin/main` differs from its authorization baseline
+- canonical API/Schema authority materially differs
+- writer source/test authority unexpectedly changes
+- implementation requires modifying `src/instrumentation/evidenceRepository.js`
+- implementation requires DDL/migration
+- implementation requires a new error code
+- canonical `H/W/R/N/L/V/ρ` semantics cannot be implemented without
+  clarification
+- Retention v1 or RAW_SOURCE must be semantically changed
+- actual/human data becomes necessary
+- a test reveals a source/canonical contradiction rather than an ordinary
+  implementation defect
+
+##### Evidence-Type Boundaries
+
+The evidence bodies referenced here remain distinct and are not merged: (1)
+the fresh read-only source/canonical readiness analysis, which produced no
+runtime execution evidence and mutated nothing; (2) prior writer
+runtime/PostgreSQL validation evidence from the already-closed ITEM
+Lineage-Authority Writer lifecycle; (3) the Control Tower readiness
+adjudication, which is a decision and not test evidence; (4) the prospective
+Development authorization/scope, which is permission and not evidence; and
+(5) future Development/Validation evidence for the Unseen Transfer v2
+Runtime, which DOES NOT YET EXIST. Runtime-engine evidence is not
+learning-efficacy evidence. `READY` is not `IMPLEMENTED`, and `NOT RUN` is
+not `PASS`.
+
+##### Evidence Boundary for This Status Sync
+
+- Runtime tests for this record: `NOT RUN — STATUS-ONLY
+  READINESS/AUTHORIZATION DOCUMENTATION SYNC`
+- PostgreSQL for this record: `NOT RUN — STATUS-ONLY
+  READINESS/AUTHORIZATION DOCUMENTATION SYNC`
+
+Neither is converted into `PASS` by this record.
+
+##### Governing Status After This Record
+
+- METRIC_RESULT Unseen Transfer v2 Runtime Implementation-Readiness:
+  `READY` (ready to BEGIN a separately authorized bounded Development
+  lifecycle only).
+- `Q26`: `NO OPERATIVE CANONICAL AMBIGUITY`.
+- `Q27`: `READY`.
+- `Q28`/`Q29`: `BLOCKED FOR Q28/Q29 WORDING`; not resolved, not answered,
+  wording not invented.
+- METRIC_RESULT Unseen Transfer v2 Runtime: `NOT IMPLEMENTED / NOT
+  VALIDATED`.
+- Unseen Transfer v2 Runtime Development: approved in scope by Control
+  Tower, but operationally `NOT STARTED` and gated per §10.
+- `ITEM Lineage-Authority Writer Correction Lifecycle`: `CLOSED`, not
+  reopened.
+- `F-IR-01`, `F-IR-02`, `F-IR-03`, `F-IR-04`, `N-IR-S1`: each remains `OPEN
+  / NOTE / NON-BLOCKING`.
+- Migration/DDL: `NONE`.
+- BIGINT Writer Source-Authority Runtime: `CLOSED`, not reopened; unsafe
+  BIGINT `T27` remains `PASS`.
+- METRIC_RESULT Retention v1 Runtime: `CLOSED`, not reopened.
+- Historical stored `resolved_item_lineage` learner/human data: `UNKNOWN /
+  NOT INSPECTED`.
+- `API_CONTRACT.md` `1.31` (blob
+  `e60afa6bda3356051c24b36a823fb325761b9b42`),
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10` (blob
+  `de244476e56dfcab59dcd899a25091a2b1452e31`), and
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.79` (blob
+  `2502416468896eca0a7f8d17a8879a520acbd4ba`): unchanged by this record.
+
+##### Candidate Lifecycle
+
+On this validation branch this exact record is only a `READINESS /
+DEVELOPMENT-AUTHORIZATION STATUS-SYNC CANDIDATE`. The `Q27` = `READY`
+adjudication it records is the Control Tower decision, not a decision made by
+this session. The approved Development routing remains gated: it may not
+start until this documentation candidate itself (1) receives a fresh,
+separate, read-only Independent Review and (2) is integrated to actual
+`main`. Until both gates complete, Unseen Transfer Runtime Development
+remains operationally `NOT STARTED`. No second project-level Next Action is
+created.
+
+##### Non-Claims
+
+This record does not mean: Unseen Transfer v2 Runtime implemented — NOT
+CLAIMED (`NOT IMPLEMENTED`); Unseen Transfer v2 Runtime validated — NOT
+CLAIMED (`NOT VALIDATED`); Unseen Transfer v2 Runtime Development started,
+begun, or in progress — NOT CLAIMED (operationally `NOT STARTED`, gated per
+§10); `Q28`/`Q29` resolved, answered, or their wording recovered — NOT
+CLAIMED (`BLOCKED FOR Q28/Q29 WORDING`); `Q26`/`Q27` re-adjudicated by this
+session — NOT CLAIMED (Control Tower adjudication recorded, not re-decided);
+any of `F-IR-01`–`F-IR-04` or `N-IR-S1` closed, reclassified, converted into
+a defect, or fixed — NOT CLAIMED (all remain `OPEN / NOTE / NON-BLOCKING`);
+`N-IR-P1` added to canonical Current State, registered, closed, or
+reclassified — NOT CLAIMED (Independent Review precision note only); the
+writer lifecycle reopened, re-validated, or re-executed — NOT CLAIMED
+(remains `CLOSED`); learning efficacy verified — NOT CLAIMED (`NOT
+VERIFIED`); actual-provider milestone complete or validated — NOT CLAIMED
+(`NOT ESTABLISHED`); P1 activated — NOT CLAIMED (`NOT ACTIVATED`);
+human-data collection authorized — NOT CLAIMED (`NOT AUTHORIZED`);
+historical stored learner/human `resolved_item_lineage` data inspected, or
+valid, invalid, needing migration, needing repair, needing backfill, or
+needing no action — NOT CLAIMED (`UNKNOWN / NOT INSPECTED`); Validation
+Level 3 §10 overall PASS — NOT CLAIMED; Evidence Foundation overall complete
+— NOT CLAIMED; BIGINT writer lifecycle or Retention v1 Runtime reopened —
+NOT CLAIMED (each remains `CLOSED`); prior writer runtime/PostgreSQL
+evidence rerun, regenerated, relabelled, or transferred to Unseen v2 — NOT
+CLAIMED (PRIOR evidence only); future regression gates satisfied — NOT
+CLAIMED (they do not yet exist); GitHub Actions PASS — NOT CLAIMED;
+migration/DDL introduced — NOT CLAIMED (`NONE`, no migration `014`); any
+canonical document changed by this record — NOT CLAIMED; any source, test,
+migration, or DDL file changed by this record — NOT CLAIMED; tests or
+PostgreSQL run for this record — NOT CLAIMED (`NOT RUN — STATUS-ONLY
+READINESS/AUTHORIZATION DOCUMENTATION SYNC`).
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -10725,6 +11089,60 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Candidate / NOT CLOSED" for full detail; the sole Next Action is now a
   fresh, separate, read-only Independent Review of this exact
   `LLE_CURRENT_STATE.md` closure-record sync candidate (§10)
+- `Q27` = `NOT READY` and the Unseen Transfer v2 readiness re-pre-analysis
+  Next Action — SUPERSEDED; the fresh, separate, read-only `VI P1
+  Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness` analysis has since been completed (repository
+  mutation `0`; PostgreSQL/tests `NOT RUN`) and returned to Control Tower,
+  which adjudicated `Q26` = `NO OPERATIVE CANONICAL AMBIGUITY` and `Q27` =
+  `READY`. The previously deciding `NOT READY` prerequisite — the missing
+  ITEM `lineageAuthority` writer semantics in
+  `src/instrumentation/evidenceRepository.js` — is satisfied by current
+  `main` source (blob `5355c7264fa85fe6c1d963d8c8c9ed79d6b45922`), and the
+  `ITEM Lineage-Authority Writer Correction Lifecycle` remains `CLOSED`,
+  not reopened. `READY` means only READY TO BEGIN a separately authorized
+  bounded Development lifecycle; writer prerequisite closure is NOT Unseen
+  reducer implementation. `Q28`/`Q29` are `BLOCKED FOR Q28/Q29 WORDING` —
+  their exact authoritative wording was not recoverable, is not invented or
+  reconstructed here, and they are NOT resolved or answered; Control Tower
+  adjudicates this as a bounded documentation/provenance limitation that
+  does not alter the independently supportable `Q27` = `READY` conclusion.
+  Control Tower has approved a bounded Unseen Transfer v2 Runtime
+  Development scope for FUTURE routing — allowed files
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1MetricResultRuntime.test.js` only; no ordinary edit to
+  `src/instrumentation/evidenceRepository.js` or
+  `src/instrumentation/index.js`; required-unchanged regression gates
+  `tests/viP1ItemLineageRuntime.test.js`,
+  `tests/viP1RawSourceRuntime.test.js`,
+  `tests/evidenceFoundationRepository.test.js`,
+  `tests/evidenceFoundationMigration.test.js`, `tests/migrations.test.js`;
+  migration/DDL `NONE` (no migration `014`) — gated so that it may not
+  start until this exact readiness/authorization status-sync candidate is
+  independently reviewed and integrated to actual `main`. This does NOT
+  mean: Unseen Transfer v2 Runtime implemented — NOT CLAIMED (`NOT
+  IMPLEMENTED`); validated — NOT CLAIMED (`NOT VALIDATED`); Development
+  started — NOT CLAIMED (operationally `NOT STARTED`); `Q28`/`Q29`
+  resolved — NOT CLAIMED; `F-IR-01`–`F-IR-04` or `N-IR-S1` closed or
+  reclassified — NOT CLAIMED (all remain `OPEN / NOTE / NON-BLOCKING`);
+  `N-IR-P1` added to canonical Current State — NOT CLAIMED (Independent
+  Review precision note only); historical learner/human
+  `resolved_item_lineage` inspected or resolved — NOT CLAIMED (remains
+  `UNKNOWN / NOT INSPECTED`); BIGINT writer lifecycle or Retention v1
+  Runtime reopened — NOT CLAIMED (each remains `CLOSED`); P1 activated,
+  human-data collection authorized, efficacy verified, or actual-provider
+  milestone complete — NOT CLAIMED; Validation Level 3 §10 overall PASS or
+  Evidence Foundation overall completeness — NOT CLAIMED; prior writer
+  runtime/PostgreSQL evidence rerun or transferred to Unseen v2 — NOT
+  CLAIMED (PRIOR evidence only); PostgreSQL or tests run for this record —
+  NOT CLAIMED (`NOT RUN — STATUS-ONLY READINESS/AUTHORIZATION
+  DOCUMENTATION SYNC`). See §4 "METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness — Control Tower Adjudication READY / Bounded
+  Development Authorization Recorded / Gated Status-Sync Candidate" for
+  full detail; the sole Next Action is now the gated `VI P1 Measurement
+  Readiness — METRIC_RESULT Unseen Transfer v2 Runtime Development`
+  candidate, classification `BOUNDED RUNTIME DEVELOPMENT`, NOT authorized
+  to start and NOT started by this record (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -11563,20 +11981,48 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- The sole project Next Action is a fresh, separate, read-only `VI P1
-  Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
-  Implementation-Readiness` analysis, classification `READ-ONLY
-  PRE-ANALYSIS`, repository mutation `0`. The `ITEM Lineage-Authority Writer
-  Correction Lifecycle` is `CLOSED` by Control Tower adjudication, so the
-  preceding closure-sync Independent Review action is complete and is
-  replaced by this action. It must run against then-current `main` only
-  after this post-closure status sync is itself independently reviewed and
-  integrated. It must NOT assume `READY`; it must distinguish engine
-  correctness evidence from learning efficacy evidence; it must NOT
-  implement Unseen Transfer Runtime; it must NOT authorize P1; it must NOT
-  authorize human-data collection; it must NOT claim Actual-provider
-  validation; and it must NOT modify repository files — no branch creation,
-  edit, commit, push, merge, PR, migration run, or PostgreSQL mutation. Its
-  result must return to Control Tower for adjudication. Any Unseen Transfer
-  Runtime Development remains separately unauthorized and requires explicit
-  future Control Tower authorization.
+- The sole project Next Action is a fresh, separate `VI P1 Measurement
+  Readiness — METRIC_RESULT Unseen Transfer v2 Runtime Development`
+  candidate, classification `BOUNDED RUNTIME DEVELOPMENT`. The preceding
+  read-only `Implementation-Readiness` analysis action is fulfilled and is
+  replaced by this action; Control Tower adjudicated `Q26` = `NO OPERATIVE
+  CANONICAL AMBIGUITY` and `Q27` = `READY`. This action is GATED: it MUST
+  NOT START until this exact readiness/authorization status-sync candidate
+  (branch `validation/unseen-v2-readiness-dev-authorization-sync-20260920`,
+  parent `72a0a9731d9d3d877994bcc8ca4a7291969af18b`) has (1) passed a
+  fresh, separate, read-only Independent Review and (2) been integrated to
+  actual `main`. Until both gates complete, Unseen Transfer Runtime
+  Development remains operationally `NOT STARTED`; no Development is
+  authorized or started by this record. After the gate is satisfied, the
+  authorized implementation file scope is exactly
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1MetricResultRuntime.test.js`; no ordinary Development edit is
+  authorized to `src/instrumentation/evidenceRepository.js` or
+  `src/instrumentation/index.js`; migration/DDL is `NONE` (no migration
+  `014`). `READY` means only READY TO BEGIN — it does NOT mean the Runtime
+  is implemented or validated, and Development must NOT assume
+  implementation success. Future validation requires actual PostgreSQL with
+  synthetic fixtures only, current schema only, no production-data
+  experimentation. The existing regression gates
+  `tests/viP1ItemLineageRuntime.test.js`,
+  `tests/viP1RawSourceRuntime.test.js`,
+  `tests/evidenceFoundationRepository.test.js`,
+  `tests/evidenceFoundationMigration.test.js`, and
+  `tests/migrations.test.js` must remain unchanged and must pass, together
+  with an updated focused `tests/viP1MetricResultRuntime.test.js` and full
+  `npm test`. Development cannot self-declare `VALIDATED` or `CLOSED`;
+  Independent Review remains a separate, later, read-only action, and
+  Control Tower retains sole closure authority. It must NOT use human or
+  learner data; it must NOT claim learning efficacy; it must NOT claim
+  Actual-provider validation; P1 remains `NOT ACTIVATED` and human-data
+  collection remains `NOT AUTHORIZED`. It must STOP and return to Control
+  Tower — rather than widen scope — if `origin/main` differs from its
+  authorization baseline, canonical API/Schema authority materially
+  differs, writer source/test authority unexpectedly changes,
+  implementation requires modifying `evidenceRepository.js` or any
+  regression-gate file, implementation requires DDL/migration or a new
+  error code, canonical `H/W/R/N/L/V/ρ` semantics cannot be implemented
+  without clarification, Retention v1 or RAW_SOURCE must be semantically
+  changed, actual/human data becomes necessary, or a test reveals a
+  source/canonical contradiction rather than an ordinary implementation
+  defect.
