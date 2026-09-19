@@ -70,6 +70,44 @@ async function registerReference(referenceKind, referenceId, version) {
   });
 }
 
+// ITEM lineage-authority fixtures (API_CONTRACT.md §13.10.11.3,
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §5.5). `lineageAuthority` is an optional
+// sub-object of the existing ITEM `definition` JSONB -- no new reference kind,
+// no new physical object, no migration.
+function lineageAuthority({ canonicalStimulusId = null, surfaceVariantReferences = [] } = {}) {
+  return {
+    definitionType: 'EVIDENCE_ITEM_LINEAGE',
+    definitionVersion: 1,
+    canonicalStimulusId,
+    surfaceVariantReferences,
+  };
+}
+
+// Registers an ITEM whose definition carries the EXACT supplied
+// `lineageAuthority` value -- including an explicit `null`, which the
+// canonical contract rejects at consume time.
+async function registerItemWithLineage(itemId, authority, version = 1) {
+  return repository.registerReferenceVersion(pool, {
+    referenceKind: 'ITEM',
+    referenceId: itemId,
+    version,
+    definition: {
+      kind: 'ITEM',
+      stableId: itemId,
+      version,
+      lineageAuthority: authority,
+    },
+  });
+}
+
+async function insertGrammarNode(nodeId, label) {
+  await pool.query(
+    `INSERT INTO grammar_nodes (node_id, language, concept_ids, label, difficulty)
+     VALUES ($1, 'VI', '[]'::jsonb, $2, 1)`,
+    [nodeId, label]
+  );
+}
+
 async function registerAuthorityFixture() {
   await repository.registerExperimentVersion(pool, {
     experimentId: EXPERIMENT_ID,
@@ -157,6 +195,35 @@ async function exposeNewAssignment(enrollmentId, options = {}) {
     assignmentId: created.assignment.assignment_id,
   });
   return { created, exposure };
+}
+
+// One same-enrollment prior exposure followed by the ASSESSMENT that consumes
+// it, so `R(A)` is nonempty and `L(A)` is exactly {current ITEM, prior ITEM}.
+async function assessAfterPriorExposure({
+  nodeId,
+  priorItemId,
+  priorFamilyId,
+  currentItemId,
+  currentFamilyId,
+  priorNodeIds,
+}) {
+  const enrollment = await newEnrollment();
+  await exposeNewAssignment(enrollment.enrollment_id, {
+    targetNodeIds: priorNodeIds ?? [nodeId],
+    itemId: priorItemId,
+    itemFamilyId: priorFamilyId,
+  });
+  return createAssignmentFixture(enrollment.enrollment_id, {
+    assignmentType: 'ASSESSMENT',
+    targetNodeIds: [nodeId],
+    itemId: currentItemId,
+    itemFamilyId: currentFamilyId,
+  });
+}
+
+async function lineageAfterPriorExposure(options) {
+  const assessment = await assessAfterPriorExposure(options);
+  return (await readSnapshot(assessment.assignment.assignment_id)).resolved_item_lineage;
 }
 
 async function countRows(tableName) {
@@ -941,5 +1008,576 @@ describe('VI P1 item exposure lineage runtime', { concurrency: false }, () => {
     });
     assert.equal(otherAssessment.snapshot.exposure_history_cutoff_ordinal, '0');
     assert.notEqual(otherAssessment.snapshot.snapshot_digest, assessment.snapshot.snapshot_digest);
+  });
+
+  // ------------------------------------------------------------------
+  // T28-T44 -- ITEM lineage-authority writer correction.
+  //
+  // The writer's `exposure_history_cutoff_ordinal`/`resolved_item_lineage`
+  // resolution must consume the SAME `L(A)` source authority, the same
+  // `lineageAuthority` validity rules, the same direct `SV` relation and the
+  // same canonical priority as the METRIC_RESULT Unseen Transfer reader
+  // (API_CONTRACT.md §13.10.4/§13.10.11.3, EVIDENCE_FOUNDATION_P0_SCHEMA.md
+  // §5.5). Each test below owns self-contained node/item/family fixture IDs so
+  // nothing here can collide with or depend on T01-T27.
+  // ------------------------------------------------------------------
+
+  test('T28 distinct ITEM pairs sharing one non-null canonicalStimulusId resolve to EXACT_REPEAT', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T28', 'Lineage T28');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T28_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T28_OTHER', 1);
+    // Deliberately DIFFERENT families: without canonical-stimulus equality
+    // this pair would resolve to DIFFERENT_ITEM_FAMILY, so EXACT_REPEAT here
+    // can only come from the shared non-null canonicalStimulusId.
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T28_PRIOR',
+      lineageAuthority({ canonicalStimulusId: 'CANON-T28' })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T28_CURRENT',
+      lineageAuthority({ canonicalStimulusId: 'CANON-T28' })
+    );
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T28',
+      priorItemId: 'ITEM_LINEAGE_T28_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T28_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T28_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T28_MAIN',
+    });
+    assert.equal(lineage, 'EXACT_REPEAT');
+  });
+
+  test('T29 null canonicalStimulusId never establishes EXACT_REPEAT equality', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T29', 'Lineage T29');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T29_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T29_OTHER', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T29_NULL_PRIOR',
+      lineageAuthority({ canonicalStimulusId: null })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T29_NULL_CURRENT',
+      lineageAuthority({ canonicalStimulusId: null })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T29_NAMED_CURRENT',
+      lineageAuthority({ canonicalStimulusId: 'CANON-T29' })
+    );
+
+    // null vs null: two nulls are not equal to each other.
+    assert.equal(
+      await lineageAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T29',
+        priorItemId: 'ITEM_LINEAGE_T29_NULL_PRIOR',
+        priorFamilyId: 'FAMILY_LINEAGE_T29_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T29_NULL_CURRENT',
+        currentFamilyId: 'FAMILY_LINEAGE_T29_MAIN',
+      }),
+      'DIFFERENT_ITEM_FAMILY'
+    );
+
+    // null on one side only: still no equality.
+    assert.equal(
+      await lineageAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T29',
+        priorItemId: 'ITEM_LINEAGE_T29_NULL_PRIOR',
+        priorFamilyId: 'FAMILY_LINEAGE_T29_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T29_NAMED_CURRENT',
+        currentFamilyId: 'FAMILY_LINEAGE_T29_MAIN',
+      }),
+      'DIFFERENT_ITEM_FAMILY'
+    );
+  });
+
+  test('T30 canonicalStimulusId comparison is exact code-unit equality (no trim, no case fold)', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T30', 'Lineage T30');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T30_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T30_OTHER', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T30_LOWER',
+      lineageAuthority({ canonicalStimulusId: 'canon-t30' })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T30_UPPER',
+      lineageAuthority({ canonicalStimulusId: 'CANON-T30' })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T30_PADDED',
+      lineageAuthority({ canonicalStimulusId: ' CANON-T30 ' })
+    );
+
+    // Case-folding would wrongly make these equal.
+    assert.equal(
+      await lineageAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T30',
+        priorItemId: 'ITEM_LINEAGE_T30_LOWER',
+        priorFamilyId: 'FAMILY_LINEAGE_T30_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T30_UPPER',
+        currentFamilyId: 'FAMILY_LINEAGE_T30_MAIN',
+      }),
+      'DIFFERENT_ITEM_FAMILY'
+    );
+
+    // Trimming would wrongly make these equal.
+    assert.equal(
+      await lineageAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T30',
+        priorItemId: 'ITEM_LINEAGE_T30_PADDED',
+        priorFamilyId: 'FAMILY_LINEAGE_T30_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T30_UPPER',
+        currentFamilyId: 'FAMILY_LINEAGE_T30_MAIN',
+      }),
+      'DIFFERENT_ITEM_FAMILY'
+    );
+  });
+
+  test('T31 current -> prior direct surface reference yields SURFACE_VARIANT without reciprocal storage', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T31', 'Lineage T31');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T31_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T31_OTHER', 1);
+    // The PRIOR item declares no lineageAuthority at all -- absence is valid
+    // and the reverse edge is deliberately not stored.
+    await registerReference('ITEM', 'ITEM_LINEAGE_T31_PRIOR', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T31_CURRENT',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T31_PRIOR', itemVersion: 1 }],
+      })
+    );
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T31',
+      priorItemId: 'ITEM_LINEAGE_T31_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T31_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T31_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T31_MAIN',
+    });
+    assert.equal(lineage, 'SURFACE_VARIANT');
+  });
+
+  test('T32 prior -> current direct surface reference yields SURFACE_VARIANT without reciprocal storage', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T32', 'Lineage T32');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T32_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T32_OTHER', 1);
+    // Mirror image of T31: only the PRIOR item stores the edge, and the
+    // CURRENT item declares no lineageAuthority at all.
+    await registerReference('ITEM', 'ITEM_LINEAGE_T32_CURRENT', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T32_PRIOR',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T32_CURRENT', itemVersion: 1 }],
+      })
+    );
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T32',
+      priorItemId: 'ITEM_LINEAGE_T32_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T32_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T32_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T32_MAIN',
+    });
+    assert.equal(lineage, 'SURFACE_VARIANT');
+  });
+
+  test('T33 surface-variant relation is direct only -- no transitive closure', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T33', 'Lineage T33');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T33_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T33_OTHER', 1);
+    // CURRENT -> MIDDLE -> PRIOR, with no direct CURRENT/PRIOR edge in either
+    // direction. MIDDLE exists (so nothing dangles) but is never exposed, so
+    // it is outside L(A).
+    await registerReference('ITEM', 'ITEM_LINEAGE_T33_PRIOR', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T33_MIDDLE',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T33_PRIOR', itemVersion: 1 }],
+      })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T33_CURRENT',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T33_MIDDLE', itemVersion: 1 }],
+      })
+    );
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T33',
+      priorItemId: 'ITEM_LINEAGE_T33_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T33_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T33_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T33_MAIN',
+    });
+    assert.equal(lineage, 'DIFFERENT_ITEM_FAMILY');
+    assert.notEqual(lineage, 'SURFACE_VARIANT');
+  });
+
+  test('T34 canonical priority: EXACT_REPEAT beats SURFACE_VARIANT', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T34', 'Lineage T34');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T34_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T34_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T34_VARIANT', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T34_CURRENT',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T34_VARIANT', itemVersion: 1 }],
+      })
+    );
+
+    const enrollment = await newEnrollment();
+    // A declared surface variant AND the exact same ITEM pair are both
+    // target-relevant prior exposures; the stronger relation must win.
+    await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: ['NODE_LINEAGE_T34'],
+      itemId: 'ITEM_LINEAGE_T34_VARIANT',
+      itemFamilyId: 'FAMILY_LINEAGE_T34_OTHER',
+    });
+    await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: ['NODE_LINEAGE_T34'],
+      itemId: 'ITEM_LINEAGE_T34_CURRENT',
+      itemFamilyId: 'FAMILY_LINEAGE_T34_MAIN',
+    });
+    const assessment = await createAssignmentFixture(enrollment.enrollment_id, {
+      assignmentType: 'ASSESSMENT',
+      targetNodeIds: ['NODE_LINEAGE_T34'],
+      itemId: 'ITEM_LINEAGE_T34_CURRENT',
+      itemFamilyId: 'FAMILY_LINEAGE_T34_MAIN',
+    });
+    const snapshot = await readSnapshot(assessment.assignment.assignment_id);
+    assert.equal(snapshot.resolved_item_lineage, 'EXACT_REPEAT');
+  });
+
+  test('T35 canonical priority: SURFACE_VARIANT beats SAME_ITEM_FAMILY', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T35', 'Lineage T35');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T35_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T35_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T35_SAME_FAMILY', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T35_VARIANT', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T35_CURRENT',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T35_VARIANT', itemVersion: 1 }],
+      })
+    );
+
+    const enrollment = await newEnrollment();
+    // Same-family-but-unrelated prior exposure.
+    await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: ['NODE_LINEAGE_T35'],
+      itemId: 'ITEM_LINEAGE_T35_SAME_FAMILY',
+      itemFamilyId: 'FAMILY_LINEAGE_T35_MAIN',
+    });
+    // Different-family prior exposure that IS a declared direct surface variant.
+    await exposeNewAssignment(enrollment.enrollment_id, {
+      targetNodeIds: ['NODE_LINEAGE_T35'],
+      itemId: 'ITEM_LINEAGE_T35_VARIANT',
+      itemFamilyId: 'FAMILY_LINEAGE_T35_OTHER',
+    });
+    const assessment = await createAssignmentFixture(enrollment.enrollment_id, {
+      assignmentType: 'ASSESSMENT',
+      targetNodeIds: ['NODE_LINEAGE_T35'],
+      itemId: 'ITEM_LINEAGE_T35_CURRENT',
+      itemFamilyId: 'FAMILY_LINEAGE_T35_MAIN',
+    });
+    const snapshot = await readSnapshot(assessment.assignment.assignment_id);
+    assert.equal(snapshot.resolved_item_lineage, 'SURFACE_VARIANT');
+  });
+
+  test('T36 SAME_ITEM_FAMILY remains when declared lineage authority establishes no stronger relation', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T36', 'Lineage T36');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T36_MAIN', 1);
+    await registerItemWithLineage('ITEM_LINEAGE_T36_PRIOR', lineageAuthority());
+    await registerItemWithLineage('ITEM_LINEAGE_T36_CURRENT', lineageAuthority());
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T36',
+      priorItemId: 'ITEM_LINEAGE_T36_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T36_MAIN',
+      currentItemId: 'ITEM_LINEAGE_T36_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T36_MAIN',
+    });
+    assert.equal(lineage, 'SAME_ITEM_FAMILY');
+  });
+
+  test('T37 DIFFERENT_ITEM_FAMILY remains when target-relevant history exists but no stronger relation does', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T37', 'Lineage T37');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T37_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T37_OTHER', 1);
+    await registerItemWithLineage('ITEM_LINEAGE_T37_PRIOR', lineageAuthority());
+    await registerItemWithLineage('ITEM_LINEAGE_T37_CURRENT', lineageAuthority());
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T37',
+      priorItemId: 'ITEM_LINEAGE_T37_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T37_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T37_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T37_MAIN',
+    });
+    assert.equal(lineage, 'DIFFERENT_ITEM_FAMILY');
+  });
+
+  test('T38 null remains when no target-relevant history exists, however strong the declared relation is', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T38_TARGET', 'Lineage T38 Target');
+    await insertGrammarNode('NODE_LINEAGE_T38_OTHER', 'Lineage T38 Other');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T38_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T38_OTHER', 1);
+    // Both a shared canonicalStimulusId AND a direct surface-variant edge --
+    // neither can create lineage when R(A) is empty.
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T38_PRIOR',
+      lineageAuthority({ canonicalStimulusId: 'CANON-T38' })
+    );
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T38_CURRENT',
+      lineageAuthority({
+        canonicalStimulusId: 'CANON-T38',
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T38_PRIOR', itemVersion: 1 }],
+      })
+    );
+
+    const assessment = await assessAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T38_TARGET',
+      priorNodeIds: ['NODE_LINEAGE_T38_OTHER'],
+      priorItemId: 'ITEM_LINEAGE_T38_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T38_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T38_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T38_MAIN',
+    });
+    const snapshot = await readSnapshot(assessment.assignment.assignment_id);
+    // The cutoff is positive -- history exists, it is simply not
+    // target-relevant -- and lineage stays null rather than becoming
+    // DIFFERENT_ITEM_FAMILY.
+    assert.notEqual(snapshot.exposure_history_cutoff_ordinal, '0');
+    assert.equal(snapshot.resolved_item_lineage, null);
+  });
+
+  test('T39 explicit lineageAuthority null is CONTRACT_VIOLATION on either consumed ITEM', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T39', 'Lineage T39');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T39_MAIN', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T39_VALID', 1);
+    await registerItemWithLineage('ITEM_LINEAGE_T39_NULL_CURRENT', null);
+    await registerItemWithLineage('ITEM_LINEAGE_T39_NULL_PRIOR', null);
+
+    // The current assignment's own pinned ITEM.
+    await rejectsWithCode(
+      () => assessAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T39',
+        priorItemId: 'ITEM_LINEAGE_T39_VALID',
+        priorFamilyId: 'FAMILY_LINEAGE_T39_MAIN',
+        currentItemId: 'ITEM_LINEAGE_T39_NULL_CURRENT',
+        currentFamilyId: 'FAMILY_LINEAGE_T39_MAIN',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+
+    // An R(A) owner's pinned ITEM -- L(A) covers both sides.
+    await rejectsWithCode(
+      () => assessAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T39',
+        priorItemId: 'ITEM_LINEAGE_T39_NULL_PRIOR',
+        priorFamilyId: 'FAMILY_LINEAGE_T39_MAIN',
+        currentItemId: 'ITEM_LINEAGE_T39_VALID',
+        currentFamilyId: 'FAMILY_LINEAGE_T39_MAIN',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T40 malformed lineageAuthority shape/type/version is CONTRACT_VIOLATION', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T40', 'Lineage T40');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T40_MAIN', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T40_PRIOR', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T40_TARGET', 1);
+
+    const malformed = [
+      ['unknown extra key', { ...lineageAuthority(), extraKey: 'nope' }],
+      ['missing canonicalStimulusId key', {
+        definitionType: 'EVIDENCE_ITEM_LINEAGE',
+        definitionVersion: 1,
+        surfaceVariantReferences: [],
+      }],
+      ['wrong definitionType', { ...lineageAuthority(), definitionType: 'EVIDENCE_ITEM_OTHER' }],
+      ['wrong definitionVersion', { ...lineageAuthority(), definitionVersion: 2 }],
+      ['string definitionVersion', { ...lineageAuthority(), definitionVersion: '1' }],
+      ['empty canonicalStimulusId', { ...lineageAuthority(), canonicalStimulusId: '' }],
+      ['non-string canonicalStimulusId', { ...lineageAuthority(), canonicalStimulusId: 123 }],
+      ['non-array surfaceVariantReferences', {
+        ...lineageAuthority(),
+        surfaceVariantReferences: 'nope',
+      }],
+      ['array lineageAuthority', []],
+      ['scalar lineageAuthority', 'EVIDENCE_ITEM_LINEAGE'],
+      ['non-object surfaceVariantReferences entry', lineageAuthority({
+        surfaceVariantReferences: ['ITEM_LINEAGE_T40_TARGET'],
+      })],
+      ['surfaceVariantReferences entry extra key', lineageAuthority({
+        surfaceVariantReferences: [
+          { itemId: 'ITEM_LINEAGE_T40_TARGET', itemVersion: 1, extraKey: 'nope' },
+        ],
+      })],
+      ['surfaceVariantReferences entry missing itemVersion', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T40_TARGET' }],
+      })],
+      ['surfaceVariantReferences entry empty itemId', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: '', itemVersion: 1 }],
+      })],
+      ['surfaceVariantReferences entry zero itemVersion', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T40_TARGET', itemVersion: 0 }],
+      })],
+      ['surfaceVariantReferences entry non-integer itemVersion', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T40_TARGET', itemVersion: 1.5 }],
+      })],
+      ['surfaceVariantReferences entry out-of-range itemVersion', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T40_TARGET', itemVersion: 2147483648 }],
+      })],
+      ['surfaceVariantReferences entry string itemVersion', lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T40_TARGET', itemVersion: '1' }],
+      })],
+    ];
+
+    for (let index = 0; index < malformed.length; index += 1) {
+      const [label, authority] = malformed[index];
+      const itemId = `ITEM_LINEAGE_T40_CASE_${index}`;
+      await registerItemWithLineage(itemId, authority);
+      await assert.rejects(
+        () => assessAfterPriorExposure({
+          nodeId: 'NODE_LINEAGE_T40',
+          priorItemId: 'ITEM_LINEAGE_T40_PRIOR',
+          priorFamilyId: 'FAMILY_LINEAGE_T40_MAIN',
+          currentItemId: itemId,
+          currentFamilyId: 'FAMILY_LINEAGE_T40_MAIN',
+        }),
+        (error) => {
+          assert.equal(error.code, 'CONTRACT_VIOLATION', `${label} must be CONTRACT_VIOLATION`);
+          return true;
+        },
+        label
+      );
+    }
+  });
+
+  test('T41 exact self-reference is CONTRACT_VIOLATION while another version of the same itemId is not', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T41', 'Lineage T41');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T41_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T41_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T41_PRIOR', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T41_SELF',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T41_SELF', itemVersion: 1 }],
+      })
+    );
+
+    await rejectsWithCode(
+      () => assessAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T41',
+        priorItemId: 'ITEM_LINEAGE_T41_PRIOR',
+        priorFamilyId: 'FAMILY_LINEAGE_T41_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T41_SELF',
+        currentFamilyId: 'FAMILY_LINEAGE_T41_MAIN',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+
+    // Same itemId, DIFFERENT itemVersion: a legal direct reference, not a
+    // self-reference. Version 2 exists, so nothing dangles.
+    await registerReference('ITEM', 'ITEM_LINEAGE_T41_OTHER_VERSION', 2);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T41_OTHER_VERSION',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T41_OTHER_VERSION', itemVersion: 2 }],
+      }),
+      1
+    );
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T41',
+      priorItemId: 'ITEM_LINEAGE_T41_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T41_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T41_OTHER_VERSION',
+      currentFamilyId: 'FAMILY_LINEAGE_T41_MAIN',
+    });
+    assert.equal(lineage, 'DIFFERENT_ITEM_FAMILY');
+  });
+
+  test('T42 duplicate exact surfaceVariantReferences pair is CONTRACT_VIOLATION', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T42', 'Lineage T42');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T42_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T42_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T42_PRIOR', 1);
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T42_CURRENT',
+      lineageAuthority({
+        surfaceVariantReferences: [
+          { itemId: 'ITEM_LINEAGE_T42_PRIOR', itemVersion: 1 },
+          { itemId: 'ITEM_LINEAGE_T42_PRIOR', itemVersion: 1 },
+        ],
+      })
+    );
+
+    await rejectsWithCode(
+      () => assessAfterPriorExposure({
+        nodeId: 'NODE_LINEAGE_T42',
+        priorItemId: 'ITEM_LINEAGE_T42_PRIOR',
+        priorFamilyId: 'FAMILY_LINEAGE_T42_OTHER',
+        currentItemId: 'ITEM_LINEAGE_T42_CURRENT',
+        currentFamilyId: 'FAMILY_LINEAGE_T42_MAIN',
+      }),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('T43 dangling surfaceVariantReferences ITEM pair is CONTRACT_VIOLATION', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T43', 'Lineage T43');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T43_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T43_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T43_PRIOR', 1);
+    // Unknown itemId.
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T43_UNKNOWN_ID',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T43_NEVER_REGISTERED', itemVersion: 1 }],
+      })
+    );
+    // Known itemId, unpublished itemVersion.
+    await registerItemWithLineage(
+      'ITEM_LINEAGE_T43_UNKNOWN_VERSION',
+      lineageAuthority({
+        surfaceVariantReferences: [{ itemId: 'ITEM_LINEAGE_T43_PRIOR', itemVersion: 7 }],
+      })
+    );
+
+    for (const currentItemId of ['ITEM_LINEAGE_T43_UNKNOWN_ID', 'ITEM_LINEAGE_T43_UNKNOWN_VERSION']) {
+      await rejectsWithCode(
+        () => assessAfterPriorExposure({
+          nodeId: 'NODE_LINEAGE_T43',
+          priorItemId: 'ITEM_LINEAGE_T43_PRIOR',
+          priorFamilyId: 'FAMILY_LINEAGE_T43_OTHER',
+          currentItemId,
+          currentFamilyId: 'FAMILY_LINEAGE_T43_MAIN',
+        }),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  test('T44 ITEM definitions outside L(A) are not validated by this lineage operation', async () => {
+    await insertGrammarNode('NODE_LINEAGE_T44', 'Lineage T44');
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T44_MAIN', 1);
+    await registerReference('ITEM_FAMILY', 'FAMILY_LINEAGE_T44_OTHER', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T44_PRIOR', 1);
+    await registerReference('ITEM', 'ITEM_LINEAGE_T44_CURRENT', 1);
+    // Registered, never exposed, never referenced by an L(A) member: this
+    // operation must not widen validation to reach it.
+    await registerItemWithLineage('ITEM_LINEAGE_T44_UNRELATED_BROKEN', null);
+
+    const lineage = await lineageAfterPriorExposure({
+      nodeId: 'NODE_LINEAGE_T44',
+      priorItemId: 'ITEM_LINEAGE_T44_PRIOR',
+      priorFamilyId: 'FAMILY_LINEAGE_T44_OTHER',
+      currentItemId: 'ITEM_LINEAGE_T44_CURRENT',
+      currentFamilyId: 'FAMILY_LINEAGE_T44_MAIN',
+    });
+    assert.equal(lineage, 'DIFFERENT_ITEM_FAMILY');
   });
 });
