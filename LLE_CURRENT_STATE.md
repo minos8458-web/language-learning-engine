@@ -8025,6 +8025,216 @@ RUN`).
 
 See §10.
 
+#### ITEM Lineage-Authority Writer Correction — Control Tower Closure Adjudication Recorded / Lifecycle CLOSED / Post-Closure Canonical Status Sync Candidate
+
+##### Scope
+
+Classification: `POST-CLOSURE STATUS-ONLY DOCUMENTATION SYNC`, additive.
+Repository tracked-file/content mutation by this record is limited to exactly
+one file — `LLE_CURRENT_STATE.md` — on validation branch
+`validation/item-lineage-authority-writer-post-closure-sync-20260919`,
+branched from exact `origin/main`
+`7ef696879e60956bfab649af74f5b8bbc05453c6`. It does not modify
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `API_CONTRACT.md`,
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md`, Runtime source, tests, migrations,
+schema/DDL, `package.json`, lockfiles, the session map, or any other tracked
+file. Earlier historical/time-scoped entries in this document — including the
+preceding `NOT CLOSED` and `CLOSURE ADJUDICATION PENDING` entries — are
+preserved verbatim and are not rewritten by this record; they are superseded
+by it as governing status. This record performs no Development, no runtime
+correction, and no runtime/PostgreSQL execution. This session did not decide
+whether closure occurred; it synchronizes an adjudication already made by
+Control Tower.
+
+##### Closure-Sync Candidate Evidence (Prior Evidence)
+
+The closure condition stated in the immediately preceding record — that the
+exact closure-record sync candidate must itself be (1) independently reviewed
+and (2) integrated to exact `main` — has been satisfied:
+
+- Reviewed closure-sync candidate commit:
+  `6eb670cee319f5a273f09118b850aea223db7595`
+- Candidate branch:
+  `validation/item-lineage-authority-writer-closure-sync-20260919`
+- Candidate parent: `77db80d97f25c9394cd04ad08801d85580f006dd`
+- Candidate tree: `cdf6270f8df97297e559983f3b31cc66d8d25bde`
+- Candidate `LLE_CURRENT_STATE.md` blob:
+  `9da7a1eecf1d5c0e352d1ce047f1869251b40e1a`
+
+##### Fresh Independent Review of the Exact Closure-Sync Candidate (Prior Evidence)
+
+A fresh Independent Review of exact candidate
+`6eb670cee319f5a273f09118b850aea223db7595` returned:
+
+- Verdict: `APPROVE WITH NON-BLOCKING NOTES`
+- BLOCKING findings: `0`
+- NON-BLOCKING findings: `1`
+- Correction required before integration: `NO`
+- Guarded integration suitable: `YES`
+
+##### Closure-Sync Review Note — NON-BLOCKING, Preserved Unchanged
+
+- `N-IR-S1` = `OPEN / NOTE / NON-BLOCKING`; correction required `NO`. The
+  preserved historical/time-scoped text `See §10 (unchanged).` in the
+  earlier METRIC_RESULT Unseen Transfer v2 status-sync entry is
+  intentionally preserved as time-scoped history. It is NOT edited, fixed,
+  reworded, or closed by this record.
+
+`N-IR-S1` is not closed, reclassified, converted into a defect, or silently
+fixed by this record, and its preserved historical text remains byte-identical.
+
+##### Guarded Closure-Sync Integration Evidence (Prior Evidence)
+
+- Closure-sync integration commit on `main`:
+  `7ef696879e60956bfab649af74f5b8bbc05453c6`
+- Integration parent: `77db80d97f25c9394cd04ad08801d85580f006dd`
+- Integration tree: `cdf6270f8df97297e559983f3b31cc66d8d25bde`
+- Integration tree == reviewed candidate tree: `YES`, byte-identical
+  (`cdf6270f8df97297e559983f3b31cc66d8d25bde`)
+- Integrated `LLE_CURRENT_STATE.md` blob:
+  `9da7a1eecf1d5c0e352d1ce047f1869251b40e1a`, byte-identical to the reviewed
+  candidate blob
+- old-`main` → integration diff: exactly `LLE_CURRENT_STATE.md`,
+  `288` additions / `38` deletions
+- Closure-sync validation branch preserved at
+  `6eb670cee319f5a273f09118b850aea223db7595`
+- No rebase, amend, squash, force-push, PR, reset, stash, or pull
+- No canonical contract, schema, or migration change
+
+##### Post-Merge Documentation Validation on Actual Main (Prior Evidence)
+
+Validated against actual `main`
+`7ef696879e60956bfab649af74f5b8bbc05453c6`:
+
+- Post-merge documentation/Git validation: `PASS`
+- Runtime tests in that documentation integration: `NOT RUN —
+  DOCUMENTATION-ONLY STATUS-RECORD INTEGRATION`
+- PostgreSQL in that documentation integration: `NOT RUN —
+  DOCUMENTATION-ONLY STATUS-RECORD INTEGRATION`
+
+Those `NOT RUN` states are not converted into `PASS` by this record.
+
+##### Control Tower Closure Adjudication
+
+Control Tower declared the `ITEM Lineage-Authority Writer Correction
+Lifecycle` `CLOSED` only after the exact closure-sync candidate
+`6eb670cee319f5a273f09118b850aea223db7595` received fresh Independent Review
+and was integrated byte-identically to exact `main` as
+`7ef696879e60956bfab649af74f5b8bbc05453c6`, and after post-merge
+documentation validation on actual `main` passed. The closure rests on the
+completed evidence chain: approved bounded Development; exact candidate
+implementation; commit-pinned Validation/Integration; actual PostgreSQL
+validation; fresh Independent Review of the runtime candidate; guarded
+runtime integration to `main`; post-merge runtime/PostgreSQL validation;
+closure-record sync candidate; fresh Independent Review of the closure-record
+sync; guarded closure-record sync integration to `main`; and post-merge
+documentation/Git validation.
+
+##### Writer Runtime Evidence — Unchanged Prior Evidence
+
+The closure does NOT reopen, rerun, relabel, or alter prior runtime evidence.
+It remains as already recorded:
+
+- Original runtime candidate:
+  `b862bcc48a150206c6fb8eece898ab2b95ace7f3`
+- Runtime integration `main`:
+  `77db80d97f25c9394cd04ad08801d85580f006dd`
+- Post-merge runtime gates on that `main`:
+  - `tests/viP1ItemLineageRuntime.test.js`: `44/44 PASS`
+  - `tests/evidenceFoundationRepository.test.js`: `80/80 PASS`
+  - `tests/evidenceFoundationMigration.test.js`: `24/24 PASS`
+  - `tests/migrations.test.js`: `14/14 PASS`
+  - Full `npm test`: `576/576 PASS` across `56` suites
+  - Actual PostgreSQL server: `17.10`
+  - Database: disposable `lle_dev`
+  - Fixtures: synthetic only
+  - Unsafe BIGINT `T27`: `PASS`
+  - Lineage `T28`–`T44`: `PASS`
+
+This is prior, independently generated evidence. It was NOT generated by this
+Architecture session and is not restated as evidence newly executed here.
+
+##### Evidence-Type Boundaries
+
+The evidence bodies above remain distinct and are not merged: (1)
+pre-integration commit-pinned validation of exact runtime candidate
+`b862bcc48a150206c6fb8eece898ab2b95ace7f3`; (2) fresh Independent Review of
+that same exact runtime candidate; (3) post-merge runtime/PostgreSQL
+validation of `main` `77db80d97f25c9394cd04ad08801d85580f006dd`; (4) fresh
+Independent Review of the exact closure-sync documentation candidate
+`6eb670cee319f5a273f09118b850aea223db7595`; (5) post-merge
+documentation/Git validation of `main`
+`7ef696879e60956bfab649af74f5b8bbc05453c6`, whose runtime tests and
+PostgreSQL are `NOT RUN — DOCUMENTATION-ONLY STATUS-RECORD INTEGRATION`.
+Runtime-engine evidence is not learning-efficacy evidence. Tests and
+PostgreSQL for THIS post-closure documentation-only status sync are `NOT RUN
+— POST-CLOSURE STATUS-ONLY DOCUMENTATION SYNC`. `NOT RUN` is not `PASS`.
+
+##### Governing Status After This Record
+
+- `ITEM Lineage-Authority Writer Correction Lifecycle`: `CLOSED` (Control
+  Tower adjudication recorded; closure basis as stated above, with the
+  evidence-type boundaries preserved).
+- Migration/DDL: `NONE` (unchanged; physical schema already sufficient per
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §12.5).
+- BIGINT Writer Source-Authority Runtime: `CLOSED`, not reopened; unsafe
+  BIGINT `T27` remains `PASS`.
+- METRIC_RESULT Retention v1 Runtime: `CLOSED`, not reopened.
+- `F-IR-01`, `F-IR-02`, `F-IR-03`, `F-IR-04`: each remains `OPEN / NOTE /
+  NON-BLOCKING`; correction required `NO`. Closure of the writer lifecycle
+  does NOT mean any of them was fixed, closed, or reclassified.
+- `N-IR-S1`: remains `OPEN / NOTE / NON-BLOCKING`; correction required `NO`;
+  preserved historical text unchanged.
+- Historical stored `resolved_item_lineage` learner/human data: `UNKNOWN /
+  NOT INSPECTED`.
+- METRIC_RESULT Unseen Transfer v2 Runtime: `NOT READY` governing verdict
+  unchanged; `NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED`.
+- `API_CONTRACT.md` `1.31` (blob
+  `e60afa6bda3356051c24b36a823fb325761b9b42`),
+  `EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10` (blob
+  `de244476e56dfcab59dcd899a25091a2b1452e31`), and
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.79` (blob
+  `2502416468896eca0a7f8d17a8879a520acbd4ba`): unchanged by this record.
+
+##### Candidate Lifecycle
+
+On this validation branch this exact post-closure status sync is only
+`POST-CLOSURE STATUS-SYNC CANDIDATE / WRITER CLOSED`. The `CLOSED` status it
+records is the Control Tower adjudication, not a decision made by this
+session. This candidate itself must still be independently reviewed and
+integrated before the §10 Next Action may run. No second project-level Next
+Action is created.
+
+##### Non-Claims
+
+This record does not mean: any of `F-IR-01`–`F-IR-04` or `N-IR-S1` closed,
+reclassified, converted into a defect, or fixed — NOT CLAIMED (all remain
+`OPEN / NOTE / NON-BLOCKING`); learning efficacy verified — NOT CLAIMED
+(`NOT VERIFIED`); actual-provider milestone complete — NOT CLAIMED (`NOT
+ESTABLISHED`); P1 activated — NOT CLAIMED (`NOT ACTIVATED`); human-data
+collection authorized — NOT CLAIMED (`NOT AUTHORIZED`); historical stored
+learner/human `resolved_item_lineage` data inspected, or valid, invalid,
+needing migration, needing repair, or needing backfill — NOT CLAIMED
+(`UNKNOWN / NOT INSPECTED`); Validation Level 3 §10 overall PASS — NOT
+CLAIMED; Evidence Foundation overall complete — NOT CLAIMED; Unseen Transfer
+Runtime implemented — NOT CLAIMED (`NOT IMPLEMENTED`); Unseen Transfer
+Runtime validated — NOT CLAIMED (`NOT VALIDATED`); Unseen Transfer Runtime
+Development authorized or routed — NOT CLAIMED (remains separately
+unauthorized and requires explicit future Control Tower authorization);
+`READY` established or `Q27` re-answered — NOT CLAIMED; GitHub Actions PASS
+— NOT CLAIMED; BIGINT writer lifecycle or Retention v1 Runtime reopened —
+NOT CLAIMED (each remains `CLOSED`); prior runtime evidence rerun,
+regenerated, or relabelled by this session — NOT CLAIMED; the
+documentation-integration `NOT RUN` runtime/PostgreSQL states converted to
+`PASS` — NOT CLAIMED; migration/DDL introduced — NOT CLAIMED (`NONE`); any
+canonical document changed by this record — NOT CLAIMED; any source, test,
+migration, or DDL file changed by this record — NOT CLAIMED; tests or
+PostgreSQL run for this record — NOT CLAIMED (`NOT RUN`).
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -11353,35 +11563,20 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- The sole project Next Action is a fresh, separate, read-only Independent
-  Review of this exact `LLE_CURRENT_STATE.md` closure-record sync candidate
-  (branch `validation/item-lineage-authority-writer-closure-sync-20260919`,
-  parent `77db80d97f25c9394cd04ad08801d85580f006dd`), classification
-  `READ-ONLY INDEPENDENT REVIEW`, repository mutation `0`. Its bounded scope
-  is exactly this documentation candidate: it must verify that the recorded
-  Development, commit-pinned regression/PostgreSQL validation, Independent
-  Review, guarded integration, and post-merge validation evidence for the
-  `ITEM Lineage-Authority Writer Correction Lifecycle` is transcribed
-  accurately (SHAs, trees, blobs, branch names, changed-file scope, test
-  counts, PostgreSQL/fixture evidence types), that the three evidence bodies
-  remain distinct and that this session's own tests/PostgreSQL remain
-  `NOT RUN`, that `F-IR-01`–`F-IR-04` remain `OPEN / NOTE / NON-BLOCKING`,
-  that historical learner/human data remains `UNKNOWN / NOT INSPECTED`, that
-  no canonical contract/schema/backlog text was changed, and that no closure
-  is claimed. It must NOT: create a branch; edit files; commit; push; merge;
-  open a PR; run migrations; mutate PostgreSQL; run tests as candidate
-  evidence; declare the writer lifecycle `CLOSED`; implement, authorize, or
-  route Unseen Transfer Runtime Development; activate P1; authorize
-  human-data collection; or claim efficacy. The writer lifecycle is NOT
-  `CLOSED` by this record — it is `VALIDATED / INTEGRATED / POST-MERGE
-  VALIDATION PASS / CLOSURE ADJUDICATION PENDING`, and Control Tower retains
-  sole authority to declare it `CLOSED` after this reviewed status-record
-  sync candidate is adjudicated and integrated. Only after that formal
-  `CLOSED` adjudication may the already-canonical downstream sequence resume
-  with a fresh read-only `VI P1 Measurement Readiness — METRIC_RESULT Unseen
-  Transfer v2 Runtime Implementation-Readiness` analysis against
-  then-current `main`, classification `READ-ONLY PRE-ANALYSIS`, repository
-  mutation `0`, without assuming `READY`. This record does NOT route to that
-  analysis yet and does NOT assume the writer correction is `CLOSED`; any
-  Unseen Transfer Runtime Development remains separately unauthorized and
-  requires explicit Control Tower authorization.
+- The sole project Next Action is a fresh, separate, read-only `VI P1
+  Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Implementation-Readiness` analysis, classification `READ-ONLY
+  PRE-ANALYSIS`, repository mutation `0`. The `ITEM Lineage-Authority Writer
+  Correction Lifecycle` is `CLOSED` by Control Tower adjudication, so the
+  preceding closure-sync Independent Review action is complete and is
+  replaced by this action. It must run against then-current `main` only
+  after this post-closure status sync is itself independently reviewed and
+  integrated. It must NOT assume `READY`; it must distinguish engine
+  correctness evidence from learning efficacy evidence; it must NOT
+  implement Unseen Transfer Runtime; it must NOT authorize P1; it must NOT
+  authorize human-data collection; it must NOT claim Actual-provider
+  validation; and it must NOT modify repository files — no branch creation,
+  edit, commit, push, merge, PR, migration run, or PostgreSQL mutation. Its
+  result must return to Control Tower for adjudication. Any Unseen Transfer
+  Runtime Development remains separately unauthorized and requires explicit
+  future Control Tower authorization.
