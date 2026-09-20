@@ -27,6 +27,8 @@ const {
   assertAllowedKeys,
   assertExactDefinitionKeys,
   assertExactKeys,
+  hasOwn,
+  isPlainObject,
   requireField,
   validateBoundedVersion,
   validatePositiveSafeInteger,
@@ -723,16 +725,22 @@ async function queryRawEvidenceForMetricRebuild(pool, input) {
 }
 
 // ---------------------------------------------------------------------------
-// VI P1 Measurement Readiness -- METRIC_RESULT / Retention v1 Runtime
+// VI P1 Measurement Readiness -- METRIC_RESULT Runtime
 // Synthetic P0 Query-Time Only.
 //
 // Implements the bounded METRIC_RESULT query contract:
 //
 //   queryMetricResult(pool, input)
 //
-// Canonical authority: API_CONTRACT.md §13.10.11.2,
-// EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.4 / §12.4.1 / Retention portion of
-// §12.5 / §18.11.
+// Canonical authority: API_CONTRACT.md §13.10.11.2 (Retention v1) and
+// §13.10.11.3 (Unseen Transfer v2), EVIDENCE_FOUNDATION_P0_SCHEMA.md
+// §12.3.4 / §12.3.5 / §12.4.1 / §12.4.2 / §12.5 / §18.11.
+//
+// Metric kind is never a caller-supplied top-level input: it is decided
+// solely by the pinned FORMULA's immutable `definitionVersion`
+// (1 = RETENTION, 2 = UNSEEN_TRANSFER). The two versions are mutually
+// exclusive and closed, and this dispatch does not retroactively change the
+// meaning of any existing `definitionVersion 1` FORMULA reference.
 //
 // This is a separate internal Pilot Evidence Instrumentation Component
 // operation from `queryRawEvidenceForMetricRebuild` above: it does not call
@@ -770,6 +778,18 @@ const RETENTION_TARGET_TIMEPOINTS = ['DAY_7', 'DAY_30'];
 const REQUIRED_AGGREGATION_GRAIN = Object.freeze([
   'PARTICIPANT',
   'TARGET_NODE',
+  'ASSESSMENT_TIMEPOINT',
+  'CONDITION',
+  'FORMULA_VERSION',
+]);
+
+// Unseen Transfer v2 adds exactly one axis, `ITEM_FAMILY`, in exactly this
+// position (API_CONTRACT.md §13.10.11.3 / EVIDENCE_FOUNDATION_P0_SCHEMA.md
+// §12.4.2). `enrollment`, `experiment` and `scenario` are NOT grain axes.
+const UNSEEN_AGGREGATION_GRAIN = Object.freeze([
+  'PARTICIPANT',
+  'TARGET_NODE',
+  'ITEM_FAMILY',
   'ASSESSMENT_TIMEPOINT',
   'CONDITION',
   'FORMULA_VERSION',
@@ -823,6 +843,44 @@ const EXCLUDED_COUNT_KEYS = Object.freeze([
   'earlyCount',
   'lateCount',
 ]);
+
+// Unseen Transfer v2: rules 1-14 are byte-identical to Retention v1's
+// `exclusionPolicy.ruleOrder`; rules 15 and 16 are appended and apply ONLY to
+// candidates that survived rules 1-14 (API_CONTRACT.md §13.10.11.3 "Exact
+// 16-rule FIRST_MATCH exclusion order").
+const UNSEEN_EXCLUSION_RULE_ORDER = Object.freeze([
+  ...EXCLUSION_RULE_ORDER,
+  'ITEM_LINEAGE_NOT_DIFFERENT',
+  'NODE_PRIOR_EXPOSURE_ABSENT',
+]);
+
+const UNSEEN_RULE_COUNT_KEY = Object.freeze({
+  ...RULE_COUNT_KEY,
+  ITEM_LINEAGE_NOT_DIFFERENT: 'lineageNotDifferentCount',
+  NODE_PRIOR_EXPOSURE_ABSENT: 'noPriorNodeExposureCount',
+});
+
+// 12-bucket mutually exclusive partition: the ten Retention buckets plus the
+// two v2-only lineage buckets.
+const UNSEEN_EXCLUDED_COUNT_KEYS = Object.freeze([
+  ...EXCLUDED_COUNT_KEYS,
+  'lineageNotDifferentCount',
+  'noPriorNodeExposureCount',
+]);
+
+// Canonical lineage priority, exactly this order. There is no fuzzy,
+// text-similarity, edit-distance, token-overlap or transitive inference
+// anywhere in this module -- only explicit, versioned, stored ITEM authority.
+const LINEAGE_PRIORITY = Object.freeze([
+  'EXACT_REPEAT',
+  'SURFACE_VARIANT',
+  'SAME_ITEM_FAMILY',
+  'DIFFERENT_ITEM_FAMILY',
+]);
+
+// Primary unseen eligibility requires exactly this stored lineage value.
+// A null `resolved_item_lineage` is NEVER coerced into it.
+const PRIMARY_UNSEEN_LINEAGE = 'DIFFERENT_ITEM_FAMILY';
 
 const MAX_SAFE_COUNT = BigInt(Number.MAX_SAFE_INTEGER);
 
@@ -963,7 +1021,64 @@ const FORMULA_TOP_LEVEL_KEYS = [
   'valueProjection',
 ];
 
-function validateClosedFormulaDefinition(definition, requestedAggregationGrain) {
+// FORMULA v2 is the v1 closed shape plus exactly two new required subobjects
+// (EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.4.2). Except for the v2-specific
+// `exclusionPolicy.ruleOrder` extension (14-rule Retention order -> exact
+// 16-rule Unseen order) and those two new required subobjects, the remaining
+// inherited v1 fields/subobjects retain their canonical v1 values, so the v1
+// specs are reused verbatim rather than restated.
+const FORMULA_V2_TOP_LEVEL_KEYS = [
+  ...FORMULA_TOP_LEVEL_KEYS,
+  'lineagePolicy',
+  'scenarioPolicy',
+];
+
+const UNSEEN_EXCLUSION_POLICY_SPEC = Object.freeze({
+  classificationRule: 'FIRST_MATCH',
+  matchedCandidateTreatment: 'EXCLUDE_AND_COUNT',
+  ruleOrder: UNSEEN_EXCLUSION_RULE_ORDER,
+});
+
+const LINEAGE_POLICY_SPEC = Object.freeze({
+  historyScope: 'SAME_ENROLLMENT',
+  historyCutoffRule: 'EXPOSURE_ORDINAL_LTE_STORED_CUTOFF',
+  relevanceScope: 'FULL_ASSIGNMENT_TARGET_NODE_SET',
+  assignmentLineageRequirement: 'DIFFERENT_ITEM_FAMILY',
+  nodeExposureRequirement: 'EXPOSED_ASSIGNMENT_CONTAINS_NODE',
+  recomputationRule: 'REQUIRED_NULL_SAFE_MATCH',
+  priority: LINEAGE_PRIORITY,
+  itemRelationAuthority: 'VERSIONED_ITEM_LINEAGE_AUTHORITY_V1',
+});
+
+// Scenario stays a separate stratification axis: it is not a primary
+// eligibility requirement, not a grain axis, not a group-key field, and the
+// stratified reducer output remains deferred and is not produced here.
+const SCENARIO_POLICY_SPEC = Object.freeze({
+  primaryEligibilityRequirement: 'NONE',
+  primaryAggregation: 'NONE',
+  stratifiedOutput: 'DEFERRED_SEPARATE_OUTPUT',
+});
+
+// Dispatch authority. Metric kind is decided ONLY here, from the stored
+// FORMULA's immutable `definitionVersion` -- never from caller input. Any
+// other value (including a non-object definition, a string "1", 0, 3 or an
+// absent key) is a stored-source CONTRACT_VIOLATION, and the per-version
+// closed validation below is what enforces the mutually-exclusive
+// version/metricKind pairing.
+function readFormulaDefinitionVersion(definition) {
+  if (!isPlainObject(definition)) {
+    throw new ContractViolationError('formula definition must be a plain object');
+  }
+  const definitionVersion = definition.definitionVersion;
+  if (definitionVersion !== 1 && definitionVersion !== 2) {
+    throw new ContractViolationError(
+      'formula.definitionVersion must be exactly 1 (RETENTION) or 2 (UNSEEN_TRANSFER)'
+    );
+  }
+  return definitionVersion;
+}
+
+function validateClosedFormulaDefinitionV1(definition, requestedAggregationGrain) {
   // The legacy (unapproved) `populationPolicy` shape, and any other
   // unknown/missing/extra key, is rejected here: the required key set is
   // exact and closed.
@@ -972,9 +1087,13 @@ function validateClosedFormulaDefinition(definition, requestedAggregationGrain) 
   requireExactConstant(definition.definitionType, 'EVIDENCE_METRIC_FORMULA', 'formula.definitionType');
   requireExactConstant(definition.definitionVersion, 1, 'formula.definitionVersion');
   requireExactConstant(definition.executionScope, 'SYNTHETIC_P0', 'formula.executionScope');
-  // definitionVersion 1 supports RETENTION only -- UNSEEN_TRANSFER
-  // (F-MR-ARCH-06, OPEN/DEFERRED) remains unsupported: this exact-equality
-  // check is what rejects it, not a separate UNSEEN_TRANSFER branch.
+  // definitionVersion 1 supports RETENTION only. The prior rejection of an
+  // UNSEEN_TRANSFER declaration is now VERSION-AWARE rather than global: a
+  // `definitionVersion 1` FORMULA claiming UNSEEN_TRANSFER is still
+  // CONTRACT_VIOLATION, because the two definitionVersions are mutually
+  // exclusive and closed (API_CONTRACT.md §13.10.11.3 "Operation과
+  // dispatch"). UNSEEN_TRANSFER is reachable only through the separate
+  // `definitionVersion 2` branch below -- never by relaxing this check.
   requireExactConstant(definition.metricKind, 'RETENTION', 'formula.metricKind');
   requireExactArrayConstant(definition.aggregationGrain, REQUIRED_AGGREGATION_GRAIN, 'formula.aggregationGrain');
 
@@ -1026,12 +1145,108 @@ function validateClosedFormulaDefinition(definition, requestedAggregationGrain) 
 }
 
 // ---------------------------------------------------------------------------
+// Closed FORMULA v2 definition -- Unseen Transfer synthetic P0
+// (API_CONTRACT.md §13.10.11.3 "Exact closed FORMULA v2",
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.4.2).
+//
+// Exactly 16 required top-level keys; every subobject key is required too --
+// FORMULA v2 has no optional and no nullable field. A `null` appearing
+// anywhere inside the definition (top-level value, subobject value or array
+// element) is CONTRACT_VIOLATION, which falls out structurally here: every
+// key is either an exact scalar constant, an exact array constant, or a
+// validated safe integer, and `null` satisfies none of those. (ITEM
+// `lineageAuthority.canonicalStimulusId` may be `null` under its own,
+// separate ITEM definition contract -- that is not an exception to this
+// prohibition, and it is validated elsewhere.)
+// ---------------------------------------------------------------------------
+
+function validateClosedFormulaDefinitionV2(definition, requestedAggregationGrain) {
+  assertExactDefinitionKeys(definition, FORMULA_V2_TOP_LEVEL_KEYS, 'formula');
+
+  requireExactConstant(definition.definitionType, 'EVIDENCE_METRIC_FORMULA', 'formula.definitionType');
+  requireExactConstant(definition.definitionVersion, 2, 'formula.definitionVersion');
+  requireExactConstant(definition.executionScope, 'SYNTHETIC_P0', 'formula.executionScope');
+  // definitionVersion 2 supports UNSEEN_TRANSFER only -- a v2 FORMULA
+  // claiming RETENTION is CONTRACT_VIOLATION (mutually exclusive, closed).
+  requireExactConstant(definition.metricKind, 'UNSEEN_TRANSFER', 'formula.metricKind');
+  requireExactArrayConstant(
+    definition.aggregationGrain,
+    UNSEEN_AGGREGATION_GRAIN,
+    'formula.aggregationGrain'
+  );
+
+  const minimumSample = validatePositiveSafeInteger(
+    definition.minimumSample,
+    'formula.minimumSample',
+    Number.MAX_SAFE_INTEGER
+  );
+
+  validateClosedObject(
+    definition.candidateAdmissionPolicy,
+    CANDIDATE_ADMISSION_POLICY_SPEC,
+    'formula.candidateAdmissionPolicy'
+  );
+  validateClosedObject(
+    definition.denominatorEligibilityPolicy,
+    DENOMINATOR_ELIGIBILITY_POLICY_SPEC,
+    'formula.denominatorEligibilityPolicy'
+  );
+  requireExactConstant(
+    definition.numeratorRule,
+    'CORRECT_ELIGIBLE_NODE_EVALUATIONS',
+    'formula.numeratorRule'
+  );
+  requireExactConstant(
+    definition.denominatorRule,
+    'ALL_ELIGIBLE_SCORABLE_NODE_EVALUATIONS',
+    'formula.denominatorRule'
+  );
+  const timeliness = validateClosedObject(definition.timeliness, TIMELINESS_SPEC, 'formula.timeliness');
+  validateClosedObject(
+    definition.sourceCompatibility,
+    SOURCE_COMPATIBILITY_SPEC,
+    'formula.sourceCompatibility'
+  );
+  validateClosedObject(
+    definition.exclusionPolicy,
+    UNSEEN_EXCLUSION_POLICY_SPEC,
+    'formula.exclusionPolicy'
+  );
+  validateClosedObject(definition.valueProjection, VALUE_PROJECTION_SPEC, 'formula.valueProjection');
+  validateClosedObject(definition.lineagePolicy, LINEAGE_POLICY_SPEC, 'formula.lineagePolicy');
+  validateClosedObject(definition.scenarioPolicy, SCENARIO_POLICY_SPEC, 'formula.scenarioPolicy');
+
+  if (!arraysEqualExact(definition.aggregationGrain, requestedAggregationGrain)) {
+    throw new ContractViolationError('aggregationGrain mismatch between request and pinned FORMULA');
+  }
+
+  return {
+    minimumSample,
+    earlyToleranceMs: timeliness.earlyToleranceMs,
+    lateToleranceMs: timeliness.lateToleranceMs,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Exact input validation/normalization (no DB).
 // ---------------------------------------------------------------------------
 
+// The caller-supplied grain must itself be one of the exact canonical grains,
+// in exact order. Which one is legal for THIS request is then decided against
+// the pinned FORMULA's own grain inside the per-version closed validation --
+// a caller/FORMULA grain mismatch (for example the v2 six-axis grain against
+// a `definitionVersion 1` FORMULA) is CONTRACT_VIOLATION there, exactly as a
+// FORMULA-side mismatch already was.
 function validateMetricAggregationGrainInput(value) {
-  requireExactArrayConstant(value, REQUIRED_AGGREGATION_GRAIN, 'aggregationGrain');
-  return REQUIRED_AGGREGATION_GRAIN.slice();
+  if (arraysEqualExact(value, REQUIRED_AGGREGATION_GRAIN)) {
+    return REQUIRED_AGGREGATION_GRAIN.slice();
+  }
+  if (arraysEqualExact(value, UNSEEN_AGGREGATION_GRAIN)) {
+    return UNSEEN_AGGREGATION_GRAIN.slice();
+  }
+  throw new ContractViolationError(
+    'aggregationGrain must equal exactly one of the canonical metric grains, in exact order'
+  );
 }
 
 // F-MR-RR-03 (METRIC_RESULT-specific): built with a dense index-by-index
@@ -1288,6 +1503,17 @@ async function selectCandidateAssignments(client, enrollmentIds, filters, analys
        s.item_family_version,
        s.rubric_id,
        s.rubric_version,
+       -- Unseen Transfer v2 assignment-time immutable lineage authority
+       -- (EVIDENCE_FOUNDATION_P0_SCHEMA.md §5.9). Projected here so the v2
+       -- reducer reads the SAME frozen snapshot row the shared candidate
+       -- admission already resolved; Retention v1 ignores these columns and
+       -- is unaffected. exposure_history_cutoff_ordinal is BIGINT and is
+       -- projected as its exact base-10 decimal text -- never as a
+       -- JavaScript Number.
+       s.item_id,
+       s.item_version,
+       s.resolved_item_lineage,
+       s.exposure_history_cutoff_ordinal::text AS exposure_history_cutoff_ordinal,
        (a.completed_at IS NOT NULL AND a.completed_at <= $3::timestamptz) AS completed_within_cutoff
      FROM evidence_assignments a
      LEFT JOIN evidence_assignment_snapshots s ON s.assignment_id = a.assignment_id
@@ -1346,6 +1572,17 @@ function resolvePopulationEligibleAssignments(assignmentRows, formulaId, formula
       completedWithinCutoff: row.completed_within_cutoff,
       rubricId: row.rubric_id,
       rubricVersion: Number(row.rubric_version),
+      // Unseen Transfer v2 authority carried through unchanged. Retention v1
+      // never reads these, so its grain, group key, counts, output and
+      // provenance are untouched. `exposureHistoryCutoffOrdinal` stays the
+      // exact BIGINT decimal string; `itemVersion`/`itemFamilyVersion` are
+      // PostgreSQL INTEGER, not BIGINT.
+      itemId: row.item_id,
+      itemVersion: Number(row.item_version),
+      itemFamilyId: row.item_family_id,
+      itemFamilyVersion: Number(row.item_family_version),
+      resolvedItemLineage: row.resolved_item_lineage,
+      exposureHistoryCutoffOrdinal: row.exposure_history_cutoff_ordinal,
     });
   }
   return eligible;
@@ -1382,6 +1619,14 @@ function buildMetricCandidates(nodeRows, assignmentMap, enrollmentMap, formulaId
       completedWithinCutoff: assignment.completedWithinCutoff,
       rubricId: assignment.rubricId,
       rubricVersion: assignment.rubricVersion,
+      // v2-only fields; Retention v1's group key, reduction, projection and
+      // provenance never read them.
+      itemId: assignment.itemId,
+      itemVersion: assignment.itemVersion,
+      itemFamilyId: assignment.itemFamilyId,
+      itemFamilyVersion: assignment.itemFamilyVersion,
+      resolvedItemLineage: assignment.resolvedItemLineage,
+      exposureHistoryCutoffOrdinal: assignment.exposureHistoryCutoffOrdinal,
       formulaId,
       formulaVersion,
     };
@@ -1838,6 +2083,831 @@ function unionMetricSourceRebuildReference(groups) {
   };
 }
 
+// ===========================================================================
+// VI P1 Measurement Readiness -- METRIC_RESULT Unseen Transfer v2 reducer
+// (API_CONTRACT.md §13.10.11.3, EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.5 /
+// §12.4.2 / Unseen transfer portion of §12.5).
+//
+// Everything above this banner is Retention v1 and is NOT reopened,
+// redefined or weakened here. The v2 path shares -- verbatim -- v1's input
+// vocabulary, candidate admission, completion/timeliness integrity and the
+// rule 1-14 FIRST_MATCH classifier, and adds on top of it: the item-family
+// grain axis, the assignment-time immutable lineage authority layer, rules 15
+// and 16, the two extra counts, and full-`H(A)` exposure provenance.
+//
+// `targetTimepoints` vocabulary (DAY_7/DAY_30), `IMMEDIATE` exclusion and the
+// EARLY/ON_TIME/LATE boundary rules are unchanged in v2, so v1's input
+// validator and completion projection are reused rather than duplicated.
+// ===========================================================================
+
+// exposure_ordinal / exposure_history_cutoff_ordinal are PostgreSQL BIGINT.
+// JavaScript `Number` is never their comparison, ordering, persistence or
+// round-trip authority: they arrive as exact base-10 decimal strings and are
+// compared either in PostgreSQL (BIGINT vs BIGINT) or, in memory, as
+// JavaScript `BigInt`.
+const EXACT_BIGINT_ORDINAL_PATTERN = /^(0|[1-9][0-9]*)$/;
+
+function requireExactBigIntOrdinal(value, fieldName) {
+  if (typeof value !== 'string' || !EXACT_BIGINT_ORDINAL_PATTERN.test(value)) {
+    throw new ContractViolationError(
+      `${fieldName} must be an exact base-10 decimal BIGINT ordinal string `
+        + '(digits only, no sign, no leading zero, no exponent, no decimal point, no whitespace)'
+    );
+  }
+  return BigInt(value);
+}
+
+// ---------------------------------------------------------------------------
+// ITEM lineage authority (API_CONTRACT.md §13.10.11.3 "UT-C1 / UT-C1-a /
+// UT-C1-b", EVIDENCE_FOUNDATION_P0_SCHEMA.md §5.5).
+//
+// The assignment-creation writer and this METRIC_RESULT reader consume the
+// SAME `L(A)` source authority, the same `lineageAuthority` validity rules,
+// the same direct either-direction `SV` relation and the same canonical
+// priority. Nothing here infers a relation from text similarity, edit
+// distance, token overlap or transitive closure -- only explicit, versioned,
+// stored ITEM authority counts, and a relation that does not exist is never
+// invented or backfilled.
+// ---------------------------------------------------------------------------
+
+const ITEM_LINEAGE_DEFINITION_TYPE = 'EVIDENCE_ITEM_LINEAGE';
+const ITEM_LINEAGE_DEFINITION_VERSION = 1;
+const ITEM_LINEAGE_AUTHORITY_KEYS = Object.freeze([
+  'definitionType',
+  'definitionVersion',
+  'canonicalStimulusId',
+  'surfaceVariantReferences',
+]);
+const SURFACE_VARIANT_REFERENCE_KEYS = Object.freeze(['itemId', 'itemVersion']);
+const MAX_ITEM_REFERENCE_VERSION = 2147483647;
+
+// Key absence is valid and means "no explicit canonical-stimulus/
+// surface-variant declaration" -- never an error, and never an equality
+// source. An explicit `null` is a stored-source CONTRACT_VIOLATION.
+const ABSENT_ITEM_LINEAGE_AUTHORITY = Object.freeze({
+  canonicalStimulusId: null,
+  surfaceVariantReferences: Object.freeze([]),
+});
+
+function itemPairKey(itemId, itemVersion) {
+  return JSON.stringify([itemId, itemVersion]);
+}
+
+// Whole-object validation of one consumed ITEM's `lineageAuthority`,
+// including every `surfaceVariantReferences` entry. Every failure is a stored
+// authoritative-source contradiction, so it is always CONTRACT_VIOLATION --
+// never INVALID_ID, never an exclusion bucket, and never a silently ignored
+// declaration.
+function validateConsumedItemLineageAuthority(definition, itemId, itemVersion) {
+  const label = `ITEM ${itemId}@${itemVersion} lineageAuthority`;
+  if (!isPlainObject(definition) || !hasOwn(definition, 'lineageAuthority')) {
+    return ABSENT_ITEM_LINEAGE_AUTHORITY;
+  }
+
+  const authority = definition.lineageAuthority;
+  if (authority === null) {
+    throw new ContractViolationError(
+      `${label} must be absent or a valid object -- explicit null is not allowed`
+    );
+  }
+  assertExactDefinitionKeys(authority, ITEM_LINEAGE_AUTHORITY_KEYS, label);
+
+  if (authority.definitionType !== ITEM_LINEAGE_DEFINITION_TYPE) {
+    throw new ContractViolationError(`${label}.definitionType must be ${ITEM_LINEAGE_DEFINITION_TYPE}`);
+  }
+  if (authority.definitionVersion !== ITEM_LINEAGE_DEFINITION_VERSION) {
+    throw new ContractViolationError(
+      `${label}.definitionVersion must be ${ITEM_LINEAGE_DEFINITION_VERSION}`
+    );
+  }
+
+  // Nonempty string or null. No trim, no case fold, no Unicode
+  // normalization -- comparison is exact code-unit equality, and null never
+  // establishes equality.
+  const canonicalStimulusId = authority.canonicalStimulusId;
+  if (
+    canonicalStimulusId !== null
+    && !(typeof canonicalStimulusId === 'string' && canonicalStimulusId.length > 0)
+  ) {
+    throw new ContractViolationError(`${label}.canonicalStimulusId must be a nonempty string or null`);
+  }
+
+  if (!Array.isArray(authority.surfaceVariantReferences)) {
+    throw new ContractViolationError(`${label}.surfaceVariantReferences must be an array`);
+  }
+
+  const selfKey = itemPairKey(itemId, itemVersion);
+  const seenKeys = new Set();
+  const surfaceVariantReferences = [];
+  for (let index = 0; index < authority.surfaceVariantReferences.length; index += 1) {
+    const entry = authority.surfaceVariantReferences[index];
+    const entryLabel = `${label}.surfaceVariantReferences[${index}]`;
+    assertExactDefinitionKeys(entry, SURFACE_VARIANT_REFERENCE_KEYS, entryLabel);
+    if (typeof entry.itemId !== 'string' || entry.itemId.length === 0) {
+      throw new ContractViolationError(`${entryLabel}.itemId must be a nonempty string`);
+    }
+    if (
+      typeof entry.itemVersion !== 'number'
+      || !Number.isInteger(entry.itemVersion)
+      || entry.itemVersion < 1
+      || entry.itemVersion > MAX_ITEM_REFERENCE_VERSION
+    ) {
+      throw new ContractViolationError(
+        `${entryLabel}.itemVersion must be an integer 1..${MAX_ITEM_REFERENCE_VERSION}`
+      );
+    }
+
+    const entryKey = itemPairKey(entry.itemId, entry.itemVersion);
+    // Self-reference is the EXACT (itemId, itemVersion) pair only -- the same
+    // itemId at another itemVersion is a legal surface-variant reference.
+    if (entryKey === selfKey) {
+      throw new ContractViolationError(`${entryLabel} must not reference the declaring ITEM itself`);
+    }
+    if (seenKeys.has(entryKey)) {
+      throw new ContractViolationError(`${entryLabel} duplicates an earlier exact ITEM pair`);
+    }
+    seenKeys.add(entryKey);
+    surfaceVariantReferences.push({ itemId: entry.itemId, itemVersion: entry.itemVersion });
+  }
+
+  return { canonicalStimulusId, surfaceVariantReferences };
+}
+
+// ---------------------------------------------------------------------------
+// Lineage source loaders (all inside the single REPEATABLE READ READ ONLY
+// transaction; every one of them is a read).
+// ---------------------------------------------------------------------------
+
+// Exact (reference_id, version) ITEM lookup inside the caller's transaction
+// snapshot, so reference existence is validated against the same
+// authoritative state the lineage decision is taken from.
+async function selectPinnedItemRows(client, pairs) {
+  if (pairs.length === 0) return [];
+  const { rows } = await client.query(
+    `SELECT reference.reference_id AS item_id,
+            reference.version      AS item_version,
+            reference.definition   AS definition
+       FROM evidence_reference_versions reference
+       JOIN unnest($1::text[], $2::int[]) AS requested(item_id, item_version)
+         ON requested.item_id = reference.reference_id
+        AND requested.item_version = reference.version
+      WHERE reference.reference_kind = 'ITEM'`,
+    [pairs.map((pair) => pair.itemId), pairs.map((pair) => pair.itemVersion)]
+  );
+  return rows;
+}
+
+// L(A) whole-object validation: every ITEM pinned by A or by an R(A) owner.
+// ITEM definitions OUTSIDE L(A) are not validated for this operation; their
+// existence is checked only where an L(A) surface-variant reference points at
+// them (dangling-reference rejection).
+async function loadConsumedItemLineageAuthorities(client, pairs) {
+  const rows = await selectPinnedItemRows(client, pairs);
+  const authoritiesByPair = new Map();
+  for (const row of rows) {
+    const itemVersion = Number(row.item_version);
+    authoritiesByPair.set(
+      itemPairKey(row.item_id, itemVersion),
+      validateConsumedItemLineageAuthority(row.definition, row.item_id, itemVersion)
+    );
+  }
+
+  const referencedPairs = [];
+  const referencedKeys = new Set();
+  for (const pair of pairs) {
+    const authority = authoritiesByPair.get(itemPairKey(pair.itemId, pair.itemVersion));
+    // V(A) condition 4: A and every R(A) owner must hold exact pinned ITEM
+    // authority.
+    if (!authority) {
+      throw new ContractViolationError(
+        `consumed lineage ITEM ${pair.itemId}@${pair.itemVersion} has no pinned ITEM authority`
+      );
+    }
+    for (const reference of authority.surfaceVariantReferences) {
+      const referenceKey = itemPairKey(reference.itemId, reference.itemVersion);
+      if (referencedKeys.has(referenceKey)) continue;
+      referencedKeys.add(referenceKey);
+      referencedPairs.push(reference);
+    }
+  }
+
+  const existingRows = await selectPinnedItemRows(client, referencedPairs);
+  const existingKeys = new Set(
+    existingRows.map((row) => itemPairKey(row.item_id, Number(row.item_version)))
+  );
+  for (const reference of referencedPairs) {
+    if (!existingKeys.has(itemPairKey(reference.itemId, reference.itemVersion))) {
+      throw new ContractViolationError(
+        `surfaceVariantReferences entry ${reference.itemId}@${reference.itemVersion} `
+          + 'does not exist as a pinned ITEM reference version'
+      );
+    }
+  }
+
+  return authoritiesByPair;
+}
+
+// V(A) condition 4, family half. A missing pinned ITEM_FAMILY authority for a
+// consumed assignment is a stored-source contradiction
+// (CONTRACT_VIOLATION) -- distinct from a caller-supplied unknown
+// `itemFamilyReferences` filter entry, which keeps its existing INVALID_ID
+// semantics.
+async function assertPinnedItemFamilyAuthority(client, pairs) {
+  if (pairs.length === 0) return;
+  const { rows } = await client.query(
+    `SELECT reference_id, version
+       FROM evidence_reference_versions
+      WHERE reference_kind = 'ITEM_FAMILY'
+        AND (reference_id, version) IN (SELECT * FROM unnest($1::text[], $2::int[]))`,
+    [pairs.map((pair) => pair.itemFamilyId), pairs.map((pair) => pair.itemFamilyVersion)]
+  );
+  const existing = new Set(rows.map((row) => `${row.reference_id}@${Number(row.version)}`));
+  for (const pair of pairs) {
+    if (!existing.has(`${pair.itemFamilyId}@${pair.itemFamilyVersion}`)) {
+      throw new ContractViolationError(
+        `consumed lineage ITEM_FAMILY ${pair.itemFamilyId}@${pair.itemFamilyVersion} `
+          + 'has no pinned ITEM_FAMILY authority'
+      );
+    }
+  }
+}
+
+// nodes(X): the COMPLETE immutable snapshot target-node set. Deliberately not
+// filtered by the caller's `nodeIds` -- source/filter separation requires
+// that a candidate filter never silently truncates the history needed for
+// lineage recomputation, and the current assignment's lineage uses its full
+// target-node set, not the caller-filtered subset.
+async function selectFullSnapshotNodeSets(client, assignmentIds) {
+  if (assignmentIds.length === 0) return new Map();
+  const { rows } = await client.query(
+    `SELECT assignment_id, node_id
+       FROM evidence_assignment_snapshot_nodes
+      WHERE assignment_id = ANY($1::uuid[])
+      ORDER BY assignment_id ASC, ordinal ASC`,
+    [assignmentIds]
+  );
+  const map = new Map();
+  for (const row of rows) {
+    let set = map.get(row.assignment_id);
+    if (!set) {
+      set = new Set();
+      map.set(row.assignment_id, set);
+    }
+    set.add(row.node_id);
+  }
+  return map;
+}
+
+// H(A): every authoritative first-exposure row whose owner belongs to E(A)
+// and whose exposure_ordinal <= C(A), compared as PostgreSQL BIGINT against
+// BIGINT. H(A) represents the immutable assignment-creation history that
+// C(A) captures, so it is deliberately NOT truncated by `analysisCutoff`,
+// `exposed_at`, or any exposure/assignment/snapshot `created_at`: timestamps
+// are not lineage-history ordering authority. Global ordinal gaps are legal.
+// Cross-enrollment exposures never participate, whatever their ordinal.
+async function selectSameEnrollmentExposureHistory(client, assignmentIds) {
+  if (assignmentIds.length === 0) return [];
+  const { rows } = await client.query(
+    `SELECT target.assignment_id            AS target_assignment_id,
+            exposure.exposure_id            AS exposure_id,
+            exposure.exposure_ordinal::text AS exposure_ordinal,
+            exposure.assignment_id          AS owner_assignment_id
+       FROM evidence_assignments target
+       JOIN evidence_assignment_snapshots target_snapshot
+         ON target_snapshot.assignment_id = target.assignment_id
+       JOIN evidence_assignments owner
+         ON owner.enrollment_id = target.enrollment_id
+       JOIN evidence_assignment_item_exposures exposure
+         ON exposure.assignment_id = owner.assignment_id
+      WHERE target.assignment_id = ANY($1::uuid[])
+        AND exposure.exposure_ordinal <= target_snapshot.exposure_history_cutoff_ordinal
+      ORDER BY target.assignment_id ASC, exposure.exposure_id ASC`,
+    [assignmentIds]
+  );
+  return rows;
+}
+
+// owner(e) snapshot authority. LEFT JOIN so "owner has no immutable
+// snapshot" stays distinguishable and can surface as the V(A) condition 3
+// contradiction it is, instead of being filtered away.
+async function selectExposureOwnerSnapshots(client, ownerAssignmentIds) {
+  if (ownerAssignmentIds.length === 0) return new Map();
+  const { rows } = await client.query(
+    `SELECT a.assignment_id,
+            (s.assignment_id IS NOT NULL) AS has_snapshot,
+            s.item_id,
+            s.item_version,
+            s.item_family_id,
+            s.item_family_version
+       FROM evidence_assignments a
+       LEFT JOIN evidence_assignment_snapshots s ON s.assignment_id = a.assignment_id
+      WHERE a.assignment_id = ANY($1::uuid[])`,
+    [ownerAssignmentIds]
+  );
+  const map = new Map();
+  for (const row of rows) {
+    map.set(row.assignment_id, {
+      assignmentId: row.assignment_id,
+      hasSnapshot: row.has_snapshot,
+      itemId: row.item_id,
+      itemVersion: row.item_version === null ? null : Number(row.item_version),
+      itemFamilyId: row.item_family_id,
+      itemFamilyVersion: row.item_family_version === null ? null : Number(row.item_family_version),
+    });
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Recomputed lineage rho(A) (API_CONTRACT.md §13.10.11.3 "Recomputed lineage").
+//
+// Computed from the WHOLE of R(A) -- never from caller-filtered node history.
+// Branch order is exactly the canonical LINEAGE_PRIORITY order. Recomputation
+// only VALIDATES stored authority; it never overwrites it, and exposures
+// after C(A) never retroactively reclassify an assignment.
+// ---------------------------------------------------------------------------
+
+function recomputeAssignmentLineage(target, priorItems, lineageAuthorities) {
+  // R(A) empty -> null. Never DIFFERENT_ITEM_FAMILY, and never any other
+  // invented value.
+  if (priorItems.length === 0) return null;
+
+  const currentAuthority = lineageAuthorities.get(itemPairKey(target.itemId, target.itemVersion));
+  const currentSurfaceVariantKeys = new Set(
+    currentAuthority.surfaceVariantReferences.map(
+      (reference) => itemPairKey(reference.itemId, reference.itemVersion)
+    )
+  );
+
+  // EXACT_REPEAT: exact snapshot ITEM pair equality, OR both consumed ITEM
+  // definitions declaring the SAME non-null canonicalStimulusId under exact
+  // code-unit equality.
+  const hasExactRepeat = priorItems.some((prior) => {
+    if (prior.itemId === target.itemId && prior.itemVersion === target.itemVersion) return true;
+    const priorCanonicalStimulusId = lineageAuthorities
+      .get(itemPairKey(prior.itemId, prior.itemVersion)).canonicalStimulusId;
+    return currentAuthority.canonicalStimulusId !== null
+      && priorCanonicalStimulusId !== null
+      && currentAuthority.canonicalStimulusId === priorCanonicalStimulusId;
+  });
+  if (hasExactRepeat) return LINEAGE_PRIORITY[0];
+
+  // SURFACE_VARIANT: the direct, either-direction relation SV(A, prior).
+  // Reciprocal storage is not required and the relation is never closed
+  // transitively.
+  const hasSurfaceVariant = priorItems.some((prior) => {
+    const priorKey = itemPairKey(prior.itemId, prior.itemVersion);
+    if (currentSurfaceVariantKeys.has(priorKey)) return true;
+    return lineageAuthorities.get(priorKey).surfaceVariantReferences.some(
+      (reference) => reference.itemId === target.itemId && reference.itemVersion === target.itemVersion
+    );
+  });
+  if (hasSurfaceVariant) return LINEAGE_PRIORITY[1];
+
+  // SAME_ITEM_FAMILY is decided by authoritative family ID only -- family
+  // version does not change this identity test.
+  if (priorItems.some((prior) => prior.itemFamilyId === target.itemFamilyId)) {
+    return LINEAGE_PRIORITY[2];
+  }
+
+  return LINEAGE_PRIORITY[3];
+}
+
+// ---------------------------------------------------------------------------
+// V(A): assignment lineage validation + derived per-assignment facts.
+//
+// Every violation below is a stored authoritative-source contradiction and is
+// therefore CONTRACT_VIOLATION -- never INVALID_ID and never converted into
+// `lineageNotDifferentCount`/`noPriorNodeExposureCount`. Caller-supplied
+// unknown references keep their existing INVALID_ID semantics elsewhere.
+// ---------------------------------------------------------------------------
+
+async function buildUnseenLineageFacts(client, lineageAssignments) {
+  const targetIds = [...lineageAssignments.keys()];
+  if (targetIds.length === 0) return new Map();
+
+  const historyRows = await selectSameEnrollmentExposureHistory(client, targetIds);
+  const historyByTarget = new Map(targetIds.map((id) => [id, []]));
+  const ownerIds = new Set();
+  for (const row of historyRows) {
+    historyByTarget.get(row.target_assignment_id).push(row);
+    ownerIds.add(row.owner_assignment_id);
+  }
+
+  const nodeSets = await selectFullSnapshotNodeSets(
+    client,
+    [...new Set([...targetIds, ...ownerIds])]
+  );
+  const ownerSnapshots = await selectExposureOwnerSnapshots(client, [...ownerIds]);
+
+  // Phase 1: V(A) conditions 1-3, then R(A)/N(A,n)/L(A) derivation.
+  const derived = new Map();
+  const consumedItemPairs = [];
+  const consumedItemKeys = new Set();
+  const consumedFamilyPairs = [];
+  const consumedFamilyKeys = new Set();
+
+  for (const targetId of targetIds) {
+    const target = lineageAssignments.get(targetId);
+    const cutoff = requireExactBigIntOrdinal(
+      target.exposureHistoryCutoffOrdinal,
+      `assignment ${targetId} exposure_history_cutoff_ordinal`
+    );
+    const history = historyByTarget.get(targetId);
+
+    // V(A).1 -- cutoff witness W(A). C(A) = 0 requires no positive witness.
+    // Because H(A) is already restricted to E(A), a row that exists at
+    // ordinal C(A) but belongs to another enrollment fails this check, which
+    // is exactly the canonical requirement.
+    if (cutoff > 0n) {
+      const hasWitness = history.some(
+        (row) => requireExactBigIntOrdinal(row.exposure_ordinal, 'exposure_ordinal') === cutoff
+      );
+      if (!hasWitness) {
+        throw new ContractViolationError(
+          `assignment ${targetId} has no same-enrollment cutoff witness exposure at `
+            + `exposure_ordinal ${cutoff.toString()}`
+        );
+      }
+    }
+
+    // V(A).2 -- self-exclusion.
+    if (history.some((row) => row.owner_assignment_id === targetId)) {
+      throw new ContractViolationError(
+        `assignment ${targetId} appears in its own exposure-history H(A)`
+      );
+    }
+
+    // V(A).3 -- history node authority for every H(A) row, target-relevant
+    // or not.
+    for (const row of history) {
+      const ownerSnapshot = ownerSnapshots.get(row.owner_assignment_id);
+      if (!ownerSnapshot || !ownerSnapshot.hasSnapshot) {
+        throw new ContractViolationError(
+          `exposure-history owner assignment ${row.owner_assignment_id} has no immutable snapshot`
+        );
+      }
+      const ownerNodes = nodeSets.get(row.owner_assignment_id);
+      if (!ownerNodes || ownerNodes.size === 0) {
+        throw new ContractViolationError(
+          `exposure-history owner assignment ${row.owner_assignment_id} has an empty target-node set`
+        );
+      }
+    }
+
+    const targetNodes = nodeSets.get(targetId);
+    if (!targetNodes || targetNodes.size === 0) {
+      throw new ContractViolationError(
+        `assignment ${targetId} has an empty immutable target-node set`
+      );
+    }
+
+    // R(A): H(A) rows whose owner's FULL target-node set intersects nodes(A).
+    const relevant = history.filter((row) => {
+      for (const nodeId of nodeSets.get(row.owner_assignment_id)) {
+        if (targetNodes.has(nodeId)) return true;
+      }
+      return false;
+    });
+
+    // N(A,n) nonempty <=> n appears in the target-node set of some R(A)
+    // owner. This is a requirement separate from assignment-level lineage.
+    const nodesWithPriorTargetExposure = new Set();
+    for (const row of relevant) {
+      for (const nodeId of nodeSets.get(row.owner_assignment_id)) {
+        nodesWithPriorTargetExposure.add(nodeId);
+      }
+    }
+
+    // L(A) contributors: the distinct pinned ITEM/ITEM_FAMILY authority of
+    // every R(A) owner (A's own is added below). Empty when R(A) is empty --
+    // no lineage authority is consumed at all in that case.
+    const priorItems = [];
+    const priorItemKeys = new Set();
+    for (const row of relevant) {
+      const ownerSnapshot = ownerSnapshots.get(row.owner_assignment_id);
+      const key = itemPairKey(ownerSnapshot.itemId, ownerSnapshot.itemVersion)
+        + ` ${ownerSnapshot.itemFamilyId}@${ownerSnapshot.itemFamilyVersion}`;
+      if (priorItemKeys.has(key)) continue;
+      priorItemKeys.add(key);
+      priorItems.push(ownerSnapshot);
+    }
+
+    if (relevant.length > 0) {
+      for (const pair of [{ itemId: target.itemId, itemVersion: target.itemVersion }, ...priorItems]) {
+        const key = itemPairKey(pair.itemId, pair.itemVersion);
+        if (consumedItemKeys.has(key)) continue;
+        consumedItemKeys.add(key);
+        consumedItemPairs.push({ itemId: pair.itemId, itemVersion: pair.itemVersion });
+      }
+      const familyPairs = [
+        { itemFamilyId: target.itemFamilyId, itemFamilyVersion: target.itemFamilyVersion },
+        ...priorItems,
+      ];
+      for (const pair of familyPairs) {
+        const key = `${pair.itemFamilyId}@${pair.itemFamilyVersion}`;
+        if (consumedFamilyKeys.has(key)) continue;
+        consumedFamilyKeys.add(key);
+        consumedFamilyPairs.push({
+          itemFamilyId: pair.itemFamilyId,
+          itemFamilyVersion: pair.itemFamilyVersion,
+        });
+      }
+    }
+
+    derived.set(targetId, { target, history, priorItems, nodesWithPriorTargetExposure });
+  }
+
+  // Phase 2: V(A).4 -- consumed reference authority, batched across every
+  // target in one pair of reads inside the same transaction snapshot. Whole-
+  // object L(A) validation runs before any lineage value is chosen, so a
+  // contradiction is reported even when a stronger relation would have won.
+  const lineageAuthorities = await loadConsumedItemLineageAuthorities(client, consumedItemPairs);
+  await assertPinnedItemFamilyAuthority(client, consumedFamilyPairs);
+
+  // Phase 3: V(A).5 -- null-safe stored-vs-recomputed comparison, then the
+  // per-assignment facts the reducer consumes.
+  const facts = new Map();
+  for (const [targetId, state] of derived) {
+    const { target, history, priorItems, nodesWithPriorTargetExposure } = state;
+    const recomputed = recomputeAssignmentLineage(target, priorItems, lineageAuthorities);
+    const stored = target.resolvedItemLineage;
+    // Null-safe: null/null and equal-non-null are consistent; null vs
+    // non-null, non-null vs different and non-null vs recomputed-null are all
+    // CONTRACT_VIOLATION.
+    if (stored !== recomputed) {
+      throw new ContractViolationError(
+        `assignment ${targetId} stored resolved_item_lineage `
+          + `${stored === null ? 'null' : stored} contradicts recomputed lineage `
+          + `${recomputed === null ? 'null' : recomputed}`
+      );
+    }
+    facts.set(targetId, {
+      exposureIds: history.map((row) => row.exposure_id),
+      ownerAssignmentIds: history.map((row) => row.owner_assignment_id),
+      nodesWithPriorTargetExposure,
+    });
+  }
+  return facts;
+}
+
+// ---------------------------------------------------------------------------
+// Rules 15/16 + Unseen Transfer grouping/reduction/projection.
+// ---------------------------------------------------------------------------
+
+// Applied ONLY to a candidate that already survived rules 1-14.
+function classifyUnseenLineage(candidate, lineageFacts) {
+  // Rule 15: anything other than DIFFERENT_ITEM_FAMILY, null included. A null
+  // stored lineage is never coerced into DIFFERENT_ITEM_FAMILY.
+  if (candidate.resolvedItemLineage !== PRIMARY_UNSEEN_LINEAGE) {
+    return { rule: 'ITEM_LINEAGE_NOT_DIFFERENT' };
+  }
+  // Rule 16: normal exclusion bucket, not a contradiction.
+  if (!lineageFacts.nodesWithPriorTargetExposure.has(candidate.nodeId)) {
+    return { rule: 'NODE_PRIOR_EXPOSURE_ABSENT' };
+  }
+  return { eligible: true };
+}
+
+function unseenGroupKeyString(candidate) {
+  return JSON.stringify([
+    candidate.participantId,
+    candidate.nodeId,
+    candidate.itemFamilyId,
+    candidate.itemFamilyVersion,
+    candidate.targetTimepoint,
+    candidate.conditionId,
+    candidate.conditionVersion,
+    candidate.formulaId,
+    candidate.formulaVersion,
+  ]);
+}
+
+function newUnseenGroupAccumulator(candidate) {
+  return {
+    groupKey: {
+      participantId: candidate.participantId,
+      nodeId: candidate.nodeId,
+      itemFamilyId: candidate.itemFamilyId,
+      itemFamilyVersion: candidate.itemFamilyVersion,
+      targetTimepoint: candidate.targetTimepoint,
+      conditionId: candidate.conditionId,
+      conditionVersion: candidate.conditionVersion,
+      formulaId: candidate.formulaId,
+      formulaVersion: candidate.formulaVersion,
+    },
+    denominator: 0n,
+    numerator: 0n,
+    counts: {
+      missingCount: 0n,
+      technicalFailureCount: 0n,
+      withdrawnCount: 0n,
+      unscorableCount: 0n,
+      normalEmptyCount: 0n,
+      earlyCount: 0n,
+      lateCount: 0n,
+      supersededCount: 0n,
+      nonterminalCount: 0n,
+      postCutoffCompletionCount: 0n,
+      lineageNotDifferentCount: 0n,
+      noPriorNodeExposureCount: 0n,
+    },
+    enrollmentIds: new Set(),
+    assignmentIds: new Set(),
+    attemptIds: new Set(),
+    exposureIds: new Set(),
+    evaluationIds: new Set(),
+  };
+}
+
+async function reduceUnseenCandidates(client, candidates, completionDetailMap, evaluationMap) {
+  // Pass 1 -- rules 1-14 only. Lazy FIRST_MATCH lineage validation timing
+  // (UT-C2): rules 1-14 require no lineage/history reference validation at
+  // all.
+  const classified = candidates.map((candidate) => ({
+    candidate,
+    lifecycle: classifyMetricCandidate(
+      candidate,
+      completionDetailMap.get(candidate.assignmentId) || null,
+      evaluationMap
+    ),
+  }));
+
+  // V(A) is required exactly for the assignments owning at least one rule-1-14
+  // survivor. An assignment whose every candidate was already classified by
+  // rules 1-14 is never validated, so a lineage/history defect belonging only
+  // to such candidates cannot fail the operation. Batched prefetch below is
+  // HOW only: it does not change error outcome, counts or provenance.
+  const lineageAssignments = new Map();
+  for (const entry of classified) {
+    if (!entry.lifecycle.eligible) continue;
+    lineageAssignments.set(entry.candidate.assignmentId, entry.candidate);
+  }
+  const lineageFactsByAssignment = await buildUnseenLineageFacts(client, lineageAssignments);
+
+  const groups = new Map();
+  for (const { candidate, lifecycle } of classified) {
+    const key = unseenGroupKeyString(candidate);
+    let group = groups.get(key);
+    if (!group) {
+      group = newUnseenGroupAccumulator(candidate);
+      groups.set(key, group);
+    }
+
+    group.enrollmentIds.add(candidate.enrollmentId);
+    group.assignmentIds.add(candidate.assignmentId);
+    // Existing logical-dereference semantics: an attempt/evaluation actually
+    // dereferenced while classifying this candidate contributes to provenance,
+    // exactly as in Retention v1.
+    if (lifecycle.attemptId) group.attemptIds.add(lifecycle.attemptId);
+    if (lifecycle.evaluationId) group.evaluationIds.add(lifecycle.evaluationId);
+
+    if (!lifecycle.eligible) {
+      // Classified by rules 1-14: contributes no lineage-history exposure ID.
+      group.counts[UNSEEN_RULE_COUNT_KEY[lifecycle.rule]] += 1n;
+      continue;
+    }
+
+    // V(A) was required for this candidate, so its full H(A) joins group
+    // provenance -- including rows that are not target-relevant, because V(A)
+    // consumed them for history-integrity/node-authority verification -- and
+    // so do the owning assignments of those exposures. C(A) = 0 yields an
+    // empty H(A) and therefore contributes nothing; C(A) > 0 always includes
+    // W(A), since W(A) is itself an H(A) row.
+    const facts = lineageFactsByAssignment.get(candidate.assignmentId);
+    for (const exposureId of facts.exposureIds) group.exposureIds.add(exposureId);
+    for (const ownerAssignmentId of facts.ownerAssignmentIds) {
+      group.assignmentIds.add(ownerAssignmentId);
+    }
+
+    const lineage = classifyUnseenLineage(candidate, facts);
+    if (!lineage.eligible) {
+      group.counts[UNSEEN_RULE_COUNT_KEY[lineage.rule]] += 1n;
+      continue;
+    }
+
+    group.denominator += 1n;
+    if (lifecycle.isCorrect) group.numerator += 1n;
+  }
+  return groups;
+}
+
+// Exact closed 21-key group row (EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.5).
+// All keys required; `value` is the only nullable field.
+function projectUnseenGroup(group, minimumSample) {
+  const excludedCountBig = UNSEEN_EXCLUDED_COUNT_KEYS.reduce(
+    (sum, key) => sum + group.counts[key],
+    0n
+  );
+  const candidateCountBig = group.denominator + excludedCountBig;
+
+  if (group.numerator > group.denominator) {
+    throw new ContractViolationError('numerator exceeds denominator for a group');
+  }
+
+  const denominator = toSafeCount(group.denominator, 'denominator');
+  const numerator = toSafeCount(group.numerator, 'numerator');
+  const excludedCount = toSafeCount(excludedCountBig, 'excludedCount');
+  const candidateCount = toSafeCount(candidateCountBig, 'candidateCount');
+  const eligibleCount = denominator;
+
+  const status = denominator >= minimumSample ? 'OK' : 'INSUFFICIENT';
+  const value = status === 'OK' ? computeHalfUpRatio(group.numerator, group.denominator) : null;
+
+  return {
+    groupKey: group.groupKey,
+    status,
+    numerator,
+    denominator,
+    value,
+    candidateCount,
+    eligibleCount,
+    excludedCount,
+    missingCount: toSafeCount(group.counts.missingCount, 'missingCount'),
+    technicalFailureCount: toSafeCount(group.counts.technicalFailureCount, 'technicalFailureCount'),
+    withdrawnCount: toSafeCount(group.counts.withdrawnCount, 'withdrawnCount'),
+    unscorableCount: toSafeCount(group.counts.unscorableCount, 'unscorableCount'),
+    normalEmptyCount: toSafeCount(group.counts.normalEmptyCount, 'normalEmptyCount'),
+    earlyCount: toSafeCount(group.counts.earlyCount, 'earlyCount'),
+    lateCount: toSafeCount(group.counts.lateCount, 'lateCount'),
+    supersededCount: toSafeCount(group.counts.supersededCount, 'supersededCount'),
+    nonterminalCount: toSafeCount(group.counts.nonterminalCount, 'nonterminalCount'),
+    postCutoffCompletionCount: toSafeCount(
+      group.counts.postCutoffCompletionCount,
+      'postCutoffCompletionCount'
+    ),
+    lineageNotDifferentCount: toSafeCount(
+      group.counts.lineageNotDifferentCount,
+      'lineageNotDifferentCount'
+    ),
+    noPriorNodeExposureCount: toSafeCount(
+      group.counts.noPriorNodeExposureCount,
+      'noPriorNodeExposureCount'
+    ),
+    sourceRebuildReference: {
+      enrollmentIds: [...group.enrollmentIds].sort(),
+      assignmentIds: [...group.assignmentIds].sort(),
+      attemptIds: [...group.attemptIds].sort(),
+      // Canonical lowercase UUID/string ordering -- deliberately NOT ordinal
+      // ordering.
+      exposureIds: [...group.exposureIds].sort(),
+      evaluationIds: [...group.evaluationIds].sort(),
+    },
+  };
+}
+
+// Retention v1 ordering with the item-family identity inserted immediately
+// after `nodeId` (EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.5 "Ordering").
+function compareUnseenGroups(a, b) {
+  const left = a.groupKey;
+  const right = b.groupKey;
+  if (left.participantId !== right.participantId) {
+    return left.participantId < right.participantId ? -1 : 1;
+  }
+  if (left.nodeId !== right.nodeId) return left.nodeId < right.nodeId ? -1 : 1;
+  if (left.itemFamilyId !== right.itemFamilyId) {
+    return left.itemFamilyId < right.itemFamilyId ? -1 : 1;
+  }
+  if (left.itemFamilyVersion !== right.itemFamilyVersion) {
+    return left.itemFamilyVersion - right.itemFamilyVersion;
+  }
+  // DAY_7 before DAY_30.
+  const timepointDelta = RETENTION_TARGET_TIMEPOINTS.indexOf(left.targetTimepoint)
+    - RETENTION_TARGET_TIMEPOINTS.indexOf(right.targetTimepoint);
+  if (timepointDelta !== 0) return timepointDelta;
+  if (left.conditionId !== right.conditionId) return left.conditionId < right.conditionId ? -1 : 1;
+  if (left.conditionVersion !== right.conditionVersion) {
+    return left.conditionVersion - right.conditionVersion;
+  }
+  if (left.formulaId !== right.formulaId) return left.formulaId < right.formulaId ? -1 : 1;
+  return left.formulaVersion - right.formulaVersion;
+}
+
+// Response-wide reference: the array-by-array set-union of the group
+// references, canonicalized with the same ordering. Unlike Retention v1,
+// `exposureIds` is not fixed to [].
+function unionUnseenSourceRebuildReference(groups) {
+  const enrollmentIds = new Set();
+  const assignmentIds = new Set();
+  const attemptIds = new Set();
+  const exposureIds = new Set();
+  const evaluationIds = new Set();
+  for (const group of groups) {
+    for (const id of group.sourceRebuildReference.enrollmentIds) enrollmentIds.add(id);
+    for (const id of group.sourceRebuildReference.assignmentIds) assignmentIds.add(id);
+    for (const id of group.sourceRebuildReference.attemptIds) attemptIds.add(id);
+    for (const id of group.sourceRebuildReference.exposureIds) exposureIds.add(id);
+    for (const id of group.sourceRebuildReference.evaluationIds) evaluationIds.add(id);
+  }
+  return {
+    enrollmentIds: [...enrollmentIds].sort(),
+    assignmentIds: [...assignmentIds].sort(),
+    attemptIds: [...attemptIds].sort(),
+    exposureIds: [...exposureIds].sort(),
+    evaluationIds: [...evaluationIds].sort(),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Public operation.
 // ---------------------------------------------------------------------------
@@ -1845,13 +2915,14 @@ function unionMetricSourceRebuildReference(groups) {
 async function runMetricResult(client, validated) {
   const { formulaId, formulaVersion, analysisCutoff, aggregationGrain, filters } = validated;
 
-  // Transaction steps 1-3: exact FORMULA read, closed FORMULA validation,
-  // grain compatibility.
+  // Transaction steps 1-3: exact FORMULA read, definitionVersion dispatch,
+  // closed per-version FORMULA validation, grain compatibility. The metric
+  // kind is decided here and nowhere else.
   const formulaRow = await fetchFormulaRow(client, formulaId, formulaVersion);
-  const { minimumSample, earlyToleranceMs, lateToleranceMs } = validateClosedFormulaDefinition(
-    formulaRow.definition,
-    aggregationGrain
-  );
+  const definitionVersion = readFormulaDefinitionVersion(formulaRow.definition);
+  const { minimumSample, earlyToleranceMs, lateToleranceMs } = definitionVersion === 1
+    ? validateClosedFormulaDefinitionV1(formulaRow.definition, aggregationGrain)
+    : validateClosedFormulaDefinitionV2(formulaRow.definition, aggregationGrain);
 
   // Transaction step 4: filter existence validation (reuses this module's
   // RAW_SOURCE existence helpers -- already-open-client-only, no
@@ -1925,13 +2996,29 @@ async function runMetricResult(client, validated) {
   )];
   const evaluationMap = await selectEvaluationsForAttempts(client, evaluationAttemptIds, analysisCutoff);
 
-  // Transaction step 7: in-memory Retention reduction.
-  const groupAccumulators = reduceMetricCandidates(candidates, completionDetailMap, evaluationMap);
-  const groups = [...groupAccumulators.values()]
-    .map((group) => projectMetricGroup(group, minimumSample))
-    .sort(compareMetricGroups);
+  // Transaction step 7: in-memory reduction. Retention v1 reduces exactly as
+  // before; Unseen Transfer v2 layers rules 15/16 and the lineage authority
+  // validation on top of the same rule-1-14 classification.
+  let groups;
+  if (definitionVersion === 1) {
+    groups = [...reduceMetricCandidates(candidates, completionDetailMap, evaluationMap).values()]
+      .map((group) => projectMetricGroup(group, minimumSample))
+      .sort(compareMetricGroups);
+  } else {
+    const unseenAccumulators = await reduceUnseenCandidates(
+      client,
+      candidates,
+      completionDetailMap,
+      evaluationMap
+    );
+    groups = [...unseenAccumulators.values()]
+      .map((group) => projectUnseenGroup(group, minimumSample))
+      .sort(compareUnseenGroups);
+  }
 
-  // Transaction step 8: invariant / status / provenance validation.
+  // Transaction step 8: invariant / status / provenance validation. Identical
+  // for both versions -- `excludedCount` already carries the 10-bucket
+  // (Retention) or 12-bucket (Unseen Transfer) sum of its own version.
   for (const group of groups) {
     if (group.eligibleCount !== group.denominator) {
       throw new ContractViolationError('eligibleCount does not equal denominator');
@@ -1957,7 +3044,9 @@ async function runMetricResult(client, validated) {
     filters,
     status,
     groups,
-    sourceRebuildReference: unionMetricSourceRebuildReference(groups),
+    sourceRebuildReference: definitionVersion === 1
+      ? unionMetricSourceRebuildReference(groups)
+      : unionUnseenSourceRebuildReference(groups),
   };
 }
 

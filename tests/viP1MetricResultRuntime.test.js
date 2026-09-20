@@ -60,6 +60,123 @@ const GRAIN = ['PARTICIPANT', 'TARGET_NODE', 'ASSESSMENT_TIMEPOINT', 'CONDITION'
 const MINIMUM_SAMPLE = 2;
 const TOLERANCE_MS = 3600000;
 
+// ---------------------------------------------------------------------------
+// Unseen Transfer v2 fixture vocabulary (API_CONTRACT.md §13.10.11.3,
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.5 / §12.4.2 / §12.5). Synthetic only.
+// ---------------------------------------------------------------------------
+
+const GRAIN_V2 = [
+  'PARTICIPANT',
+  'TARGET_NODE',
+  'ITEM_FAMILY',
+  'ASSESSMENT_TIMEPOINT',
+  'CONDITION',
+  'FORMULA_VERSION',
+];
+
+const RULE_ORDER_V1 = [
+  'ASSIGNMENT_SUPERSEDED',
+  'ASSIGNMENT_WITHDRAWN',
+  'ASSIGNMENT_TECHNICAL_FAILURE',
+  'ASSIGNMENT_MISSING',
+  'ASSIGNMENT_UNSCORABLE',
+  'ASSIGNMENT_NORMAL_EMPTY',
+  'ASSIGNMENT_NONTERMINAL',
+  'POST_CUTOFF_COMPLETION',
+  'COMPLETION_EARLY',
+  'COMPLETION_LATE',
+  'ON_TIME_TECHNICAL_INVALID_ATTEMPT',
+  'ON_TIME_NORMAL_EMPTY_RESPONSE',
+  'ON_TIME_UNSCORABLE_ATTEMPT',
+  'ON_TIME_UNSCORABLE_NODE_EVALUATION',
+];
+const RULE_ORDER_V2 = [...RULE_ORDER_V1, 'ITEM_LINEAGE_NOT_DIFFERENT', 'NODE_PRIOR_EXPOSURE_ABSENT'];
+
+const LINEAGE_POLICY_V2 = {
+  historyScope: 'SAME_ENROLLMENT',
+  historyCutoffRule: 'EXPOSURE_ORDINAL_LTE_STORED_CUTOFF',
+  relevanceScope: 'FULL_ASSIGNMENT_TARGET_NODE_SET',
+  assignmentLineageRequirement: 'DIFFERENT_ITEM_FAMILY',
+  nodeExposureRequirement: 'EXPOSED_ASSIGNMENT_CONTAINS_NODE',
+  recomputationRule: 'REQUIRED_NULL_SAFE_MATCH',
+  priority: ['EXACT_REPEAT', 'SURFACE_VARIANT', 'SAME_ITEM_FAMILY', 'DIFFERENT_ITEM_FAMILY'],
+  itemRelationAuthority: 'VERSIONED_ITEM_LINEAGE_AUTHORITY_V1',
+};
+
+const SCENARIO_POLICY_V2 = {
+  primaryEligibilityRequirement: 'NONE',
+  primaryAggregation: 'NONE',
+  stratifiedOutput: 'DEFERRED_SEPARATE_OUTPUT',
+};
+
+const FORMULA_V2_ID = 'FORMULA_METRIC_UNSEEN_V2';
+
+// Exact 21-key Unseen Transfer group row, in canonical order.
+const UNSEEN_GROUP_ROW_KEYS = [
+  'groupKey',
+  'status',
+  'numerator',
+  'denominator',
+  'value',
+  'candidateCount',
+  'eligibleCount',
+  'excludedCount',
+  'missingCount',
+  'technicalFailureCount',
+  'withdrawnCount',
+  'unscorableCount',
+  'normalEmptyCount',
+  'earlyCount',
+  'lateCount',
+  'supersededCount',
+  'nonterminalCount',
+  'postCutoffCompletionCount',
+  'lineageNotDifferentCount',
+  'noPriorNodeExposureCount',
+  'sourceRebuildReference',
+];
+
+const UNSEEN_GROUP_KEY_KEYS = [
+  'participantId',
+  'nodeId',
+  'itemFamilyId',
+  'itemFamilyVersion',
+  'targetTimepoint',
+  'conditionId',
+  'conditionVersion',
+  'formulaId',
+  'formulaVersion',
+];
+
+// v2 ITEM/ITEM_FAMILY lineage fixtures. FAMILY_1 is the "prior" family and
+// FAMILY_2 the held-out target family, so a FAMILY_1 -> FAMILY_2 transition is
+// the canonical DIFFERENT_ITEM_FAMILY case. FAMILY_3 is a second held-out
+// family, used only to exercise item-family group ordering.
+const FAMILY_3 = 'FAMILY_METRIC_3';
+const ITEM_PRIOR = 'ITEM_UNSEEN_PRIOR';
+const ITEM_TARGET = 'ITEM_UNSEEN_TARGET';
+const ITEM_SV_TARGET = 'ITEM_UNSEEN_SV_TARGET';
+const ITEM_SV_PRIOR = 'ITEM_UNSEEN_SV_PRIOR';
+const ITEM_CANON_TARGET = 'ITEM_UNSEEN_CANON_TARGET';
+const ITEM_CANON_PRIOR = 'ITEM_UNSEEN_CANON_PRIOR';
+const ITEM_OUTSIDE_LA = 'ITEM_UNSEEN_OUTSIDE_LA';
+const ITEM_TAMPER_A = 'ITEM_UNSEEN_TAMPER_A';
+const ITEM_TAMPER_B = 'ITEM_UNSEEN_TAMPER_B';
+const ITEM_TAMPER_C = 'ITEM_UNSEEN_TAMPER_C';
+const ITEM_TAMPER_D = 'ITEM_UNSEEN_TAMPER_D';
+const ITEM_TAMPER_E = 'ITEM_UNSEEN_TAMPER_E';
+const ITEM_TAMPER_F = 'ITEM_UNSEEN_TAMPER_F';
+const ITEM_TAMPER_G = 'ITEM_UNSEEN_TAMPER_G';
+const ITEM_SV_DANGLING_TARGET = 'ITEM_UNSEEN_SV_DANGLING';
+const ITEM_NEVER_REGISTERED = 'ITEM_UNSEEN_NEVER_REGISTERED';
+
+// Above Number.MAX_SAFE_INTEGER (9007199254740991). As JavaScript Numbers
+// these two BIGINT values are indistinguishable -- 9007199254740993 rounds to
+// 9007199254740992 -- so any Number-based ordinal comparison authority is
+// detectable with them.
+const BIG_ORDINAL = '9007199254740993';
+const BIG_ORDINAL_MINUS_ONE = '9007199254740992';
+
 let openCounter = 0;
 let formulaSeq = 0;
 
@@ -217,6 +334,27 @@ function formulaDefinition(overrides = {}) {
   return { ...base, ...overrides };
 }
 
+// Exact closed FORMULA v2 (API_CONTRACT.md §13.10.11.3 /
+// EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.4.2): the v1 shape with
+// definitionVersion 2, metricKind UNSEEN_TRANSFER, the six-axis grain, the
+// 16-rule exclusion order, and the two new required subobjects.
+function formulaDefinitionV2(overrides = {}) {
+  return {
+    ...formulaDefinition(),
+    definitionVersion: 2,
+    metricKind: 'UNSEEN_TRANSFER',
+    aggregationGrain: GRAIN_V2.slice(),
+    exclusionPolicy: {
+      classificationRule: 'FIRST_MATCH',
+      matchedCandidateTreatment: 'EXCLUDE_AND_COUNT',
+      ruleOrder: RULE_ORDER_V2.slice(),
+    },
+    lineagePolicy: { ...LINEAGE_POLICY_V2, priority: LINEAGE_POLICY_V2.priority.slice() },
+    scenarioPolicy: { ...SCENARIO_POLICY_V2 },
+    ...overrides,
+  };
+}
+
 async function registerFormula(referenceId, definition) {
   return registerReference('FORMULA', referenceId, 1, definition);
 }
@@ -283,6 +421,125 @@ async function registerAuthorityFixture() {
   await registerFormula(FORMULA_ID, formulaDefinition());
   await registerFormula(FORMULA_ALT_ID, formulaDefinition());
   // FORMULA_UNKNOWN_ID is intentionally never registered.
+
+  await registerUnseenV2AuthorityFixture();
+}
+
+// ---------------------------------------------------------------------------
+// Unseen Transfer v2 authority fixtures.
+// ---------------------------------------------------------------------------
+
+function lineageAuthority({ canonicalStimulusId = null, surfaceVariantReferences = [] } = {}) {
+  return {
+    definitionType: 'EVIDENCE_ITEM_LINEAGE',
+    definitionVersion: 1,
+    canonicalStimulusId,
+    surfaceVariantReferences,
+  };
+}
+
+// `lineageAuthority` is an optional sub-object of the existing generic ITEM
+// `definition` JSONB -- no new reference kind, no new column, no migration.
+async function registerItem(itemId, authority, version = 1) {
+  const definition = { kind: 'ITEM', stableId: itemId, version };
+  if (authority !== undefined) definition.lineageAuthority = authority;
+  return repository.registerReferenceVersion(pool, {
+    referenceKind: 'ITEM',
+    referenceId: itemId,
+    version,
+    definition,
+  });
+}
+
+// Replaces a published ITEM definition in place. Used ONLY to inject a
+// reader-side stored-source contradiction that the assignment-creation writer
+// would itself have rejected at write time, so the METRIC_RESULT reader's own
+// whole-object L(A) validation can be exercised.
+async function tamperItemDefinition(itemId, version, definition) {
+  await pool.query(
+    `UPDATE evidence_reference_versions SET definition = $3::jsonb
+      WHERE reference_kind = 'ITEM' AND reference_id = $1 AND version = $2`,
+    [itemId, version, JSON.stringify(definition)]
+  );
+}
+
+async function setStoredItemLineage(assignmentId, resolvedItemLineage) {
+  await pool.query(
+    'UPDATE evidence_assignment_snapshots SET resolved_item_lineage = $2 WHERE assignment_id = $1',
+    [assignmentId, resolvedItemLineage]
+  );
+}
+
+async function setStoredCutoffOrdinal(assignmentId, cutoffOrdinalText) {
+  await pool.query(
+    `UPDATE evidence_assignment_snapshots
+        SET exposure_history_cutoff_ordinal = $2::bigint
+      WHERE assignment_id = $1`,
+    [assignmentId, cutoffOrdinalText]
+  );
+}
+
+async function setExposureOrdinal(assignmentId, ordinalText) {
+  await pool.query(
+    `UPDATE evidence_assignment_item_exposures
+        SET exposure_ordinal = $2::bigint
+      WHERE assignment_id = $1`,
+    [assignmentId, ordinalText]
+  );
+}
+
+async function readStoredSnapshotLineage(assignmentId) {
+  const { rows } = await pool.query(
+    `SELECT resolved_item_lineage,
+            exposure_history_cutoff_ordinal::text AS cutoff
+       FROM evidence_assignment_snapshots
+      WHERE assignment_id = $1`,
+    [assignmentId]
+  );
+  return rows[0];
+}
+
+async function registerUnseenV2AuthorityFixture() {
+  await registerReference('ITEM_FAMILY', FAMILY_3, 1);
+  // A second FAMILY_2 version, so "same family id, different family version"
+  // is a real, registered reference pair rather than a dangling one.
+  await registerReference('ITEM_FAMILY', FAMILY_2, 2);
+
+  await registerItem(ITEM_PRIOR);
+  await registerItem(ITEM_TARGET);
+  await registerItem(ITEM_OUTSIDE_LA);
+  // SV pair: the TARGET declares the direct relation, the PRIOR declares
+  // nothing -- reciprocal storage is not required.
+  await registerItem(ITEM_SV_TARGET, lineageAuthority({
+    surfaceVariantReferences: [{ itemId: ITEM_SV_PRIOR, itemVersion: 1 }],
+  }));
+  await registerItem(ITEM_SV_PRIOR);
+  // Shared non-null canonicalStimulusId across two distinct ITEM pairs.
+  await registerItem(ITEM_CANON_TARGET, lineageAuthority({ canonicalStimulusId: 'CANON-UNSEEN' }));
+  await registerItem(ITEM_CANON_PRIOR, lineageAuthority({ canonicalStimulusId: 'CANON-UNSEEN' }));
+  // Items registered clean, then tampered per-test.
+  for (const itemId of [
+    ITEM_TAMPER_A,
+    ITEM_TAMPER_B,
+    ITEM_TAMPER_C,
+    ITEM_TAMPER_D,
+    ITEM_TAMPER_E,
+    ITEM_TAMPER_F,
+    ITEM_TAMPER_G,
+    ITEM_SV_DANGLING_TARGET,
+  ]) {
+    await registerItem(itemId);
+  }
+  // ITEM_NEVER_REGISTERED is intentionally never registered.
+
+  await registerFormula(FORMULA_V2_ID, formulaDefinitionV2());
+}
+
+async function registerNegativeFormulaV2(definition) {
+  formulaSeq += 1;
+  const referenceId = `FORMULA_METRIC_NEG_V2_${formulaSeq}`;
+  await registerFormula(referenceId, definition);
+  return referenceId;
 }
 
 async function newParticipant() {
@@ -308,12 +565,15 @@ function assignmentInput(enrollmentId, overrides = {}) {
     anchorStrategy: 'NODE_ASSIGNMENT_COMPLETION',
     targetNodeIds: overrides.targetNodeIds ?? [NODE_A],
     references: {
-      itemId: ITEM_ID,
-      itemVersion: 1,
+      // itemId/itemVersion/itemFamilyVersion overrides exist for the Unseen
+      // Transfer v2 lineage fixtures; every pre-existing caller omits them and
+      // keeps the original ITEM_ID@1 / FAMILY@1 pinning unchanged.
+      itemId: overrides.itemId ?? ITEM_ID,
+      itemVersion: overrides.itemVersion ?? 1,
       scenarioId: SCENARIO_ID,
       scenarioVersion: 1,
       itemFamilyId: overrides.itemFamilyId ?? FAMILY_1,
-      itemFamilyVersion: 1,
+      itemFamilyVersion: overrides.itemFamilyVersion ?? 1,
       lexicalManifestId: LEXICAL_ID,
       lexicalManifestVersion: 1,
       rubricId: RUBRIC_ID,
@@ -550,6 +810,117 @@ function baseInput(overrides = {}) {
     filters: baseFilters(),
     ...overrides,
   };
+}
+
+function baseInputV2(overrides = {}) {
+  return {
+    formulaId: FORMULA_V2_ID,
+    formulaVersion: 1,
+    analysisCutoff: FAR_FUTURE_CUTOFF,
+    aggregationGrain: GRAIN_V2.slice(),
+    filters: baseFilters(),
+    ...overrides,
+  };
+}
+
+// A prior, already-exposed assignment in the SAME enrollment. Pinned to
+// IMMEDIATE so it can never itself enter the DAY_7/DAY_30 candidate
+// population, while still owning an authoritative first-exposure fact and a
+// full immutable target-node set.
+async function newExposedPriorAssignment(enrollmentId, {
+  itemId = ITEM_PRIOR,
+  itemVersion = 1,
+  itemFamilyId = FAMILY_1,
+  itemFamilyVersion = 1,
+  targetNodeIds = [NODE_A],
+} = {}) {
+  const created = await newAssignment(enrollmentId, {
+    itemId,
+    itemVersion,
+    itemFamilyId,
+    itemFamilyVersion,
+    targetNodeIds,
+    targetTimepoint: 'IMMEDIATE',
+    formulaId: FORMULA_V2_ID,
+  });
+  const assignmentId = created.assignment.assignment_id;
+  const exposure = await repository.recordAssignmentItemExposure(pool, { assignmentId });
+  return { created, assignmentId, exposure };
+}
+
+// One Unseen Transfer v2 target ASSESSMENT candidate assignment, pinned to the
+// v2 FORMULA, created AFTER any prior exposure so its assignment-time
+// exposure_history_cutoff_ordinal / resolved_item_lineage are resolved by the
+// real writer rather than seeded.
+async function newUnseenTarget(enrollment, {
+  itemId = ITEM_TARGET,
+  itemVersion = 1,
+  itemFamilyId = FAMILY_2,
+  itemFamilyVersion = 1,
+  targetNodeIds = [NODE_A],
+  targetTimepoint = 'DAY_7',
+  dueAt,
+} = {}) {
+  return newCandidateAssignment({
+    enrollment,
+    itemId,
+    itemVersion,
+    itemFamilyId,
+    itemFamilyVersion,
+    targetNodeIds,
+    targetTimepoint,
+    formulaId: FORMULA_V2_ID,
+    dueAt,
+  });
+}
+
+// Attaches an exactly-ON_TIME scorable completion (finalized_at == due_at) and
+// one evaluation per supplied node.
+async function completeUnseenTarget(target, evaluations) {
+  const session = await newSession(target.enrollment.enrollment_id);
+  const attempt = await newAttempt(target.assignmentId, session.session_id);
+  await finalizeWith(attempt, evaluations);
+  await forceTimeliness(attempt, target.assignmentId, target.dueAt);
+  return attempt;
+}
+
+// The canonical positive shape: prior FAMILY_1 exposure on NODE_A, then a
+// held-out FAMILY_2 target on NODE_A, completed ON_TIME and correct.
+async function newEligibleUnseenCandidate(options = {}) {
+  const enrollment = options.enrollment ?? await newEnrollment(options.conditionId);
+  const prior = await newExposedPriorAssignment(enrollment.enrollment_id, options.prior);
+  const target = await newUnseenTarget(enrollment, options.target);
+  const attempt = await completeUnseenTarget(
+    target,
+    options.evaluations ?? [correctEvaluation(NODE_A)]
+  );
+  return { enrollment, prior, target, attempt };
+}
+
+function findUnseenGroup(result, nodeId, itemFamilyId = FAMILY_2, targetTimepoint = 'DAY_7') {
+  return result.groups.find((group) => (
+    group.groupKey.nodeId === nodeId
+    && group.groupKey.itemFamilyId === itemFamilyId
+    && group.groupKey.targetTimepoint === targetTimepoint
+  ));
+}
+
+// Own-property presence, so "key absent" is asserted directly rather than
+// inferred from an undefined value.
+function hasOwnKey(value, key) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+// A complete, rule-1-14-surviving v2 candidate whose TARGET assignment pins
+// the supplied ITEM. The ITEM is still canonical at assignment-creation time
+// (the writer would reject a broken one), so the reader-side L(A) defect is
+// injected afterwards with `tamperItemDefinition`.
+async function unseenCandidateWithTargetItem(itemId) {
+  const enrollment = await newEnrollment();
+  const prior = await newExposedPriorAssignment(enrollment.enrollment_id);
+  const target = await newUnseenTarget(enrollment, { itemId });
+  const attempt = await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+  return { enrollment, prior, target, attempt };
 }
 
 async function rejectsWithCode(fn, code) {
@@ -2761,5 +3132,1386 @@ describe('VI P1 METRIC_RESULT Retention v1 runtime (queryMetricResult)', { concu
     assert.equal(group.lateCount, 0);
     assert.equal(group.denominator, 1);
     assert.equal(group.numerator, 1);
+  });
+
+  // ###########################################################################
+  // METRIC_RESULT Unseen Transfer v2 (API_CONTRACT.md §13.10.11.3,
+  // EVIDENCE_FOUNDATION_P0_SCHEMA.md §12.3.5 / §12.4.2 / Unseen transfer
+  // portion of §12.5). Synthetic fixtures only -- no human/learner data, no
+  // migration, no DDL, current schema only.
+  // ###########################################################################
+
+  // ===========================================================================
+  // U1. definitionVersion dispatch and Retention v1 mutual exclusivity.
+  // ===========================================================================
+
+  test('U01 a definitionVersion 2 FORMULA dispatches to UNSEEN_TRANSFER and returns the exact 21-key group row', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.ok(group, 'expected an Unseen Transfer group for NODE_A/FAMILY_2');
+    assert.deepEqual(Object.keys(group), UNSEEN_GROUP_ROW_KEYS);
+    assert.deepEqual(Object.keys(group.groupKey), UNSEEN_GROUP_KEY_KEYS);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 1);
+    assert.equal(group.lineageNotDifferentCount, 0);
+    assert.equal(group.noPriorNodeExposureCount, 0);
+  });
+
+  test('U02 Retention v1 remains the 19-key row with the 7-key groupKey alongside v2 usage', async () => {
+    const { enrollment } = await candidateWithTimeliness(DUE_AT, [correctEvaluation(NODE_A)]);
+    const result = await queryMetricResult(pool, baseInput({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findGroup(result, NODE_A);
+    assert.equal(Object.keys(group).length, 19);
+    assert.equal(Object.keys(group.groupKey).length, 7);
+    assert.equal(hasOwnKey(group, 'lineageNotDifferentCount'), false);
+    assert.equal(hasOwnKey(group, 'noPriorNodeExposureCount'), false);
+    assert.equal(hasOwnKey(group.groupKey, 'itemFamilyId'), false);
+    assert.equal(hasOwnKey(group.groupKey, 'itemFamilyVersion'), false);
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, []);
+  });
+
+  test('U03 definitionVersion 1 claiming UNSEEN_TRANSFER stays CONTRACT_VIOLATION (version-aware, not deleted)', async () => {
+    const badId = await registerNegativeFormula(formulaDefinition({ metricKind: 'UNSEEN_TRANSFER' }));
+    const enrollment = await newEnrollment();
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        formulaId: badId,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U04 definitionVersion 2 claiming RETENTION is CONTRACT_VIOLATION', async () => {
+    const badId = await registerNegativeFormulaV2(formulaDefinitionV2({ metricKind: 'RETENTION' }));
+    const enrollment = await newEnrollment();
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        formulaId: badId,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U05 definitionVersion outside the closed {1, 2} set is CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    const badDefinitions = [
+      formulaDefinitionV2({ definitionVersion: 3 }),
+      formulaDefinitionV2({ definitionVersion: '2' }),
+      formulaDefinitionV2({ definitionVersion: 0 }),
+      formulaDefinitionV2({ definitionVersion: 2.0000001 }),
+    ];
+    for (const definition of badDefinitions) {
+      const badId = await registerNegativeFormulaV2(definition);
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  // ===========================================================================
+  // U2. Exact closed FORMULA v2 shape.
+  // ===========================================================================
+
+  test('U06 the exact closed FORMULA v2 is accepted and formulaReference echoes digest metadata', async () => {
+    const enrollment = await newEnrollment();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(result.formulaReference.formulaId, FORMULA_V2_ID);
+    assert.equal(result.formulaReference.formulaVersion, 1);
+    assert.equal(typeof result.formulaReference.definitionDigest, 'string');
+    assert.equal(typeof result.formulaReference.digestAlgorithm, 'string');
+    assert.equal(typeof result.formulaReference.normalizationVersion, 'string');
+  });
+
+  test('U07 a missing or extra FORMULA v2 top-level key is CONTRACT_VIOLATION (exactly 16 required keys)', async () => {
+    const enrollment = await newEnrollment();
+    const broken = [];
+    for (const key of ['lineagePolicy', 'scenarioPolicy', 'exclusionPolicy', 'minimumSample']) {
+      const definition = formulaDefinitionV2();
+      delete definition[key];
+      broken.push(definition);
+    }
+    broken.push({ ...formulaDefinitionV2(), unexpectedKey: 1 });
+    // The v1 14-key shape carrying definitionVersion 2 is also not a v2 shape.
+    broken.push(formulaDefinition({
+      definitionVersion: 2,
+      metricKind: 'UNSEEN_TRANSFER',
+      aggregationGrain: GRAIN_V2.slice(),
+    }));
+
+    for (const definition of broken) {
+      const badId = await registerNegativeFormulaV2(definition);
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  test('U08 a v2 FORMULA carrying the Retention 14-rule ruleOrder is CONTRACT_VIOLATION', async () => {
+    const badId = await registerNegativeFormulaV2(formulaDefinitionV2({
+      exclusionPolicy: {
+        classificationRule: 'FIRST_MATCH',
+        matchedCandidateTreatment: 'EXCLUDE_AND_COUNT',
+        ruleOrder: RULE_ORDER_V1.slice(),
+      },
+    }));
+    const enrollment = await newEnrollment();
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        formulaId: badId,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U09 rule 15/16 swapped in ruleOrder is CONTRACT_VIOLATION (exact fixed-array order)', async () => {
+    const swapped = RULE_ORDER_V1.concat(['NODE_PRIOR_EXPOSURE_ABSENT', 'ITEM_LINEAGE_NOT_DIFFERENT']);
+    const badId = await registerNegativeFormulaV2(formulaDefinitionV2({
+      exclusionPolicy: {
+        classificationRule: 'FIRST_MATCH',
+        matchedCandidateTreatment: 'EXCLUDE_AND_COUNT',
+        ruleOrder: swapped,
+      },
+    }));
+    const enrollment = await newEnrollment();
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        formulaId: badId,
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U10 any noncanonical lineagePolicy value, priority order, missing key or extra key is CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    const variants = [
+      { ...LINEAGE_POLICY_V2, historyScope: 'ANY_ENROLLMENT' },
+      { ...LINEAGE_POLICY_V2, relevanceScope: 'CALLER_FILTERED_NODE_SUBSET' },
+      { ...LINEAGE_POLICY_V2, assignmentLineageRequirement: 'SAME_ITEM_FAMILY' },
+      { ...LINEAGE_POLICY_V2, recomputationRule: 'NOT_REQUIRED' },
+      { ...LINEAGE_POLICY_V2, itemRelationAuthority: 'FUZZY_TEXT_SIMILARITY' },
+      // Reordered priority: the canonical order is fixed.
+      {
+        ...LINEAGE_POLICY_V2,
+        priority: ['SURFACE_VARIANT', 'EXACT_REPEAT', 'SAME_ITEM_FAMILY', 'DIFFERENT_ITEM_FAMILY'],
+      },
+      // Truncated priority array.
+      { ...LINEAGE_POLICY_V2, priority: ['EXACT_REPEAT', 'SURFACE_VARIANT', 'SAME_ITEM_FAMILY'] },
+      { ...LINEAGE_POLICY_V2, unexpectedKey: true },
+    ];
+    const withoutKey = { ...LINEAGE_POLICY_V2 };
+    delete withoutKey.nodeExposureRequirement;
+    variants.push(withoutKey);
+
+    for (const lineagePolicy of variants) {
+      const badId = await registerNegativeFormulaV2(formulaDefinitionV2({ lineagePolicy }));
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  test('U11 any noncanonical scenarioPolicy value is CONTRACT_VIOLATION (scenario stays non-primary, output deferred)', async () => {
+    const enrollment = await newEnrollment();
+    const variants = [
+      { ...SCENARIO_POLICY_V2, primaryEligibilityRequirement: 'UNSEEN_SCENARIO' },
+      { ...SCENARIO_POLICY_V2, primaryAggregation: 'SCENARIO' },
+      { ...SCENARIO_POLICY_V2, stratifiedOutput: 'PRODUCED' },
+      { ...SCENARIO_POLICY_V2, unexpectedKey: 1 },
+    ];
+    for (const scenarioPolicy of variants) {
+      const badId = await registerNegativeFormulaV2(formulaDefinitionV2({ scenarioPolicy }));
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  test('U12 an explicit null anywhere inside FORMULA v2 is CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    const nullBearing = [
+      formulaDefinitionV2({ minimumSample: null }),
+      formulaDefinitionV2({ metricKind: null }),
+      formulaDefinitionV2({ lineagePolicy: null }),
+      formulaDefinitionV2({ scenarioPolicy: null }),
+      formulaDefinitionV2({ lineagePolicy: { ...LINEAGE_POLICY_V2, historyScope: null } }),
+      formulaDefinitionV2({
+        lineagePolicy: {
+          ...LINEAGE_POLICY_V2,
+          priority: ['EXACT_REPEAT', 'SURFACE_VARIANT', 'SAME_ITEM_FAMILY', null],
+        },
+      }),
+      formulaDefinitionV2({ scenarioPolicy: { ...SCENARIO_POLICY_V2, primaryAggregation: null } }),
+      formulaDefinitionV2({
+        exclusionPolicy: {
+          classificationRule: 'FIRST_MATCH',
+          matchedCandidateTreatment: 'EXCLUDE_AND_COUNT',
+          ruleOrder: RULE_ORDER_V1.concat(['ITEM_LINEAGE_NOT_DIFFERENT', null]),
+        },
+      }),
+    ];
+    for (const definition of nullBearing) {
+      const badId = await registerNegativeFormulaV2(definition);
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  test('U13 v2 minimumSample / tolerance boundaries behave exactly as v1', async () => {
+    const enrollment = await newEnrollment();
+    const rejected = [
+      formulaDefinitionV2({ minimumSample: 0 }),
+      formulaDefinitionV2({ minimumSample: Number.MAX_SAFE_INTEGER + 1 }),
+      formulaDefinitionV2({
+        timeliness: {
+          basis: 'ASSIGNMENT_DUE_AT',
+          observationTimestamp: 'FINALIZATION_FINALIZED_AT',
+          earlyToleranceMs: -1,
+          lateToleranceMs: TOLERANCE_MS,
+          lowerBoundInclusive: true,
+          upperBoundInclusive: true,
+        },
+      }),
+    ];
+    for (const definition of rejected) {
+      const badId = await registerNegativeFormulaV2(definition);
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          formulaId: badId,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+    const okId = await registerNegativeFormulaV2(formulaDefinitionV2({ minimumSample: 1 }));
+    const result = await queryMetricResult(pool, baseInputV2({
+      formulaId: okId,
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(result.status, 'INSUFFICIENT');
+    assert.deepEqual(result.groups, []);
+  });
+
+  // ===========================================================================
+  // U3. Six-axis aggregation grain exactness/order.
+  // ===========================================================================
+
+  test('U14 the v2 grain is the exact six-axis array in canonical order and is echoed unchanged', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.deepEqual(result.aggregationGrain, [
+      'PARTICIPANT',
+      'TARGET_NODE',
+      'ITEM_FAMILY',
+      'ASSESSMENT_TIMEPOINT',
+      'CONDITION',
+      'FORMULA_VERSION',
+    ]);
+  });
+
+  test('U15 a v2 FORMULA carrying the five-axis Retention grain is CONTRACT_VIOLATION', async () => {
+    const badId = await registerNegativeFormulaV2(formulaDefinitionV2({
+      aggregationGrain: GRAIN.slice(),
+    }));
+    const enrollment = await newEnrollment();
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        formulaId: badId,
+        aggregationGrain: GRAIN.slice(),
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U16 caller/FORMULA grain cross-version mismatch is CONTRACT_VIOLATION in both directions', async () => {
+    const enrollment = await newEnrollment();
+    // Six-axis caller grain against a definitionVersion 1 FORMULA.
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInput({
+        aggregationGrain: GRAIN_V2.slice(),
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+    // Five-axis caller grain against a definitionVersion 2 FORMULA.
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        aggregationGrain: GRAIN.slice(),
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U17 a reordered, truncated or extended six-axis caller grain is CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    const badGrains = [
+      GRAIN_V2.slice().reverse(),
+      GRAIN_V2.slice(0, 5),
+      GRAIN_V2.concat(['SCENARIO']),
+      ['PARTICIPANT', 'ITEM_FAMILY', 'TARGET_NODE', 'ASSESSMENT_TIMEPOINT', 'CONDITION', 'FORMULA_VERSION'],
+    ];
+    for (const aggregationGrain of badGrains) {
+      await rejectsWithCode(
+        () => queryMetricResult(pool, baseInputV2({
+          aggregationGrain,
+          filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+        })),
+        'CONTRACT_VIOLATION'
+      );
+    }
+  });
+
+  // ===========================================================================
+  // U4. Group key / output projection / ordering / zero-candidate envelope.
+  // ===========================================================================
+
+  test('U18 the nine-key groupKey carries the snapshot item-family identity, including its version', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id);
+    const target = await newUnseenTarget(enrollment, { itemFamilyId: FAMILY_2, itemFamilyVersion: 2 });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(result.groups.length, 1);
+    const [group] = result.groups;
+    assert.deepEqual(Object.keys(group.groupKey), UNSEEN_GROUP_KEY_KEYS);
+    assert.equal(group.groupKey.itemFamilyId, FAMILY_2);
+    assert.equal(group.groupKey.itemFamilyVersion, 2);
+    assert.equal(group.groupKey.nodeId, NODE_A);
+    assert.equal(group.groupKey.targetTimepoint, 'DAY_7');
+    assert.equal(group.groupKey.formulaId, FORMULA_V2_ID);
+    assert.equal(group.groupKey.formulaVersion, 1);
+    // Scenario / enrollment / experiment are NOT group-key fields.
+    for (const forbidden of ['scenarioId', 'scenarioVersion', 'enrollmentId', 'experimentId']) {
+      assert.equal(hasOwnKey(group.groupKey, forbidden), false);
+    }
+  });
+
+  test('U19 group ordering inserts item-family identity immediately after nodeId', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A, NODE_B] });
+
+    const family3Day7 = await newUnseenTarget(enrollment, {
+      itemFamilyId: FAMILY_3,
+      targetNodeIds: [NODE_A],
+    });
+    await completeUnseenTarget(family3Day7, [correctEvaluation(NODE_A)]);
+
+    const family2Day30 = await newUnseenTarget(enrollment, {
+      itemFamilyId: FAMILY_2,
+      targetNodeIds: [NODE_A],
+      targetTimepoint: 'DAY_30',
+    });
+    await completeUnseenTarget(family2Day30, [correctEvaluation(NODE_A)]);
+
+    const family2Day7 = await newUnseenTarget(enrollment, {
+      itemFamilyId: FAMILY_2,
+      targetNodeIds: [NODE_A],
+    });
+    await completeUnseenTarget(family2Day7, [correctEvaluation(NODE_A)]);
+
+    const nodeBFamily2 = await newUnseenTarget(enrollment, {
+      itemFamilyId: FAMILY_2,
+      targetNodeIds: [NODE_B],
+    });
+    await completeUnseenTarget(nodeBFamily2, [correctEvaluation(NODE_B)]);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.deepEqual(
+      result.groups.map((group) => [
+        group.groupKey.nodeId,
+        group.groupKey.itemFamilyId,
+        group.groupKey.targetTimepoint,
+      ]),
+      [
+        [NODE_A, FAMILY_2, 'DAY_7'],
+        [NODE_A, FAMILY_2, 'DAY_30'],
+        [NODE_A, FAMILY_3, 'DAY_7'],
+        [NODE_B, FAMILY_2, 'DAY_7'],
+      ]
+    );
+  });
+
+  test('U20 zero-candidate v2 is the exact normal seven-key envelope, never RAW_SOURCE empty_result', async () => {
+    const enrollment = await newEnrollment();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.deepEqual(Object.keys(result).sort(), [
+      'aggregationGrain', 'analysisCutoff', 'filters', 'formulaReference',
+      'groups', 'sourceRebuildReference', 'status',
+    ]);
+    assert.deepEqual(result.groups, []);
+    assert.equal(result.status, 'INSUFFICIENT');
+    assert.equal(hasOwnKey(result, 'data'), false);
+    assert.deepEqual(result.sourceRebuildReference.exposureIds, []);
+  });
+
+  // ===========================================================================
+  // U5. Lineage priority / DIFFERENT_ITEM_FAMILY eligibility / null lineage.
+  // ===========================================================================
+
+  test('U21 stored DIFFERENT_ITEM_FAMILY is the primary unseen eligibility', async () => {
+    const { target, enrollment } = await newEligibleUnseenCandidate();
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'DIFFERENT_ITEM_FAMILY'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.eligibleCount, 1);
+    assert.equal(group.excludedCount, 0);
+  });
+
+  test('U22 EXACT_REPEAT (exact snapshot ITEM pair equality) is rule 15, not eligible', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemId: ITEM_TARGET });
+    const target = await newUnseenTarget(enrollment, { itemId: ITEM_TARGET });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'EXACT_REPEAT'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.lineageNotDifferentCount, 1);
+    assert.equal(group.denominator, 0);
+    assert.equal(group.noPriorNodeExposureCount, 0);
+  });
+
+  test('U23 EXACT_REPEAT via a shared non-null canonicalStimulusId is rule 15', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemId: ITEM_CANON_PRIOR });
+    const target = await newUnseenTarget(enrollment, { itemId: ITEM_CANON_TARGET });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'EXACT_REPEAT'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(findUnseenGroup(result, NODE_A).lineageNotDifferentCount, 1);
+  });
+
+  test('U24 SURFACE_VARIANT via a one-directional direct relation is rule 15 (no reciprocal edge required)', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemId: ITEM_SV_PRIOR });
+    const target = await newUnseenTarget(enrollment, { itemId: ITEM_SV_TARGET });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'SURFACE_VARIANT'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(findUnseenGroup(result, NODE_A).lineageNotDifferentCount, 1);
+  });
+
+  test('U25 SAME_ITEM_FAMILY is rule 15', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemFamilyId: FAMILY_2 });
+    const target = await newUnseenTarget(enrollment, { itemFamilyId: FAMILY_2 });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'SAME_ITEM_FAMILY'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(findUnseenGroup(result, NODE_A).lineageNotDifferentCount, 1);
+  });
+
+  test('U26 item-family version does not change the SAME_ITEM_FAMILY identity test', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, {
+      itemFamilyId: FAMILY_2,
+      itemFamilyVersion: 1,
+    });
+    const target = await newUnseenTarget(enrollment, {
+      itemFamilyId: FAMILY_2,
+      itemFamilyVersion: 2,
+    });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'SAME_ITEM_FAMILY'
+    );
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A, FAMILY_2);
+    assert.equal(group.groupKey.itemFamilyVersion, 2);
+    assert.equal(group.lineageNotDifferentCount, 1);
+  });
+
+  test('U27 null lineage is rule 15 and is never coerced into DIFFERENT_ITEM_FAMILY', async () => {
+    const enrollment = await newEnrollment();
+    // No prior exposure at all -> C(A) = 0, R(A) empty, stored lineage null.
+    const target = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    const stored = await readStoredSnapshotLineage(target.assignmentId);
+    assert.equal(stored.resolved_item_lineage, null);
+    assert.equal(stored.cutoff, '0');
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.lineageNotDifferentCount, 1);
+    assert.equal(group.noPriorNodeExposureCount, 0);
+    assert.equal(group.denominator, 0);
+    // C(A) = 0 contributes no exposure provenance.
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, []);
+    // The stored authority is validated, never overwritten.
+    assert.equal((await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage, null);
+  });
+
+  // ===========================================================================
+  // U6. Same-enrollment history boundary / cutoff boundary.
+  // ===========================================================================
+
+  test('U28 an exposure whose ordinal exceeds C(A) is outside H(A) and contributes nothing', async () => {
+    const enrollment = await newEnrollment();
+    // Target first: C(A) = 0. The exposure is recorded afterwards, so its
+    // ordinal is strictly greater than the stored cutoff.
+    const target = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+    const later = await newExposedPriorAssignment(enrollment.enrollment_id);
+    assert.ok(BigInt(later.exposure.exposureOrdinal) > 0n);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    // Later exposures never retroactively reclassify the assignment.
+    assert.equal(group.lineageNotDifferentCount, 1);
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, []);
+  });
+
+  test('U29 a cross-enrollment exposure at or below C(A) never participates in H(A)', async () => {
+    const otherEnrollment = await newEnrollment();
+    const otherPrior = await newExposedPriorAssignment(otherEnrollment.enrollment_id);
+
+    const enrollment = await newEnrollment();
+    const ownPrior = await newExposedPriorAssignment(enrollment.enrollment_id);
+    const target = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    // The other enrollment's exposure ordinal is strictly below this
+    // assignment's cutoff, so only the same-enrollment rule can exclude it.
+    assert.ok(
+      BigInt(otherPrior.exposure.exposureOrdinal)
+        < BigInt((await readStoredSnapshotLineage(target.assignmentId)).cutoff)
+    );
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, [ownPrior.exposure.exposureId]);
+    assert.equal(
+      group.sourceRebuildReference.assignmentIds.includes(otherPrior.assignmentId),
+      false
+    );
+  });
+
+  // ===========================================================================
+  // U7. Node-level prior target exposure / NODE_PRIOR_EXPOSURE_ABSENT.
+  // ===========================================================================
+
+  test('U30 DIFFERENT_ITEM_FAMILY with an empty N(A,n) is the normal NODE_PRIOR_EXPOSURE_ABSENT bucket, not CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    // Prior target-node set covers NODE_B only.
+    await newExposedPriorAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_B] });
+    const target = await newUnseenTarget(enrollment, { targetNodeIds: [NODE_A, NODE_B] });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A), correctEvaluation(NODE_B)]);
+
+    // Assignment-level lineage is DIFFERENT_ITEM_FAMILY (R(A) intersects at
+    // NODE_B); the node-level requirement is a separate one.
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'DIFFERENT_ITEM_FAMILY'
+    );
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const nodeAGroup = findUnseenGroup(result, NODE_A);
+    const nodeBGroup = findUnseenGroup(result, NODE_B);
+    assert.equal(nodeAGroup.noPriorNodeExposureCount, 1);
+    assert.equal(nodeAGroup.lineageNotDifferentCount, 0);
+    assert.equal(nodeAGroup.denominator, 0);
+    assert.equal(nodeBGroup.denominator, 1);
+    assert.equal(nodeBGroup.noPriorNodeExposureCount, 0);
+  });
+
+  test('U31 rule 15 precedes rule 16 for a candidate matching both', async () => {
+    const enrollment = await newEnrollment();
+    // Prior covers NODE_B only AND shares the target family -> lineage is
+    // SAME_ITEM_FAMILY, and N(A, NODE_A) is empty too.
+    await newExposedPriorAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_B],
+      itemFamilyId: FAMILY_2,
+    });
+    const target = await newUnseenTarget(enrollment, {
+      targetNodeIds: [NODE_A, NODE_B],
+      itemFamilyId: FAMILY_2,
+    });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A), correctEvaluation(NODE_B)]);
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'SAME_ITEM_FAMILY'
+    );
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const nodeAGroup = findUnseenGroup(result, NODE_A);
+    assert.equal(nodeAGroup.lineageNotDifferentCount, 1);
+    assert.equal(nodeAGroup.noPriorNodeExposureCount, 0);
+  });
+
+  // ===========================================================================
+  // U8. V(A) stored-source contradictions (always CONTRACT_VIOLATION).
+  // ===========================================================================
+
+  test('U32 stored null with a non-null recomputed lineage is CONTRACT_VIOLATION', async () => {
+    const { target, enrollment } = await newEligibleUnseenCandidate();
+    await setStoredItemLineage(target.assignmentId, null);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U33 stored non-null differing from the recomputed lineage is CONTRACT_VIOLATION', async () => {
+    const { target, enrollment } = await newEligibleUnseenCandidate();
+    await setStoredItemLineage(target.assignmentId, 'SAME_ITEM_FAMILY');
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U34 stored non-null with a recomputed null (empty R(A)) is CONTRACT_VIOLATION', async () => {
+    const enrollment = await newEnrollment();
+    const target = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+    await setStoredItemLineage(target.assignmentId, 'DIFFERENT_ITEM_FAMILY');
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U35 a missing cutoff witness W(A) for C(A) > 0 is CONTRACT_VIOLATION', async () => {
+    const { target, enrollment, prior } = await newEligibleUnseenCandidate();
+    const stored = await readStoredSnapshotLineage(target.assignmentId);
+    assert.equal(stored.cutoff, prior.exposure.exposureOrdinal);
+    // Raise the stored cutoff to an ordinal no exposure occupies.
+    await setStoredCutoffOrdinal(target.assignmentId, (BigInt(stored.cutoff) + 1000n).toString());
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U36 an assignment appearing in its own H(A) is CONTRACT_VIOLATION (self-exclusion)', async () => {
+    const { target, enrollment } = await newEligibleUnseenCandidate();
+    const ownExposure = await repository.recordAssignmentItemExposure(pool, {
+      assignmentId: target.assignmentId,
+    });
+    await setStoredCutoffOrdinal(target.assignmentId, ownExposure.exposureOrdinal);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U37 an H(A) owner without an immutable snapshot is CONTRACT_VIOLATION', async () => {
+    const { enrollment, prior } = await newEligibleUnseenCandidate();
+    await pool.query(
+      'DELETE FROM evidence_assignment_snapshot_nodes WHERE assignment_id = $1',
+      [prior.assignmentId]
+    );
+    await pool.query(
+      'DELETE FROM evidence_assignment_snapshots WHERE assignment_id = $1',
+      [prior.assignmentId]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U38 an H(A) owner with an empty target-node set is CONTRACT_VIOLATION', async () => {
+    const { enrollment, prior } = await newEligibleUnseenCandidate();
+    await pool.query(
+      'DELETE FROM evidence_assignment_snapshot_nodes WHERE assignment_id = $1',
+      [prior.assignmentId]
+    );
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U39 a source contradiction is never converted into a lineage exclusion bucket', async () => {
+    const { target, enrollment } = await newEligibleUnseenCandidate();
+    await setStoredItemLineage(target.assignmentId, 'EXACT_REPEAT');
+    // If the contradiction were silently absorbed, the call would resolve with
+    // lineageNotDifferentCount = 1 instead of failing.
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  // ===========================================================================
+  // U9. L(A) whole-object lineageAuthority validation.
+  // ===========================================================================
+
+  test('U40 a consumed ITEM with an explicit null lineageAuthority is CONTRACT_VIOLATION', async () => {
+    const { enrollment } = await unseenCandidateWithTargetItem(ITEM_TAMPER_A);
+    await tamperItemDefinition(ITEM_TAMPER_A, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_A,
+      version: 1,
+      lineageAuthority: null,
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U41 an exact self-reference in surfaceVariantReferences is CONTRACT_VIOLATION', async () => {
+    const { enrollment } = await unseenCandidateWithTargetItem(ITEM_TAMPER_B);
+    await tamperItemDefinition(ITEM_TAMPER_B, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_B,
+      version: 1,
+      lineageAuthority: lineageAuthority({
+        surfaceVariantReferences: [{ itemId: ITEM_TAMPER_B, itemVersion: 1 }],
+      }),
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U42 a duplicate exact ITEM pair in surfaceVariantReferences is CONTRACT_VIOLATION', async () => {
+    const { enrollment } = await unseenCandidateWithTargetItem(ITEM_TAMPER_C);
+    await tamperItemDefinition(ITEM_TAMPER_C, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_C,
+      version: 1,
+      lineageAuthority: lineageAuthority({
+        surfaceVariantReferences: [
+          { itemId: ITEM_PRIOR, itemVersion: 1 },
+          { itemId: ITEM_PRIOR, itemVersion: 1 },
+        ],
+      }),
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U43 a dangling surfaceVariantReferences entry is CONTRACT_VIOLATION (never invented or backfilled)', async () => {
+    const { enrollment } = await unseenCandidateWithTargetItem(ITEM_SV_DANGLING_TARGET);
+    await tamperItemDefinition(ITEM_SV_DANGLING_TARGET, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_SV_DANGLING_TARGET,
+      version: 1,
+      lineageAuthority: lineageAuthority({
+        surfaceVariantReferences: [{ itemId: ITEM_NEVER_REGISTERED, itemVersion: 1 }],
+      }),
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U44 a noncanonical lineageAuthority definitionType/definitionVersion is CONTRACT_VIOLATION', async () => {
+    const wrongType = await unseenCandidateWithTargetItem(ITEM_TAMPER_D);
+    await tamperItemDefinition(ITEM_TAMPER_D, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_D,
+      version: 1,
+      lineageAuthority: { ...lineageAuthority(), definitionType: 'EVIDENCE_SOMETHING_ELSE' },
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [wrongType.enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+
+    const wrongVersion = await unseenCandidateWithTargetItem(ITEM_TAMPER_E);
+    await tamperItemDefinition(ITEM_TAMPER_E, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_E,
+      version: 1,
+      lineageAuthority: { ...lineageAuthority(), definitionVersion: 2 },
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [wrongVersion.enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U45 an unknown lineageAuthority key or a non-array surfaceVariantReferences is CONTRACT_VIOLATION', async () => {
+    const unknownKey = await unseenCandidateWithTargetItem(ITEM_TAMPER_F);
+    await tamperItemDefinition(ITEM_TAMPER_F, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_F,
+      version: 1,
+      lineageAuthority: { ...lineageAuthority(), unexpectedKey: true },
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [unknownKey.enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+
+    const nonArray = await unseenCandidateWithTargetItem(ITEM_TAMPER_G);
+    await tamperItemDefinition(ITEM_TAMPER_G, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_TAMPER_G,
+      version: 1,
+      lineageAuthority: { ...lineageAuthority(), surfaceVariantReferences: {} },
+    });
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [nonArray.enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  test('U46 an ITEM outside L(A) with a broken lineageAuthority does not fail the operation', async () => {
+    await tamperItemDefinition(ITEM_OUTSIDE_LA, 1, {
+      kind: 'ITEM',
+      stableId: ITEM_OUTSIDE_LA,
+      version: 1,
+      lineageAuthority: null,
+    });
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(findUnseenGroup(result, NODE_A).denominator, 1);
+  });
+
+  // ===========================================================================
+  // U10. FIRST_MATCH: rules 15/16 apply only to rule 1-14 survivors.
+  // ===========================================================================
+
+  test('U47 a rule 1-14 match wins over rule 15 for the same candidate', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemId: ITEM_TARGET });
+    // Exact repeat (rule 15 material) that is ALSO withdrawn (rule 2).
+    const target = await newUnseenTarget(enrollment, { itemId: ITEM_TARGET });
+    await setAssignmentTerminalOutcome(target.assignmentId, 'WITHDRAWN');
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.withdrawnCount, 1);
+    assert.equal(group.lineageNotDifferentCount, 0);
+    assert.equal(group.noPriorNodeExposureCount, 0);
+    // A rule 1-14 candidate contributes no lineage-history exposure ID.
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, []);
+  });
+
+  test('U48 lazy V(A): a lineage contradiction confined to a rule 1-14 candidate never fails the operation', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id);
+
+    const broken = await newUnseenTarget(enrollment);
+    await setAssignmentTerminalOutcome(broken.assignmentId, 'WITHDRAWN');
+    // A contradiction that V(A) would reject -- but this assignment's only
+    // candidate is already classified by rule 2, so V(A) is never required.
+    await setStoredItemLineage(broken.assignmentId, 'EXACT_REPEAT');
+    await setStoredCutoffOrdinal(broken.assignmentId, '999999999');
+
+    const good = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(good, [correctEvaluation(NODE_A)]);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.withdrawnCount, 1);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.candidateCount, 2);
+  });
+
+  test('U49 lineageNotDifferentCount counts only rule 1-14 survivors', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { itemId: ITEM_TARGET });
+
+    // Survivor: exact repeat, completed ON_TIME and scorable -> rule 15.
+    const survivor = await newUnseenTarget(enrollment, { itemId: ITEM_TARGET });
+    await completeUnseenTarget(survivor, [correctEvaluation(NODE_A)]);
+
+    // Same exact-repeat lineage, but MISSING -> rule 4, never rule 15.
+    const missing = await newUnseenTarget(enrollment, { itemId: ITEM_TARGET });
+    await setAssignmentTerminalOutcome(missing.assignmentId, 'MISSING');
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.lineageNotDifferentCount, 1);
+    assert.equal(group.missingCount, 1);
+    assert.equal(group.candidateCount, 2);
+    assert.equal(group.excludedCount, 2);
+  });
+
+  // ===========================================================================
+  // U11. Source / filter separation.
+  // ===========================================================================
+
+  test('U50 a nodeIds candidate filter never truncates the history used for lineage recomputation', async () => {
+    const enrollment = await newEnrollment();
+    // The only target-relevant prior exposure covers NODE_B.
+    await newExposedPriorAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_B],
+      itemFamilyId: FAMILY_2,
+    });
+    const target = await newUnseenTarget(enrollment, {
+      targetNodeIds: [NODE_A, NODE_B],
+      itemFamilyId: FAMILY_2,
+    });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A), correctEvaluation(NODE_B)]);
+    assert.equal(
+      (await readStoredSnapshotLineage(target.assignmentId)).resolved_item_lineage,
+      'SAME_ITEM_FAMILY'
+    );
+
+    // Filtering candidates to NODE_A must not make R(A) empty (which would
+    // recompute null and contradict the stored SAME_ITEM_FAMILY).
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({
+        enrollmentIds: [enrollment.enrollment_id],
+        nodeIds: [NODE_A],
+      }),
+    }));
+    assert.equal(result.groups.length, 1);
+    assert.equal(result.groups[0].groupKey.nodeId, NODE_A);
+    assert.equal(result.groups[0].lineageNotDifferentCount, 1);
+  });
+
+  test('U51 an itemFamilyReferences candidate filter never truncates the history used for lineage recomputation', async () => {
+    const enrollment = await newEnrollment();
+    // The prior exposure's family (FAMILY_1) is deliberately NOT in the filter.
+    const prior = await newExposedPriorAssignment(enrollment.enrollment_id, {
+      itemFamilyId: FAMILY_1,
+    });
+    const target = await newUnseenTarget(enrollment, { itemFamilyId: FAMILY_2 });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({
+        enrollmentIds: [enrollment.enrollment_id],
+        itemFamilyReferences: [{ itemFamilyId: FAMILY_2, itemFamilyVersion: 1 }],
+      }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, [prior.exposure.exposureId]);
+  });
+
+  // ===========================================================================
+  // U12. BIGINT exactness for exposure_ordinal / cutoff.
+  // ===========================================================================
+
+  test('U52 a cutoff witness above 2^53 is matched exactly as BIGINT', async () => {
+    const { target, enrollment, prior } = await newEligibleUnseenCandidate();
+    await setExposureOrdinal(prior.assignmentId, BIG_ORDINAL);
+    await setStoredCutoffOrdinal(target.assignmentId, BIG_ORDINAL);
+    assert.equal((await readStoredSnapshotLineage(target.assignmentId)).cutoff, BIG_ORDINAL);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.deepEqual(group.sourceRebuildReference.exposureIds, [prior.exposure.exposureId]);
+  });
+
+  test('U53 two BIGINT ordinals that collapse to the same JavaScript Number remain distinguishable', async () => {
+    const { target, enrollment, prior } = await newEligibleUnseenCandidate();
+    // Number(BIG_ORDINAL) === Number(BIG_ORDINAL_MINUS_ONE), so a Number-based
+    // witness comparison would wrongly find a witness here.
+    assert.equal(Number(BIG_ORDINAL), Number(BIG_ORDINAL_MINUS_ONE));
+    await setExposureOrdinal(prior.assignmentId, BIG_ORDINAL_MINUS_ONE);
+    await setStoredCutoffOrdinal(target.assignmentId, BIG_ORDINAL);
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+  });
+
+  // ===========================================================================
+  // U13. Provenance (UT-C3 full-history H(A)).
+  // ===========================================================================
+
+  test('U54 exposureIds is the H(A) set-union and includes rows that are not target-relevant', async () => {
+    const enrollment = await newEnrollment();
+    // Not target-relevant (NODE_B only), still part of H(A).
+    const irrelevant = await newExposedPriorAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_B],
+    });
+    // Target-relevant (NODE_A).
+    const relevant = await newExposedPriorAssignment(enrollment.enrollment_id, {
+      targetNodeIds: [NODE_A],
+    });
+    const target = await newUnseenTarget(enrollment, { targetNodeIds: [NODE_A] });
+    await completeUnseenTarget(target, [correctEvaluation(NODE_A)]);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.deepEqual(
+      group.sourceRebuildReference.exposureIds,
+      [irrelevant.exposure.exposureId, relevant.exposure.exposureId].sort()
+    );
+    // Owner assignments of those exposures join assignmentIds.
+    for (const assignmentId of [irrelevant.assignmentId, relevant.assignmentId, target.assignmentId]) {
+      assert.equal(group.sourceRebuildReference.assignmentIds.includes(assignmentId), true);
+    }
+    // Canonical string ordering, not ordinal ordering.
+    assert.deepEqual(
+      group.sourceRebuildReference.exposureIds,
+      group.sourceRebuildReference.exposureIds.slice().sort()
+    );
+  });
+
+  test('U55 the response-wide sourceRebuildReference is the canonical sorted union of the group references', async () => {
+    const first = await newEligibleUnseenCandidate();
+    const second = await newEligibleUnseenCandidate();
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({
+        enrollmentIds: [first.enrollment.enrollment_id, second.enrollment.enrollment_id],
+      }),
+    }));
+    for (const key of ['enrollmentIds', 'assignmentIds', 'attemptIds', 'exposureIds', 'evaluationIds']) {
+      const expected = [...new Set(
+        result.groups.flatMap((group) => group.sourceRebuildReference[key])
+      )].sort();
+      assert.deepEqual(result.sourceRebuildReference[key], expected);
+    }
+    assert.equal(result.sourceRebuildReference.exposureIds.length >= 2, true);
+  });
+
+  // ===========================================================================
+  // U14. Counts, status, numeric projection.
+  // ===========================================================================
+
+  test('U56 the 12-bucket excludedCount partition and candidateCount identity hold for every group', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id, { targetNodeIds: [NODE_A, NODE_B] });
+
+    const eligible = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(eligible, [correctEvaluation(NODE_A)]);
+
+    const withdrawn = await newUnseenTarget(enrollment);
+    await setAssignmentTerminalOutcome(withdrawn.assignmentId, 'WITHDRAWN');
+
+    // Left NONTERMINAL on purpose (no completion attached).
+    await newUnseenTarget(enrollment);
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const bucketKeys = [
+      'missingCount', 'technicalFailureCount', 'withdrawnCount', 'unscorableCount',
+      'normalEmptyCount', 'earlyCount', 'lateCount', 'supersededCount',
+      'nonterminalCount', 'postCutoffCompletionCount',
+      'lineageNotDifferentCount', 'noPriorNodeExposureCount',
+    ];
+    assert.equal(result.groups.length >= 1, true);
+    for (const group of result.groups) {
+      const bucketSum = bucketKeys.reduce((sum, key) => sum + group[key], 0);
+      assert.equal(group.excludedCount, bucketSum);
+      assert.equal(group.eligibleCount, group.denominator);
+      assert.equal(group.candidateCount, group.eligibleCount + group.excludedCount);
+      assert.equal(group.numerator <= group.denominator, true);
+    }
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.withdrawnCount, 1);
+    assert.equal(group.nonterminalCount, 1);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.candidateCount, 3);
+  });
+
+  test('U57 OK/INSUFFICIENT by minimumSample, with six-decimal HALF_UP value projection', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id);
+
+    for (const evaluation of [correctEvaluation, correctEvaluation, incorrectEvaluation]) {
+      const target = await newUnseenTarget(enrollment);
+      await completeUnseenTarget(target, [evaluation(NODE_A)]);
+    }
+
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 3);
+    assert.equal(group.numerator, 2);
+    assert.equal(group.status, 'OK');
+    // 2/3 = 0.6666... -> HALF_UP at six decimals.
+    assert.equal(group.value, '0.666667');
+    assert.equal(result.status, 'OK');
+  });
+
+  test('U58 a single eligible candidate is INSUFFICIENT with a null value; eligible-incorrect stays in the denominator', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate({
+      evaluations: [incorrectEvaluation(NODE_A)],
+    });
+    const result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const group = findUnseenGroup(result, NODE_A);
+    assert.equal(group.denominator, 1);
+    assert.equal(group.numerator, 0);
+    assert.equal(group.status, 'INSUFFICIENT');
+    assert.equal(group.value, null);
+    assert.equal(result.status, 'INSUFFICIENT');
+  });
+
+  // ===========================================================================
+  // U15. Error registry, transaction, side effects, determinism, coexistence.
+  // ===========================================================================
+
+  test('U59 v2 uses only the existing five-code error registry', async () => {
+    const seen = new Set();
+    const cases = [
+      [() => {
+        const input = baseInputV2();
+        delete input.filters;
+        return queryMetricResult(pool, input);
+      }, 'MISSING_REQUIRED_FIELD'],
+      [() => queryMetricResult(pool, baseInputV2({ aggregationGrain: GRAIN.slice() })), 'CONTRACT_VIOLATION'],
+      [() => queryMetricResult(pool, baseInputV2({ analysisCutoff: '2030-05-06T07:08:09Z' })), 'OUT_OF_RANGE_VALUE'],
+      [() => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [UNKNOWN_BUT_VALID_UUID] }),
+      })), 'INVALID_ID'],
+    ];
+    for (const [fn, code] of cases) {
+      await rejectsWithCode(fn, code);
+      seen.add(code);
+    }
+    assert.deepEqual([...seen].sort(), [
+      'CONTRACT_VIOLATION', 'INVALID_ID', 'MISSING_REQUIRED_FIELD', 'OUT_OF_RANGE_VALUE',
+    ]);
+  });
+
+  test('U60 the v2 path runs in exactly one REPEATABLE READ READ ONLY transaction and issues no write statement', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const capturing = wrapPoolCapturingQueries(pool);
+    await queryMetricResult(capturing, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(capturing.calls[0], 'BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY');
+    assert.equal(capturing.calls[capturing.calls.length - 1], 'COMMIT');
+    assert.equal(capturing.calls.filter((text) => text.startsWith('BEGIN')).length, 1);
+    assert.equal(capturing.calls.filter((text) => text === 'COMMIT').length, 1);
+    for (const text of capturing.calls) {
+      assert.equal(/\b(INSERT|UPDATE|DELETE|TRUNCATE|CREATE|ALTER|DROP)\b/i.test(text), false, text);
+      assert.equal(/FOR\s+UPDATE/i.test(text), false, text);
+    }
+  });
+
+  test('U61 zero side effects for a successful v2 call, a v2 exclusion path and a v2 contradiction', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const excluded = await newEnrollment();
+    await newExposedPriorAssignment(excluded.enrollment_id, { itemId: ITEM_TARGET });
+    const repeatTarget = await newUnseenTarget(excluded, { itemId: ITEM_TARGET });
+    await completeUnseenTarget(repeatTarget, [correctEvaluation(NODE_A)]);
+
+    const contradictory = await newEligibleUnseenCandidate();
+    await setStoredItemLineage(contradictory.target.assignmentId, 'SAME_ITEM_FAMILY');
+
+    const before = await fullFixtureCounts();
+    await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [excluded.enrollment_id] }),
+    }));
+    await rejectsWithCode(
+      () => queryMetricResult(pool, baseInputV2({
+        filters: baseFilters({ enrollmentIds: [contradictory.enrollment.enrollment_id] }),
+      })),
+      'CONTRACT_VIOLATION'
+    );
+    assert.deepEqual(await fullFixtureCounts(), before);
+
+    // Stored lineage authority is validated, never rewritten.
+    assert.equal(
+      (await readStoredSnapshotLineage(contradictory.target.assignmentId)).resolved_item_lineage,
+      'SAME_ITEM_FAMILY'
+    );
+  });
+
+  test('U62 the v2 result is deterministic for the same committed source/cutoff/formula', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const input = baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    });
+    const first = await queryMetricResult(pool, input);
+    const second = await queryMetricResult(pool, input);
+    assert.deepEqual(second, first);
+  });
+
+  test('U63 RAW_SOURCE remains regression-identical alongside Unseen Transfer v2 usage', async () => {
+    const { enrollment } = await newEligibleUnseenCandidate();
+    const rawInput = {
+      formulaId: FORMULA_V2_ID,
+      formulaVersion: 1,
+      analysisCutoff: FAR_FUTURE_CUTOFF,
+      filters: {
+        enrollmentIds: [enrollment.enrollment_id],
+        assignmentIds: [],
+        attemptIds: [],
+        conditionReferences: [],
+        targetTimepoints: [],
+        nodeIds: [],
+        itemFamilyReferences: [],
+      },
+    };
+    const before = await queryRawEvidenceForMetricRebuild(pool, rawInput);
+    await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    const after = await queryRawEvidenceForMetricRebuild(pool, rawInput);
+    assert.deepEqual(after, before);
+    // RAW_SOURCE keeps its own exact shape, unaffected by the v2 reducer.
+    assert.equal(hasOwnKey(before, 'rawFacts'), true);
+    assert.equal(hasOwnKey(before, 'groups'), false);
+  });
+
+  test('U64 Retention v1 and Unseen Transfer v2 coexist over the same enrollment without cross-contamination', async () => {
+    const enrollment = await newEnrollment();
+    await newExposedPriorAssignment(enrollment.enrollment_id);
+    const v2Target = await newUnseenTarget(enrollment);
+    await completeUnseenTarget(v2Target, [correctEvaluation(NODE_A)]);
+
+    // A Retention v1 assignment in the same enrollment, pinned to the v1
+    // FORMULA.
+    const v1Target = await newCandidateAssignment({ enrollment, formulaId: FORMULA_ID });
+    const session = await newSession(enrollment.enrollment_id);
+    const attempt = await newAttempt(v1Target.assignmentId, session.session_id);
+    await finalizeWith(attempt, [correctEvaluation(NODE_A)]);
+    await forceTimeliness(attempt, v1Target.assignmentId, v1Target.dueAt);
+
+    const v2Result = await queryMetricResult(pool, baseInputV2({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(v2Result.groups.length, 1);
+    assert.equal(v2Result.groups[0].groupKey.formulaId, FORMULA_V2_ID);
+    assert.equal(v2Result.groups[0].denominator, 1);
+
+    const v1Result = await queryMetricResult(pool, baseInput({
+      filters: baseFilters({ enrollmentIds: [enrollment.enrollment_id] }),
+    }));
+    assert.equal(v1Result.groups.length, 1);
+    assert.equal(v1Result.groups[0].groupKey.formulaId, FORMULA_ID);
+    assert.equal(v1Result.groups[0].denominator, 1);
+    assert.equal(Object.keys(v1Result.groups[0]).length, 19);
+    assert.deepEqual(v1Result.groups[0].sourceRebuildReference.exposureIds, []);
   });
 });
