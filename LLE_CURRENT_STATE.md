@@ -8599,6 +8599,138 @@ READINESS/AUTHORIZATION DOCUMENTATION SYNC`).
 
 See §10.
 
+#### METRIC_RESULT Unseen Transfer v2 Runtime — Integrated on Main / Post-Merge Validation PASS / Control Tower VALIDATED / Status-Sync Candidate
+
+Classification: `STATUS-ONLY POST-MERGE VALIDATION RECONCILIATION`.
+
+Control Tower lifecycle adjudication: `INDEPENDENT REVIEW PASSED /
+CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
+VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`.
+
+##### Exact Implementation Identity
+
+- Approved Development candidate:
+  `407460cea917d789dab16ad2ef57c4cce87215cf`.
+- Integrated `main`: `1de6dec26d9da3122c0d1335938af6edadf5883f`.
+- Parent: `2a94396627f95b7d138e7285a64411684b0b3e3e`.
+- Tree: `eff25c34594baf4c5b94ebdb72e885a7ab2cdddd`.
+- Source blob: `src/instrumentation/evidenceMetrics.js` =
+  `0de535c3ec4868e2e89e04a8539cc20a336bdfa5`.
+- Test blob: `tests/viP1MetricResultRuntime.test.js` =
+  `a709ef0e8498cc70631038b0bfd442c24bff46fa`.
+- Exact implementation-commit changed-file set:
+  `src/instrumentation/evidenceMetrics.js` and
+  `tests/viP1MetricResultRuntime.test.js` — exactly two files.
+- Migration/DDL: `NONE`. Migration `014`: absent; the migration set ends at
+  `db/migrations/013_add_vi_p1_item_lineage.sql`.
+- The integrated `main` commit is a cherry-pick of the approved candidate,
+  so its commit SHA differs from the candidate SHA while its tree, both
+  blobs, parent, and changed-file set are identical to the approved
+  candidate content on the unchanged baseline tree.
+
+##### Independent Review Evidence
+
+A fresh, separate, read-only Independent Review returned verdict `APPROVE
+WITH NON-BLOCKING NOTES`, with `0` blocking findings, `3` non-blocking
+findings, correction required `NO`, and integration suitability `YES`. The
+three non-blocking findings are identified as `IR-NB-01`, `IR-NB-02`, and
+`IR-NB-03`. They are recorded here solely as the three Independent Review
+non-blocking findings for which no correction was required; this record
+assigns them no canonical lifecycle classification, because none is
+established by an authoritative source available to this session. The
+Independent Review evidence boundary was static review only: it rerun no
+tests, rerun no PostgreSQL, ran no mutation checks `2`–`4`, and was taken
+before integration.
+
+##### Pre-Integration Independent Validation Evidence
+
+Independently rerun against the exact approved candidate, synthetic
+fixtures only:
+
+- `tests/viP1MetricResultRuntime.test.js`: `190/190` PASS.
+- `tests/viP1ItemLineageRuntime.test.js`: `44/44` PASS.
+- `tests/viP1RawSourceRuntime.test.js`: `56/56` PASS.
+- `tests/evidenceFoundationRepository.test.js`: `80/80` PASS.
+- `tests/evidenceFoundationMigration.test.js`: `24/24` PASS.
+- `tests/migrations.test.js`: `14/14` PASS.
+- Full `npm test`: `640/640` PASS, `56` suites, `0` fail.
+- Actual PostgreSQL synthetic Unseen v2 subset: `64/64` PASS.
+- PostgreSQL `17.10`, independently captured for that run.
+
+##### Post-Merge Evidence on Exact Integrated Main
+
+All of the following were run against
+`1de6dec26d9da3122c0d1335938af6edadf5883f`, synthetic fixtures only:
+
+- Diagnostic Gate A rerun: full `npm test` `640/640` PASS.
+- Captured full validation run: Gate A full `npm test` `640/640` PASS, `56`
+  suites; Gate B focused `METRIC_RESULT` `190/190` PASS; Gate C actual
+  PostgreSQL synthetic Unseen v2 subset `64/64` PASS; PostgreSQL version
+  capture PASS — `PostgreSQL 17.10 on x86_64-windows, 64-bit`.
+- Corrected final verification: `POSTMERGE_MIGRATION_013_PRESENT_PASS`,
+  `POSTMERGE_NO_MIGRATION_014_PASS`, `POSTMERGE_FINAL_REVERIFY_PASS`,
+  `POSTMERGE_FINALIZE_PASS`, exit `0`.
+- Final `HEAD` == `origin/main` ==
+  `1de6dec26d9da3122c0d1335938af6edadf5883f`.
+- Final tree, source blob, and test blob matched the approved pins above.
+- Exact two-file implementation scope matched.
+- Repository clean.
+
+##### Validation-Harness Incident
+
+The first `postmerge-validate.sh` invocation exited nonzero. Its exact
+failure text was not preserved, because terminal output was truncated and
+the run predated log capture. That first failure is therefore NOT labelled
+flaky, NOT labelled environmental, and NOT labelled a product defect — the
+evidence to classify it does not exist.
+
+A later complete captured run of the same harness showed Gate A, Gate B,
+Gate C, and the PostgreSQL version capture all PASS, and then exited at a
+validation-harness migration guard. That guard used the unsound pathspec
+`git ls-tree ... -- 'db/migrations/013*'`, whose wildcard matches nothing,
+while the same run's own complete migration listing contained
+`db/migrations/013_add_vi_p1_item_lineage.sql`. The paired `014*` wildcard
+check was unsound in the same way and is likewise not admissible evidence.
+
+A separate corrected finalizer then soundly verified, against the captured
+listing by exact whole-line match: presence of
+`db/migrations/013_add_vi_p1_item_lineage.sql`; absence of any path
+beginning `db/migrations/014`; exact SHA, tree, blob, and two-file scope;
+and a clean repository. The reproduced later failure is classified as a
+validation-harness defect, not a demonstrated product-code failure. The
+historical failed executions are preserved above, not erased.
+
+##### Evidence Boundaries and Non-Claims
+
+Runtime-engine validation is NOT learning-efficacy evidence. Learning
+efficacy: `NOT VERIFIED`. VI Empirical Pilot P1: `NOT ACTIVATED`.
+Human-data collection: `NOT AUTHORIZED`. Actual-provider validation: `NOT
+ESTABLISHED`; Mock evidence is not Actual-provider evidence. No human,
+learner, or production data was used. `Q28`/`Q29` remain `BLOCKED FOR
+Q28/Q29 WORDING`. `ITEM Lineage-Authority Writer Correction Lifecycle`
+remains `CLOSED`, not reopened. `METRIC_RESULT Retention v1 Runtime`
+remains `CLOSED`, not reopened. Validation Level 3 §10 overall PASS — NOT
+CLAIMED. Evidence Foundation overall completeness — NOT CLAIMED. GitHub
+Actions / CI PASS — NOT CLAIMED (not separately evidenced). The Runtime
+review-record is `NOT YET WRITTEN`; the Runtime lifecycle is `NOT CLOSED`.
+`API_CONTRACT.md` `1.31` (blob
+`e60afa6bda3356051c24b36a823fb325761b9b42`),
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md` `1.10` (blob
+`de244476e56dfcab59dcd899a25091a2b1452e31`), and
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md` `1.79` (blob
+`2502416468896eca0a7f8d17a8879a520acbd4ba`): unchanged by this record.
+
+##### This Status-Sync Session
+
+Tests: `NOT RUN — STATUS-ONLY RECONCILIATION`. PostgreSQL: `NOT RUN —
+STATUS-ONLY RECONCILIATION`. Every test, suite, count, and PostgreSQL
+figure recorded above is prior commit-pinned pre-integration or post-merge
+evidence; none of it was generated by this documentation session.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -11143,6 +11275,61 @@ remain true and are established in §4/§8 and elsewhere in this document:
   Readiness — METRIC_RESULT Unseen Transfer v2 Runtime Development`
   candidate, classification `BOUNDED RUNTIME DEVELOPMENT`, NOT authorized
   to start and NOT started by this record (§10)
+- METRIC_RESULT Unseen Transfer v2 Runtime `NOT IMPLEMENTED`, `NOT
+  VALIDATED`, and Development operationally `NOT STARTED` — SUPERSEDED by
+  actual implementation, integration, and post-merge validation evidence.
+  The immediately preceding bullet remains accurate for the readiness and
+  development-authorization stage at which it was recorded and is preserved
+  verbatim; only those three now-obsolete current claims are superseded.
+  The governing current disposition is `INDEPENDENT REVIEW PASSED /
+  CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED /
+  VALIDATED / NOT REVIEW-RECORDED / NOT CLOSED`. The approved Development
+  candidate `407460cea917d789dab16ad2ef57c4cce87215cf` was cherry-picked to
+  `main` as `1de6dec26d9da3122c0d1335938af6edadf5883f` (parent
+  `2a94396627f95b7d138e7285a64411684b0b3e3e`, tree
+  `eff25c34594baf4c5b94ebdb72e885a7ab2cdddd`), changing exactly
+  `src/instrumentation/evidenceMetrics.js` (blob
+  `0de535c3ec4868e2e89e04a8539cc20a336bdfa5`) and
+  `tests/viP1MetricResultRuntime.test.js` (blob
+  `a709ef0e8498cc70631038b0bfd442c24bff46fa`); migration/DDL `NONE`, no
+  migration `014`. A fresh, separate, read-only Independent Review returned
+  `APPROVE WITH NON-BLOCKING NOTES`, `0` blocking findings, `3` non-blocking
+  findings `IR-NB-01`/`IR-NB-02`/`IR-NB-03`, correction required `NO`,
+  integration suitability `YES`; those three identifiers are carried only as
+  Independent Review non-blocking findings requiring no correction, with no
+  canonical lifecycle classification asserted here. Post-merge evidence on
+  that exact `main`: full `npm test` `640/640` PASS `56` suites, focused
+  `METRIC_RESULT` `190/190` PASS, actual PostgreSQL synthetic Unseen v2
+  subset `64/64` PASS, PostgreSQL `17.10`, synthetic fixtures only, and a
+  corrected finalizer verifying exact migration `013` presence, absence of
+  any `db/migrations/014` path, matching SHA/tree/blob/two-file scope, and a
+  clean repository. A validation-harness defect — an unsound
+  `db/migrations/013*` wildcard pathspec guard — caused a reproduced
+  post-merge harness failure after all test gates had passed; an earlier
+  harness failure whose exact text was lost to output truncation is NOT
+  classified as flaky, environmental, or a product defect. This does NOT
+  mean: the Runtime review-record written — NOT CLAIMED (`NOT YET
+  WRITTEN`); the Runtime lifecycle closed — NOT CLAIMED (`NOT CLOSED`);
+  learning efficacy verified — NOT CLAIMED (`NOT VERIFIED`); P1 activated —
+  NOT CLAIMED (`NOT ACTIVATED`); human-data collection authorized — NOT
+  CLAIMED (`NOT AUTHORIZED`); Actual-provider validation established — NOT
+  CLAIMED (`NOT ESTABLISHED`; Mock evidence is not Actual-provider
+  evidence); human, learner, or production data used — NOT CLAIMED (none
+  used); `Q28`/`Q29` resolved — NOT CLAIMED (`BLOCKED FOR Q28/Q29
+  WORDING`); `ITEM Lineage-Authority Writer Correction Lifecycle` or
+  `METRIC_RESULT Retention v1 Runtime` reopened — NOT CLAIMED (each remains
+  `CLOSED`); Validation Level 3 §10 overall PASS — NOT CLAIMED; Evidence
+  Foundation overall completeness — NOT CLAIMED; GitHub Actions / CI PASS —
+  NOT CLAIMED (not separately evidenced); any canonical document, source,
+  test, migration, or DDL file changed by this record — NOT CLAIMED; tests
+  or PostgreSQL run for this record — NOT CLAIMED (`NOT RUN — STATUS-ONLY
+  POST-MERGE VALIDATION RECONCILIATION`; the figures above are prior
+  commit-pinned pre-integration and post-merge evidence, not generated by
+  this record). See §4 "METRIC_RESULT Unseen Transfer v2 Runtime —
+  Integrated on Main / Post-Merge Validation PASS / Control Tower VALIDATED
+  / Status-Sync Candidate" for full detail; the sole Next Action is now a
+  fresh, separate, read-only Independent Review of this exact
+  `LLE_CURRENT_STATE.md` post-merge status-sync candidate (§10)
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -11981,48 +12168,37 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- The sole project Next Action is a fresh, separate `VI P1 Measurement
-  Readiness — METRIC_RESULT Unseen Transfer v2 Runtime Development`
-  candidate, classification `BOUNDED RUNTIME DEVELOPMENT`. The preceding
-  read-only `Implementation-Readiness` analysis action is fulfilled and is
-  replaced by this action; Control Tower adjudicated `Q26` = `NO OPERATIVE
-  CANONICAL AMBIGUITY` and `Q27` = `READY`. This action is GATED: it MUST
-  NOT START until this exact readiness/authorization status-sync candidate
-  (branch `validation/unseen-v2-readiness-dev-authorization-sync-20260920`,
-  parent `72a0a9731d9d3d877994bcc8ca4a7291969af18b`) has (1) passed a
-  fresh, separate, read-only Independent Review and (2) been integrated to
-  actual `main`. Until both gates complete, Unseen Transfer Runtime
-  Development remains operationally `NOT STARTED`; no Development is
-  authorized or started by this record. After the gate is satisfied, the
-  authorized implementation file scope is exactly
-  `src/instrumentation/evidenceMetrics.js` and
-  `tests/viP1MetricResultRuntime.test.js`; no ordinary Development edit is
-  authorized to `src/instrumentation/evidenceRepository.js` or
-  `src/instrumentation/index.js`; migration/DDL is `NONE` (no migration
-  `014`). `READY` means only READY TO BEGIN — it does NOT mean the Runtime
-  is implemented or validated, and Development must NOT assume
-  implementation success. Future validation requires actual PostgreSQL with
-  synthetic fixtures only, current schema only, no production-data
-  experimentation. The existing regression gates
-  `tests/viP1ItemLineageRuntime.test.js`,
-  `tests/viP1RawSourceRuntime.test.js`,
-  `tests/evidenceFoundationRepository.test.js`,
-  `tests/evidenceFoundationMigration.test.js`, and
-  `tests/migrations.test.js` must remain unchanged and must pass, together
-  with an updated focused `tests/viP1MetricResultRuntime.test.js` and full
-  `npm test`. Development cannot self-declare `VALIDATED` or `CLOSED`;
-  Independent Review remains a separate, later, read-only action, and
-  Control Tower retains sole closure authority. It must NOT use human or
-  learner data; it must NOT claim learning efficacy; it must NOT claim
-  Actual-provider validation; P1 remains `NOT ACTIVATED` and human-data
-  collection remains `NOT AUTHORIZED`. It must STOP and return to Control
-  Tower — rather than widen scope — if `origin/main` differs from its
-  authorization baseline, canonical API/Schema authority materially
-  differs, writer source/test authority unexpectedly changes,
-  implementation requires modifying `evidenceRepository.js` or any
-  regression-gate file, implementation requires DDL/migration or a new
-  error code, canonical `H/W/R/N/L/V/ρ` semantics cannot be implemented
-  without clarification, Retention v1 or RAW_SOURCE must be semantically
-  changed, actual/human data becomes necessary, or a test reveals a
-  source/canonical contradiction rather than an ordinary implementation
-  defect.
+- The sole project Next Action is a fresh, separate, read-only Independent
+  Review of the exact `LLE_CURRENT_STATE.md` post-merge status-sync
+  candidate on branch
+  `validation/unseen-v2-runtime-postmerge-status-sync-20260921`, parent
+  `1de6dec26d9da3122c0d1335938af6edadf5883f`. The preceding bounded
+  `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime
+  Development` routing action is fulfilled — the Runtime is implemented,
+  integrated on `main`, and post-merge validated — and is replaced by this
+  action. This review is documentation/status review only. It must
+  fresh-read the exact parent and the exact candidate rather than relying
+  on any summary. It must verify that the candidate's tracked-file scope is
+  exactly one file, `LLE_CURRENT_STATE.md`. It must verify the recorded
+  SHA, tree, blob, changed-file, test, and PostgreSQL evidence against the
+  stated boundaries, including that pre-integration and post-merge evidence
+  remain distinct and that neither is presented as generated by the
+  status-sync session. It must verify that the validation-harness incident
+  is represented accurately — that the first harness failure is not
+  labelled flaky, environmental, or a product defect, that the reproduced
+  later failure is attributed to the unsound `db/migrations/013*` wildcard
+  pathspec guard rather than to product code, and that the failed
+  executions are preserved rather than erased. It must verify that no
+  premature `REVIEW-RECORDED` or `CLOSED` claim appears, and that no
+  learning-efficacy, P1-activation, human-data, or Actual-provider claim
+  appears. It performs repository mutation `0`: no branch, no commit, no
+  push, no tracked-file edit, no test run, and no PostgreSQL run. It must
+  STOP and return to Control Tower — rather than widen scope — if
+  `origin/main` differs from `1de6dec26d9da3122c0d1335938af6edadf5883f`,
+  the candidate touches any file other than `LLE_CURRENT_STATE.md`,
+  canonical API/Schema/Backlog authority differs from the pinned blobs, a
+  prior historical record appears altered or removed, or the recorded
+  evidence contradicts the repository. The Runtime review-record is NOT
+  authorized by this action and remains `NOT YET WRITTEN`; the Runtime
+  lifecycle remains `NOT CLOSED`; Control Tower retains sole closure
+  authority; and the next product milestone is NOT selected by this record.
