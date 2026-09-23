@@ -10,13 +10,16 @@ This document is the **sole owner** of Validation State for the project. `BOOTST
 
 This ledger distinguishes the following identities. Git ref, runtime-validated implementation, independent review target, and review-record commit are separate authorities and are not merged into a single "current implementation SHA".
 
-- **Ledger snapshot baseline**: `777f8d7dd94b9d6b5be574d6d83194688e5efaba` — the exact `origin/main` baseline from which this four-file BIGINT Runtime closure synchronization candidate is prepared
+- **Ledger snapshot baseline**: `d41829f4d6f71d78cdbda80b96ee7af41e44a715` — the exact `origin/main` baseline (subject `Record Unseen v2 runtime lifecycle closure`) from which this three-file post-closure roadmap/status synchronization candidate is prepared; the prior ledger snapshot baseline `777f8d7dd94b9d6b5be574d6d83194688e5efaba` is superseded as current and preserved as history
 - **GitHub main ref**: `GitHub refs/heads/main` (authority for current repository HEAD; no hard-coded SHA in this document replaces it)
-- **Latest accepted integrated runtime-validation milestone**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (BIGINT writer source-authority runtime; independently reviewed, canonical on main, post-integration Windows-local PostgreSQL 17.10 verified, validated, review-recorded, and closed; evidence §A.13–§A.16)
+- **Latest accepted integrated runtime-validation milestone**: `1de6dec26d9da3122c0d1335938af6edadf5883f` (`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime`; `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED`; review-record `4b86a440544a40e9195d6a6437f9f2256a92e9e3`, backlog revision `1.80`; closure `d41829f4d6f71d78cdbda80b96ee7af41e44a715`; evidence §A.18)
+- **Prior accepted integrated runtime milestone, preserved**: `77db80d97f25c9394cd04ad08801d85580f006dd` (ITEM Lineage-Authority Writer Correction; post-merge validation PASS; lifecycle `CLOSED` by Control Tower adjudication; post-closure status sync `72a0a9731d9d3d877994bcc8ca4a7291969af18b`; evidence §A.17)
+- **Prior accepted integrated runtime-validation milestone, preserved**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (BIGINT writer source-authority runtime; independently reviewed, canonical on main, post-integration Windows-local PostgreSQL 17.10 verified, validated, review-recorded, and closed; evidence §A.13–§A.16)
 - **Prior accepted integrated runtime-validation milestone, preserved**: `22508147625090af84af141ac0ec574792369115` (METRIC_RESULT / Retention v1 runtime; independently reviewed, canonical on main, post-merge PostgreSQL verified, validated, review-recorded, and closed; evidence §A.2)
 - **BIGINT writer source-authority runtime — reviewed candidate**: `303e1af9aa2c32167e7caf66527b5020bbacf882`, parent `2034d1a01e58a36762750156df1fd63c8e77ba9c`, branch `validation/bigint-writer-source-authority-runtime-20260912` (prior candidate Independent Validation PASS, §A.12; Independent Review APPROVE WITH NON-BLOCKING NOTES, §A.13)
 - **BIGINT writer source-authority runtime — main integration / post-integration validated SHA**: `8934ccee7931b79ddc544af08dceffc97a0d7b32` (main integration, §A.14; fresh post-integration Validation PASS, §A.15; REVIEW-RECORDED / CLOSED, §A.16)
-- **Current runtime implementation review-record commit**: `777f8d7dd94b9d6b5be574d6d83194688e5efaba` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.78`, blob `5a9f2e43527a72355b99838cd37a820c376af6c1`; BIGINT writer source-authority Runtime implementation lifecycle)
+- **Current runtime implementation review-record commit**: `4b86a440544a40e9195d6a6437f9f2256a92e9e3` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.80`, blob `02648bb9c672a3629d626a0da81da004eb935994`; METRIC_RESULT Unseen Transfer v2 Runtime implementation lifecycle)
+- **Prior runtime implementation review-record commit, preserved**: `777f8d7dd94b9d6b5be574d6d83194688e5efaba` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.78`, blob `5a9f2e43527a72355b99838cd37a820c376af6c1`; BIGINT writer source-authority Runtime implementation lifecycle)
 - **Prior documentation review-record commit, preserved**: `623eaf94328a5145adf62aaff52c6b23689d4efe` (`ARCHITECTURE_CLARIFICATION_BACKLOG.md` revision `1.77`; BIGINT Tier C documentation lifecycle, not the runtime candidate review)
 
 ### A.1 Validation Level State
@@ -86,6 +89,16 @@ This absence reflects that main does not retain a permanent CI workflow. It is s
 - human-data collection approved
 - any of `F-BIGINT-IR-01` through `F-BIGINT-IR-06` closed or reclassified
 - BIGINT historical-data inspection or remediation performed, or declared unnecessary
+- project-wide closure
+- B-3 resolved
+- Pilot Spec approved, or any manifest `approved_for_pilot=true`
+- Actual-provider validation established
+- any of `F-IR-01`–`F-IR-04`, `N-IR-S1`, `IR-NB-01`–`IR-NB-03`, `IR-SS-01`–`IR-SS-05`, or `IR-RR-01`–`IR-RR-02` closed or reclassified
+- historical stored `resolved_item_lineage` learner/human data inspected, or declared valid/invalid or in need of migration/repair/backfill
+- GitHub Actions / CI PASS for the ITEM writer or Unseen Transfer v2 Runtime lifecycles
+- any test or PostgreSQL evidence generated by this documentation-only status/roadmap synchronization
+
+The ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED` (§A.17), and the `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` implementation lifecycle is `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED` (§A.18), bounded to that lifecycle only.
 
 Accordingly: the BIGINT writer source-authority runtime is independently reviewed (APPROVE WITH NON-BLOCKING NOTES, §A.13), integrated on main as `8934ccee7931b79ddc544af08dceffc97a0d7b32` (§A.14), freshly post-integration validated (PASS, §A.15), review-recorded in backlog revision `1.78` (`777f8d7dd94b9d6b5be574d6d83194688e5efaba`), and its bounded lifecycle is CLOSED (§A.16). `F-R02` is CLOSED — CORRECTED within its cited ordinal domain; `F-BIGINT-IR-01` through `F-BIGINT-IR-06` remain NOTE / OPEN / NON-BLOCKING; historical data remains UNKNOWN / NOT INSPECTED. Evidence Foundation overall remains incomplete; Validation Level 3 §10 overall PASS remains NOT DECLARED; P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; efficacy remains NOT VERIFIED; the actual-provider milestone remains incomplete; product/Beta readiness is not established.
 
@@ -183,11 +196,13 @@ This accepted lifecycle is distinct from the older B-1a/B-1b assignment/session 
 
 Later canonical revisions preserve Retention v1: API `1.31` and Schema `1.10`. METRIC_RESULT / Unseen Transfer v2 Tier C documentation is separately review-recorded and closed, but its runtime remains NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED.
 
+> **Supersession pointer (added by the post-closure roadmap/status synchronization; the sentence above is preserved as time-scoped history):** the statement that the Unseen Transfer v2 runtime remained NOT AUTHORIZED / NOT IMPLEMENTED / NOT VALIDATED was accurate when this Retention v1 entry was recorded. It is superseded as current status. The `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` implementation lifecycle is now `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED` (runtime `1de6dec26d9da3122c0d1335938af6edadf5883f`; review-record `4b86a440544a40e9195d6a6437f9f2256a92e9e3`, Backlog revision `1.80`; closure `d41829f4d6f71d78cdbda80b96ee7af41e44a715`). See §A.18.
+
 ### A.11 Current Canonical Validation Context
 
 - `API_CONTRACT.md`: revision `1.31`, blob `e60afa6bda3356051c24b36a823fb325761b9b42`
 - `EVIDENCE_FOUNDATION_P0_SCHEMA.md`: revision `1.10`, blob `de244476e56dfcab59dcd899a25091a2b1452e31`
-- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.78`, blob `5a9f2e43527a72355b99838cd37a820c376af6c1`
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: revision `1.80`, blob `02648bb9c672a3629d626a0da81da004eb935994` (prior snapshot context: revision `1.78`, blob `5a9f2e43527a72355b99838cd37a820c376af6c1`)
 
 These identities provide validation context only. This synchronization changes no canonical contract, Architecture, Schema, or Validation Rule.
 
@@ -280,11 +295,81 @@ Classification: post-integration Validation evidence for the exact integrated ma
 
 No PostgreSQL, focused Node test, `npm test`, runtime validation, migration, or database operation was executed for this four-file closure synchronization. The §A.15 figures were generated by the prior post-integration Validation session and are recorded here as-is.
 
-### A.17 Next Action
+### A.17 ITEM Lineage-Authority Writer Correction — Evidence Chain (prior evidence; not regenerated)
 
-Only after this four-file BIGINT Runtime closure synchronization candidate (branch `validation/bigint-runtime-closure-sync-20260916`, parent `777f8d7dd94b9d6b5be574d6d83194688e5efaba`) is independently reviewed, approved, integrated onto main, and statically verified, the sole project Next Action is a fresh read-only METRIC_RESULT / Unseen Transfer v2 Runtime implementation-readiness re-pre-analysis against then-current main (classification READ-ONLY PRE-ANALYSIS; repository mutation 0).
+All figures in this section are prior, commit-pinned evidence already recorded in `LLE_CURRENT_STATE.md`. They were generated by earlier Validation/Integration sessions. This documentation-only synchronization did not rerun, regenerate, or relabel them.
 
-That re-pre-analysis must re-evaluate the prior governing verdict `NOT READY`, whose recorded reason was the now-closed BIGINT writer source-authority source-implementation prerequisite, without assuming READY. It must not authorize, implement, or validate Unseen Transfer Runtime and generates no Validation evidence.
+- Runtime candidate: `b862bcc48a150206c6fb8eece898ab2b95ace7f3` (parent `2e43c13dbf88f424706447c44ede31c7b7f1e036`, tree `0b98e89cc52fe361d055fba181a4022fa2dd2671`), branch `validation/item-lineage-authority-writer-correction-20260919`; exactly two files: `src/instrumentation/evidenceRepository.js` (`5355c7264fa85fe6c1d963d8c8c9ed79d6b45922`), `tests/viP1ItemLineageRuntime.test.js` (`fcb580da7203598f570c6599edaa6bfba14e8055`); migration/DDL `NONE`
+- Pre-integration commit-pinned validation of that exact candidate: `tests/viP1ItemLineageRuntime.test.js` 44/44 PASS; `tests/evidenceFoundationRepository.test.js` 80/80 PASS; `tests/evidenceFoundationMigration.test.js` 24/24 PASS; `tests/migrations.test.js` 14/14 PASS; full `npm test` 576/576 PASS across 56 suites; actual PostgreSQL 17.10, disposable `lle_dev`, synthetic fixtures only; unsafe BIGINT `T27` PASS; lineage `T28`–`T44` PASS
+- Independent Review of the exact candidate: APPROVE WITH NON-BLOCKING NOTES; blocking 0; non-blocking 4 (`F-IR-01`–`F-IR-04`); correction required NO; guarded integration suitable YES
+- Guarded integration: main `77db80d97f25c9394cd04ad08801d85580f006dd` (parent `2e43c13dbf88f424706447c44ede31c7b7f1e036`); integration tree byte-identical to the reviewed candidate tree `0b98e89cc52fe361d055fba181a4022fa2dd2671`
+- Post-merge validation on actual main `77db80d97f25c9394cd04ad08801d85580f006dd`: the same gate figures as above (44/44, 80/80, 24/24, 14/14, full 576/576 across 56 suites), all exit codes 0; actual PostgreSQL 17.10, disposable `lle_dev`, synthetic fixtures only; `T27` PASS; `T28`–`T44` PASS
+- Closure-record sync: candidate `6eb670cee319f5a273f09118b850aea223db7595` independently reviewed (APPROVE WITH NON-BLOCKING NOTES; blocking 0; non-blocking 1, `N-IR-S1`) and integrated byte-identically as main `7ef696879e60956bfab649af74f5b8bbc05453c6`. Post-merge documentation/Git validation on that main: PASS. Runtime tests and PostgreSQL for that documentation integration: NOT RUN — DOCUMENTATION-ONLY STATUS-RECORD INTEGRATION
+- Control Tower closure adjudication: lifecycle `CLOSED`. Recorded by post-closure status sync main `72a0a9731d9d3d877994bcc8ca4a7291969af18b`
+- Backlog review-record revision: none recorded for this lifecycle
+- Findings: `F-IR-01`, `F-IR-02`, `F-IR-03`, `F-IR-04`, `N-IR-S1` each OPEN / NOTE / NON-BLOCKING; correction required NO
+- Historical stored `resolved_item_lineage` learner/human data: UNKNOWN / NOT INSPECTED
+
+Runtime-engine evidence is not learning-efficacy evidence.
+
+### A.18 METRIC_RESULT Unseen Transfer v2 Runtime — Evidence Chain (prior evidence; not regenerated)
+
+All figures in this section are prior, commit-pinned evidence already recorded in `LLE_CURRENT_STATE.md`. This documentation-only synchronization did not rerun, regenerate, or relabel them.
+
+- Readiness: Control Tower adjudicated `Q26` = NO OPERATIVE CANONICAL AMBIGUITY and `Q27` = `READY`, and recorded bounded Development authorization (main `2a94396627f95b7d138e7285a64411684b0b3e3e`). `Q28`/`Q29`: BLOCKED FOR Q28/Q29 WORDING
+- Approved Development candidate: `407460cea917d789dab16ad2ef57c4cce87215cf`
+- Runtime implementation on main: `1de6dec26d9da3122c0d1335938af6edadf5883f` (parent `2a94396627f95b7d138e7285a64411684b0b3e3e`, tree `eff25c34594baf4c5b94ebdb72e885a7ab2cdddd`). It is a cherry-pick of the approved candidate. Its changed-file set is exactly two files: `src/instrumentation/evidenceMetrics.js` (`0de535c3ec4868e2e89e04a8539cc20a336bdfa5`) and `tests/viP1MetricResultRuntime.test.js` (`a709ef0e8498cc70631038b0bfd442c24bff46fa`). Migration/DDL: `NONE`. Migration `014` is absent; the migration set ends at `db/migrations/013_add_vi_p1_item_lineage.sql`
+- Independent Review: APPROVE WITH NON-BLOCKING NOTES; blocking 0; non-blocking 3 (`IR-NB-01`–`IR-NB-03`, no canonical lifecycle classification asserted); correction required NO. The review was static only and taken before integration
+- Pre-integration independent validation of the exact approved candidate, synthetic fixtures only: `tests/viP1MetricResultRuntime.test.js` 190/190 PASS; `tests/viP1ItemLineageRuntime.test.js` 44/44 PASS; `tests/viP1RawSourceRuntime.test.js` 56/56 PASS; `tests/evidenceFoundationRepository.test.js` 80/80 PASS; `tests/evidenceFoundationMigration.test.js` 24/24 PASS; `tests/migrations.test.js` 14/14 PASS; full `npm test` 640/640 PASS, 56 suites, 0 fail; actual PostgreSQL synthetic Unseen v2 subset 64/64 PASS; PostgreSQL 17.10
+- Post-merge validation on exact main `1de6dec26d9da3122c0d1335938af6edadf5883f`, synthetic fixtures only:
+  - Full `npm test`: 640/640 PASS, 56 suites
+  - Focused METRIC_RESULT: 190/190 PASS
+  - Actual PostgreSQL synthetic Unseen v2 subset: 64/64 PASS
+  - PostgreSQL version: `PostgreSQL 17.10 on x86_64-windows, 64-bit`
+  - Corrected final verification: migration 013 present and migration 014 absent, both by exact whole-line match
+  - Final `HEAD` == `origin/main` == `1de6dec26d9da3122c0d1335938af6edadf5883f`
+  - Repository: clean
+- Validation-harness incident (preserved; see `LLE_CURRENT_STATE.md`):
+  - The first harness invocation exited nonzero. Its failure text was not preserved, so it is not classified.
+  - A later captured run exited at an unsound migration-guard pathspec. That exit is classified as a validation-harness defect, not a demonstrated product-code failure.
+- Post-merge status sync: candidate `0a0612c9504d26eb11808de2e04784d9eaf87323`, integrated as main `0696de9825b1cd0430aac12058196fd41c296cdb`. Its Independent Review was APPROVE WITH NON-BLOCKING NOTES, with non-blocking findings `IR-SS-01`–`IR-SS-05`
+- Review-record: Backlog revision `1.80`, main `4b86a440544a40e9195d6a6437f9f2256a92e9e3`, backlog blob `02648bb9c672a3629d626a0da81da004eb935994`. It came from reviewed candidate `c793bf5a04c0937414d385e70c35994462f13bbb`. Its Independent Review was APPROVE WITH NON-BLOCKING NOTES, with `IR-RR-01` = NOTE / TRACEABILITY LIMIT / NON-BLOCKING and `IR-RR-02` = NOTE / OUT-OF-SCOPE OBSERVATION / PRE-EXISTING / NON-BLOCKING
+- Closure: main `d41829f4d6f71d78cdbda80b96ee7af41e44a715`
+- Current bounded lifecycle: `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED`
+- Review-record and closure integrations: tests and PostgreSQL NOT RUN (documentation-only). No `NOT RUN` state is converted into PASS
+
+The `CLOSED` above applies strictly to the bounded Unseen Transfer v2 Runtime implementation lifecycle. It is not project-wide closure. Runtime-engine validation is not learning-efficacy evidence. Learning efficacy: NOT VERIFIED. P1: NOT ACTIVATED. Human-data collection: NOT AUTHORIZED. Actual-provider validation: NOT ESTABLISHED; Mock evidence is not Actual-provider evidence. No human, learner, or production data was used. GitHub Actions / CI PASS is not claimed (not separately evidenced). Evidence Foundation overall completeness and Validation Level 3 §10 overall PASS remain NOT DECLARED.
+
+### A.19 P1 / B-3 Gate State (current)
+
+- B-1: complete bounded prerequisite (§A.7)
+- B-2: complete bounded prerequisite (§A.8)
+- B-4 / B-5: complete bounded governance prerequisites (§A.6)
+- B-3: completion lifecycle remains UNRESOLVED
+
+B-3 is the only unresolved item in the named B-1…B-5 sequence. The current `VI_EMPIRICAL_EVIDENCE_CONTRACT.md` §20.2 owner-decision register contains OWNER-APPROVED B-3 policy decisions. B-3 completion itself nevertheless remains UNRESOLVED, because existing unresolved findings/semantics remain open, including F1–F4, M-new-1, and `VI_EMPIRICAL_PILOT_SPEC.md` §14 completion/N/A semantics. This synchronization resolves no B-3 finding or policy value.
+
+B-3 is not the sole P1 activation condition:
+
+- `VI_EMPIRICAL_PILOT_SPEC.md` remains Proposed.
+- Pilot manifests remain `approved_for_pilot=false`.
+- Canonical pre-P1 instrumentation requirements include Pilot Spec approval, which is still required before n=1~3 instrumentation.
+- P1 activation is a separate explicit decision.
+
+P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; learning efficacy remains NOT VERIFIED.
+
+### A.20 Evidence Boundary of This Synchronization
+
+- Classification: DOCUMENTATION-ONLY STATUS / ROADMAP SYNCHRONIZATION (three files: `PROJECT_MASTER_INDEX.md`, `PROJECT_STATUS.md`, `VALIDATION_STATUS.md`)
+- Tests: NOT RUN — DOCUMENTATION-ONLY STATUS/ROADMAP SYNC
+- PostgreSQL: NOT RUN — DOCUMENTATION-ONLY STATUS/ROADMAP SYNC
+- `NOT RUN` is not PASS. Every figure in §A.17 and §A.18 is prior commit-pinned evidence, not evidence generated by this synchronization.
+
+### A.21 Next Action
+
+No bounded implementation milestone is currently active. Return to Control Tower for post-sync milestone selection. This applies only after this three-file post-closure roadmap/status synchronization candidate (branch `validation/post-closure-status-roadmap-sync-20260923`, parent `d41829f4d6f71d78cdbda80b96ee7af41e44a715`) has had a fresh, separate Independent Review and has been integrated onto main.
+
+The earlier Next Action here was a read-only METRIC_RESULT / Unseen Transfer v2 Runtime implementation-readiness re-pre-analysis. It is fulfilled and superseded, so it is no longer a current action. This document selects no next milestone and generates no Validation evidence.
 
 ---
 
