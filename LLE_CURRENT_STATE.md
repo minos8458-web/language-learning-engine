@@ -36,6 +36,13 @@ canonical authority or exact remote Git evidence, operational status is
 
 ## 3. Backlog Baseline
 
+> Historical / bootstrap-time baseline, preserved as recorded. The current
+> Git and Backlog baseline (`main`
+> `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00`; Backlog latest revision
+> `1.81`, blob `6e1e55a7be7ce11db98afb4a28ee12b89dfe6b45`) is recorded in
+> §4 "Post-Closure Roadmap / Status Documentation Sync — Review-Recorded
+> (Backlog 1.81) / Closure-Sync Candidate".
+
 - File: `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
 - Latest revision: `1.73`
 - Blob: `b99825ecf611d8cdd9e962ce66b16f2a41da1157`
@@ -8873,6 +8880,139 @@ collection, and no product milestone.
 
 See §10.
 
+#### Post-Closure Roadmap / Status Documentation Sync — Review-Recorded (Backlog 1.81) / Closure-Sync Candidate
+
+Classification: `DOCUMENTATION-ONLY CLOSURE-SYNC CANDIDATE`.
+
+**THIS CLOSURE-SYNC CANDIDATE DOES NOT BY ITSELF CLOSE THE LIFECYCLE.**
+
+##### Current Git and Backlog Baseline
+
+- `main` = `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00` (parent
+  `bcdf0c59299ec10cc9e866857735ddf1c504155a`, tree
+  `dfaea2343758939bce689f63be28c78b5720523d`, subject `Record post-closure
+  status-roadmap sync review record`).
+- `ARCHITECTURE_CLARIFICATION_BACKLOG.md`: latest revision `1.81` (present
+  exactly once), blob `6e1e55a7be7ce11db98afb4a28ee12b89dfe6b45`.
+- `LLE_CURRENT_STATE.md` blob on that `main` (parent of this candidate):
+  `d20c4c156991f008de768ac8b599382dc1f5115a`.
+
+##### Prior Bounded Milestone — Unchanged, Not Reopened
+
+`VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime`
+remains `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE
+WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED /
+CLOSED`, exactly as recorded in the immediately preceding subsection. This
+record does not reopen or reinterpret it.
+
+##### Lifecycle Chain
+
+- Original status/roadmap sync candidate:
+  `715cc33dc9cbcd9f23b9b4cc9562da4e284d9b7e` on branch
+  `validation/post-closure-status-roadmap-sync-20260923` (parent
+  `d41829f4d6f71d78cdbda80b96ee7af41e44a715`, tree
+  `1a9f520b95c02dfb9394b5b5140208edbd80072c`); exact changed-file set
+  `PROJECT_MASTER_INDEX.md` (blob
+  `9124f372653ae278dab55ef671a1ac75631be02e`), `PROJECT_STATUS.md` (blob
+  `136bb4a9ed212d17e3c9743998898e9685919ca9`), `VALIDATION_STATUS.md`
+  (blob `ba32383f4f80e02de17937a57b43ea7ebae625ae`).
+- Original sync Independent Review: `APPROVE WITH NON-BLOCKING NOTES`,
+  blocking `0`, non-blocking `3`, correction required before integration
+  `NO`, guarded integration suitable `YES`.
+- Original sync main integration:
+  `bcdf0c59299ec10cc9e866857735ddf1c504155a` (parent
+  `d41829f4d6f71d78cdbda80b96ee7af41e44a715`, tree
+  `1a9f520b95c02dfb9394b5b5140208edbd80072c`, subject `Synchronize
+  post-closure roadmap and status`); integrated tree identical to the
+  reviewed candidate tree.
+- Review-record: Backlog revision `1.81` (additive), candidate
+  `427e0a0c314f69a541944e1e6fea9653c6b98d91` on branch
+  `validation/post-closure-status-roadmap-sync-review-record-20260928`
+  (parent `bcdf0c59299ec10cc9e866857735ddf1c504155a`, tree
+  `dfaea2343758939bce689f63be28c78b5720523d`).
+- Review-record Independent Review: `APPROVE WITH NON-BLOCKING NOTES`,
+  blocking `0`, non-blocking `2`, correction required before integration
+  `NO`, guarded integration suitable `YES`.
+- Review-record main integration:
+  `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00` (parent
+  `bcdf0c59299ec10cc9e866857735ddf1c504155a`, tree
+  `dfaea2343758939bce689f63be28c78b5720523d`); changed-file set
+  `ARCHITECTURE_CLARIFICATION_BACKLOG.md` only (`+1/-0`); integrated tree
+  identical to the reviewed candidate tree.
+- Revision `1.81` itself explicitly did NOT close this lifecycle; it
+  recorded that the next lifecycle action is a separate documentation-only
+  closure-sync (this candidate).
+
+##### Findings (preserved; none resolved or reclassified)
+
+- Original sync Independent Review: `IR-PCS-01` (NOTE / EDITORIAL
+  PRECISION / NON-BLOCKING), `IR-PCS-02` (NOTE / PRE-EXISTING
+  SELF-REFERENCE / NON-BLOCKING), `IR-PCS-03` (NOTE / TRACEABILITY
+  PRECISION / NON-BLOCKING) — preserved with original classifications, not
+  resolved, not reclassified.
+- Review-record Independent Review: `IR-RR-PCS-01` = `NOTE / TRACEABILITY
+  WORDING / OPEN / NON-BLOCKING`; `IR-RR-PCS-02` = `NOTE / EVIDENCE
+  BOUNDARY / OPEN / NON-BLOCKING` — preserved, not resolved, not
+  reclassified.
+- All other existing open findings and lifecycle dispositions are
+  unchanged. `Q28`/`Q29`: `BLOCKED FOR Q28/Q29 WORDING`.
+
+##### Lifecycle Disposition
+
+- Pre-closure-sync state (after revision `1.81` review-record integrated
+  on `main` `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00`): `REVIEW-RECORDED /
+  CLOSURE-SYNC PENDING / NOT CLOSED`.
+- Candidate stage (this exact closure-sync candidate, before fresh
+  separate read-only Independent Review and guarded integration):
+  `REVIEW-RECORDED / CLOSURE-SYNC CANDIDATE / NOT CLOSED`.
+- Conditional integrated stage: only if this exact closure-sync candidate
+  receives a fresh, separate, read-only Independent Review with no blocking
+  correction requirement and is then guarded-integrated onto `main` does
+  the bounded lifecycle disposition become `REVIEW-RECORDED / CLOSED`.
+  Until both conditions are met, the governing disposition remains `NOT
+  CLOSED`.
+
+That conditional `CLOSED` applies strictly and only to the Post-Closure
+Roadmap / Status Documentation Sync governance lifecycle. It is NOT
+project-wide closure, and it closes, reopens, or reclassifies no other
+lifecycle or finding by implication. This Architecture session does not
+declare the lifecycle `CLOSED`.
+
+##### Evidence Boundaries and Non-Claims
+
+- Original status/roadmap sync: Tests `NOT RUN — DOCUMENTATION-ONLY
+  STATUS/ROADMAP INTEGRATION`; PostgreSQL `NOT RUN — DOCUMENTATION-ONLY
+  STATUS/ROADMAP INTEGRATION`.
+- Review-record candidate/integration: Tests `NOT RUN`; PostgreSQL `NOT
+  RUN`.
+- No `NOT RUN` above is a PASS. This lifecycle generated no runtime,
+  PostgreSQL, provider, efficacy, migration, or DDL evidence.
+
+Learning efficacy: `NOT VERIFIED`. VI Empirical Pilot P1: `NOT
+ACTIVATED`. Human-data collection: `NOT AUTHORIZED`. Actual-provider
+validation: `NOT ESTABLISHED`. `B-3`: `NOT RESOLVED`. Pilot Spec: `NOT
+APPROVED`. Evidence Foundation overall completeness: `NOT declared`.
+Validation Level 3 §10 overall PASS: `NOT declared`. Product/Beta
+readiness: `NOT declared`. Project-wide closure: `NOT declared`.
+
+##### This Closure-Sync Candidate Session
+
+Tests: `NOT RUN — DOCUMENTATION-ONLY CLOSURE-SYNC`. PostgreSQL: `NOT RUN —
+DOCUMENTATION-ONLY CLOSURE-SYNC`. Neither `NOT RUN` is a PASS. Repository
+mutation is limited to `LLE_CURRENT_STATE.md`;
+`ARCHITECTURE_CLARIFICATION_BACKLOG.md`, `PROJECT_MASTER_INDEX.md`,
+`PROJECT_STATUS.md`, `VALIDATION_STATUS.md`, `API_CONTRACT.md`,
+`EVIDENCE_FOUNDATION_P0_SCHEMA.md`, `VI_EMPIRICAL_EVIDENCE_CONTRACT.md`,
+`VI_EMPIRICAL_PILOT_SPEC.md`, Runtime source, tests, migrations, schema,
+DDL, and DB artifacts are unchanged. Tier A and Tier C semantics are
+unchanged. This candidate selects no next product milestone and
+authorizes no Development, no Research execution, no P1 activation, and
+no human-data collection.
+
+##### Next Action
+
+See §10.
+
 ## 5. Validation Branch and Canonical Artifacts
 
 - Validation branch:
@@ -11523,6 +11663,30 @@ remain true and are established in §4/§8 and elsewhere in this document:
   1.80) / Bounded Runtime Lifecycle CLOSED" for full detail; the sole Next
   Action is now a return to Control Tower for post-closure milestone
   selection/reconciliation (§10)
+- Post-Closure Roadmap / Status Documentation Sync lifecycle `CLOSED` —
+  NOT CLAIMED by this candidate. The immediately preceding bullet remains
+  accurate for the Unseen v2 Runtime closure it records and is preserved
+  verbatim; its Next Action was followed by the original status/roadmap
+  sync (integrated `bcdf0c59299ec10cc9e866857735ddf1c504155a`) and its
+  revision `1.81` review-record (integrated
+  `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00`). Current candidate-stage
+  disposition: `REVIEW-RECORDED / CLOSURE-SYNC CANDIDATE / NOT CLOSED`;
+  `REVIEW-RECORDED / CLOSED` only after fresh separate Independent Review
+  and guarded integration of this exact closure-sync, and then only for
+  that governance lifecycle, NOT project-wide. `IR-PCS-01`–`IR-PCS-03`,
+  `IR-RR-PCS-01`, and `IR-RR-PCS-02` are preserved, not resolved, not
+  reclassified. This does NOT mean: learning efficacy verified — NOT
+  CLAIMED (`NOT VERIFIED`); P1 activated — NOT CLAIMED (`NOT ACTIVATED`);
+  human-data collection authorized — NOT CLAIMED (`NOT AUTHORIZED`);
+  Actual-provider validation established — NOT CLAIMED (`NOT
+  ESTABLISHED`); `B-3` resolved — NOT CLAIMED; Pilot Spec approved — NOT
+  CLAIMED; Evidence Foundation overall completeness — NOT CLAIMED;
+  Validation Level 3 §10 overall PASS — NOT CLAIMED; product/Beta
+  readiness — NOT CLAIMED; project-wide closure — NOT CLAIMED; next
+  product milestone selected — NOT CLAIMED; tests or PostgreSQL run for
+  this lifecycle or this closure-sync — NOT CLAIMED (`NOT RUN`). See §4
+  "Post-Closure Roadmap / Status Documentation Sync — Review-Recorded
+  (Backlog 1.81) / Closure-Sync Candidate" and §10
 
 ### 9.2 Historical Non-Claims Ledger (time-scoped; preserved verbatim)
 
@@ -12361,21 +12525,24 @@ historical ledger does not.
 
 ## 10. Next Action
 
-- The sole project Next Action is to return to Control Tower for
-  post-closure milestone selection/reconciliation. The preceding Next
-  Action (fresh read-only Independent Review of the post-merge status-sync
-  candidate on `validation/unseen-v2-runtime-postmerge-status-sync-20260921`)
-  is fulfilled: that candidate was reviewed and integrated to `main` as
-  `0696de9825b1cd0430aac12058196fd41c296cdb`, the revision `1.80`
-  Runtime review-record was reviewed and integrated to `main` as
-  `4b86a440544a40e9195d6a6437f9f2256a92e9e3`, and the bounded `VI P1
-  Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime`
-  implementation lifecycle is recorded `CLOSED` by this closure-sync (§4
-  "METRIC_RESULT Unseen Transfer v2 Runtime — Review-Recorded (Backlog
-  1.80) / Bounded Runtime Lifecycle CLOSED"). This record does NOT select
-  or invent the next product milestone. This closure-sync itself
-  authorizes no new Development, no Research execution, no P1 activation,
-  no human-data collection, and no product milestone. P1 remains `NOT
-  ACTIVATED`; human-data collection remains `NOT AUTHORIZED`; learning
-  efficacy remains `NOT VERIFIED`; Actual-provider validation remains `NOT
-  ESTABLISHED`.
+- Candidate stage (pending, gated): a fresh, separate, read-only
+  Independent Review of this exact Post-Closure Roadmap / Status
+  Documentation Sync closure-sync candidate on branch
+  `validation/post-closure-status-roadmap-sync-closure-20260928` (parent
+  `58f1f3c2ea77a165d14a614a3cd5ea1c92a22f00`), followed, only if no
+  blocking correction is required, by guarded integration onto `main`.
+  Until then the lifecycle remains `REVIEW-RECORDED / CLOSURE-SYNC
+  CANDIDATE / NOT CLOSED`.
+- After successful Independent Review and guarded integration of this
+  exact closure-sync, the sole project Next Action is: Return to Control
+  Tower for post-sync milestone selection. No next milestone is selected
+  or started by this record.
+- The preceding Next Action (return to Control Tower for post-closure
+  milestone selection/reconciliation after the `VI P1 Measurement
+  Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` closure) was
+  followed by the Post-Closure Roadmap / Status Documentation Sync
+  lifecycle (§4) and is superseded by the actions above. This record authorizes no new Development, no Research
+  execution, no P1 activation, no human-data collection, and no product
+  milestone. P1 remains `NOT ACTIVATED`; human-data collection remains
+  `NOT AUTHORIZED`; learning efficacy remains `NOT VERIFIED`;
+  Actual-provider validation remains `NOT ESTABLISHED`.
