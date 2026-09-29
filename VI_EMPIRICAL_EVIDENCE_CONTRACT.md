@@ -871,6 +871,23 @@ Chance-corrected 또는 ordinal statistic은 rubric/formula version이 지정한
 
 Adjudicated final rating은 품질 결정에 사용할 수 있지만 agreement 계산에는 사용하지 않는다.
 
+#### 14.11.1 Current-P1 applicability (`OD-B3-HUMAN-RATER-01`)
+
+The formula, the `insufficient` conditions, and the adjudication exclusion above are unchanged.
+
+Two distinct states apply to Human agreement. They must never be collapsed into, substituted for, or reported as each other:
+
+- `insufficient` is a metric-query result state. A generic human-agreement metric query evaluated where no lawful human-rating source is present may still return `insufficient` under the existing rules above.
+- `N/A — POLICY-EXCLUDED` is a protocol applicability state. For the current provider-free / raw-audio-free P1 governed by §20.2 `Human rater access` (`OD-B3-HUMAN-RATER-01`), the Human Agreement protocol is `N/A — POLICY-EXCLUDED FOR CURRENT P1`, because live human-rater access to learner evidence is not authorized and no live human rating is performed.
+
+An `insufficient` metric-query result is not the current-P1 protocol applicability disposition. `N/A — POLICY-EXCLUDED` is not a metric result, not a measured value, and not a PASS.
+
+An empirical human-agreement claim — any reported `raw_agreement`, chance-corrected or ordinal statistic, or statement that inter-rater agreement was measured — requires independent original ratings from a lawful real human-rating source. No empirical human-agreement claim may be made for the current P1.
+
+Synthetic or structural human-audit instrumentation records may be used only to test structural/instrumentation separability, for example that original-rating representations and adjudication representations are separately identified and preserved and that the computation above excludes adjudicated ratings. A computation over synthetic records is an instrumentation test output, not an empirical human-agreement result. Synthetic evidence must not establish lawful live human rating, real human-rater participation, empirical inter-rater agreement, or a `VI_EMPIRICAL_PILOT_SPEC.md` §14 PASS.
+
+This subsection does not set or change `agreement_min_n`, the agreement threshold, or any rubric/formula version, and does not decide P2 applicability (§16.2, §20.2 adjacent mapping).
+
 ## 15. Lexical manifest boundary
 
 ### 15.1 Authority
@@ -954,12 +971,23 @@ Minimum rating fact:
 
 ### 16.2 n=1~3 instrumentation stage
 
-허용 및 권장:
+Current provider-free / raw-audio-free P1 (§20.2 `Human rater access`, `OD-B3-HUMAN-RATER-01`):
+
+- Live human-rater access to learner evidence is NOT AUTHORIZED (deny-all).
+- The current P1 performs no live human rating and no live independent double rating.
+- Human-audit work in the current P1 is structural/synthetic instrumentation only, without learner-evidence exposure.
+- Synthetic evidence may test the separability of original-rating representations and adjudication representations (§16.1 rules 1, 3, 4) and that agreement computation uses only original independent overlap (§16.1 rule 5).
+- Synthetic evidence must not establish lawful live human rating, real human-rater participation, empirical inter-rater agreement, or a `VI_EMPIRICAL_PILOT_SPEC.md` §14 PASS.
+- Human Agreement protocol applicability = `N/A — POLICY-EXCLUDED FOR CURRENT P1` (§14.11.1). `Human rating original/adjudication 분리` = `N/A — POLICY-EXCLUDED FOR CURRENT P1` / `GATE EXCLUSION / NOT PASS` (`VI_EMPIRICAL_PILOT_SPEC.md` §14).
+
+Future live-rating protocol — applicable only if live human rating at this stage later becomes lawful under separately valid authority, meaning separately applicable Human-rater access authority, Consent/privacy compatibility, audit-overlap protocol, agreement analysis rule, and applicable rating evidence, in addition to every requirement of the §20.2 `Human rater access` row. 그 경우에만 허용 및 권장:
 
 - Audit 대상으로 선정된 항목 전부를 independent double rating할 수 있다.
 - 목적은 rubric 이해 차이, instrumentation defect 및 disagreement 원인 파악이다.
 - Adjudication 전 original rating을 보존한다.
 - 이 단계의 전수 double rating을 12~20명 형성 단계의 영구 기본 계약으로 확대 해석하지 않는다.
+
+This subsection does not decide P2 (§16.3) and sets no `agreement_min_n`, agreement threshold, overlap, or `Human-audit staffing/cost` value.
 
 ### 16.3 12~20명 formative pilot
 
@@ -1149,6 +1177,24 @@ Contract §24.3의 `operational escalation`은 `Incident handling`의 child/sub-
 Contract §19의 `mapping store owner`, `재식별 가능성`, `mapping retention`과 §5.1의 `mapping 접근권한`은 모두 `Pseudonymous mapping policy`의 child/sub-decision이며, 이는 Architecture structural mapping이지 policy-value 결정이 아니다.
 Pilot Spec §19.1 item 1의 `cost ceiling` OWNER-DECISION(승인된 ceiling 금액)은 `Incident handling`의 child/sub-decision이며, 이는 Architecture structural mapping이지 cost ceiling grain·amount·unit policy-value 결정이 아니다.
 Pilot Spec §19.1 item 4의 `Retry 횟수`와 `recovery time window` OWNER-DECISION은 `Incident handling`의 child/sub-decision이며, 이는 Architecture structural mapping이지 Retry 횟수·recovery time window 값·grain·단위 policy-value 결정이 아니다.
+`Human rater access` (`OD-B3-HUMAN-RATER-01`) current-P1 applicability mapping — 이는 Architecture structural mapping이며 새로운 Privacy/Operations owner decision이 아니고 policy-value 결정도 아니다. The `Human rater access` row text and its owner-approved policy value, including the current provider-free / raw-audio-free P1 deny-all, are unchanged and not re-versioned; every other register row is unchanged; no new owner value is created:
+
+1. `VI_EMPIRICAL_PILOT_SPEC.md` §12 `human agreement`, for the current provider-free / raw-audio-free P1: protocol applicability = `N/A — POLICY-EXCLUDED FOR CURRENT P1` (§14.11.1). This protocol applicability state is distinct from the `insufficient` metric-query result state that a generic human-agreement metric query with no lawful human-rating source may still return under §14.11; the two must never be collapsed or substituted.
+2. `VI_EMPIRICAL_PILOT_SPEC.md` §14 `Human rating original/adjudication 분리`, for the same scope: `N/A — POLICY-EXCLUDED FOR CURRENT P1`; gate interpretation = `GATE EXCLUSION / NOT PASS`. Consistent with the row, this gate item remains execution/gate logic and not a policy value.
+3. Recording the disposition in items 1–2 requires evidence establishing all of the following semantic facts:
+   - `policy_reference` = `OD-B3-HUMAN-RATER-01`
+   - `scope` = current provider-free / raw-audio-free P1
+   - `live_human_rating_authorized` = false
+   - `live_human_rating_performed` = false
+   - `lawful_real_human_rating_source_present` = false
+   - `synthetic_evidence_use` = structure/instrumentation only
+   - `human_agreement_empirically_established` = false
+   - `absence_reason` = policy exclusion (not missing, technical failure, insufficient sample, or instrumentation defect)
+   - `gate_disposition` = excluded / not pass
+   These are semantic requirements only. The labels are not field, column, enum, or API names. They create no database schema, enum, API, migration, runtime state, or persistence format, and assign no owner for recording this disposition or declaring §14 completion. If any listed fact does not hold, this N/A disposition must not be recorded; this mapping defines no alternative disposition.
+4. §16.2 and `VI_EMPIRICAL_PILOT_SPEC.md` §2 / §11 P1 state the same current-P1 boundary directly: no live human rating, no live double rating, and structural/synthetic human-audit instrumentation only. Their double-rating protocol applies only under separately valid future live-rating authority.
+5. This mapping is scoped to the current P1 only and does not decide P2. Any later live human rating in P1 or P2 requires, in addition to every requirement stated in the `Human rater access` row, separately applicable: Human-rater access authority; Consent/privacy compatibility; audit-overlap protocol (§24.4); agreement analysis rule (§24.4); and applicable rating evidence.
+6. This mapping does not resolve B-3, Evidence-retention findings F1–F4, or Participant-deletion finding M-new-1. It does not declare §14 evaluation complete or P1→P2 eligibility, and a single gate item's N/A disposition does not complete §14 evaluation. It does not alter the `OD-B3-RETENTION-01` retention-end trigger or any Operational support, Incident handling, or Operational-support transport-disposition value. It sets no `agreement_min_n`, agreement threshold, or `Human-audit staffing/cost` value, activates no P1, and authorizes no human-data collection.
 
 근거 없는 숫자 placeholder는 architecture blocker가 아니다. 관련 단계에서 값이 필요한 경우에만 stage gate가 된다.
 

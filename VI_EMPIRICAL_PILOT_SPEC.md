@@ -24,7 +24,10 @@ Baseline: `ef467e4076c8bfcfbef84d766f0b1b6b0550534b`
 
 - participant 수: `[EVIDENCE-BOUND: 1~3]`
 - 목적: timing, anchor, rubric, session, missing 및 human-audit instrumentation 검증
-- human audit: 선정 audit 대상 전부 independent double rating 허용
+- human audit (current provider-free / raw-audio-free P1): no live human rating and no live double rating. Under `OD-B3-HUMAN-RATER-01` (Contract §20.2 `Human rater access`), live human-rater access to learner evidence is NOT AUTHORIZED (deny-all)
+- human-audit instrumentation: structural/synthetic instrumentation only, without learner-evidence exposure. Synthetic evidence may test separability of original-rating and adjudication representations only, and does not establish lawful live human rating, real human-rater participation, empirical inter-rater agreement, or §14 PASS
+- empirical human-agreement claim: none. §12 `human agreement` = `N/A — POLICY-EXCLUDED FOR CURRENT P1`
+- any later live human rating requires separately applicable Human-rater access authority, Consent/privacy compatibility, audit-overlap protocol, agreement analysis rule, and applicable rating evidence (§11 P1). P2 is not decided here
 - actual provider: 사용하지 않음
 - raw audio: 수집하지 않음
 
@@ -437,6 +440,18 @@ Excluded:
 
 ### P1
 
+Current provider-free / raw-audio-free P1 (`OD-B3-HUMAN-RATER-01`, Contract §20.2 `Human rater access`):
+
+- no live human rating
+- no live double rating
+- live human-rater access: NOT AUTHORIZED (deny-all)
+- human-audit work: structural/synthetic instrumentation only, without learner-evidence exposure
+- synthetic evidence may test separability of original-rating and adjudication representations; it does not establish lawful live human rating, real human-rater participation, empirical inter-rater agreement, or §14 PASS
+- human agreement: `N/A — POLICY-EXCLUDED FOR CURRENT P1` (§12)
+- original/adjudication separation gate: `N/A — POLICY-EXCLUDED FOR CURRENT P1` / `GATE EXCLUSION / NOT PASS` (§14)
+
+Future live-rating protocol — applicable only under separately valid future live-rating authority (separately applicable Human-rater access authority, Consent/privacy compatibility, audit-overlap protocol, agreement analysis rule, and applicable rating evidence, in addition to every requirement of the Contract §20.2 `Human rater access` row):
+
 - selected audit items all double-rated allowed
 - rubric defect/disagreement investigation
 - adjudication separate
@@ -462,9 +477,18 @@ Required:
 - completion
 - dropout
 - review debt
-- human agreement
+- human agreement (current P1: `N/A — POLICY-EXCLUDED FOR CURRENT P1`; see below)
 
 Formula version과 evidence contract §14를 따른다.
+
+Current-P1 applicability of `human agreement` (provider-free / raw-audio-free P1 governed by `OD-B3-HUMAN-RATER-01`):
+
+- `human agreement` remains in this metric catalog and is not removed.
+- Protocol applicability for the current P1: `N/A — POLICY-EXCLUDED FOR CURRENT P1` under `OD-B3-HUMAN-RATER-01`.
+- For the current P1 it is not measured, not reported as a value, and not PASS.
+- A generic human-agreement metric query with no lawful human-rating source may still return `insufficient` under Contract §14.11. `insufficient` is a metric-query result state and `N/A — POLICY-EXCLUDED` is a protocol applicability state; they must never be collapsed or substituted.
+- Synthetic evidence may establish only structural/instrumentation separability (Contract §14.11.1).
+- P2 applicability is not decided here.
 
 ## 13. Missing and technical failure
 
@@ -491,10 +515,30 @@ P1→P2 진입 전 확인:
 - Missing/technical outcome 구분 가능
 - Item-family lineage 판정 가능
 - Metric 재계산 가능
-- Human rating original/adjudication 분리
+- Human rating original/adjudication 분리 (current P1: `N/A — POLICY-EXCLUDED FOR CURRENT P1` / `GATE EXCLUSION / NOT PASS`; see below)
 - Privacy owner decisions 완료
 
 정확한 허용률은 `[PILOT-CALIBRATE]`이며 근거 없이 확정하지 않는다.
+
+Current-P1 disposition of `Human rating original/adjudication 분리`:
+
+For the current provider-free / raw-audio-free P1 governed by `OD-B3-HUMAN-RATER-01` (Contract §20.2 `Human rater access`), this gate item is `N/A — POLICY-EXCLUDED FOR CURRENT P1`. Gate interpretation: `GATE EXCLUSION / NOT PASS`. The item is excluded from the current-P1 gate evaluation; it is not satisfied, not passed, and must not be reported as PASS. Synthetic or structural verification that original-rating and adjudication representations are separable is instrumentation evidence only and does not convert this item to PASS.
+
+Recording this disposition requires evidence establishing all of the following semantic facts:
+
+- `policy_reference` = `OD-B3-HUMAN-RATER-01`
+- `scope` = current provider-free / raw-audio-free P1
+- `live_human_rating_authorized` = false
+- `live_human_rating_performed` = false
+- `lawful_real_human_rating_source_present` = false
+- `synthetic_evidence_use` = structure/instrumentation only
+- `human_agreement_empirically_established` = false
+- `absence_reason` = policy exclusion (not missing, technical failure, insufficient sample, or instrumentation defect)
+- `gate_disposition` = excluded / not pass
+
+These are semantic requirements only. The labels are not field, column, enum, or API names. They create no database schema, enum, API, migration, runtime state, or persistence format, and assign no owner for recording this disposition or declaring §14 completion. If any listed fact does not hold, this disposition must not be recorded; this section defines no alternative disposition. On any conflict, the Contract §20.2 `Human rater access` applicability mapping governs.
+
+This single gate item's N/A disposition does not declare the §14 evaluation complete or P1→P2 eligibility. It does not alter the `OD-B3-RETENTION-01` retention-end trigger, sets no exact 허용률, and does not decide P2 or how this gate item applies under any later live human rating. Any later live human rating requires separately applicable Human-rater access authority, Consent/privacy compatibility, audit-overlap protocol, agreement analysis rule, and applicable rating evidence. B-3 remains UNRESOLVED.
 
 ## 15. Privacy and operations
 
