@@ -14,14 +14,15 @@
   <div class="app-shell">
     <header class="app-header">
       <a class="brand" href="./" aria-label="LLE 시작 화면"><span class="brand-icon" aria-hidden="true">L</span><span>LLE<small>배운 것을, 내 말로</small></span></a>
-      <span class="language-pill" id="connection-label">베트남어</span>
+      <div class="header-language"><span class="language-pill" id="connection-label">언어 선택</span><button type="button" class="language-button" id="language-button" hidden>언어팩 변경</button></div>
     </header>
     <aside id="preview-notice" class="preview-notice" hidden>
-      <strong>화면 미리보기</strong><span>실제 학습 기록은 저장하지 않아요.</span>
+      <strong>화면 미리보기</strong><span>언어팩 용량은 예시이며 다운로드는 가상이에요. 실제 학습 기록은 저장하지 않아요.</span>
     </aside>
     <form id="preview-controls" class="preview-controls" hidden>
       <label for="preview-scene">살펴볼 화면</label>
       <select id="preview-scene" name="scene">
+        <option value="languages">언어팩 선택</option>
         <option value="home">시작 화면</option>
         <option value="review">복습</option>
         <option value="new">새 문법</option>

@@ -531,3 +531,32 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 실제 브라우저의 CSP 집행·화면 표시·휴대폰 너비·실기기: `미확인`. 브라우저 접근을 재시도하거나 우회하지 않았다.
 - 기존 전체 `npm test` / PostgreSQL / 실제 공급자 / APK / 실기기 / 학습 효과: NOT RUN.
 - 이 결과는 해당 작업 파일의 개발 세션 자동 검증이다. 실제 화면 검증, 독립 리뷰, 전체 Validation PASS, MOBILE-01 lifecycle CLOSED를 뜻하지 않는다.
+
+## D. MOBILE-02 — 선택 다운로드 클라이언트 개발 검증
+
+- 날짜: 2026-10-01 (Asia/Seoul). 사용자 지정 범위: `MOBILE_APP_BRIEF.md` §7.
+- 작업 시작: `0e07e90ff1ecfcd8304b089f870dd10401d9d634`; 계획 저장: `bf84224ec94f9d879947fcebe420ef1630ee46b1`.
+- 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 브랜치: `development/mobile-01-session-ui-20261001`.
+- 환경: Linux, Node.js `v24.19.0`, npm `11.9.0`, `linkedom` `0.18.13`, IndexedDB 테스트 전용 `fake-indexeddb` `6.2.5`.
+- 최종 실행: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js`.
+- 결과: 95 tests / 4 suites / pass 95 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
+- 구성: 모바일 화면/번들 38개 + 언어팩 서비스/캐시/팝업 26개 + 기존 AI Generation/Generation 계약 31개.
+- 최종 작업 파일의 `npm run build:mobile`: exit 0. 일반 정적 앱과 다운로드용 단일 HTML 생성 완료.
+- 직접 검증: 확인 전 다운로드 없음, 선택 파일 한 개, 크기·SHA-256 검증, 스트림 진행률,
+  취소/늦은 응답/저장 실패의 설치 방지, 캐시 쓰기 원자성, 재실행 복구, 같은 버전 재사용,
+  새 버전 실패 시 이전 캐시 보존, 본문 없는 캐시 차단, 미발행/잘못된 목록 차단,
+  팝업 하나와 나라·언어 질문/용량/100 MB 경계의 Wi-Fi 안내, 텍스트 비실행과 Escape 취소.
+- 실제 번들 DOM 실행: 기본 진입은 언어팩 목록, 옛 language/scene 설정으로 미설치 진입 불가,
+  저장 후 선택한 EN으로 기존 HTTP 세션 호출, user_id 바디 비포함과 기존 토큰 헤더 유지,
+  재실행/팩 재사용 시 추가 다운로드 없음, 인증 미연결 상태 유지, EN→JA 변경 시 대화 확인 초기화.
+- 단일 파일 DOM 실행: 기본 목록·예시 용량·가상 설치 후 선택 언어 전환·합성 모드 고정,
+  네트워크 호출 0, 기존 학습 장면/서버 순서 보존, 인라인 CSP 해시 일치.
+- 개발 중 중간 실패는 기존 HOME 기대와 비동기 테스트 대기 조건에서 발생했다. 새 요구의
+  LANGUAGE_PACKS 기대와 실제 선택 완료 Promise로 수정했고 위 최종 실행에서 통과했다.
+- 모든 패키지 데이터는 작은 합성 바이트 또는 명시적 가상 목록이다. 실제 출시 팩·실제 용량·콘텐츠·HTTP 공급 서버를 검증하지 않았다.
+- 실제 브라우저 CSP 집행·휴대폰 표시/터치·기기 캐시 보존/저장 한도·대용량 메모리·OS 중단: 미확인.
+  C.1의 브라우저 보안 제한은 유지하며 접근을 재시도하거나 우회하지 않았다.
+- 전체 `npm test`, PostgreSQL, 실제 AI 공급자, APK, 실기기, 학습 효과: NOT RUN.
+- 기존 엔진/제어기/전송 계약/DB/migration/API/Tier A/Validation 판정 규칙은 변경하지 않았다.
+  저장 커밋·원격 원문 확인·최종 다운로드 파일의 출처는 `MOBILE_APP_HANDOFF.md`와 브랜치 Git 이력에서 확인한다.
+- 이 증거는 개발 세션 검증이며 독립 리뷰·프로젝트 전체 PASS·학습 효과·lifecycle CLOSED를 선언하지 않는다.

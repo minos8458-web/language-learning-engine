@@ -55,6 +55,18 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-02 작업 브랜치 체크포인트 — 2026-10-01
+
+- 최신 사용자 지정 기능: 작은 지원 목록, 나라·언어 확인 팝업 하나, 예상 용량·Wi-Fi 권장 안내.
+- 코드 후보: 명시적 선택 다운로드, 크기·SHA-256 검증, 캐시의 원자적 저장, 설치 후 선택 언어로 새 세션 진입 구현 완료.
+- 초기 언어팩 본문 다운로드 없음. 팩 다운로드·검증·저장 실패는 학습으로 넘어가지 않는다.
+- 같은 버전 재사용·재실행 복구·취소·중복 요청 방지·언어 변경 시 대화 확인 초기화 구현 완료.
+- 자동 검증·빌드: 통과. 상세 증거는 `VALIDATION_STATUS.md` §D가 소유한다.
+- 미리보기: 예시 목록·용량과 가상 다운로드. 실제 팩 배포 지원이나 용량 검증으로 취급하지 않는다.
+- 실제 팩 파일·배포 목록·정확한 용량·콘텐츠 연결: 미완료/미확인 (`LANGUAGE_PACK_DOWNLOAD_BRIEF.md`).
+- MOBILE-01 시각 검증, 실제 브라우저·휴대폰 터치·대용량 성능·APK·인증/서버: 미확인 또는 후속 작업.
+- 기존 엔진·API·DB·Validation 규칙 및 기존 준비/비완료 경계를 보존한다. 전체 앱 완성·출시·CLOSED를 선언하지 않는다.
+
 ### MOBILE-01 작업 브랜치 체크포인트 — 2026-10-01
 
 - 사용자 앱 제작 착수 지시를 확인하고 작업 브랜치를 준비했다.
@@ -131,7 +143,7 @@ Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, an
 
 ### 5.1 Next Action
 
-현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
+현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
 작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md`, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 
 #### 제작 착수 전 다음 행동 기록 (보존)
