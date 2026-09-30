@@ -523,6 +523,7 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 기존 계약 포함 실행: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js` → 63 tests / 4 suites / pass 63 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
 - 구성: 모바일 검증 32개 (C.1 대비 단일 파일 산출물·실행 검증 4개 추가)와 기존 AI Generation/Generation 계약 검증 31개.
 - `npm run build:mobile`: exit 0. 일반 정적 앱과 `mobile/dist/lle-mobile-preview.html`을 생성했다.
+- 코드 저장 커밋 `a959906ce8a40a57c7aca8e9d0ad63c7c770a5e8` 확인 후 깨끗한 작업 상태에서 `npm run build:mobile`을 다시 실행했고 exit 0을 확인했다. 다운로드 파일의 출처 메타데이터가 이 커밋과 일치하고 작업 중 변경 표시가 없는 것을 확인했다. 런타임 테스트를 커밋 후 재실행한 기록으로 바꾸지 않는다.
 - 추가 직접 검증: HTML 안에 코드·스타일·아이콘 포함, 외부 코드·스타일 파일 참조 없음, 인라인 코드·스타일의 CSP 해시 일치, `connect-src 'none'` 선언, 파일에 출처 커밋/작업 중 변경 표시 포함.
 - 추가 DOM 실행: 다운로드 파일의 합성 모드 고정, 호스트 토큰 미호출, 일곱 장면 선택, 교차 연습 중복·순서 보존, 명시적 학습 시작 후 같은 제안의 학습 시작 버튼 비활성, 대화 확인·새 세션, 합성 오류 재시도. 해당 DOM 실행에서 네트워크 호출 0을 확인했다.
 - 정적 실행기의 공개 파일 목록은 유지한다. 다운로드 전용 HTML을 기존 서버 경로로 노출하지 않는다.
