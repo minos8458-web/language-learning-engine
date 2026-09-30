@@ -542,6 +542,7 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 결과: 95 tests / 4 suites / pass 95 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
 - 구성: 모바일 화면/번들 38개 + 언어팩 서비스/캐시/팝업 26개 + 기존 AI Generation/Generation 계약 31개.
 - 최종 작업 파일의 `npm run build:mobile`: exit 0. 일반 정적 앱과 다운로드용 단일 HTML 생성 완료.
+- 코드 커밋 `16e793dc454482652f46329d3d0959fba35a2312`의 원격 변경 원문 일치를 확인한 후, 깨끗한 소스에서 `npm run build:mobile`을 다시 실행해 exit 0을 확인했다. 최종 파일의 출처 메타데이터가 이 코드 커밋과 일치하며 작업 중 변경 표시가 없는 것을 확인했고 파일 저장을 완료했다. 코드 커밋 후 런타임 테스트 재실행을 뜻하지 않는다.
 - 직접 검증: 확인 전 다운로드 없음, 선택 파일 한 개, 크기·SHA-256 검증, 스트림 진행률,
   취소/늦은 응답/저장 실패의 설치 방지, 캐시 쓰기 원자성, 재실행 복구, 같은 버전 재사용,
   새 버전 실패 시 이전 캐시 보존, 본문 없는 캐시 차단, 미발행/잘못된 목록 차단,
