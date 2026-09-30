@@ -62,6 +62,9 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 - 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
 - 모바일 화면·HTTP 연결 경계: 코드 후보 구현 완료 (`MOBILE_APP_BRIEF.md`).
 - 자동 검증: 통과, 상세 증거는 `VALIDATION_STATUS.md` §C가 소유한다.
+- 동일 MOBILE-01 검증 준비: 단일 HTML 미리보기 생성·합성 모드 고정·수동 화면 확인 안내 구현 완료.
+- 추가 자동 검증·빌드: 통과, 상세 증거는 `VALIDATION_STATUS.md` §C.2가 소유한다.
+- 다운로드 파일은 화면 검증용 합성 미리보기이며 설치 앱·실제 학습 서버 연결을 뜻하지 않는다.
 - 실제 브라우저·휴대폰 화면 표시: 환경 제한으로 미확인.
 - 전체 앱·실제 서버·실제 AI·Android 설치 패키지 완료와 lifecycle CLOSED는 선언하지 않는다.
 - 이 추가 기록은 아래 기존 서버·검증·제품 준비 상태를 완료로 승격하지 않는다.

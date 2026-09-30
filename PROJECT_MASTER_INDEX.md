@@ -85,6 +85,9 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 `development/mobile-01-session-ui-20261001`을 준비했다.
 현재 작업은 기존 세션 제어기와 모바일 화면 연결 하나다. 코드 후보 구현과 자동 검증을 마쳤으며,
 실제 브라우저·휴대폰 화면 검증은 환경 제한으로 미확인이다. Lifecycle CLOSED를 선언하지 않는다.
+같은 작업의 검증 준비로 단일 HTML 미리보기 빌드와 수동 확인 안내를 추가했다.
+준비 코드와 관련 자동 검증은 완료했으며, 실제 화면 검증은 미확인으로 유지한다.
+준비 범위는 `MOBILE_APP_BRIEF.md` §6, 수동 확인 순서는 `MOBILE_SCREEN_TEST_GUIDE.md`를 따른다.
 범위는 `MOBILE_APP_BRIEF.md`, 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 기존 엔진·스키마·Validation 규칙을 보존하고, 검토·종료되지 않은 기존 문서
 동기화 lifecycle을 종료로 재분류하지 않는다. 앱 출시·실제 AI·학습 효과 완료를 선언하지 않는다.
