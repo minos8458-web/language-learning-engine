@@ -5,7 +5,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { once } = require('node:events');
 const vm = require('node:vm');
-const { createHash } = require('node:crypto');
+const { createHash, webcrypto } = require('node:crypto');
+const { IDBFactory } = require('fake-indexeddb');
 const { HttpLearningFlowTransport } = require('../src/client/httpLearningFlowTransport');
 const { LearningSessionController } = require('../src/client/learningSessionController');
 const { CapacityAdmissionConflictError } = require('../src/client/learningFlowTransportContract');
@@ -406,27 +407,27 @@ test('전송 실패는 오류 화면과 수동 재시도로 이어지고 원문 
   view.destroy();
 });
 
-function runBundle(context, search, { standalone = false, config } = {}) {
+function runBundle(context, search, { standalone = false, config, indexedDB, fetchImpl } = {}) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'lle-mobile-bootstrap-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   buildMobile(directory);
   const file = standalone ? 'lle-mobile-preview.html' : 'index.html';
   const { document } = parseHTML(fs.readFileSync(path.join(directory, file), 'utf8'));
-  const window = { location: { search }, LLE_APP_CONFIG: config };
+  const window = { location: { search, origin: 'https://lle.example' }, LLE_APP_CONFIG: config, indexedDB };
   let fetchCalls = 0;
   const code = standalone ? document.querySelector('script').textContent : fs.readFileSync(path.join(directory, 'app.js'), 'utf8');
   vm.runInNewContext(code, {
-    window, document, URL, URLSearchParams, structuredClone, AbortController,
+    window, document, URL, URLSearchParams, structuredClone, AbortController, Blob, Uint8Array, crypto: webcrypto,
     setTimeout, clearTimeout,
-    fetch: () => { fetchCalls += 1; throw new Error('합성 네트워크 차단'); },
+    fetch: (...args) => { fetchCalls += 1; if (fetchImpl) return fetchImpl(...args); throw new Error('합성 네트워크 차단'); },
   });
   return { root: document.getElementById('learning-root'), document, window, fetchCalls: () => fetchCalls };
 }
 
-test('최종 브라우저 번들의 기본 진입은 연결 준비 화면이며 합성 학습을 시작하지 않는다', (context) => {
+test('최종 브라우저 번들의 기본 진입은 언어팩 선택이며 미설치 언어로 학습하지 않는다', (context) => {
   const app = runBundle(context, '');
-  assert.equal(app.root.dataset.screen, 'HOME');
-  assert.equal(app.root.querySelector('[data-action="start"]').disabled, true);
+  assert.equal(app.root.dataset.screen, 'LANGUAGE_PACKS');
+  assert.equal(app.root.querySelector('[data-action="start"]'), null);
   assert.equal(app.document.getElementById('preview-controls').hidden, true);
   assert.equal(app.document.getElementById('preview-notice').hidden, true);
   assert.equal(app.fetchCalls(), 0);
@@ -521,5 +522,131 @@ test('다운로드 빌드의 학습 시작·대화 확인·새 세션·합성 �
   app.root.querySelector('[data-action="start"]').click();
   await settle();
   assert.equal(app.root.dataset.screen, 'ERROR');
+  assert.equal(app.fetchCalls(), 0);
+});
+
+// 실제 번들을 Node DOM으로 실행한다. 브라우저 렌더링/실기기 검증은 아니다.
+function waitForDom(app, predicate) {
+  if (predicate()) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const observer = new app.document.defaultView.MutationObserver(() => {
+      if (predicate()) { clearTimeout(timer); observer.disconnect(); resolve(); }
+    });
+    const timer = setTimeout(() => { observer.disconnect(); reject(new Error(`화면 조건 대기 실패: ${app.root.dataset.screen}`)); }, 2000);
+    observer.observe(app.root, { subtree: true, childList: true, attributes: true });
+  });
+}
+
+const PACK_BYTES = new TextEncoder().encode('합성 번들 언어팩 파일');
+const PACK_CATALOG = [{ id: 'test-en', language: 'EN', name: '영어', country: '미국', version: 'test-1',
+  downloadBytes: PACK_BYTES.length, sha256: createHash('sha256').update(PACK_BYTES).digest('hex'), downloadUrl: '/packs/test-en.llepack' }];
+
+test('인증 설정·옛 기본 언어·scene query가 있어도 미설치 언어로 학습하지 않는다', async (context) => {
+  let tokens = 0;
+  const app = runBundle(context, '?scene=review', { indexedDB: new IDBFactory(), config: {
+    language: 'VI', userId: USER_ID, getAccessToken() { tokens += 1; return TOKEN; }, languagePackCatalog: PACK_CATALOG,
+  } });
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id]')?.disabled === false);
+  assert.equal(app.root.dataset.screen, 'LANGUAGE_PACKS');
+  assert.equal(app.root.querySelector('[data-action="start"]'), null);
+  app.root.querySelector('[data-pack-id]').click();
+  assert.equal(app.fetchCalls(), 0); assert.equal(tokens, 0);
+  app.root.querySelector('[data-action="pack-cancel"]').click();
+  assert.equal(app.fetchCalls(), 0);
+});
+
+test('번들은 선택한 팩 하나만 받고 설치 후 선택 언어로 기존 HTTP 세션을 시작한다', async (context) => {
+  const indexedDB = new IDBFactory(); const calls = [];
+  const config = { language: 'VI', userId: USER_ID, getAccessToken: () => TOKEN, languagePackCatalog: PACK_CATALOG };
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return url.includes('/packs/') ? new Response(PACK_BYTES) : ok({ next_action: 'IDLE' });
+  };
+  const app = runBundle(context, '', { indexedDB, config, fetchImpl });
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id]')?.disabled === false);
+  app.root.querySelector('[data-pack-id]').click();
+  const confirm = app.root.querySelector('[data-action="pack-confirm"]'); confirm.click(); confirm.click();
+  await waitForDom(app, () => app.root.dataset.screen === 'HOME');
+  assert.equal(calls.length, 1); assert.match(calls[0].url, /\/packs\/test-en\.llepack$/);
+  assert.equal(calls[0].init.headers, undefined);
+  assert.equal(app.document.getElementById('connection-label').textContent, '영어');
+  app.root.querySelector('[data-action="start"]').click();
+  await waitForDom(app, () => app.root.dataset.screen === 'IDLE');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].url, '/flow/start-session');
+  assert.deepEqual(JSON.parse(calls[1].init.body), { language: 'EN', conversation_boundary_acknowledged: false });
+  assert.equal(calls[1].init.headers.Authorization, `Bearer ${TOKEN}`);
+  const reopened = runBundle(context, '', { indexedDB, config, fetchImpl });
+  await waitForDom(reopened, () => reopened.root.dataset.screen === 'HOME');
+  assert.equal(reopened.document.getElementById('connection-label').textContent, '영어');
+  assert.equal(calls.length, 2); // 재실행은 팩이나 학습을 자동으로 요청하지 않는다.
+  reopened.document.getElementById('language-button').click();
+  await waitForDom(reopened, () => reopened.root.querySelector('[data-pack-id]')?.disabled === false);
+  assert.match(reopened.root.textContent, /설치됨|선택됨/);
+  reopened.root.querySelector('[data-pack-id]').click(); reopened.root.querySelector('[data-action="pack-confirm"]').click();
+  await waitForDom(reopened, () => reopened.root.dataset.screen === 'HOME');
+  assert.equal(calls.length, 2);
+});
+
+test('다운로드 완료 후에도 인증 미연결이면 학습 요청은 비활성 상태다', async (context) => {
+  const app = runBundle(context, '', { indexedDB: new IDBFactory(), config: { languagePackCatalog: PACK_CATALOG }, fetchImpl: async () => new Response(PACK_BYTES) });
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id]')?.disabled === false);
+  app.root.querySelector('[data-pack-id]').click(); app.root.querySelector('[data-action="pack-confirm"]').click();
+  await waitForDom(app, () => app.root.dataset.screen === 'HOME');
+  assert.equal(app.root.querySelector('[data-action="start"]').disabled, true);
+  assert.equal(app.fetchCalls(), 1);
+});
+
+test('학습 언어를 바꾸면 새 세션을 만들고 이전 언어의 대화 확인을 넘기지 않는다', async (context) => {
+  const catalog = [...PACK_CATALOG, { ...PACK_CATALOG[0], id: 'test-ja', language: 'JA', name: '일본어', country: '일본', downloadUrl: '/packs/test-ja.llepack' }];
+  const bodies = [];
+  const app = runBundle(context, '', { indexedDB: new IDBFactory(), config: { userId: USER_ID, getAccessToken: () => TOKEN, languagePackCatalog: catalog },
+    fetchImpl: async (url, init) => {
+      if (url.includes('/packs/')) return new Response(PACK_BYTES);
+      const body = JSON.parse(init.body); bodies.push(body);
+      return ok({ next_action: body.conversation_boundary_acknowledged ? 'IDLE' : 'CONVERSATION' });
+    } });
+  async function install(id) {
+    await waitForDom(app, () => app.root.querySelector(`[data-pack-id="${id}"]`)?.disabled === false);
+    app.root.querySelector(`[data-pack-id="${id}"]`).click(); app.root.querySelector('[data-action="pack-confirm"]').click();
+    await waitForDom(app, () => app.root.dataset.screen === 'HOME');
+  }
+  await install('test-en'); app.root.querySelector('[data-action="start"]').click();
+  await waitForDom(app, () => app.root.dataset.screen === 'CONVERSATION_BOUNDARY');
+  app.root.querySelector('[data-action="acknowledge"]').click(); await waitForDom(app, () => app.root.dataset.screen === 'IDLE');
+  app.document.getElementById('language-button').click(); await install('test-ja');
+  app.root.querySelector('[data-action="start"]').click(); await waitForDom(app, () => app.root.dataset.screen === 'CONVERSATION_BOUNDARY');
+  assert.deepEqual(bodies, [{ language: 'EN', conversation_boundary_acknowledged: false },
+    { language: 'EN', conversation_boundary_acknowledged: true }, { language: 'JA', conversation_boundary_acknowledged: false }]);
+});
+
+test('최종 번들에서 해시 오류는 미설치 상태와 같은 팝업의 재시도로 이어진다', async (context) => {
+  const app = runBundle(context, '', { indexedDB: new IDBFactory(), config: { languagePackCatalog: PACK_CATALOG, getAccessToken: () => TOKEN }, fetchImpl: async () => new Response(new Uint8Array(PACK_BYTES.length)) });
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id]')?.disabled === false);
+  app.root.querySelector('[data-pack-id]').click(); app.root.querySelector('[data-action="pack-confirm"]').click();
+  await waitForDom(app, () => app.root.querySelector('[data-action="pack-confirm"]')?.textContent === '다시 다운로드');
+  assert.equal(app.root.dataset.screen, 'LANGUAGE_PACKS');
+  assert.equal(app.root.querySelectorAll('dialog[open]').length, 1);
+  assert.equal(app.root.querySelector('[data-action="start"]'), null);
+  assert.equal(app.fetchCalls(), 1);
+});
+
+test('다운로드 HTML의 기본 장면은 언어팩 선택이며 가상 설치 후 해당 언어로 전환한다', async (context) => {
+  const app = runBundle(context, '', { standalone: true, config: { languagePackCatalog: PACK_CATALOG, getAccessToken() { throw new Error('실제 인증을 읽으면 안 됨'); } } });
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id="preview-JA"]')?.disabled === false);
+  assert.equal(app.root.dataset.screen, 'LANGUAGE_PACKS');
+  assert.equal(app.root.querySelectorAll('[data-pack-id]').length, 4);
+  app.root.querySelector('[data-pack-id="preview-JA"]').click();
+  assert.equal(app.root.querySelector('#pack-dialog-wifi').hidden, false);
+  assert.match(app.root.querySelector('#pack-dialog-size').textContent, /150 MB/);
+  const confirm = app.root.querySelector('[data-action="pack-confirm"]'); confirm.click(); confirm.click();
+  await waitForDom(app, () => app.root.dataset.screen === 'HOME');
+  assert.match(app.document.getElementById('connection-label').textContent, /일본어/);
+  assert.equal(app.fetchCalls(), 0);
+  app.document.getElementById('language-button').click();
+  await waitForDom(app, () => app.root.querySelector('[data-pack-id="preview-JA"]')?.disabled === false);
+  app.root.querySelector('[data-pack-id="preview-JA"]').click();
+  assert.match(app.root.querySelector('#pack-dialog-size').textContent, /다시 내려받지/);
+  assert.equal(app.root.querySelector('#pack-dialog-wifi').hidden, true);
   assert.equal(app.fetchCalls(), 0);
 });

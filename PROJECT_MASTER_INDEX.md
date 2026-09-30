@@ -78,12 +78,23 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-02 — 사용자 지정 언어팩 선택 다운로드 (작업 브랜치)
+
+2026-10-01T06:27:14+09:00 사용자가 다음 빌드에 나라·언어별 선택 다운로드,
+확인 팝업 하나, 예상 용량과 큰 파일의 Wi-Fi 안내를 지정했다.
+이 명시적 지시로 이번 클라이언트 범위를 변경했다 (`MOBILE_APP_BRIEF.md` §7).
+선택 다운로드·파일 검증·기기 캐시·설치 후 언어별 세션 진입의 코드 후보와 자동 검증·빌드를 완료했다.
+실제 배포용 팩·용량·목록 연결과 휴대폰 표시·터치는 미확인이다.
+이전 MOBILE-01의 시각 검증 대기 상태와 모든 기존 lifecycle 경계를 유지하며 CLOSED로 바꾸지 않는다.
+실행 증거는 `VALIDATION_STATUS.md` §D, 구현 설명은 `LANGUAGE_PACK_DOWNLOAD_BRIEF.md`,
+최신 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+
 ### MOBILE-01 — 모바일 세션 화면 연결 (작업 브랜치)
 
 2026-09-30의 사용자 앱 제작 착수 지시와 2026-10-01의 계속 진행 지시에 따라,
 `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`에서
 `development/mobile-01-session-ui-20261001`을 준비했다.
-현재 작업은 기존 세션 제어기와 모바일 화면 연결 하나다. 코드 후보 구현과 자동 검증을 마쳤으며,
+이전 작업은 기존 세션 제어기와 모바일 화면 연결이다. 코드 후보 구현과 자동 검증을 마쳤으며,
 실제 브라우저·휴대폰 화면 검증은 환경 제한으로 미확인이다. Lifecycle CLOSED를 선언하지 않는다.
 같은 작업의 검증 준비로 단일 HTML 미리보기 빌드와 수동 확인 안내를 추가했다.
 준비 코드와 관련 자동 검증은 완료했으며, 실제 화면 검증은 미확인으로 유지한다.
@@ -116,8 +127,9 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
-사용자 제작 착수 지시를 근거로 선택한 작업이며 세부 범위는 `MOBILE_APP_BRIEF.md`를 따른다.
+현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
+`MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩 연결·콘텐츠·APK는 미완료 상태로 남긴다.
+최신 사용자 지정 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §7 / `MOBILE_APP_HANDOFF.md`를 따른다.
 
 ### 제작 착수 전 다음 행동 기록 (보존)
 

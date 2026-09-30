@@ -9015,6 +9015,17 @@ See §10.
 
 ## 5. Validation Branch and Canonical Artifacts
 
+### MOBILE-02 — 사용자 지정 나라·언어별 선택 다운로드
+
+- 최신 사용자 직접 지시: 2026-10-01T06:27:14+09:00. 초기 용량 부담을 줄이고 언어팩 목록에서 선택한 팩만 받으며, 확인 팝업·예상 용량·큰 파일의 Wi-Fi 권장 안내를 추가한다.
+- 이 지시로 이번 클라이언트 범위를 변경했다. MOBILE-01 실제 시각 검증 대기·보안 접근 제한은 유지하고 CLOSED로 바꾸지 않는다.
+- 시작 기준선: `0e07e90ff1ecfcd8304b089f870dd10401d9d634`; 계획 저장: `bf84224ec94f9d879947fcebe420ef1630ee46b1`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §7.
+- 코드 후보 구현: 목록·확인 팝업·선택 다운로드·진행률·취소·크기/해시 검증·기기 캐시·설치 후 언어별 새 세션 진입 완료.
+- 직접 실행 증거: `VALIDATION_STATUS.md` §D. 코드와 미리보기 출처·최신 저장 상태는 `MOBILE_APP_HANDOFF.md`에서 확인한다.
+- 실제 배포 팩·용량·목록·콘텐츠 연결·휴대폰 시각/터치·대용량 성능·APK: 미확인/후속 작업. 합성 목록과 가상 진행률을 실제 팩으로 취급하지 않는다.
+- 기존 엔진·Tier A·API·PostgreSQL schema/migration·Validation 판정 규칙·Pilot/학습 효과 비완료 경계는 변경하지 않는다.
+
 ### MOBILE-01 — 사용자 지시에 따른 모바일 화면 제작 착수
 
 - 기록일: 2026-10-01 (Asia/Seoul).
@@ -9032,7 +9043,7 @@ See §10.
 - 이 사용자 지시는 기존 문서 동기화 후보의 독립 검토·종료를 대신하지 않는다.
   그 lifecycle과 기존 비완료 경계는 보존하며 앱·실제 AI·출시·학습 효과 완료를 선언하지 않는다.
 
-> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-01` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다.
+> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-02` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01 기록은 이전 빌드의 출처로 보존한다.
 
 - Validation branch:
   `validation/vi-p1-raw-source-core-contract-20260829`
@@ -12544,7 +12555,7 @@ historical ledger does not.
 
 ## 10. Next Action
 
-현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
+현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
 사용자 제작 착수 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md`의 범위를 따른다.
 
 ### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)

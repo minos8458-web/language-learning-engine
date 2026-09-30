@@ -19,7 +19,7 @@ function mobileScreenModel(state) {
     return { kind: 'ERROR', tag: '연결 확인', title: '학습을 불러오지 못했어요', description: '연결을 확인한 뒤 다시 시도해 주세요. 학습 완료로 처리하지 않았어요.', nodeIds: [] };
   }
   if (state.requestStatus === REQUEST_STATUS.IDLE) {
-    return { kind: 'HOME', tag: '오늘의 베트남어', title: '배운 표현이\n내 말이 되도록', description: '기억을 꺼내고, 문법을 연결하고, 새로운 문장으로 이어가요.', nodeIds: [] };
+    return { kind: 'HOME', tag: '오늘의 언어 학습', title: '배운 표현이\n내 말이 되도록', description: '기억을 꺼내고, 문법을 연결하고, 새로운 문장으로 이어가요.', nodeIds: [] };
   }
   const screen = state.currentScreen;
   if (!screen || !Object.hasOwn(SCREEN_COPY, screen.kind)) {

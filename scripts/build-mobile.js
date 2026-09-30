@@ -10,7 +10,11 @@ const MODULES = [
   'src/client/learningSessionController.js',
   'src/client/httpLearningFlowTransport.js',
   'src/client/mobileSessionView.js',
+  'src/client/languagePackService.js',
+  'src/client/languagePackController.js',
+  'src/client/languagePackView.js',
   'mobile/previewTransport.js',
+  'mobile/previewLanguagePacks.js',
   'mobile/browserEntry.js',
 ];
 
