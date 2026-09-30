@@ -55,6 +55,19 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-01 작업 브랜치 체크포인트 — 2026-10-01
+
+- 사용자 앱 제작 착수 지시를 확인하고 작업 브랜치를 준비했다.
+- 작업 브랜치: `development/mobile-01-session-ui-20261001`.
+- 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 모바일 화면·HTTP 연결 경계: 코드 후보 구현 완료 (`MOBILE_APP_BRIEF.md`).
+- 자동 검증: 통과, 상세 증거는 `VALIDATION_STATUS.md` §C가 소유한다.
+- 실제 브라우저·휴대폰 화면 표시: 환경 제한으로 미확인.
+- 전체 앱·실제 서버·실제 AI·Android 설치 패키지 완료와 lifecycle CLOSED는 선언하지 않는다.
+- 이 추가 기록은 아래 기존 서버·검증·제품 준비 상태를 완료로 승격하지 않는다.
+
+### 서버·제품 준비 기준선 (보존)
+
 - Backend runtime: partial implementation
 - Actual provider: incomplete
 - Evidence Foundation overall: incomplete
@@ -114,6 +127,11 @@ Accordingly: the BIGINT writer source-authority runtime is independently reviewe
 Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, and the `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` implementation lifecycle is `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED`, bounded to that lifecycle only. Tests and PostgreSQL for this synchronization: NOT RUN — DOCUMENTATION-ONLY STATUS/ROADMAP SYNC.
 
 ### 5.1 Next Action
+
+현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
+작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md`, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+
+#### 제작 착수 전 다음 행동 기록 (보존)
 
 No bounded implementation milestone is currently active. Return to Control Tower for post-sync milestone selection. This applies only after this three-file post-closure roadmap/status synchronization candidate (branch `validation/post-closure-status-roadmap-sync-20260923`, parent `d41829f4d6f71d78cdbda80b96ee7af41e44a715`) has had a fresh, separate Independent Review and has been integrated onto main.
 

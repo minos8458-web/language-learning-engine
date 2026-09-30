@@ -78,6 +78,19 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-01 — 모바일 세션 화면 연결 (작업 브랜치)
+
+2026-09-30의 사용자 앱 제작 착수 지시와 2026-10-01의 계속 진행 지시에 따라,
+`ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`에서
+`development/mobile-01-session-ui-20261001`을 준비했다.
+현재 작업은 기존 세션 제어기와 모바일 화면 연결 하나다. 코드 후보 구현과 자동 검증을 마쳤으며,
+실제 브라우저·휴대폰 화면 검증은 환경 제한으로 미확인이다. Lifecycle CLOSED를 선언하지 않는다.
+범위는 `MOBILE_APP_BRIEF.md`, 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+기존 엔진·스키마·Validation 규칙을 보존하고, 검토·종료되지 않은 기존 문서
+동기화 lifecycle을 종료로 재분류하지 않는다. 앱 출시·실제 AI·학습 효과 완료를 선언하지 않는다.
+
+### 제작 착수 전 기준선 기록 (보존)
+
 No bounded implementation milestone is currently active. The `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` implementation lifecycle is `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED` and is recorded above as the Last Completed Bounded Milestone. The previously selected read-only Unseen Transfer v2 Runtime implementation-readiness re-pre-analysis is fulfilled and superseded (Control Tower adjudicated readiness `READY`, and the bounded Runtime lifecycle has since closed). Milestone selection returns to Control Tower; no next milestone is selected or started by this document.
 
 ## Remaining Blocking-Gap Sequence
@@ -99,6 +112,11 @@ VI Empirical Pilot P1 activation remains gated on the following implementation/d
 B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not the sole condition for P1 activation. `VI_EMPIRICAL_PILOT_SPEC.md` remains Proposed; the pilot manifests remain `approved_for_pilot=false`; canonical pre-P1 instrumentation requirements include Pilot Spec approval, which is still required before n=1~3 instrumentation; and P1 activation is a separate explicit decision. VI Empirical Pilot P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; learning efficacy remains NOT VERIFIED.
 
 ## Next Action
+
+현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
+사용자 제작 착수 지시를 근거로 선택한 작업이며 세부 범위는 `MOBILE_APP_BRIEF.md`를 따른다.
+
+### 제작 착수 전 다음 행동 기록 (보존)
 
 Return to Control Tower for post-sync milestone selection. This applies only after this three-file post-closure roadmap/status synchronization candidate (branch `validation/post-closure-status-roadmap-sync-20260923`, parent `d41829f4d6f71d78cdbda80b96ee7af41e44a715`) has had a fresh, separate Independent Review and has been integrated onto main.
 
