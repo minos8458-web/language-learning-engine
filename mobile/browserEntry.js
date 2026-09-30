@@ -5,7 +5,9 @@ const { createPreviewTransport, PREVIEW_LABELS } = require('./previewTransport')
 
 const config = window.LLE_APP_CONFIG || {};
 const query = new URLSearchParams(window.location.search);
-const preview = query.get('preview') === '1';
+// 다운로드용 미리보기 파일은 빌드가 명시한 모드만 사용한다. 서버 오류의 대체 경로가 아니다.
+const standalonePreview = document.documentElement.dataset.llePreview === 'standalone';
+const preview = standalonePreview || query.get('preview') === '1';
 const choices = ['home', 'review', 'new', 'interleaving', 'conversation', 'idle', 'error'];
 let scene = choices.includes(query.get('scene')) ? query.get('scene') : 'home';
 let mounted;

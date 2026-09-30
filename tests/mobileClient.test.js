@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { once } = require('node:events');
 const vm = require('node:vm');
+const { createHash } = require('node:crypto');
 const { HttpLearningFlowTransport } = require('../src/client/httpLearningFlowTransport');
 const { LearningSessionController } = require('../src/client/learningSessionController');
 const { CapacityAdmissionConflictError } = require('../src/client/learningFlowTransportContract');
@@ -238,7 +239,7 @@ test('브라우저 빌드에는 기존 제어기 원문과 클라이언트 모�
   assert.equal(bundle.includes("require('pg')"), false);
   assert.equal(bundle.includes('PGPASSWORD'), false);
   assert.equal(bundle.includes('evidenceRepository'), false);
-  assert.deepEqual(fs.readdirSync(directory).sort(), ['app.js', 'icon.svg', 'index.html', 'styles.css']);
+  assert.deepEqual(fs.readdirSync(directory).sort(), ['app.js', 'icon.svg', 'index.html', 'lle-mobile-preview.html', 'styles.css']);
 });
 
 test('로컬 실행기는 공개 화면 파일만 제공하고 저장소·학습 API 쓰기를 노출하지 않는다', async (context) => {
@@ -257,7 +258,7 @@ test('로컬 실행기는 공개 화면 파일만 제공하고 저장소·학습
   assert.match(index.headers.get('content-type'), /text\/html/);
   assert.equal(index.headers.get('cache-control'), 'no-store');
   assert.match(await index.text(), /실제 학습 기록은 저장하지 않아요/);
-  for (const file of ['/.env', '/PROJECT_VISION.md', '/src/client/learningSessionController.js', '/..%2f.env']) {
+  for (const file of ['/.env', '/PROJECT_VISION.md', '/src/client/learningSessionController.js', '/..%2f.env', '/lle-mobile-preview.html']) {
     assert.equal((await fetch(base + file)).status, 404);
   }
   assert.equal((await fetch(base + '/flow/start-session', { method: 'POST' })).status, 405);
@@ -405,14 +406,16 @@ test('전송 실패는 오류 화면과 수동 재시도로 이어지고 원문 
   view.destroy();
 });
 
-function runBundle(context, search) {
+function runBundle(context, search, { standalone = false, config } = {}) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'lle-mobile-bootstrap-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   buildMobile(directory);
-  const { document } = parseHTML(fs.readFileSync(path.join(directory, 'index.html'), 'utf8'));
-  const window = { location: { search } };
+  const file = standalone ? 'lle-mobile-preview.html' : 'index.html';
+  const { document } = parseHTML(fs.readFileSync(path.join(directory, file), 'utf8'));
+  const window = { location: { search }, LLE_APP_CONFIG: config };
   let fetchCalls = 0;
-  vm.runInNewContext(fs.readFileSync(path.join(directory, 'app.js'), 'utf8'), {
+  const code = standalone ? document.querySelector('script').textContent : fs.readFileSync(path.join(directory, 'app.js'), 'utf8');
+  vm.runInNewContext(code, {
     window, document, URL, URLSearchParams, structuredClone, AbortController,
     setTimeout, clearTimeout,
     fetch: () => { fetchCalls += 1; throw new Error('합성 네트워크 차단'); },
@@ -438,5 +441,85 @@ test('최종 번들의 명시적 미리보기는 안내와 합성 대화 경계 
   app.root.querySelector('[data-action="acknowledge"]').click();
   await settle();
   assert.equal(app.root.dataset.screen, 'IDLE');
+  assert.equal(app.fetchCalls(), 0);
+});
+
+test('다운로드 HTML은 코드·스타일·아이콘을 포함하고 CSP 해시와 네트워크 차단을 선언한다', (context) => {
+  const app = runBundle(context, '', { standalone: true });
+  const { document } = app;
+  assert.equal(document.querySelectorAll('script').length, 1);
+  assert.equal(document.querySelectorAll('script[src], link[rel="stylesheet"], iframe').length, 0);
+  assert.equal(document.querySelectorAll('style').length, 1);
+  assert.match(document.querySelector('link[rel="icon"]').getAttribute('href'), /^data:image\/svg\+xml;base64,/);
+  for (const anchor of document.querySelectorAll('a[href]')) assert.match(anchor.getAttribute('href'), /^#/);
+  const policy = document.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+  for (const tag of ['script', 'style']) {
+    const hash = createHash('sha256').update(document.querySelector(tag).textContent).digest('base64');
+    assert.equal(policy.includes(`${tag}-src 'sha256-${hash}'`), true);
+  }
+  assert.match(policy, /connect-src 'none'/);
+  assert.match(document.querySelector('meta[name="lle-source-commit"]').getAttribute('content'), /^(?:[a-f0-9]{40}(?: \(작업 파일 변경 있음\))?|미확인)$/);
+  assert.ok(document.getElementById('preview-guide'));
+  assert.equal(app.fetchCalls(), 0);
+});
+
+test('다운로드 파일은 query와 호스트 인증 설정에 관계없이 명시된 합성 미리보기만 사용한다', async (context) => {
+  let tokenReads = 0;
+  const app = runBundle(context, '?preview=0&scene=new', {
+    standalone: true,
+    config: { baseUrl: 'https://learning.example', getAccessToken: () => { tokenReads += 1; return TOKEN; } },
+  });
+  await settle();
+  assert.equal(app.root.dataset.screen, 'NEW_GRAMMAR');
+  assert.equal(app.document.getElementById('preview-notice').hidden, false);
+  assert.equal(app.document.getElementById('preview-controls').hidden, false);
+  assert.equal(app.root.textContent.includes('실제 학습 기록은 저장하지 않아요'), true);
+  assert.equal(tokenReads, 0);
+  assert.equal(app.fetchCalls(), 0);
+});
+
+function selectScene(app, scene) {
+  const selector = app.document.getElementById('preview-scene');
+  const option = [...selector.options].find((item) => item.value === scene);
+  for (const item of selector.options) item.selected = false;
+  option.selected = true;
+  selector.dispatchEvent(new app.document.defaultView.Event('change'));
+}
+
+test('다운로드 빌드의 장면 선택은 일곱 화면과 교차 연습의 반복 순서를 유지한다', async (context) => {
+  const app = runBundle(context, '', { standalone: true });
+  for (const [scene, kind] of [['review', 'REVIEW'], ['new', 'NEW_GRAMMAR'], ['interleaving', 'INTERLEAVING'], ['conversation', 'CONVERSATION_BOUNDARY'], ['idle', 'IDLE'], ['error', 'ERROR'], ['home', 'HOME']]) {
+    selectScene(app, scene);
+    await settle();
+    assert.equal(app.root.dataset.screen, kind);
+    if (scene === 'interleaving') {
+      assert.deepEqual([...app.root.querySelectorAll('.node-item')].map((item) => item.dataset.nodeId), [
+        'NODE_MOBILE_PREVIEW_A', 'NODE_MOBILE_PREVIEW_B', 'NODE_MOBILE_PREVIEW_C',
+        'NODE_MOBILE_PREVIEW_A', 'NODE_MOBILE_PREVIEW_B', 'NODE_MOBILE_PREVIEW_C',
+      ]);
+    }
+  }
+  assert.equal(app.fetchCalls(), 0);
+});
+
+test('다운로드 빌드의 학습 시작·대화 확인·새 세션·합성 오류 재시도는 서버를 호출하지 않는다', async (context) => {
+  const app = runBundle(context, '?scene=new', { standalone: true });
+  await settle();
+  app.root.querySelector('[data-action="admit"]').click();
+  await settle();
+  assert.equal(app.root.querySelector('[data-action="admit"]').disabled, true);
+  selectScene(app, 'conversation');
+  await settle();
+  app.root.querySelector('[data-action="acknowledge"]').click();
+  await settle();
+  assert.equal(app.root.dataset.screen, 'IDLE');
+  app.root.querySelector('[data-action="restart"]').click();
+  await settle();
+  assert.equal(app.root.dataset.screen, 'CONVERSATION_BOUNDARY');
+  selectScene(app, 'error');
+  await settle();
+  app.root.querySelector('[data-action="start"]').click();
+  await settle();
+  assert.equal(app.root.dataset.screen, 'ERROR');
   assert.equal(app.fetchCalls(), 0);
 });

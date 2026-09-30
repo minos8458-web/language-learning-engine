@@ -48,6 +48,11 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid
 .preview-controls label { flex-shrink: 0; }
 .preview-controls select { min-width: 0; flex: 1; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); padding: 9px; }
 .preview-footnote { font-size: 11px; line-height: 1.7; color: #7c896d; text-align: center; }
+.preview-guide { padding: 16px; font-size: 12px; line-height: 1.8; }
+.preview-guide summary { min-height: 44px; display: list-item; padding: 9px 0; cursor: pointer; font-weight: 700; }
+.preview-guide ol { margin: 10px 0 0; padding-left: 22px; color: var(--muted); }
+.preview-guide li { margin-bottom: 8px; }
+.preview-guide summary:focus-visible { outline: 3px solid #7d9e4b; outline-offset: 4px; }
 .loading-card { padding: 45px 25px; text-align: center; }
 .loading-card p { margin-bottom: 0; }
 .spinner { height: 32px; width: 32px; margin: auto; border: 3px solid #e3ebda; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }

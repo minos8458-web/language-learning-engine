@@ -490,6 +490,8 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 
 ## C. MOBILE-01 — 작업 브랜치 개발 검증
 
+### C.1 최초 모바일 화면 구현 검증
+
 - 날짜: 2026-10-01 (Asia/Seoul).
 - 시작 기준선: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
 - 브랜치: `development/mobile-01-session-ui-20261001`.
@@ -511,3 +513,20 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 저장 커밋은 해당 작업 브랜치의 Git에서 직접 조회한다. 이 결과는 해당 파일 내용의 개발 검증 증거이며,
   커밋 후 재실행이나 독립 리뷰 증거를 임의로 선언하지 않는다.
 - 구분: 이 작업의 검증 결과는 개발 세션 증거이며 독립 리뷰나 프로젝트 전체 PASS를 뜻하지 않는다.
+
+### C.2 단일 HTML 화면 검증 준비 빌드 — 2026-10-01
+
+- 사용자 계속 빌드 지시: 2026-10-01T05:48:50+09:00. 범위는 `MOBILE_APP_BRIEF.md` §6.
+- 시작 개발 기준선: `6728a75f3411d7ac388253bb509a189e03931828`; 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 실행 환경: 기존 C.1과 같은 Linux / Node.js `v24.19.0` / npm `11.9.0` / `linkedom` `0.18.13`.
+- 모바일 단독 실행: `node --test --test-concurrency=1 tests/mobileClient.test.js` → 32 tests / 0 suites / pass 32 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
+- 기존 계약 포함 실행: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js` → 63 tests / 4 suites / pass 63 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
+- 구성: 모바일 검증 32개 (C.1 대비 단일 파일 산출물·실행 검증 4개 추가)와 기존 AI Generation/Generation 계약 검증 31개.
+- `npm run build:mobile`: exit 0. 일반 정적 앱과 `mobile/dist/lle-mobile-preview.html`을 생성했다.
+- 추가 직접 검증: HTML 안에 코드·스타일·아이콘 포함, 외부 코드·스타일 파일 참조 없음, 인라인 코드·스타일의 CSP 해시 일치, `connect-src 'none'` 선언, 파일에 출처 커밋/작업 중 변경 표시 포함.
+- 추가 DOM 실행: 다운로드 파일의 합성 모드 고정, 호스트 토큰 미호출, 일곱 장면 선택, 교차 연습 중복·순서 보존, 명시적 학습 시작 후 같은 제안의 학습 시작 버튼 비활성, 대화 확인·새 세션, 합성 오류 재시도. 해당 DOM 실행에서 네트워크 호출 0을 확인했다.
+- 정적 실행기의 공개 파일 목록은 유지한다. 다운로드 전용 HTML을 기존 서버 경로로 노출하지 않는다.
+- `git diff --check`, 문서 구조·변경 파일 범위와 기존 제어기/전송 계약 보존을 확인한다. 이 준비 빌드의 저장 커밋과 최종 다운로드 파일 출처·해시는 `MOBILE_APP_HANDOFF.md` 및 해당 브랜치 Git 이력에서 조회한다.
+- 실제 브라우저의 CSP 집행·화면 표시·휴대폰 너비·실기기: `미확인`. 브라우저 접근을 재시도하거나 우회하지 않았다.
+- 기존 전체 `npm test` / PostgreSQL / 실제 공급자 / APK / 실기기 / 학습 효과: NOT RUN.
+- 이 결과는 해당 작업 파일의 개발 세션 자동 검증이다. 실제 화면 검증, 독립 리뷰, 전체 Validation PASS, MOBILE-01 lifecycle CLOSED를 뜻하지 않는다.

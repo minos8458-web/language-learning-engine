@@ -9022,6 +9022,8 @@ See §10.
   2026-10-01 계속 진행 지시.
 - 첫 작업: 기존 `LearningSessionController`와 모바일 화면·HTTP 연결 경계 구현.
 - 상태: 코드 후보 구현 완료 / 자동 검증 통과 / 실제 브라우저·휴대폰 화면 검증 미확인.
+- 추가 검증 준비: 단일 HTML 미리보기 빌드·합성 모드 고정·수동 화면 검사 안내 구현과 관련 자동 검증을 완료했다.
+- 최신 사용자 계속 빌드 지시: 2026-10-01T05:48:50+09:00. 준비 범위는 `MOBILE_APP_BRIEF.md` §6, 직접 검증 증거는 `VALIDATION_STATUS.md` §C.2, 수동 확인 순서는 `MOBILE_SCREEN_TEST_GUIDE.md`에서 확인한다.
 - 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
 - 브랜치: `development/mobile-01-session-ui-20261001`.
 - 파일 범위와 완료 기준: `MOBILE_APP_BRIEF.md`.
