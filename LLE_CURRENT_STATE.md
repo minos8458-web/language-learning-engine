@@ -9015,6 +9015,23 @@ See §10.
 
 ## 5. Validation Branch and Canonical Artifacts
 
+### MOBILE-01 — 사용자 지시에 따른 모바일 화면 제작 착수
+
+- 기록일: 2026-10-01 (Asia/Seoul).
+- 최신 사용자 지시: 2026-09-30 앱 제작 착수 및 완성 시 테스트 안내 요청,
+  2026-10-01 계속 진행 지시.
+- 첫 작업: 기존 `LearningSessionController`와 모바일 화면·HTTP 연결 경계 구현.
+- 상태: 코드 후보 구현 완료 / 자동 검증 통과 / 실제 브라우저·휴대폰 화면 검증 미확인.
+- 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`.
+- 파일 범위와 완료 기준: `MOBILE_APP_BRIEF.md`.
+- 구현·인계 상태: `MOBILE_APP_HANDOFF.md`, 상세 검증 상태: `VALIDATION_STATUS.md` §C.
+- 기존 엔진·Tier A·API·DB schema·migration·Validation 규칙은 보존한다.
+- 이 사용자 지시는 기존 문서 동기화 후보의 독립 검토·종료를 대신하지 않는다.
+  그 lifecycle과 기존 비완료 경계는 보존하며 앱·실제 AI·출시·학습 효과 완료를 선언하지 않는다.
+
+> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-01` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다.
+
 - Validation branch:
   `validation/vi-p1-raw-source-core-contract-20260829`
 - Original documentation candidate:
@@ -12524,6 +12541,11 @@ historical ledger does not.
   this record (§10)
 
 ## 10. Next Action
+
+현재 다음 행동 하나: `MOBILE-01`의 실제 브라우저·휴대폰 화면 검증을 허용된 검증 환경에서 수행한다.
+사용자 제작 착수 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md`의 범위를 따른다.
+
+### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)
 
 - Candidate stage (pending, gated): a fresh, separate, read-only
   Independent Review of this exact Post-Closure Roadmap / Status

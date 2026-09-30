@@ -375,6 +375,8 @@ The earlier Next Action here was a read-only METRIC_RESULT / Unseen Transfer v2 
 
 ## B. Historical Validation Records
 
+> `MOBILE-01` 작업 브랜치의 개발 검증 상태는 아래 §C에서 별도로 관리한다.
+
 ### B.1 §9 Conversation Boundary — Full Evidence Chain
 
 The following is the full §9 Conversation Boundary evidence chain and acceptance-criteria reconciliation, preserved unchanged. It is the factual support for the current §A.1 "§9 PASS" status and is not superseded.
@@ -485,3 +487,27 @@ This is the prior `Last runtime-validated implementation` / §A.2 pointer, prese
 - tests 324, suites 52, pass 324, fail 0, cancelled 0, skipped 0, todo 0
 
 This is the bounded Evidence Foundation P0 finalization writer runtime-validation record. It does not declare Evidence Foundation overall complete.
+
+## C. MOBILE-01 — 작업 브랜치 개발 검증
+
+- 날짜: 2026-10-01 (Asia/Seoul).
+- 시작 기준선: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`.
+- 실행 환경: Linux, Node.js `v24.19.0`, npm `11.9.0`, DOM 검증용 `linkedom` `0.18.13`.
+- 코드 검증 명령: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js`.
+- 결과: 59 tests / 4 suites / pass 59 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0.
+- 구성: 신규 모바일 검증 28개와 기존 AI Generation/Generation 계약 검증 31개. 기존 PostgreSQL 회귀 전체 결과로 인용하지 않는다.
+- `npm run build:mobile`: exit 0. 기존 제어기 원문을 포함한 빌드와 기본 진입·명시적 미리보기의 DOM 실행을 확인했다.
+- 새 검증의 주요 범위: HTTP 경로·봉투·토큰 헤더, user_id 바디 비포함, 다섯 서버 분기, 순서·중복 보존,
+  capacity 충돌의 단일 재조회, 일반 오류의 비재조회, 대화 확인과 새 세션 초기화, 타임아웃,
+  원문 진단 비노출, DOM 문자열 비실행, 버튼 중복 요청 방지, 늦은 응답의 제거된 화면 비복구,
+  빌드의 서버 코드 비포함, 정적 실행기의 공개 파일 제한.
+- 실제 브라우저 화면 표시·휴대폰 너비: `미확인`.
+  실행 파일 설치는 잘못된 압축 응답으로 실패했고, 제공 브라우저는 로컬 서버에
+  `ERR_BLOCKED_BY_CLIENT`, 공유 파일의 `file://` 열기에 보안 정책 거부를 반환했다.
+  브라우저 접근을 우회하지 않았다. DOM 검사는 시각 검증으로 승격하지 않는다.
+- 기존 전체 `npm test` / PostgreSQL / 실제 공급자 / APK / 실기기 / 학습 효과: NOT RUN.
+  이 환경에 PostgreSQL 실행기가 없으며 사용자·학습자·운영 DB를 대상으로 하지 않았다.
+- 저장 커밋은 해당 작업 브랜치의 Git에서 직접 조회한다. 이 결과는 해당 파일 내용의 개발 검증 증거이며,
+  커밋 후 재실행이나 독립 리뷰 증거를 임의로 선언하지 않는다.
+- 구분: 이 작업의 검증 결과는 개발 세션 증거이며 독립 리뷰나 프로젝트 전체 PASS를 뜻하지 않는다.
