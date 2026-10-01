@@ -55,6 +55,18 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-04 작업 브랜치 체크포인트 — 2026-10-01
+
+- 최신 지시: 2026-10-01T21:29:43+09:00 “오케이. 그 다음은?”. 이전 다음 설계를 확인하고 AI가 게스트 서버 빌드를 선택했다.
+- 입력 없는 `POST /auth/guest`·기존 GUEST users INSERT·HS256 토큰·서명/만료/현재 계정 확인·PG 호스트 factory 구현 완료.
+- 선택 자동 검증·모바일 빌드 통과. 실제 HTTP/crypto와 기존 앱 전송을 사용했고 저장 fixture는 합성이다. 증거는 `VALIDATION_STATUS.md` §F가 소유한다.
+- 기본 CLI는 미연결 503. 명시 PG 호스트 모듈·서명 키·기존 PG 환경이 있어야 실제 연결되며 이번에 운영 연결을 실행하지 않았다.
+- 모바일 보안 저장·자동 게스트 시작·갱신/복구·계정 전환·실제 DB/TLS·동일 출처 라우팅: 미구현/미확인.
+- 기존 엔진/전송/학습 API·DB schema/migration·Validation 판정 규칙 유지. 실제 팩/콘텐츠·기기/대용량·APK·공급자·Pilot/학습 효과와 이전 lifecycle 대기는 유지한다.
+- 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+- 상세 연결: `GUEST_AUTH_BRIEF.md`. 최신 코드·원격 저장: `MOBILE_APP_HANDOFF.md`.
+- 아래 MOBILE-03의 당시 인증/사용자 저장 미구현 기록은 이번 서버 코드 범위에서만 갱신된다. main 반영·출시·독립 리뷰·CLOSED는 선언하지 않는다.
+
 ### MOBILE-03 작업 브랜치 체크포인트 — 2026-10-01
 
 - 최신 사용자 지시: 2026-10-01T14:47:29+09:00 제작 계속. AI가 기존 HTTP/엔진 전송 사이의 서버 어댑터를 다음 항목으로 선택했다.
@@ -156,9 +168,9 @@ Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, an
 
 ### 5.1 Next Action
 
-현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
-작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §8, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §9, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 
 #### 제작 착수 전 다음 행동 기록 (보존)
 

@@ -20,19 +20,20 @@
 - 이번 작업: MOBILE-04 기존 users·게스트 인증 계약의 서버 구현. 이전 다음 행동의 설계를 직접 확인하고 AI가 한정된 빌드를 선택했다 (`MOBILE_APP_BRIEF.md` §9).
 - 기준 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92` (변경 없음).
 - 이번 시작 기준선: `3db8f6ab365e2ba1f9ab1516b3bbdeed04cdcf79` (tree `fd2cfccf6a09d9d8762e3b85de152cb40040848b`).
-- 이번 구현 계획 저장: 이 체크포인트와 `GUEST_AUTH_BRIEF.md`. 저장 identity는 원격 브랜치/Git 이력에서 조회한다.
+- 이번 구현 계획 저장: `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02` (tree `8f65426e84a3d328609f2419efd0409e29f5f946`). 원격 계획 원문 재확인 완료.
 - 이전 모바일 코드/보존 미리보기 출처: `16e793dc454482652f46329d3d0959fba35a2312` (tree `fb5a841fd4fcf891fe0152edb033c99ed77eae0f`).
-- 직접 확인한 서버 코드 커밋: `c5285b23ea5f1ddd936a6743217b7e2cfb365035` (tree `44b659bb78ac5185cb63c52ab97c83db960bccfa`, parent `110b9b8dfffc9b8270e0877746d75ea636875357`). 변경 파일 모두의 원격 원문과 실행한 작업 파일이 일치함을 확인했다.
+- 이전 HTTP 서버 코드: `c5285b23ea5f1ddd936a6743217b7e2cfb365035` (tree `44b659bb78ac5185cb63c52ab97c83db960bccfa`, parent `110b9b8dfffc9b8270e0877746d75ea636875357`). §E의 이전 증거다.
+- 이번 게스트 코드: 구현·최종 선택 자동 검증·빌드 완료. 코드 저장 commit은 Git 이력에서 조회하며 원격 원문 대조 뒤 최종 인계에 고정한다.
 - 저장소: `minos8458-web/language-learning-engine`.
 - 작업 브랜치: `development/mobile-01-session-ui-20261001`.
 - 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2.
-- 후보 상태: MOBILE-03 완료 기록·원격 코드 직접 확인 / MOBILE-04 계획 기록 / 이번 코드·테스트는 아직 실행하지 않음.
-- 검증 수치·실행 증거의 소유 문서: 기존 `VALIDATION_STATUS.md` §C/§D/§E. 이번 새 실행 증거는 아직 없음.
+- 후보 상태: MOBILE-04 게스트 서버 구현·최종 선택 자동 검증·모바일 빌드 통과 / 코드 원격 저장·대조 진행 단계.
+- 검증 수치·실행 증거의 소유 문서: 이번 `VALIDATION_STATUS.md` §F. 이전 §C/§D/§E는 보존한다.
 - 실제 팩 배포 파일·목록·정확한 용량·콘텐츠 연결·브라우저/휴대폰·대용량 성능·APK: 미확인 또는 후속 작업.
 - MOBILE-01 시각 검증 대기 상태와 기존 lifecycle은 유지한다. 전체 앱 완성·출시·CLOSED를 선언하지 않는다.
 
 이 파일 자체의 최신 저장 커밋은 원격 브랜치 및 Git 이력에서 조회한다.
-이번 서버 코드와 기존 다운로드 파일의 코드 출처는 구분한다. 이번에는 보존된 다운로드 파일을 교체하지 않았다.
+이번 게스트 서버 코드와 기존 다운로드 파일의 코드 출처는 구분한다. 이번에는 보존된 다운로드 파일을 교체하지 않았다.
 
 ## 이전 구현 (MOBILE-02, 이번 시작 시 확인)
 
@@ -60,7 +61,7 @@
 - 새 파일: `src/server/learningFlowHttpServer.js`, `scripts/serve-learning-api.js`, `tests/learningFlowHttpServer.test.js`.
 - `start:api`·`test:api` 명령과 연결 안내 추가. 새 의존성 설치나 lock 변경 없음.
 
-## 이번 계획 (MOBILE-04)
+## 이번 구현 (MOBILE-04)
 
 - 입력 없는 게스트 발급 경로·기존 users INSERT·서명/만료·현재 GUEST 행 확인을 기존 HTTP 호스트에 연결한다.
 - schema/migration·엔진/전송/학습 계약·클라이언트 화면·Validation 판정 규칙 변경 없음.
@@ -68,26 +69,30 @@
 - 새 UUID, HS256, 기본 24시간 만료·UTC timezone은 AI의 구현 선택이며 호스트 설정/후속 출시 정책과 구분한다.
 - 상세 경계: `GUEST_AUTH_BRIEF.md`. 합성 저장 fixture와 실제 Node HTTP로 검증하고 최종 코드·증거·인계를 원격 저장한다.
 - 모바일 보안 저장소·자동 게스트 진입·갱신/복구·계정 전환·운영 배포는 후속 경계다.
+- 실제 HS256 발급·검증과 현재 GUEST 행 확인, 빈 POST/빈 JSON 발급, no-store·401/503·내부 진단 비노출 구현.
+- 신규 파일: `src/server/guestTokenCodec.js`, `src/server/guestAuthService.js`, `src/server/postgresGuestHost.js`, `scripts/postgres-guest-host.js`, `tests/guestAuth.test.js`.
+- 기존 HTTP 서버/CLI의 선택적 `createGuest`·`onClose` 연결과 관련 HTTP 테스트·`test:api` 목록을 확장했다.
+- 최종 선택 회귀와 모바일 빌드 통과. 키와 PG를 명시하지 않은 기본 실행은 미연결 503이며 실제 운영 연결은 하지 않았다.
 
 ## 근거 구분과 미확인
 
 - 사용자 승인: 제작 계속 지시 및 이전 선택 다운로드 요구. 구체적인 파일·배포 형식·용량·운영 인증을 사용자 승인으로 만들어내지 않는다.
-- AI 구현 선택 (이번): Node HTTP 어댑터, 호스트 인증 검증 콜백·전송 주입, loopback CLI, 미연결 503, 요청 크기/시간 제한. 엔진 학습 정책을 바꾸지 않는다.
+- AI 구현 선택 (이번): 자기 발급 HS256 토큰·256-bit 호스트 키·기본 만료 24시간과 timezone UTC·현재 GUEST 확인·선택적 PG 호스트/종료 hook. 기본값은 출시 정책/실제 기기 시간대 승인으로 취급하지 않는다.
 - 직접 검증 (이전 기록): 합성 다운로드·캐시·DOM·계약 자동 검증과 모바일 빌드, 코드 원격 대조·최종 파일 저장 완료는 §D의 이전 증거다.
 - 직접 검증 (이전 기록): MOBILE-03 HTTP·CLI·선택 회귀·빌드와 원격 코드 원문 대조는 §E와 시작 기준선의 이전 증거다.
-- 직접 검증 (이번): 원격 main/작업 브랜치/초안 PR·users schema·게스트/클라이언트 계약, 필수 원문 일치, 깨끗한 작업 트리와 사전 점검을 확인했다. 이번 코드·테스트는 아직 없다.
-- 기존 원문 보존: 엔진·기존 클라이언트/전송·DB·Tier A/API·스키마·Validation 판정 규칙 변경 없음을 직접 대조했다.
+- 직접 검증 (이번): 원격 main/작업 브랜치/초안 PR·users/게스트/클라이언트 계약·필수 원문 일치와 사전 점검, 실제 Node crypto/HTTP·CLI와 합성 저장 fixture·기존 선택 회귀·빌드. 수치는 §F만 인용한다.
+- 기존 원문 보존: 엔진·기존 클라이언트/전송·DB·Tier A/학습 API·스키마·Validation 판정 규칙 변경 없음을 직접 대조했다. HTTP 호스트의 이미 정의된 게스트 경로만 추가했다.
 - 이전 세션 동기화 관찰은 `e89c4d027f4470d4e572fd89856afbb5ca41a62b:MOBILE_APP_HANDOFF.md`에 보존한다. 이번 계획 원격 저장과 로컬 동기화는 통과했다.
 - 실제 배포 자료: 저장소에 없음. Tier A 문서는 실제 다운로드 가능한 지원/콘텐츠/크기의 증거가 아니다.
 - 이전 브라우저 차단: 로컬 HTTP `ERR_BLOCKED_BY_CLIENT`, file 열기 보안 거부. 이번에 재시도/우회하지 않았다.
 - DOM 실행은 실제 화면 배치·터치·CSP 집행·실기기 성능 검증으로 취급하지 않는다.
-- 실제 운영 인증·사용자 저장·PostgreSQL·AI·APK·학습 효과는 실행하지 않았다. Pilot/학습자 데이터 승인 경계도 그대로다.
+- 실제 운영 키/사용자 저장·PostgreSQL·AI·APK·학습 효과는 실행하지 않았다. 저장 검증은 합성 fixture이며 Pilot/학습자 데이터 승인 경계도 그대로다.
 - 기존 in-process 명시적 학습은 Progress 갱신만 반환한다. 설명 콘텐츠 조회·나머지 세 학습 API·동일 출처 앱 라우팅은 미구현이다.
 - 이미 호출한 엔진 작업은 HTTP 취소로 중단되거나 rollback된다고 보장하지 않는다. 서버 자동 재전송 없음.
 
 ## 다음 행동 하나
 
-MOBILE-04 게스트 인증·사용자 저장·HTTP 호스트 연결과 합성 저장/실제 HTTP 검증을 구현한다.
+모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목으로 유지한다.
 기존 다운로드 안내와 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용하며 브라우저 제한을 우회하지 않는다.
 자동 검증만으로 실제 인증·DB·기기·콘텐츠 연결을 완료 처리하지 않는다.
@@ -100,13 +105,14 @@ npm run build:mobile
 npm run test:mobile
 npm run test:api
 npm run start:api
-node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js
+node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js
 ```
 
 생성 파일은 `mobile/dist/`이며 Git에서 제외한다.
 실제 앱에 언어팩 목록을 연결하는 방법은 `LANGUAGE_PACK_DOWNLOAD_BRIEF.md`를 따른다.
 API 실행·호스트 연결은 `LEARNING_API_SERVER_BRIEF.md`를 따른다. 기본 CLI는 미연결 503이다.
-위 명령은 재현 절차다. 이번 실행과 수치는 `VALIDATION_STATUS.md` §E만 인용한다.
+게스트 PG 호스트·키 환경 설정은 `GUEST_AUTH_BRIEF.md`를 따른다. 실제 키·DB는 이 세션에서 준비하지 않았다.
+위 명령은 재현 절차다. 이번 실행과 수치는 `VALIDATION_STATUS.md` §F만 인용한다.
 
 ## 보존된 다운로드 파일 출처 (MOBILE-02)
 
