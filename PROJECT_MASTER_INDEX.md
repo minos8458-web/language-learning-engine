@@ -78,6 +78,17 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결 (작업 브랜치)
+
+2026-10-01T14:47:29+09:00 사용자의 제작 계속 지시 안에서 AI가 다음 항목을 선택했다.
+기존 세션 시작·명시적 학습 시작 두 POST 경로의 서버 어댑터와 인증 검증 콜백 경계를 구현했다.
+요청 크기·JSON·입력·시간 제한과 기존 오류 매핑, 실제 HTTP를 거친 클라이언트 흐름의 자동 검증·빌드를 완료했다.
+상세 실행 증거는 `VALIDATION_STATUS.md` §E, 연결 방법은 `LEARNING_API_SERVER_BRIEF.md`를 따른다.
+실제 인증 발급·사용자 저장·운영 DB·동일 출처 연결·EXPLANATION 콘텐츠·나머지 세 API는 미구현/미확인이다.
+이전 화면 검증 대기·기존 lifecycle·main 기준선·학습 효과 비완료 경계를 유지하며 CLOSED로 바꾸지 않는다.
+다음 행동 하나는 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계하는 것이다.
+최신 코드와 원격 저장 상태는 `MOBILE_APP_HANDOFF.md`를 따른다.
+
 ### MOBILE-02 — 사용자 지정 언어팩 선택 다운로드 (작업 브랜치)
 
 2026-10-01T06:27:14+09:00 사용자가 다음 빌드에 나라·언어별 선택 다운로드,
@@ -127,9 +138,10 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
-`MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩 연결·콘텐츠·APK는 미완료 상태로 남긴다.
-최신 사용자 지정 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §7 / `MOBILE_APP_HANDOFF.md`를 따른다.
+현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
+`MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
+최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §8 / `MOBILE_APP_HANDOFF.md`를 따른다.
 
 ### 제작 착수 전 다음 행동 기록 (보존)
 

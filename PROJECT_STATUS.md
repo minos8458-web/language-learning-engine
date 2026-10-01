@@ -55,6 +55,19 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-03 작업 브랜치 체크포인트 — 2026-10-01
+
+- 최신 사용자 지시: 2026-10-01T14:47:29+09:00 제작 계속. AI가 기존 HTTP/엔진 전송 사이의 서버 어댑터를 다음 항목으로 선택했다.
+- 두 POST 경로·검증된 사용자 주입·요청/시간 제한·공개 오류 매핑·capacity 표식 보존의 코드 후보 구현 완료.
+- 선택 자동 검증·모바일 빌드 통과. 실제 HTTP 소켓과 기존 클라이언트 경계 검증이며 상세 증거는 `VALIDATION_STATUS.md` §E가 소유한다.
+- 인증 callback과 학습 전송은 호스트가 주입한다. CLI 기본 미연결 모드는 503이며 DB 호출을 하지 않는다.
+- 실제 인증 발급·사용자 저장·DB 배포·정적 앱과 동일 출처 라우팅·나머지 세 API: 미구현/후속 작업.
+- 기존 in-process 명시적 학습은 Progress 갱신만 반환한다. §10.1 EXPLANATION 전체 응답 완료를 선언하지 않는다.
+- MOBILE-01/02 휴대폰 화면·터치·실제 팩·대용량 성능·APK·실제 공급자·학습 효과 비완료 경계를 유지한다.
+- 기존 엔진·전송·Tier A·API 계약·DB·Validation 판정 규칙 유지. main 병합·독립 리뷰·CLOSED·출시를 선언하지 않는다.
+- 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+- 연결 안내: `LEARNING_API_SERVER_BRIEF.md`. 최신 코드·저장 위치: `MOBILE_APP_HANDOFF.md`.
+
 ### MOBILE-02 작업 브랜치 체크포인트 — 2026-10-01
 
 - 최신 사용자 지정 기능: 작은 지원 목록, 나라·언어 확인 팝업 하나, 예상 용량·Wi-Fi 권장 안내.
@@ -143,8 +156,9 @@ Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, an
 
 ### 5.1 Next Action
 
-현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
-작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md`, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
+작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §8, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 
 #### 제작 착수 전 다음 행동 기록 (보존)
 
