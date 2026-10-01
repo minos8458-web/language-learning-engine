@@ -78,6 +78,17 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-04 — 게스트 인증·기존 사용자 저장 서버 (작업 브랜치)
+
+2026-10-01T21:29:43+09:00 사용자의 계속 지시와 이전 다음 행동을 근거로 기존 게스트/users 계약을 확인했다.
+새 UUID의 GUEST 저장·서명 토큰 발급·서명/만료/현재 GUEST 확인을 기존 HTTP 경계와 호스트에 구현했다.
+합성 저장 fixture와 실제 HTTP·crypto/기존 클라이언트의 선택 자동 검증·모바일 빌드 완료.
+실제 PostgreSQL·운영 키/토큰·모바일 보안 저장·갱신/복구·계정 전환·APK는 미구현/미확인이다.
+상세 증거는 `VALIDATION_STATUS.md` §F, 연결은 `GUEST_AUTH_BRIEF.md`, 최신 코드/저장은 `MOBILE_APP_HANDOFF.md`를 따른다.
+schema/migration·엔진/전송/학습 API·Validation 판정 규칙을 바꾸지 않았으며 main 반영·독립 리뷰·lifecycle CLOSED·출시는 선언하지 않는다.
+다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+아래 MOBILE-01/02/03은 이전 체크포인트다. 당시 인증 미구현 기록은 이번 서버 코드 범위에서만 갱신되며 실제 운영/기기 비완료 경계는 유지한다.
+
 ### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결 (작업 브랜치)
 
 2026-10-01T14:47:29+09:00 사용자의 제작 계속 지시 안에서 AI가 다음 항목을 선택했다.
@@ -138,10 +149,10 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
-최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §8 / `MOBILE_APP_HANDOFF.md`를 따른다.
+최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §9 / `MOBILE_APP_HANDOFF.md`를 따른다.
 
 ### 제작 착수 전 다음 행동 기록 (보존)
 

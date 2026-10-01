@@ -13,7 +13,7 @@ const PUBLIC_ERRORS = Object.freeze({
 });
 const CAPACITY_MESSAGE = 'active Grammar Node limit 초과: 최신 학습 상태를 다시 확인해 주세요.';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ROUTES = new Set(['/flow/start-session', '/flow/start-explicit-study']);
+const ROUTES = new Set(['/flow/start-session', '/flow/start-explicit-study', '/auth/guest']);
 
 // HTTP framing/configuration failures are not new engine error codes.
 class HttpBoundaryError extends Error {
@@ -51,10 +51,10 @@ function bearerToken(request) {
   return match[1];
 }
 
-function checkBodyHeaders(request, maxBodyBytes) {
+function checkBodyHeaders(request, maxBodyBytes, allowEmpty = false) {
   const types = headerValues(request, 'content-type');
-  if (types.length !== 1 ||
-      !/^application\/json(?:\s*;\s*charset\s*=\s*(?:"utf-8"|utf-8))?$/i.test(types[0])) {
+  if (!(allowEmpty && types.length === 0) && (types.length !== 1 ||
+      !/^application\/json(?:\s*;\s*charset\s*=\s*(?:"utf-8"|utf-8))?$/i.test(types[0]))) {
     throw new HttpBoundaryError(415);
   }
   const encodings = headerValues(request, 'content-encoding');
@@ -65,7 +65,7 @@ function checkBodyHeaders(request, maxBodyBytes) {
   if (length !== undefined && Number(length) > maxBodyBytes) throw new HttpBoundaryError(413);
 }
 
-function readJson(request, maxBodyBytes, signal) {
+function readJson(request, maxBodyBytes, signal, allowEmpty = false) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
@@ -87,12 +87,14 @@ function readJson(request, maxBodyBytes, signal) {
       cleanup();
       try {
         if (!request.complete) throw new Error('incomplete request');
+        if (size === 0 && allowEmpty) return resolve({});
+        if (allowEmpty && headerValues(request, 'content-type').length === 0) throw new HttpBoundaryError(415);
         const text = new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
         const data = JSON.parse(text);
         if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('not an object');
         resolve(data);
-      } catch {
-        reject(new HttpBoundaryError(400));
+      } catch (error) {
+        reject(error instanceof HttpBoundaryError ? error : new HttpBoundaryError(400));
       }
     };
     request.on('data', onData);
@@ -165,6 +167,7 @@ function publicFailure(error, explicitStudy) {
 function createLearningFlowHttpServer({
   transport,
   resolveUserId,
+  createGuest,
   maxBodyBytes = 8192,
   operationTimeoutMs = 10000,
   requestTimeoutMs = 15000,
@@ -173,6 +176,7 @@ function createLearningFlowHttpServer({
   if (resolveUserId !== undefined && typeof resolveUserId !== 'function') {
     throw new TypeError('resolveUserId must be a function');
   }
+  if (createGuest !== undefined && typeof createGuest !== 'function') throw new TypeError('createGuest must be a function');
   positiveInteger(maxBodyBytes, 'maxBodyBytes');
   positiveInteger(operationTimeoutMs, 'operationTimeoutMs', 2147483647);
   positiveInteger(requestTimeoutMs, 'requestTimeoutMs', 2147483647);
@@ -196,6 +200,26 @@ function createLearningFlowHttpServer({
       if (request.method !== 'POST') {
         response.setHeader('Allow', 'POST');
         throw new HttpBoundaryError(405);
+      }
+      if (request.url === '/auth/guest') {
+        if (!createGuest) throw new HttpBoundaryError(503);
+        checkBodyHeaders(request, maxBodyBytes, true);
+        const body = await readJson(request, maxBodyBytes, abort.signal, true);
+        abort.signal.throwIfAborted();
+        if (Object.keys(body).length !== 0) throw new HttpBoundaryError(400);
+        let guest;
+        try { guest = await withinDeadline(createGuest({ signal: abort.signal }), abort.signal); }
+        catch { throw new HttpBoundaryError(503); }
+        abort.signal.throwIfAborted();
+        if (!guest || typeof guest !== 'object' || Array.isArray(guest) || Object.keys(guest).length !== 4 ||
+            typeof guest.user_id !== 'string' || !UUID_PATTERN.test(guest.user_id) ||
+            typeof guest.access_token !== 'string' || !guest.access_token || guest.access_token.length > 4096 ||
+            /[\x00-\x20\x7f]/.test(guest.access_token) || guest.token_type !== 'Bearer' ||
+            typeof guest.expires_at !== 'string' || !Number.isFinite(Date.parse(guest.expires_at))) {
+          throw new HttpBoundaryError(503);
+        }
+        sendJson(response, 200, { status: 'ok', data: guest });
+        return;
       }
       const token = bearerToken(request);
       if (!transport || !resolveUserId) throw new HttpBoundaryError(503);

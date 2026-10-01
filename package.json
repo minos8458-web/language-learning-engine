@@ -12,7 +12,7 @@
     "start:mobile": "node scripts/serve-mobile.js",
     "test:mobile": "node --test tests/mobileClient.test.js tests/languagePackClient.test.js",
     "start:api": "node scripts/serve-learning-api.js",
-    "test:api": "node --test tests/learningFlowHttpServer.test.js"
+    "test:api": "node --test tests/learningFlowHttpServer.test.js tests/guestAuth.test.js"
   },
   "engines": {
     "node": ">=20"

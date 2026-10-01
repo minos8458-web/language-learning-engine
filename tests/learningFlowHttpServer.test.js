@@ -182,7 +182,7 @@ test('본문 user_id·추가 키로 인증된 사용자를 바꿀 수 없다', a
 
 test('URL 사용자 지정·내부 엔진 경로·아직 없는 외부 경로를 열지 않는다', async (t) => {
   const f = await fixture(t);
-  for (const route of [SESSION + '?user_id=' + ATTACKER_ID, '/progress/record-attempt', '/auth/guest', '/flow/submit-attempt', '/flow/start-session/']) {
+  for (const route of [SESSION + '?user_id=' + ATTACKER_ID, '/progress/record-attempt', '/auth/convert', '/flow/submit-attempt', '/flow/start-session/']) {
     const result = await f.request(route);
     assert.equal(result.status, 404);
     assert.equal(result.body.error_code, undefined);

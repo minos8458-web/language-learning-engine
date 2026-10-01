@@ -592,3 +592,35 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 기존 엔진·전송/제어기·Tier A·API 계약·schema/migration·Validation 판정 규칙은 변경하지 않았다.
 - 원격 저장·코드 identity는 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 합성 미리보기 산출물은 MOBILE-02 출처로 보존하며 새 설치 앱으로 취급하지 않는다.
 - 이 증거는 개발 세션의 HTTP 경계 검증이다. 독립 리뷰·프로젝트 전체 PASS·운영 준비·lifecycle CLOSED를 선언하지 않는다.
+
+## F. MOBILE-04 — 게스트 인증·기존 사용자 저장 개발 검증
+
+- 날짜: 2026-10-01 (Asia/Seoul). 범위: `MOBILE_APP_BRIEF.md` §9와 `GUEST_AUTH_BRIEF.md`.
+- 시작 기준선: `3db8f6ab365e2ba1f9ab1516b3bbdeed04cdcf79`; 계획 저장: `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`.
+- 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 브랜치: `development/mobile-01-session-ui-20261001`.
+- 환경: Linux, Node.js `v24.19.0`. 패키지 설치·새 의존성·lock 변경 없음.
+- 최종 실행: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js`.
+- 결과: 151 tests / 4 suites / pass 151 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0 (2387.911136 ms).
+- 구성: 신규 게스트 26개 + 기존 HTTP 30개 + 모바일 38개 + 언어팩 26개 + AI Generation/Generation 31개.
+- 최종 작업 파일의 `npm run build:mobile`: exit 0. 클라이언트 whitelist·기존 화면/팩 코드를 보존했다. 서버/키/PG 모듈을 모바일 번들에 추가하지 않았다.
+- 최초 개별 게스트/HTTP 실행도 통과했으며, 최종 수치는 위 선택 회귀만 인용한다. 런타임 테스트의 중간 실패 없음.
+- crypto 직접 검증: 실제 HS256 서명, 별도의 WebCrypto HMAC 검증 API, 키 메모리 복사,
+  토큰 변조/다른 키/padding/크기/누락·algorithm none/RS256·다른 typ·kid/JWK 거절,
+  issuer/audience·UUID·발급/만료 경계·비정상 JSON/UTF-8·중복/추가 claim과 설정/시계 오류 차단.
+- 저장 fixture 검증: 기존 users 컬럼·서버의 서로 다른 UUID·GUEST/NULL 필드·호스트 timezone,
+  저장 확인 이전 토큰 비반환, 발급 준비 실패/사전 취소의 zero query, 변조/만료의 zero lookup,
+  사용자 삭제/전환/identifier 변경·조회 도중 만료 차단.
+- 실제 HTTP: 빈 POST/빈 JSON 발급·no-store/정확한 필드, 실제 발급 토큰으로 기존 앱 전송과 대화 확인,
+  클라이언트 user_id 지정 비사용, 가입 입력/형식/media/크기/method/정확한 경로 거절,
+  401/503 오류와 내부 진단 비노출·일반 오류의 엔진 code 비생성·새 게스트/미리보기 자동 대체 없음.
+- 수명/호스트: timeout 뒤 끝난 INSERT가 저장될 수 있음을 합성 지연으로 확인했고 토큰 응답/자동 재전송은 없음.
+  HTTP timeout을 DB rollback 증거로 취급하지 않는다. PG 호스트 factory의 기존 in-process 전송 연결,
+  CLI 공통 실행의 발급/종료 hook, 명시 PG 호스트의 키 누락 시 시작 실패를 검증했다.
+- 테스트의 key/clock/DB/학습 결정은 합성 fixture다. 서명·HTTP 소켓은 실제 Node API를 실행했다.
+  실제 PostgreSQL SQL 실행·migration·운영 키·운영 인증·실제 학습자/사용자 생성 검증은 수행하지 않았다.
+- 전체 `npm test`, PostgreSQL, 운영 TLS/동일 출처 라우팅, 기기 보안 저장/초기 진입, refresh/복구/convert,
+  실제 팩/콘텐츠·AI 공급자·APK·실기기·학습 효과: NOT RUN 또는 미구현.
+- 기존 엔진/전송/클라이언트/학습 API·schema/migration·Tier A·Validation 판정 규칙 변경 없음.
+  HTTP 호스트·선택적 인증 경로와 관련 테스트만 확장했다. 기존 브라우저 제한을 재시도/우회하지 않았다.
+- 코드 identity·원격 저장은 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 미리보기 산출물의 MOBILE-02 출처를 보존한다.
+- 이 증거는 개발 세션 검증이다. 독립 보안 리뷰·프로젝트 전체 PASS·운영 준비·출시·lifecycle CLOSED를 선언하지 않는다.

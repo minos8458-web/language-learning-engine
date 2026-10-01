@@ -9015,6 +9015,17 @@ See §10.
 
 ## 5. Validation Branch and Canonical Artifacts
 
+### MOBILE-04 — 게스트 인증·기존 사용자 저장 서버
+
+- 최신 지시: 2026-10-01T21:29:43+09:00 제작 계속. 이전 다음 행동의 users/게스트 계약을 직접 확인하고 한정된 구현을 선택했다.
+- 시작 기준선: `3db8f6ab365e2ba1f9ab1516b3bbdeed04cdcf79`; 계획 저장: `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §9와 `GUEST_AUTH_BRIEF.md`.
+- 기존 users GUEST 저장·서명 토큰·현재 GUEST/만료 확인·HTTP/CLI 호스트 연결 코드와 선택 자동 검증·모바일 빌드 완료.
+- 직접 증거: `VALIDATION_STATUS.md` §F. 실제 HTTP/Node crypto와 합성 DB fixture이며 실제 PostgreSQL·운영 인증·기기 검증은 아니다.
+- 아래 MOBILE-03의 당시 인증/저장 미구현은 이번 서버 코드 범위에서만 갱신한다. 모바일 보안 저장/초기화·갱신/복구·계정 전환·운영 DB/TLS·콘텐츠/팩·APK는 미완료/미확인이다.
+- schema/migration·엔진/전송/학습 계약·Validation 판정 규칙·기존 lifecycle/Pilot/학습 효과 비완료와 기기 검증 대기/브라우저 보안 차단은 보존한다.
+- 코드·원격 저장 상태는 `MOBILE_APP_HANDOFF.md`. main 반영·출시·독립 리뷰·CLOSED는 선언하지 않는다.
+
 ### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결
 
 - 최신 사용자 지시: 2026-10-01T14:47:29+09:00 제작 계속. AI가 기존 모바일 HTTP 전송과 in-process 학습 전송을 연결하는 어댑터를 선택했다.
@@ -9054,7 +9065,7 @@ See §10.
 - 이 사용자 지시는 기존 문서 동기화 후보의 독립 검토·종료를 대신하지 않는다.
   그 lifecycle과 기존 비완료 경계는 보존하며 앱·실제 AI·출시·학습 효과 완료를 선언하지 않는다.
 
-> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-03` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01/02 기록은 이전 빌드의 출처로 보존한다.
+> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-04` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01/02/03 기록은 이전 빌드의 출처로 보존한다.
 
 - Validation branch:
   `validation/vi-p1-raw-source-core-contract-20260829`
@@ -12566,8 +12577,8 @@ historical ledger does not.
 
 ## 10. Next Action
 
-현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
-최신 사용자 제작 계속 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md` §8의 후속 경계를 따른다.
+현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+최신 사용자 제작 계속 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md` §9의 후속 경계를 따른다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 
 ### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)

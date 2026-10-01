@@ -15,9 +15,17 @@ function loadHostConfiguration(modulePath) {
 async function startLearningApi({ port = 4174, hostModulePath, output = process.stdout } = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError('invalid API port');
   const config = loadHostConfiguration(hostModulePath);
+  if (config.onClose !== undefined && typeof config.onClose !== 'function') throw new TypeError('onClose must be a function');
   const server = createLearningFlowHttpServer({
     transport: config.transport,
     resolveUserId: config.resolveUserId,
+    createGuest: config.createGuest,
+  });
+  if (config.onClose) server.once('close', () => {
+    Promise.resolve().then(() => config.onClose()).catch(() => {
+      process.stderr.write('학습 API 연결을 종료할 수 없습니다. 실행 설정을 확인해 주세요.\n');
+      process.exitCode = 1;
+    });
   });
   await new Promise((resolve, reject) => {
     const onError = (error) => reject(error);
@@ -31,6 +39,7 @@ async function startLearningApi({ port = 4174, hostModulePath, output = process.
   if (!config.transport || !config.resolveUserId) {
     output.write('인증/학습 전송 미연결: 학습 요청은 503으로 응답합니다.\n');
   }
+  if (config.createGuest) output.write('게스트 발급 경로 연결: POST /auth/guest\n');
   return server;
 }
 

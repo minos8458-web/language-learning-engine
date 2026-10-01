@@ -5,6 +5,9 @@
 MOBILE-03은 기존 `HttpLearningFlowTransport`와 `InProcessLearningFlowTransport`를 연결하는 HTTP 경계다.
 기준은 `API_LAYER_BRIEF.md`, `API_CONTRACT.md` 및 변경하지 않은 기존 전송·엔진 코드다.
 사용자의 2026-10-01T14:47:29+09:00 제작 계속 지시 안에서 AI가 다음 구현 항목을 선택했다.
+후속 MOBILE-04에서는 기존 계약의 `POST /auth/guest`와 선택적 `createGuest`/`onClose` 호스트 연결을 추가했다.
+게스트 인증 서버 코드는 `GUEST_AUTH_BRIEF.md`, 최신 직접 실행 증거는 `VALIDATION_STATUS.md` §F를 따른다.
+아래 MOBILE-03 범위/증거는 이전 체크포인트로 보존하며 실제 운영 DB·모바일 토큰 저장 완료를 뜻하지 않는다.
 현재 상태: HTTP 경계의 코드 후보 구현·선택 자동 검증·모바일 빌드 완료.
 실행 증거는 `VALIDATION_STATUS.md` §E, 원격 저장과 최신 커밋 확인은 `MOBILE_APP_HANDOFF.md`를 따른다.
 
@@ -21,7 +24,8 @@ MOBILE-03은 기존 `HttpLearningFlowTransport`와 `InProcessLearningFlowTranspo
 ## 호스트 경계
 
 호스트가 검증된 인증 콜백과 학습 전송을 주입한다. 토큰을 단순 디코딩하거나 UUID를 클라이언트에서 받아 신뢰하지 않는다.
-인증 발급·게스트 사용자 생성·전환·토큰 저장은 이 어댑터의 구현 범위가 아니다.
+MOBILE-03에서는 인증 발급·게스트 생성이 범위 밖이었다. MOBILE-04에서 서버 발급·검증을 추가했다.
+계정 전환·모바일 보안 저장소는 여전히 범위 밖이다.
 인증 또는 학습 전송이 미연결이면 학습 요청은 503이며 DB 호출을 하지 않는다.
 CLI는 기본적으로 loopback에서만 실행한다. 모바일 정적 서버와 운영 인증·동일 출처 라우팅은 별도 연결 과제다.
 새 의존성·공개 CORS·내부 엔진 엔드포인트를 추가하지 않는다.
@@ -35,7 +39,8 @@ npm run test:api
 
 기본 CLI 주소는 `http://127.0.0.1:4174`다. 기본 모드는 인증/학습 전송 미연결이므로 학습은 503이다.
 포트는 `LLE_API_PORT`로 지정한다. `LLE_API_HOST_MODULE`은 운영자가 관리하는 CommonJS 설정 파일의 경로다.
-이 파일은 `{ transport, resolveUserId }`를 export해야 한다. 요청 본문·헤더로 설정 파일을 지정할 수 없다.
+학습 연결은 `{ transport, resolveUserId }`를 export한다. 선택적 `createGuest`는 발급, `onClose`는 호스트 종료 hook이다.
+요청 본문·헤더로 설정 파일을 지정할 수 없다.
 코드와 함께 토큰·비밀번호를 저장하지 않는다.
 
 프로그램에서 기존 엔진을 연결하는 함수 예시 (pool과 실제 검증 함수는 호스트가 제공):
@@ -88,5 +93,6 @@ factory의 `maxBodyBytes`, `operationTimeoutMs`, `requestTimeoutMs`로 본문·�
 휴대폰 화면·팝업·터치·브라우저 CSP·대용량 팩 성능·APK 및 실제 운영 서버는 미확인이다.
 기존 브라우저 보안 제한을 우회하지 않는다. MOBILE-01/02의 화면 검증 대기도 유지한다.
 
-다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
-실제 인증·사용자 저장·콘텐츠 연결과 나머지 세 학습 API는 현재 미구현이다. main 병합·출시·lifecycle CLOSED는 선언하지 않는다.
+다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+게스트 서버 발급·사용자 저장 코드는 MOBILE-04에서 추가했으며 실제 PG·운영 인증·모바일 저장 검증은 미확인이다.
+콘텐츠와 나머지 세 학습 API는 현재 미구현이다. main 병합·출시·lifecycle CLOSED는 선언하지 않는다.
