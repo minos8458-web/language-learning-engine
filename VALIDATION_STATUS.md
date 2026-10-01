@@ -564,6 +564,7 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 
 ## E. MOBILE-03 — HTTP 서버 경계 개발 검증
 
+- 저장된 실행 파일 identity: 코드 `c5285b23ea5f1ddd936a6743217b7e2cfb365035`, tree `44b659bb78ac5185cb63c52ab97c83db960bccfa`, parent `110b9b8dfffc9b8270e0877746d75ea636875357`. 변경 파일 전체를 원격 원문과 대조해 실행한 작업 파일과 일치함을 확인했다. 코드 저장 뒤 런타임 테스트 재실행으로 기록하지 않는다.
 - 날짜: 2026-10-01 (Asia/Seoul). 범위: `MOBILE_APP_BRIEF.md` §8와 `LEARNING_API_SERVER_BRIEF.md`.
 - 시작 기준선: `e89c4d027f4470d4e572fd89856afbb5ca41a62b`; 계획 저장: `110b9b8dfffc9b8270e0877746d75ea636875357`.
 - 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 브랜치: `development/mobile-01-session-ui-20261001`.
