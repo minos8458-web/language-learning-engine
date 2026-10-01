@@ -561,3 +561,33 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 기존 엔진/제어기/전송 계약/DB/migration/API/Tier A/Validation 판정 규칙은 변경하지 않았다.
   저장 커밋·원격 원문 확인·최종 다운로드 파일의 출처는 `MOBILE_APP_HANDOFF.md`와 브랜치 Git 이력에서 확인한다.
 - 이 증거는 개발 세션 검증이며 독립 리뷰·프로젝트 전체 PASS·학습 효과·lifecycle CLOSED를 선언하지 않는다.
+
+## E. MOBILE-03 — HTTP 서버 경계 개발 검증
+
+- 날짜: 2026-10-01 (Asia/Seoul). 범위: `MOBILE_APP_BRIEF.md` §8와 `LEARNING_API_SERVER_BRIEF.md`.
+- 시작 기준선: `e89c4d027f4470d4e572fd89856afbb5ca41a62b`; 계획 저장: `110b9b8dfffc9b8270e0877746d75ea636875357`.
+- 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 브랜치: `development/mobile-01-session-ui-20261001`.
+- 환경: Linux, Node.js `v24.19.0`. 패키지 설치나 의존성 변경 없이 기존 환경에서 실행했다.
+- 최종 실행: `node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js`.
+- 결과: 125 tests / 4 suites / pass 125 / fail 0 / cancelled 0 / skipped 0 / todo 0 / exit 0 (1961.489901 ms).
+- 구성: 신규 HTTP 서버 30개 + 기존 모바일 38개 + 언어팩 26개 + AI Generation/Generation 31개.
+- 최종 작업 파일의 `npm run build:mobile`: exit 0. 고정 클라이언트 whitelist를 유지하며 일반 앱·합성 HTML 생성 성공.
+- HTTP 직접 검증: 토큰 검증 사용자만 전달, body/URL 사용자 위조 차단, 중복 Authorization,
+  다섯 분기·복습 필드/순서·interleaving 중복, ack 생략/false/true와 새 세션 초기화,
+  기존 오류 코드·HTTP 상태 매핑·내부 SQL/토큰/provider 진단 비노출·인증/전송 미연결 503.
+- HTTP 요청 검증: 경로·method·추가 키·필수 입력·언어/ack 타입·JSON/UTF-8·media/압축·중복 Content-Type,
+  Content-Length와 chunked·다중바이트 크기 상한. 헤더가 너무 많으면 Node parser의 431 거절도 안전한 차단으로 기록한다.
+- 기존 실제 HTTP 클라이언트/제어기: 검증된 capacity 거절만 최신 결정 한 번 재조회,
+  일반 계약 진단은 재조회하지 않음, 기술 실패/잘못된 내부 결과를 IDLE·empty·미리보기 성공으로 바꾸지 않음.
+- 수명 검증: 늦은 인증·연결 종료·미완료 본문 후 엔진 새 호출 없음, 이미 호출한 작업의 늦은 실패 관찰,
+  자동 재전송 없음. HTTP 취소가 기존 DB 작업의 rollback을 증명한다는 주장은 하지 않는다.
+- CLI 검증: 합성 호스트 모듈 주입, 실제 자식 프로세스의 loopback 기본 미연결 503·SIGTERM 종료,
+  설정 실패 로그의 내부 진단 비노출. 기본 실행은 실제 DB/인증을 연결하지 않는다.
+- 초기 개별 실행에서 raw HTTP 테스트 helper의 Host 누락과 runtime의 사전 431 거절 기대가 실패했다.
+  helper에 실제 Host/본문 길이를 넣고 파서 단계의 안전한 거절을 반영했다. 최종 선택 실행은 위 결과다.
+- 학습 응답·인증 callback은 합성 fixture다. 실제 in-process 엔진의 PostgreSQL 실행·토큰 발급/검증·EXPLANATION 콘텐츠를 검증하지 않았다.
+- 전체 `npm test`, PostgreSQL, 실제 AI 공급자, 운영 TLS/동일 출처 라우팅, 실제 팩, APK, 실기기, 학습 효과: NOT RUN.
+- 기존 브라우저 제한은 유지하고 접근 재시도·우회 없음. 실제 화면·터치·CSP·대용량/OS 성능은 미확인이다.
+- 기존 엔진·전송/제어기·Tier A·API 계약·schema/migration·Validation 판정 규칙은 변경하지 않았다.
+- 원격 저장·코드 identity는 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 합성 미리보기 산출물은 MOBILE-02 출처로 보존하며 새 설치 앱으로 취급하지 않는다.
+- 이 증거는 개발 세션의 HTTP 경계 검증이다. 독립 리뷰·프로젝트 전체 PASS·운영 준비·lifecycle CLOSED를 선언하지 않는다.

@@ -5,7 +5,8 @@
 MOBILE-03은 기존 `HttpLearningFlowTransport`와 `InProcessLearningFlowTransport`를 연결하는 HTTP 경계다.
 기준은 `API_LAYER_BRIEF.md`, `API_CONTRACT.md` 및 변경하지 않은 기존 전송·엔진 코드다.
 사용자의 2026-10-01T14:47:29+09:00 제작 계속 지시 안에서 AI가 다음 구현 항목을 선택했다.
-현재 상태: 구현 계획 저장 단계. 이번 실행의 테스트와 원격 코드 저장은 아직 수행하지 않았다.
+현재 상태: HTTP 경계의 코드 후보 구현·선택 자동 검증·모바일 빌드 완료.
+실행 증거는 `VALIDATION_STATUS.md` §E, 원격 저장과 최신 커밋 확인은 `MOBILE_APP_HANDOFF.md`를 따른다.
 
 | 경로 | 입력 본문 | 내부 호출 |
 |---|---|---|
@@ -25,6 +26,40 @@ MOBILE-03은 기존 `HttpLearningFlowTransport`와 `InProcessLearningFlowTranspo
 CLI는 기본적으로 loopback에서만 실행한다. 모바일 정적 서버와 운영 인증·동일 출처 라우팅은 별도 연결 과제다.
 새 의존성·공개 CORS·내부 엔진 엔드포인트를 추가하지 않는다.
 
+### 실행과 구성
+
+```bash
+npm run start:api
+npm run test:api
+```
+
+기본 CLI 주소는 `http://127.0.0.1:4174`다. 기본 모드는 인증/학습 전송 미연결이므로 학습은 503이다.
+포트는 `LLE_API_PORT`로 지정한다. `LLE_API_HOST_MODULE`은 운영자가 관리하는 CommonJS 설정 파일의 경로다.
+이 파일은 `{ transport, resolveUserId }`를 export해야 한다. 요청 본문·헤더로 설정 파일을 지정할 수 없다.
+코드와 함께 토큰·비밀번호를 저장하지 않는다.
+
+프로그램에서 기존 엔진을 연결하는 함수 예시 (pool과 실제 검증 함수는 호스트가 제공):
+
+```javascript
+const { createLearningFlowHttpServer } = require('./src/server/learningFlowHttpServer');
+const { InProcessLearningFlowTransport } = require('./src/transport/inProcessLearningFlowTransport');
+
+function makeAuthenticatedApi(pool, verifyAccessToken) {
+  return createLearningFlowHttpServer({
+    transport: new InProcessLearningFlowTransport(pool),
+    resolveUserId: verifyAccessToken,
+  });
+}
+```
+
+`resolveUserId(token, { signal })`는 토큰을 실제 검증하고 UUID 문자열을 반환한다.
+만료·무효 토큰은 `null`/`undefined` → 401, provider 예외·UUID 아닌 결과는 503이다.
+검증 함수는 signal을 사용해 자신의 외부 호출을 중단할 수 있다. 서버는 늦은 결과로 새 엔진 작업을 시작하지 않는다.
+호스트가 DB 연결·종료와 운영 인증·TLS·라우팅을 관리해야 한다. 이 예시는 실제 로그인 공급자 구현이 아니다.
+현재 `start:mobile`은 정적 서버이며 `start:api`를 자동으로 proxy하지 않는다.
+기존 앱의 `LLE_APP_CONFIG.getAccessToken`/`baseUrl`과 팩 목록은 실제 호스트에서 연결해야 한다.
+동일 출처 라우팅은 후속 작업이다. 다운로드용 HTML은 합성 모드와 `connect-src 'none'`을 유지한다.
+
 ## 오류와 제한
 
 성공은 `200 { status: "ok", data }`이며 기존 결과를 변경 없이 전달한다.
@@ -39,10 +74,19 @@ UNAUTHORIZED_CALLER 403, CONTRACT_VIOLATION 422. 공개 메시지는 고정 문�
 이미 호출된 기존 DB 엔진의 실행은 HTTP 취소만으로 중단되지 않는다. 연결 종료나 timeout을 DB rollback 증거로 취급하지 않는다.
 서버는 요청을 자동 재전송하지 않는다. 기존 Progress의 명시적 학습 idempotency를 유지한다.
 
+기본 설정: 본문 8192 bytes, 헤더 16384 bytes·`maxHeadersCount` 32,
+요청 핸들러 처리 10000 ms, Node `requestTimeout`/`headersTimeout` 15000 ms.
+factory의 `maxBodyBytes`, `operationTimeoutMs`, `requestTimeoutMs`로 본문·시간 설정을 주입할 수 있다.
+핸들러 진입 전 Node HTTP 파서가 거절하는 요청은 기본 400/408/417/431 응답일 수 있으며 JSON 봉투를 보장하지 않는다.
+이 파서 응답도 학습 오류 코드나 성공으로 바꾸지 않는다.
+
 ## 검증과 후속 작업
 
-실제 Node HTTP 소켓과 기존 모바일 HTTP 전송·세션 제어기로 경계 동작을 검증할 예정이다.
+실제 Node HTTP 소켓과 기존 모바일 HTTP 전송·세션 제어기로 경계 동작을 검증했다.
 테스트의 인증·학습 전송은 합성 fixture다. 운영 토큰·DB·학습자 데이터를 사용하지 않는다.
-실행 증거의 소유 문서는 `VALIDATION_STATUS.md`다. 현재 단계에서는 이번 테스트를 통과했다고 기록하지 않는다.
+실행 증거의 소유 문서는 `VALIDATION_STATUS.md` §E다. 테스트는 운영 엔진/DB·토큰 발급 검증을 대신하지 않는다.
 휴대폰 화면·팝업·터치·브라우저 CSP·대용량 팩 성능·APK 및 실제 운영 서버는 미확인이다.
 기존 브라우저 보안 제한을 우회하지 않는다. MOBILE-01/02의 화면 검증 대기도 유지한다.
+
+다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+실제 인증·사용자 저장·콘텐츠 연결과 나머지 세 학습 API는 현재 미구현이다. main 병합·출시·lifecycle CLOSED는 선언하지 않는다.

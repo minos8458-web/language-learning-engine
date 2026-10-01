@@ -9015,6 +9015,17 @@ See §10.
 
 ## 5. Validation Branch and Canonical Artifacts
 
+### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결
+
+- 최신 사용자 지시: 2026-10-01T14:47:29+09:00 제작 계속. AI가 기존 모바일 HTTP 전송과 in-process 학습 전송을 연결하는 어댑터를 선택했다.
+- 시작 기준선: `e89c4d027f4470d4e572fd89856afbb5ca41a62b`; 계획 저장: `110b9b8dfffc9b8270e0877746d75ea636875357`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §8와 `LEARNING_API_SERVER_BRIEF.md`.
+- 두 기존 POST 경로·호스트 인증 콜백·요청/시간 제한·공개 오류 매핑의 코드 후보 구현과 실제 HTTP 자동 검증·모바일 빌드 완료.
+- 직접 실행 증거: `VALIDATION_STATUS.md` §E. 테스트의 인증·학습 전송은 합성이며 실제 운영 토큰·DB·공급자 검증이 아니다.
+- 실제 인증 발급·사용자 저장·DB 배포·동일 출처 연결·EXPLANATION 콘텐츠·나머지 세 API·팩 배포·APK는 미구현/미확인이다.
+- MOBILE-01/02 실제 화면 검증 대기·보안 차단·기존 lifecycle·API/엔진/스키마/Validation 판정 규칙과 Pilot/학습 효과 비완료 경계를 보존한다.
+- 코드 커밋·원격 저장 상태와 다음 세션 기준은 `MOBILE_APP_HANDOFF.md`에서 확인한다. main 반영·출시·CLOSED는 선언하지 않는다.
+
 ### MOBILE-02 — 사용자 지정 나라·언어별 선택 다운로드
 
 - 최신 사용자 직접 지시: 2026-10-01T06:27:14+09:00. 초기 용량 부담을 줄이고 언어팩 목록에서 선택한 팩만 받으며, 확인 팝업·예상 용량·큰 파일의 Wi-Fi 권장 안내를 추가한다.
@@ -9043,7 +9054,7 @@ See §10.
 - 이 사용자 지시는 기존 문서 동기화 후보의 독립 검토·종료를 대신하지 않는다.
   그 lifecycle과 기존 비완료 경계는 보존하며 앱·실제 AI·출시·학습 효과 완료를 선언하지 않는다.
 
-> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-02` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01 기록은 이전 빌드의 출처로 보존한다.
+> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-03` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01/02 기록은 이전 빌드의 출처로 보존한다.
 
 - Validation branch:
   `validation/vi-p1-raw-source-core-contract-20260829`
@@ -12555,8 +12566,9 @@ historical ledger does not.
 
 ## 10. Next Action
 
-현재 다음 행동 하나: `MOBILE-01/02`의 화면·언어팩 팝업·취소·언어 전환을 허용된 휴대폰 환경에서 검증한다.
-사용자 제작 착수 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md`의 범위를 따른다.
+현재 다음 행동 하나: 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계한다.
+최신 사용자 제작 계속 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md` §8의 후속 경계를 따른다.
+MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 
 ### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)
 
