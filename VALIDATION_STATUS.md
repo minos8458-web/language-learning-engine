@@ -625,3 +625,21 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 저장 코드: `7093a43acc035793223d8a500210a848d24f0dfa` (tree `170bee426c0766d05f6710f1148c17fc09546aaf`, parent `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`). 변경 16개 파일의 원격 UTF-8 원문과 위 검증을 실행한 작업 파일의 완전 일치를 대조했다. 테스트·빌드는 코드 저장 전 실행이며 커밋 후 재실행으로 보고하지 않는다.
 - 최종 인계의 저장 위치는 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 미리보기 산출물의 MOBILE-02 출처를 보존한다.
 - 이 증거는 개발 세션 검증이다. 독립 보안 리뷰·프로젝트 전체 PASS·운영 준비·출시·lifecycle CLOSED를 선언하지 않는다.
+
+## G. Android 베트남어 첫 시연 부족분 평가 — 문서/원문/환경 점검
+
+- 사용자 지시: 2026-10-02T06:58:37+09:00 (Asia/Seoul). 평가 범위는 `ANDROID_VI_DEMO_ASSESSMENT.md`다.
+- 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 작업 브랜치/로컬/PR head: `661fa16edbf2cbde0ec9872f311247306c46828f` (tree `7079c2bba9c21b1d0dfc0c72ab15b57ff8e2a22f`).
+- Git fetch·실제 .git/저장소 최상위/브랜치/HEAD·깨끗한 작업/staging을 직접 확인했다. upstream ahead/behind 0/0, main 대비 14/0. PR #2 open/draft/unmerged. 미저장 작업/진행 중 MOBILE-05 구현 없음.
+- canonical 필수 문서·게스트/클라이언트/학습/저장 계약·VI 본문/검수 기준·관련 코드 등 47개 원문 조회 항목을 commit-pinned GitHub blob과 대조했다. 평가한 개발 파일의 실제 hash-object도 일치했다. 이는 읽기/출처 점검이며 런타임 결과가 아니다.
+- 정적 코드 점검: 게스트 서버 존재, 일반 목록 기본 빈 값, 다운로드/캐시 본문 Blob 저장, 본문 소비와 문제/제출 UI 부재, HTTP 세 경로, explicit study의 state-only 반환, Learning Flow startSession-only export, 토큰 기본 만료/복구 부재, 별도 정적/API 서버의 미연결을 확인했다.
+- 추가 직접 대조: `API_CONTRACT.md` §5.1의 PRE_MADE EXAMPLE/metadata null과 Generation의 `getContent(..., 'EXAMPLE')`, §10.1–10.3의 최초 QUIZ 제공 공백을 확인했다. `initial_practice` 보완은 제안/미승인이고 실제 계약·코드는 변경하지 않았다.
+- `VI_CONTENT.md` §0·§2, `CONTENT_PRODUCTION_STANDARD.md` §4.3 및 문서 정합성 검증 기록을 직접 대조했다. 서비스 전 별도 검수 조건이 남아 있고 새 앱 배포 자산의 검수 완료 증거는 없다.
+- 환경: Linux, Node.js `v24.19.0`, npm `11.9.0`; pg/linkedom 패키지 해석 가능. OpenJDK runtime `17.0.20` 존재. 확인한 도구 경로에 javac/gradle/adb/sdkmanager/psql/postgres/initdb/docker 없음; Android SDK 환경값/확인한 표준 경로와 추적 Android/Gradle 프로젝트·배포 팩 자산·상시 CI workflow 없음.
+- 미노님의 Android 기종/OS/키보드·PC Android Studio/SDK·PG/HTTPS 호스트·검수 일정은 미확인. 환경 상태로 실제 DB나 휴대폰 실행 성공을 추정하지 않는다.
+- 이번 변경: 평가/인계/위치/구현 상태/검증 문서만. 엔진·클라이언트·서버·테스트·package/lock·schema/migration·Tier A/API/Validation 규칙 변경 없음.
+- 이번 런타임 테스트·모바일 빌드·전체 npm test·PostgreSQL·migration·Android SDK 설치/빌드·APK·에뮬레이터·실기기·실제 팩 다운로드·학습 효과: NOT RUN. 새 PASS/테스트 수치를 만들지 않는다. 이전 §C–F 증거는 당시 source/scope의 기록으로 보존한다.
+- 문서 점검 보조 명령에 전체 문서를 담은 첫 호출은 인자 길이 제한으로 프로세스 생성 전에 거절됐다. 해당 명령은 실행되지 않았다. 짧은 파일 목록/UTF-8/구조/범위 점검으로 교체해 통과했으며 런타임 실패나 새 테스트 결과로 분류하지 않는다.
+- 기존 브라우저 보안 차단을 재시도하거나 우회하지 않았다. 미리보기·DOM 자동 검증·APK 생성·실제 Android 완주를 각각 별도 상태로 기록한다.
+- 평가 결과와 예상 시간은 AI 판단/조건부 추정이다. 사용자 목표 요청을 새 API/schema/복구/채점/출시 변경의 승인으로 확대하지 않는다. 다음 행동은 MOBILE-05 경계 설계 하나다.
+- 이 체크포인트 저장 identity는 `MOBILE_APP_HANDOFF.md`와 작업 브랜치 Git 이력에서 조회한다. 문서 원격 저장 후 원문을 재확인하며 main merge·독립 리뷰·제품 완성·실제 시연 성공·CLOSED를 선언하지 않는다.
