@@ -55,6 +55,17 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### Android 베트남어 첫 시연 평가 체크포인트 — 2026-10-02
+
+- 사용자 여섯 단계 목표를 평가 기준 `661fa16edbf2cbde0ec9872f311247306c46828f`와 직접 대조했다. 이전 MOBILE-04는 안전한 저장 지점에 있었고 미저장 작업이 없었다.
+- 설치 가능한 Android 앱·실제 검수 팩·본문 읽기·단원 학습/제출/피드백·인증/PG/진도 연결 및 실기기 완주는 아직 미완료. 구현된 UI/캐시/HTTP/게스트 서버는 재사용한다.
+- 기존 VI 설명/예문/QUIZ는 서비스 전 검수 조건이 남아 있다. `human_reviewed=true` 표기나 문서 정합성만으로 검수 완료를 선언하지 않는다.
+- 현재 환경은 Node 검증 가능, APK 빌드 도구/프로젝트·실제 PG/HTTPS 호스트·기기는 미연결/미확인. 환경 확보가 기간 추정의 전제다.
+- 최초 QUIZ 제공은 `start_explicit_study.initial_practice` 보완안으로 제안/미승인 상태다. 정식 PRE_MADE EXAMPLE 응답은 보존한다.
+- 구성/상태표/35–65시간의 조건부 추정/변경 경계는 `ANDROID_VI_DEMO_ASSESSMENT.md`. 이는 AI 제안이며 새 아키텍처/API/schema 변경을 승인받은 것으로 기록하지 않는다.
+- 이번에는 문서만 변경했다. 런타임/빌드/PG/기기 재실행 없음 (`VALIDATION_STATUS.md` §G). 이전 §F의 검증 경계를 보존한다.
+- 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05). 최신 인계: `MOBILE_APP_HANDOFF.md`.
+
 ### MOBILE-04 작업 브랜치 체크포인트 — 2026-10-01
 
 - 최신 지시: 2026-10-01T21:29:43+09:00 “오케이. 그 다음은?”. 이전 다음 설계를 확인하고 AI가 게스트 서버 빌드를 선택했다.
