@@ -622,5 +622,6 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
   실제 팩/콘텐츠·AI 공급자·APK·실기기·학습 효과: NOT RUN 또는 미구현.
 - 기존 엔진/전송/클라이언트/학습 API·schema/migration·Tier A·Validation 판정 규칙 변경 없음.
   HTTP 호스트·선택적 인증 경로와 관련 테스트만 확장했다. 기존 브라우저 제한을 재시도/우회하지 않았다.
-- 코드 identity·원격 저장은 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 미리보기 산출물의 MOBILE-02 출처를 보존한다.
+- 저장 코드: `7093a43acc035793223d8a500210a848d24f0dfa` (tree `170bee426c0766d05f6710f1148c17fc09546aaf`, parent `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`). 변경 16개 파일의 원격 UTF-8 원문과 위 검증을 실행한 작업 파일의 완전 일치를 대조했다. 테스트·빌드는 코드 저장 전 실행이며 커밋 후 재실행으로 보고하지 않는다.
+- 최종 인계의 저장 위치는 `MOBILE_APP_HANDOFF.md`와 Git 이력에서 확인한다. 기존 미리보기 산출물의 MOBILE-02 출처를 보존한다.
 - 이 증거는 개발 세션 검증이다. 독립 보안 리뷰·프로젝트 전체 PASS·운영 준비·출시·lifecycle CLOSED를 선언하지 않는다.

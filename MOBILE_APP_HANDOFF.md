@@ -23,11 +23,11 @@
 - 이번 구현 계획 저장: `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02` (tree `8f65426e84a3d328609f2419efd0409e29f5f946`). 원격 계획 원문 재확인 완료.
 - 이전 모바일 코드/보존 미리보기 출처: `16e793dc454482652f46329d3d0959fba35a2312` (tree `fb5a841fd4fcf891fe0152edb033c99ed77eae0f`).
 - 이전 HTTP 서버 코드: `c5285b23ea5f1ddd936a6743217b7e2cfb365035` (tree `44b659bb78ac5185cb63c52ab97c83db960bccfa`, parent `110b9b8dfffc9b8270e0877746d75ea636875357`). §E의 이전 증거다.
-- 이번 게스트 코드: 구현·최종 선택 자동 검증·빌드 완료. 코드 저장 commit은 Git 이력에서 조회하며 원격 원문 대조 뒤 최종 인계에 고정한다.
+- 이번 게스트 코드: `7093a43acc035793223d8a500210a848d24f0dfa` (tree `170bee426c0766d05f6710f1148c17fc09546aaf`, parent `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`). 변경 16개 파일의 원격 UTF-8 원문과 검증한 작업 파일의 완전 일치를 재확인했다.
 - 저장소: `minos8458-web/language-learning-engine`.
 - 작업 브랜치: `development/mobile-01-session-ui-20261001`.
 - 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2.
-- 후보 상태: MOBILE-04 게스트 서버 구현·최종 선택 자동 검증·모바일 빌드 통과 / 코드 원격 저장·대조 진행 단계.
+- 후보 상태: MOBILE-04 게스트 서버 구현·최종 선택 자동 검증·모바일 빌드 통과 / 코드 원격 저장·대조 완료. 실제 PostgreSQL·앱 최초 게스트 진입·기기 보안 저장은 미확인 또는 후속 작업.
 - 검증 수치·실행 증거의 소유 문서: 이번 `VALIDATION_STATUS.md` §F. 이전 §C/§D/§E는 보존한다.
 - 실제 팩 배포 파일·목록·정확한 용량·콘텐츠 연결·브라우저/휴대폰·대용량 성능·APK: 미확인 또는 후속 작업.
 - MOBILE-01 시각 검증 대기 상태와 기존 lifecycle은 유지한다. 전체 앱 완성·출시·CLOSED를 선언하지 않는다.
@@ -82,7 +82,8 @@
 - 직접 검증 (이전 기록): MOBILE-03 HTTP·CLI·선택 회귀·빌드와 원격 코드 원문 대조는 §E와 시작 기준선의 이전 증거다.
 - 직접 검증 (이번): 원격 main/작업 브랜치/초안 PR·users/게스트/클라이언트 계약·필수 원문 일치와 사전 점검, 실제 Node crypto/HTTP·CLI와 합성 저장 fixture·기존 선택 회귀·빌드. 수치는 §F만 인용한다.
 - 기존 원문 보존: 엔진·기존 클라이언트/전송·DB·Tier A/학습 API·스키마·Validation 판정 규칙 변경 없음을 직접 대조했다. HTTP 호스트의 이미 정의된 게스트 경로만 추가했다.
-- 이전 세션 동기화 관찰은 `e89c4d027f4470d4e572fd89856afbb5ca41a62b:MOBILE_APP_HANDOFF.md`에 보존한다. 이번 계획 원격 저장과 로컬 동기화는 통과했다.
+- 이전 세션 동기화 관찰은 `e89c4d027f4470d4e572fd89856afbb5ca41a62b:MOBILE_APP_HANDOFF.md`에 보존한다. 이번 계획·코드 원격 저장과 로컬 동기화는 통과했다.
+- 코드 저장 직후 HEAD/원격/PR head는 `7093a43acc035793223d8a500210a848d24f0dfa`로 일치했고 로컬 변경 0, upstream ahead/behind 0/0, main 대비 13/0이었다. PR 제목·본문의 MOBILE-04 갱신도 원격 재확인했다. 후속 인계 문서 저장 head는 원격 및 Git 이력에서 조회한다.
 - 실제 배포 자료: 저장소에 없음. Tier A 문서는 실제 다운로드 가능한 지원/콘텐츠/크기의 증거가 아니다.
 - 이전 브라우저 차단: 로컬 HTTP `ERR_BLOCKED_BY_CLIENT`, file 열기 보안 거부. 이번에 재시도/우회하지 않았다.
 - DOM 실행은 실제 화면 배치·터치·CSP 집행·실기기 성능 검증으로 취급하지 않는다.
