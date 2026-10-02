@@ -653,3 +653,16 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 현재 변경은 승인/인계/상태 문서만이다. canonical API·소스·테스트·package/lock·DB schema/migration·Validation 판정 규칙을 변경하지 않는다.
 - 런타임 테스트·모바일 빌드·PostgreSQL·migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩·학습 효과: NOT RUN. 이전 §C–G 증거를 이번 실행으로 재보고하지 않는다.
 - 이번 중간 승인 체크포인트를 원격에 저장·원문 재확인한 후 MOBILE-05 설계 하나를 진행한다. 설계 완료와 최종 직접 점검은 같은 §H에 추가 기록한다. main 병합·독립 리뷰·CLOSED·제품/실기기 완료는 선언하지 않는다.
+
+### H.1 승인 저장·MOBILE-05 설계 직접 점검
+
+- 승인 기록 원격 저장: `a2cecd593c4da92d2371169eff5592d2f9cb44dc`, parent `d80a91958bacddbbb4fb113071c89aee3128aca9`, tree `928fe493ffd8b7a2b4dfa587f00cc0026fcf00bf`.
+- staged tree와 connector 생성 tree가 일치했고 원격 여섯 문서의 UTF-8 원문 exact read-back을 확인했다. 새 head/parent/tree·로컬 clean·upstream 0/0·main 16/0을 직접 확인한 후 다음 설계를 진행했다.
+- 이번 원문 조회는 작업 브랜치 문서 15개·main 필수 문서 7개·모바일/게스트 관련 소스 8개로 총 30개 조회 항목이다. main의 required 원문·개발 후보 문서를 분리해 읽고 소스 8개는 pinned remote/local Git blob과 일치함을 확인했다.
+- 직접 설계 대조: 기존 auth 응답 정확한 네 필드·서버의 INSERT/응답 유실 경계·기본 만료, client의 getAccessToken/fetchImpl 주입·일반 catch의 401 정보 소실·함수 존재 connected 판정·기존 세션/팩 복구·빌드 allowlist와 원문을 대조했다. source/API/schema를 바꾸지 않는 내부 adapter·fetch wrapper 연결 범위를 정했다.
+- `MOBILE_GUEST_START_BRIEF.md`에 empty/pending/stored와 원자적 begin/commit, 저장 read-back 후 READY, 같은 유효 게스트 재실행, 불확실 발급/저장 오류·만료/401·dispose·호스트 관리/합성 모드의 경계 및 다음 클라이언트 구현 파일/검증 기준을 작성했다. 이는 설계 완료이며 구현/런타임 PASS가 아니다.
+- Android 공식 Keystore·WebView native bridge·Auto Backup 원문을 2026-10-02 확인했다. OS 키/앱 기록/호출 origin·백업 경계를 설계 요구로 기록했다. 특정 플러그인/SDK/호스트 구조를 선정·설치하거나 네이티브 저장 보안을 검증하지 않았다.
+- 최종 변경 범위는 신규 설계 문서 1개와 기존 승인/인계/연결/상태 문서 7개다. 로컬 UTF-8·code fence·충돌 표식 부재·설계 10절 구조·단일 다음 행동 참조·8문서 변경 범위·소스 8개 blob/기존 canonical 경계 보존·diff --check 점검을 통과했다. staged/remote tree 및 원문 exact read-back은 최종 저장에서 추가 확인한다.
+- 이번 런타임/DOM 테스트·모바일 빌드·실제 PG/DB/migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩 다운로드·학습 효과: NOT RUN. §C–F의 기존 실행 수치를 새 결과로 보고하지 않는다.
+- 엔진/클라이언트/서버 소스·테스트·package/lock·canonical API/Tier A·schema/migration·Validation 판정 규칙은 보존한다. 실제 검수 팩·Android/PG/HTTPS·같은 게스트 만료 뒤 복구는 여전히 미완료/미확인이다.
+- 최종 설계 저장 identity는 원격 작업 브랜치/Git 이력과 `MOBILE_APP_HANDOFF.md`를 따른다. 저장 후 원문/브랜치/PR를 재확인하며 main·독립 리뷰·lifecycle·출시·기기 성공 판정을 바꾸지 않는다.

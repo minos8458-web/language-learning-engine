@@ -8,7 +8,7 @@
 - 승인 상태와 구현 상태는 별개다. 정확한 응답 필드/optional·null 계약 보완과 구현·검증은 후속 단일 작업으로 진행하며, 이 승인 기록에서 canonical API나 소스를 변경하지 않는다.
 - refresh/동일 게스트 복구, 장기 토큰 수명, 서버 원문 채점, schema/migration, 새로운 Android 호스트 구조, 유료 서비스·출시·main 병합·P1 활성화는 승인 범위에 포함하지 않는다.
 - 아래 §1–§7은 06:58 요청의 평가 기록이다. 당시 “제안/미승인” 표현은 §5.1의 위 승인 범위에 한해 이 기록으로 갱신된다. 환경·검수·연결·실기기 미완료 판정은 유지한다.
-- 다음 행동은 기존에 지정한 MOBILE-05 게스트 첫 시작·보안 저장 경계 설계 하나다.
+- 후속 진행: MOBILE-05 게스트 첫 시작·보안 저장 경계 설계를 `MOBILE_GUEST_START_BRIEF.md`에 완료했다. 설계/문서만이며 네이티브 저장·게스트 클라이언트·API/APK 완료가 아니다. 다음 행동 하나는 이를 소비하는 클라이언트 구현/선택 검증이다. 정확한 구현 상태·증거는 `PROJECT_STATUS.md` / `VALIDATION_STATUS.md` §H를 따른다.
 
 ## 1. 이번 요청과 점검 기준
 
@@ -110,7 +110,7 @@ AI가 같은 초안을 즉시 재검토한 것을 사람의 검수로 기록하�
 기존 Frozen Core, §9 acknowledgement/학습 순서, API five-code registry, schema/migration과 Validation 판정 기준을 유지한다.
 개인 기술 시연을 P1 연구 활성화나 학습 효과 검증으로 확장하지 않는다. 운영 서비스 비용·실제 사용자 DB·앱스토어 출시는 별도 결정이다.
 
-### 5.1 승인을 요청하는 최소 API 보완안 — 제안/미승인
+### 5.1 최소 API 보완안 — 방향 승인/미구현
 
 **변경 이유:** 현재 첫 학습은 state만 갱신하고, Generation의 정식 PRE_MADE 응답은 EXAMPLE이다.
 검수된 QUIZ 한 개를 받고 그 서버 발급 content_id로 답안을 제출할 연결이 없다.
@@ -128,10 +128,10 @@ Content projection 자체·Generation PRE_MADE EXAMPLE 계약·State 전이·fiv
 EXPLANATION의 정확한 응답 필드명과 새 필드의 optional/null 규칙은 구현 전 계약 보완안에 고정한다.
 이는 일반 자유 답안의 서버 채점이나 전체 request_practice 완료를 의미하지 않는다.
 
-이 파일은 승인 안건이며 canonical `API_CONTRACT.md`를 변경하지 않았다.
-이 첫 시연 범위와 `initial_practice` 추가를 사용자에게 승인 요청한다.
-승인 전에는 QUIZ 제공을 성공으로 모의하거나 이미 검증한 Generation 경로를 다시 만들지 않는다.
-현재 다음 행동인 MOBILE-05 설계는 기존 범위에서 진행할 수 있으며 이 API 보완은 별도 승인 후 하나씩 진행한다.
+06:58 평가에서는 위 안을 승인 요청/미승인으로 기록했다. 21:10 사용자가 첫 시연 한정과 이 보완 방향을 승인했다 (§0).
+canonical `API_CONTRACT.md`는 아직 변경하지 않았다. 정확한 응답 필드/optional·null 보완을 구현 전에 문서로 고정하고 승인 방향 안에서 하나씩 진행한다.
+기존 검증한 Generation 경로를 재작성하거나 최초 QUIZ 제공을 이미 성공한 것으로 모의하지 않는다.
+MOBILE-05 경계 설계가 완료됐으며 현재 다음 한 작업은 해당 클라이언트 연결 구현이다. 이 API 보완은 후속 단일 작업으로 남긴다.
 
 ## 6. 직접 확인한 환경과 예상 기간
 

@@ -78,6 +78,14 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-05 게스트 첫 시작·보안 저장 경계 설계 완료 — 2026-10-02
+
+이번 한 작업의 설계를 `MOBILE_GUEST_START_BRIEF.md`에 완료했다.
+기존 발급/전송/제어기·팩 캐시를 재사용하고, empty/pending/stored 저장 경계·저장 확인 후 학습·같은 유효 게스트 재실행·만료/401/불확실 발급 처리와 구현 검증 기준을 고정했다.
+클라이언트/네이티브 코드·API/schema·APK는 아직 변경하지 않았다. 설계/실행 증거를 구분하며 직접 문서 점검은 `VALIDATION_STATUS.md` §H를 따른다.
+다음 행동 하나는 이 설계의 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결 구현과 선택 검증이다.
+`initial_practice` 방향 승인은 유효하며 정확한 계약 보완/구현은 후속 단일 작업으로 남긴다. 이전 상태·기기 검증 대기·main/lifecycle 경계를 유지한다.
+
 ### 첫 시연 범위 승인·MOBILE-05 착수 — 2026-10-02
 
 사용자 직접 응답 (2026-10-02T21:10:42+09:00) “승인”을 직전 질문에 연결했다.
@@ -166,10 +174,10 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+현재 다음 행동 하나: `MOBILE_GUEST_START_BRIEF.md`를 소비하는 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
-최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §9 / `MOBILE_APP_HANDOFF.md`를 따른다.
+최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10 / `MOBILE_APP_HANDOFF.md`를 따른다.
 
 ### 제작 착수 전 다음 행동 기록 (보존)
 
