@@ -55,6 +55,15 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-05 경계 설계 완료 체크포인트 — 2026-10-02
+
+- 설계 완료: `MOBILE_GUEST_START_BRIEF.md`. 기존 게스트 API/모바일 전송·제어기/팩 캐시를 재사용하며 저장 확인 전 학습 차단, 발급 pending·동일 사용자 재실행·만료/401·저장/응답 유실·화면 종료 경계를 정의했다.
+- 구현 상태: 클라이언트 제어기·인증 화면·네이티브 adapter는 미구현이다. 설계 완료를 실제 안전한 토큰 저장/Android 성공으로 승격하지 않는다.
+- 승인 상태: 온라인·유효 토큰 내 재실행과 `initial_practice` 방향 승인. canonical 계약/코드/키 수명/schema/채점/복구는 이번에 변경하지 않았다.
+- 직접 문서/원문/변경 범위 점검: `VALIDATION_STATUS.md` §H. 런타임·빌드·DB·기기 실행 없음. 기존 환경/검수/기기 비완료 경계를 유지한다.
+- 다음 행동 하나: MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결 구현과 선택 검증. API 보완/APK 작업은 동시에 시작하지 않는다.
+- 최신 인계는 `MOBILE_APP_HANDOFF.md`다. main 병합·독립 리뷰·출시·CLOSED를 선언하지 않는다.
+
 ### 첫 시연 범위 승인·MOBILE-05 착수 체크포인트 — 2026-10-02
 
 - 사용자 직접 응답 (2026-10-02T21:10:42+09:00) “승인”: 온라인·유효 토큰 내 재실행 첫 시연 한정과 `initial_practice` 보완 방향 승인.
@@ -188,9 +197,9 @@ Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, an
 
 ### 5.1 Next Action
 
-현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+현재 다음 행동 하나: `MOBILE_GUEST_START_BRIEF.md`를 소비하는 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
-작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §9, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §10, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 
 #### 제작 착수 전 다음 행동 기록 (보존)
 

@@ -76,4 +76,7 @@ CLI용 설정 파일은 `scripts/postgres-guest-host.js`이며 `LLE_API_HOST_MOD
 이 세션에서 호스트를 실제 PG에 연결하거나 migration을 실행하지 않았다.
 합성 pool로 HTTP 발급→서명/계정 확인→기존 클라이언트 요청과 종료 hook을 검증했다.
 
-다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+후속 MOBILE-05 경계 설계는 `MOBILE_GUEST_START_BRIEF.md`에 완료했다 (2026-10-02).
+클라이언트/네이티브 보안 저장 구현과 실제 PostgreSQL/휴대폰 검증은 아직 완료하지 않았다.
+현재 다음 행동 하나: 해당 설계의 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다.
+온라인·유효 토큰 내 재실행 시연/`initial_practice` 방향 승인 기록은 `ANDROID_VI_DEMO_ASSESSMENT.md` §0을 따른다.
