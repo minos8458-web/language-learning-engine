@@ -643,3 +643,13 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 기존 브라우저 보안 차단을 재시도하거나 우회하지 않았다. 미리보기·DOM 자동 검증·APK 생성·실제 Android 완주를 각각 별도 상태로 기록한다.
 - 평가 결과와 예상 시간은 AI 판단/조건부 추정이다. 사용자 목표 요청을 새 API/schema/복구/채점/출시 변경의 승인으로 확대하지 않는다. 다음 행동은 MOBILE-05 경계 설계 하나다.
 - 이 체크포인트 저장 identity는 `MOBILE_APP_HANDOFF.md`와 작업 브랜치 Git 이력에서 조회한다. 문서 원격 저장 후 원문을 재확인하며 main merge·독립 리뷰·제품 완성·실제 시연 성공·CLOSED를 선언하지 않는다.
+
+## H. 첫 시연 승인 기록·MOBILE-05 착수 — 문서/출처 점검
+
+- 사용자 직접 응답: 2026-10-02T21:10:42+09:00 “승인”. 직전 질문의 온라인 학습·유효 토큰 내 재실행과 §5.1 `initial_practice` 보완 방향에만 연결했다. 구현 성공이나 다른 승인으로 확장하지 않는다.
+- 시작 기준선: `d80a91958bacddbbb4fb113071c89aee3128aca9`, tree `96fb1e301e0780aa98012b1a9902dc9e3bae5cf6`; remote main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. PR #2 open/draft/unmerged.
+- 이번 직접 사전 점검: fetch 성공, 실제 저장소/.git/최상위/브랜치/HEAD·origin/main, clean worktree/stage, upstream 0/0, main 관계 15/0. 필수 원문/평가/모바일/게스트/클라이언트/API 문서 15개와 관련 소스 8개를 pinned remote로 조회했다.
+- 최초 보조 점검은 origin URL을 잘못 가정한 assertion에서 실패했다. 읽기 전용으로 실제 `https://github.com/minos8458-web/language-learning-engine.git`를 확인했으며 승인 저장소와 일치했다. 저장소를 변경/복구하지 않고 검사 가정만 고친 뒤 전체 preflight 통과를 확인했다. 이는 제품/런타임 실패가 아니다.
+- 현재 변경은 승인/인계/상태 문서만이다. canonical API·소스·테스트·package/lock·DB schema/migration·Validation 판정 규칙을 변경하지 않는다.
+- 런타임 테스트·모바일 빌드·PostgreSQL·migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩·학습 효과: NOT RUN. 이전 §C–G 증거를 이번 실행으로 재보고하지 않는다.
+- 이번 중간 승인 체크포인트를 원격에 저장·원문 재확인한 후 MOBILE-05 설계 하나를 진행한다. 설계 완료와 최종 직접 점검은 같은 §H에 추가 기록한다. main 병합·독립 리뷰·CLOSED·제품/실기기 완료는 선언하지 않는다.

@@ -55,6 +55,15 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### 첫 시연 범위 승인·MOBILE-05 착수 체크포인트 — 2026-10-02
+
+- 사용자 직접 응답 (2026-10-02T21:10:42+09:00) “승인”: 온라인·유효 토큰 내 재실행 첫 시연 한정과 `initial_practice` 보완 방향 승인.
+- 승인/구현을 구분한다. canonical API·소스·테스트·schema/migration은 이번 중간 저장에서 변경하지 않는다.
+- 기존 MOBILE-04/다운로드/캐시 코드를 재사용하는 MOBILE-05 최초 게스트·보안 저장 설계에 착수한다. 클라이언트/네이티브 보안 저장 구현 완료가 아니다.
+- 기존 Android/PG/HTTPS·독립 콘텐츠 검수·실기기 미완료 경계를 유지한다.
+- 승인 근거: `ANDROID_VI_DEMO_ASSESSMENT.md` §0 / `MOBILE_APP_BRIEF.md` §10. 직접 점검: `VALIDATION_STATUS.md` §H. 최신 인계: `MOBILE_APP_HANDOFF.md`.
+- 다음 행동 하나: MOBILE-05 게스트 첫 시작·보안 저장 경계 설계를 마무리한다.
+
 ### Android 베트남어 첫 시연 평가 체크포인트 — 2026-10-02
 
 - 사용자 여섯 단계 목표를 평가 기준 `661fa16edbf2cbde0ec9872f311247306c46828f`와 직접 대조했다. 이전 MOBILE-04는 안전한 저장 지점에 있었고 미저장 작업이 없었다.
