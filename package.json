@@ -10,7 +10,7 @@
     "migrate": "node db/migrate.js",
     "build:mobile": "node scripts/build-mobile.js",
     "start:mobile": "node scripts/serve-mobile.js",
-    "test:mobile": "node --test tests/mobileClient.test.js tests/languagePackClient.test.js",
+    "test:mobile": "node --test tests/mobileClient.test.js tests/languagePackClient.test.js tests/guestSessionClient.test.js",
     "start:api": "node scripts/serve-learning-api.js",
     "test:api": "node --test tests/learningFlowHttpServer.test.js tests/guestAuth.test.js"
   },

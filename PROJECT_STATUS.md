@@ -55,7 +55,18 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
-### MOBILE-05 클라이언트 구현 착수 체크포인트 — 2026-10-02
+### MOBILE-05 클라이언트 구현·선택 개발 검증 완료 — 2026-10-02
+
+- 사용자 직접 계속 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
+- 게스트 제어기·주입 저장 경계·게스트 화면·기존 팩/flow 진입을 구현했다. pending 저장 확인 후 기존 POST, 후보 commit/read 동일 기록 확인 후 READY, 동일 유효 게스트 복구·만료/401 차단·로컬 저장 재확인·종료/재개·이전 응답 차단을 포함한다.
+- 선택 개발 검증/모바일 빌드 통과. 실행 증거는 `VALIDATION_STATUS.md` §I.1, 내부 계약/실제 연결 부족분은 `MOBILE_GUEST_START_BRIEF.md` §12, 최신 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+- 합성 store/DB·Node DOM·실제 Node HTTP 코드 경계의 완료다. 실제 native adapter/OS 보안 저장·Android host/APK·PG/운영 HTTPS·검수 팩·단원 학습/진도·실기기는 미완료다.
+- 실제 안전 저장 host가 없는 일반 실행은 HOST_UNAVAILABLE에서 팩/학습 요청을 막는다. 기존 token callback host와 명시적 합성 preview는 유지한다.
+- 기존 엔진·서버·학습 제어기/HTTP 전송·팩 service/controller/view·API/schema/Validation 판정 규칙·dependency/lock 변경 없음. main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92` 유지. 병합·독립 리뷰·CLOSED·출시는 선언하지 않는다.
+- 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+- 아래 설계/착수/이전 빌드 체크포인트는 당시 기록이며 현재 구현 상태를 대체하지 않는다.
+
+### MOBILE-05 클라이언트 구현 착수 체크포인트 — 2026-10-02 (착수 당시 기록)
 
 - 최신 사용자 직접 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
 - `MOBILE_GUEST_START_BRIEF.md`의 게스트 제어기·adapter/화면 연결 구현을 시작한다. 아직 소스/테스트/네이티브 저장 완료가 아니다.

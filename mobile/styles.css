@@ -75,6 +75,8 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid
 .preview-guide summary:focus-visible { outline: 3px solid #7d9e4b; outline-offset: 4px; }
 .loading-card { padding: 45px 25px; text-align: center; }
 .loading-card p { margin-bottom: 0; }
+.guest-card { min-height: 120px; }
+.guest-card .guest-progress { margin: 18px 0 0; text-align: center; }
 .spinner { height: 32px; width: 32px; margin: auto; border: 3px solid #e3ebda; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
 .skip-link { position: fixed; top: -100px; left: 16px; z-index: 2; padding: 12px; background: #fff; }
 .skip-link:focus { top: 16px; }

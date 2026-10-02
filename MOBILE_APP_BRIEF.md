@@ -176,3 +176,18 @@ empty/pending/stored의 원자적 저장 경계와 저장 확인 뒤 학습, 동
 이 문서 작성은 네이티브 저장/클라이언트 코드·API/schema 변경·SDK 설치·APK/실기기 성공이 아니다.
 다음 행동 하나는 이 설계를 소비하는 MOBILE-05 클라이언트 제어기·adapter 경계·모바일 진입 연결 구현과 선택 검증이다.
 `initial_practice`의 정확한 계약 보완/구현과 Android 호스트 선택/네이티브 adapter/APK는 후속 단일 작업으로 남긴다.
+
+## 11. MOBILE-05 클라이언트 게스트 연결 완료 — 2026-10-02
+
+사용자 계속 지시 (2026-10-02T21:46:25+09:00)에 따라 §10의 다음 행동을 구현했다.
+게스트 제어기·주입 저장 경계·게스트 화면과 기존 팩/flow 진입을 연결했다.
+pending/토큰 저장 재확인 전 학습 차단, 같은 유효 게스트 재실행, 만료/401/저장/발급 실패와
+종료/재개·과거 응답 차단을 포함한다. 실제 native 보안 저장 구현은 없다.
+
+선택 개발 검증/빌드는 통과했다. 내부 계약/host 설정은 `MOBILE_GUEST_START_BRIEF.md` §12,
+직접 실행 증거는 `VALIDATION_STATUS.md` §I.1, 최신 출처/남은 작업은 `MOBILE_APP_HANDOFF.md`를 따른다.
+기존 엔진·서버·학습 전송/제어기·팩 다운로드/캐시·API/schema/Validation 규칙·lock 변경 없음.
+Android host/SDK/APK·실제 PG/TLS·독립 검수/배포 팩·본문 학습 소비·단원/진도·휴대폰 완주는 미완료다.
+초안 PR #2는 open/draft/unmerged이며 main/출시/독립 리뷰/CLOSED 상태를 바꾸지 않는다.
+
+현재 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
