@@ -25,7 +25,9 @@
 - 실제 adapter 부재: 일반 앱은 HOST_UNAVAILABLE에서 팩/학습 요청을 막는다. production 합성 store/평문 fallback 없음. token callback만 있는 기존 host·명시적 preview 유지.
 - 직접 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, tree `e3ad28a5ccc837dd0bc137bd7d4f36492185cba2`, 변경 없음.
 - 시작 기준선: `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`, tree `7f7de901f02f331859e34a6e3e999cc220d35bfe`; fetch/remote·local·PR head 일치·clean/upstream 0/0·main 17/0 확인.
-- 착수 범위 원격 저장: `7465b14f278ea73b70357de0c41c6bab74288f72`, tree `401c7be8e0da2f782c398bb1414fb6cadb208a26`; 5문서 exact read-back·clean/upstream 0/0·main 18/0 확인. 최종 구현 저장 식별자는 후속 원격 확인에 기록한다.
+- 착수 범위 원격 저장: `7465b14f278ea73b70357de0c41c6bab74288f72`, tree `401c7be8e0da2f782c398bb1414fb6cadb208a26`; 5문서 exact read-back·clean/upstream 0/0·main 18/0 확인.
+- 구현 코드의 안전한 원격 저장 지점: `00f7909aefbc447999bfc77e32dae90e99aa9580`, tree `5aba4478805b35e4402f45dd8bc58144ae76f00b`, parent `7465b14f278ea73b70357de0c41c6bab74288f72`. 변경 15파일의 pinned exact UTF-8 read-back/local staged tree 일치·clean/upstream 0/0·main 19/0 확인. 선택 테스트는 커밋 직전 동일 작업 파일의 실행이며 커밋 후 재실행 기록은 아니다.
+- PR #2 제목/설명을 최종 구현 범위로 갱신하고 원격 원문/head/main/open·draft·unmerged를 재확인했다. 후속 최종 체크포인트 저장은 문서만이며 source 코드를 바꾸지 않는다.
 - 저장소/브랜치: `minos8458-web/language-learning-engine` / `development/mobile-01-session-ui-20261001`.
 - 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2 (open/draft/unmerged). main 반영/독립 리뷰/CLOSED/출시 선언 없음.
 - 검증 결과: 선택 개발 검증·모바일 빌드 통과. 정확한 명령/수치/해시/합성 vs 실제 Node HTTP 구분/미실행은 `VALIDATION_STATUS.md` §I.1이 소유한다. 기존 §C–H는 이전 증거다.

@@ -697,3 +697,11 @@ npm run build:mobile
 - 환경 재확인 (2026-10-02T22:20:36+09:00): javac/gradle/adb/sdkmanager/psql/postgres/initdb/docker는 PATH에 없다. SDK/PG를 설치하거나 사용자 PC/기기를 탐색하지 않았다. 별도 환경/독립 검수/기기 피드백 일정은 미확인이다.
 - NOT RUN: 전체 npm test(독립 PG 미확보)·실제 PostgreSQL/migration·운영 키/인증·운영 HTTPS·실제 팩/검수 콘텐츠/단원 제출·OS Keystore/bridge/backup/재부팅·APK/에뮬레이터/실기기·실제 브라우저/CSP 집행/모바일 배치·AI 공급자/학습 효과. 기존 브라우저 차단 재시도/우회 없음.
 - 이 결과는 작업 브랜치 개발 증거다. Validation Level/판정 규칙·main/독립 리뷰/CLOSED·P1/인간 데이터 승인·출시 상태를 바꾸지 않는다. 원격 저장 식별자는 후속 읽기 확인/인계에 기록한다.
+
+### I.2 MOBILE-05 원격 코드 저장·PR 확인
+
+- 구현 저장: `00f7909aefbc447999bfc77e32dae90e99aa9580`, parent `7465b14f278ea73b70357de0c41c6bab74288f72`, tree `5aba4478805b35e4402f45dd8bc58144ae76f00b`. 원격 create_tree가 실제 local staged write-tree와 일치하고 15개 변경 파일을 pinned ref로 다시 읽어 full UTF-8 내용과 blob을 확인했다.
+- 로컬 HEAD/upstream/원격/PR head 일치·worktree/stage clean·upstream 0/0·main 19/0. main은 `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`로 유지했다.
+- §I.1의 실행 대상 작업 파일과 저장된 소스는 byte-identical이다. 코드 커밋 뒤 런타임 재실행 결과로 바꾸지 않는다. 빌드 생성물은 Git 제외이며 이전 보존 preview도 수정하지 않았다.
+- PR #2 제목/본문을 최종 구현/검증/미완료 경계로 갱신하고 exact read-back 확인. 상태 open/draft/unmerged와 base main을 유지했다.
+- 이 후속 인계/검증 문서 저장은 소스 변경이 없으며 새 런타임/빌드/PG/기기 검증을 주장하지 않는다. 마지막 문서 head는 원격/Git 이력에서 조회하며 원문을 다시 읽는다.
