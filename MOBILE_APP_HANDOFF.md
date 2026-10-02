@@ -16,12 +16,12 @@
 ## 현재 체크포인트
 
 - 날짜: 2026-10-02 (Asia/Seoul).
-- 최신 사용자 직접 응답: 2026-10-02T21:10:42+09:00, “승인”.
+- 최신 사용자 직접 지시: 2026-10-02T21:46:25+09:00, “다음작업 계속 진행해”. 이전 21:10 승인은 아래 범위에 보존한다.
 - 직전 승인 질문/범위: 온라인 학습·유효 토큰 내 재실행 첫 시연 한정과 `ANDROID_VI_DEMO_ASSESSMENT.md` §5.1의 `start_explicit_study.initial_practice` 보완 방향. 이 두 항목이 승인됐다. 정확한 계약 보완/구현은 후속 단일 작업이며 아직 변경하지 않았다.
 - 승인에서 제외: refresh/같은 게스트 복구·장기 토큰 수명·서버 원문 채점·schema/migration·새 Android 호스트 구조·유료 서비스·main 병합·출시·P1 활성화.
-- 이번 완료: 승인 기록을 `a2cecd593c4da92d2371169eff5592d2f9cb44dc`에 먼저 원격 저장/원문 재확인했고, MOBILE-05 보안 저장 경계·최초 게스트 시작/재실행/실패 처리의 설계를 `MOBILE_GUEST_START_BRIEF.md`에 완료했다. 문서만이며 클라이언트/네이티브 구현은 아직 없다.
+- 이번 진행: 최신 원격/로컬 기준선을 직접 대조하고 `MOBILE_GUEST_START_BRIEF.md`의 단일 다음 행동인 클라이언트 게스트 준비 제어기·저장 경계·화면 진입 구현/선택 검증에 착수했다. 이 중간 저장에서는 코드/런타임 완료를 선언하지 않는다.
 - 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92` (tree `e3ad28a5ccc837dd0bc137bd7d4f36492185cba2`, 변경 없음).
-- 이번 시작 기준선: `d80a91958bacddbbb4fb113071c89aee3128aca9` (tree `96fb1e301e0780aa98012b1a9902dc9e3bae5cf6`). fetch 성공, 로컬/원격/PR head 일치, dirty/staging 0, upstream 0/0, main 대비 15/0을 직접 확인했다.
+- 이번 시작 기준선: `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7` (tree `7f7de901f02f331859e34a6e3e999cc220d35bfe`). fetch 성공, 로컬/원격/PR head 일치, dirty/staging 0, upstream 0/0, main 대비 17/0을 직접 확인했다.
 - 설계 기준선/승인 저장: `a2cecd593c4da92d2371169eff5592d2f9cb44dc` (tree `928fe493ffd8b7a2b4dfa587f00cc0026fcf00bf`), 원격 6문서 exact read-back·로컬 clean·upstream 0/0·main 16/0 확인.
 - 이전 평가: `d80a91958bacddbbb4fb113071c89aee3128aca9:ANDROID_VI_DEMO_ASSESSMENT.md`. 평가 당시 미승인 표현은 위 두 승인 항목에 한해 갱신됐다. 부족분·환경·검수 미완료는 유지한다.
 - 안전한 이전 작업: 미저장 진행 작업이 없다. MOBILE-04 서버/모바일 다운로드/캐시를 다시 만들지 않는다.
@@ -29,8 +29,8 @@
 - 이전 HTTP 코드: `c5285b23ea5f1ddd936a6743217b7e2cfb365035`; 모바일/미리보기 출처: `16e793dc454482652f46329d3d0959fba35a2312`. 검증은 해당 Git 이력 및 Validation 기록에 보존한다.
 - 저장소: `minos8458-web/language-learning-engine`. 작업 브랜치: `development/mobile-01-session-ui-20261001`.
 - 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2 (open/draft/unmerged). main 반영·출시·독립 리뷰·CLOSED는 선언하지 않는다.
-- 완료한 내용: 최초 저장 read·원자적 empty→pending 발급 표시·commit/read-back 뒤 학습, 유효 저장 게스트 재사용, 만료/401 차단, 응답/저장 유실·중복 시작·dispose 처리, 기존 미리보기/호스트 연결 호환 경계, 네이티브 저장 요구와 후속 클라이언트 파일/검증 기준을 고정했다. 기존 서버/엔진/다운로드 코드는 재작성하지 않았다.
-- 검증 결과: pinned 필수/계약/모바일·게스트 원문과 로컬 hash·문서 UTF-8/구조/변경 범위·연결 계약의 정적 점검을 확인했다 (`VALIDATION_STATUS.md` §H). 이전 런타임 수치는 §C–F가 소유하며 이번에 재실행하지 않았다. 최종 저장도 원격 tree/원문과 로컬 상태를 대조한다.
+- 완료한 내용: 이전 설계/승인의 원격 기준선을 확인했다. main 필수 7문서와 후보 문서·코드/테스트/package 24개의 출처/local blob을 대조했고 이번 파일/대기 한도·재시도·수명주기 구현 범위를 기록했다. 기존 서버/엔진/다운로드 코드를 재작성하지 않는다.
+- 검증 결과: 이번 착수 preflight·출처/blob 점검은 `VALIDATION_STATUS.md` §I. 중간 저장에서는 런타임/빌드를 아직 실행하지 않았다. 이전 §C–H와 새 실행을 분리하며 최종 저장/원문과 직접 테스트 결과를 해당 §I에 추가한다.
 - 목표 판정: Android 여섯 단계 실제 시연 미완료. 클라이언트 보안 저장/첫 게스트, Android 호스트/APK, PG/HTTPS, 실제 팩/본문 읽기·설명/문제/제출/피드백·동일 사용자 진도 연결이 남아 있다.
 - 콘텐츠 차단: 기존 `GRAMMAR_VI_DA` 설명/예문/입력 QUIZ의 서비스 전 별도 검수가 남아 있다. `human_reviewed=true`나 문서 정합성을 독립 검수 완료로 승격하지 않는다. 파일/실측 용량도 아직 없다.
 - 환경 차단/미확인: 이전 직접 환경 점검(§G)에서 Android 프로젝트·SDK/컴파일러/adb·PG 실행기/실제 PG·HTTPS 호스트가 없었다. 사용자 PC/Android 기종·OS·키보드·검수 일정은 미확인이다. 이번 승인 기록만으로 환경 확보를 선언하지 않는다.

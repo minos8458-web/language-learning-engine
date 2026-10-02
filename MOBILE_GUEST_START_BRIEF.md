@@ -201,3 +201,18 @@ UI DOM 검증과 실제 렌더링/터치·Keystore/bridge·앱 종료·설치·O
 실제 안전한 host adapter가 없을 때 일반 앱은 닫힌 미연결 상태로 남긴다.
 합성 테스트용 store는 운영 기본값으로 포함하지 않는다. 새 dependency·Android SDK 설치·서버/API 변경을 동시에 하지 않는다.
 `initial_practice`의 정확한 계약 보완/구현과 Android 호스트·네이티브 저장/APK는 후속 단일 작업으로 남긴다.
+
+## 11. 클라이언트 구현 착수 범위 — 2026-10-02
+
+사용자 직접 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
+위 §1–10 설계를 소비하는 한 작업을 시작한다. 코드/테스트 완료는 아직 선언하지 않는다.
+
+- 구현 파일: `src/client/guestSessionController.js`, `src/client/mobileGuestView.js`, `mobile/browserEntry.js`, `mobile/styles.css`, `scripts/build-mobile.js`.
+- 검증 파일: `tests/guestSessionClient.test.js`, 필요한 `tests/mobileClient.test.js` 기대값/번들 연결 검사. `package.json`의 `test:mobile`에 새 검증 파일만 추가한다. 새 dependency·lock 변경 없음.
+- AI 실행 선택: 발급 fetch와 저장 Promise 모두 기본 10초의 대기 한도를 둔다. 이미 시작한 저장은 늦게 완료될 수 있고 rollback을 보장하지 않는다. Promise 확인 실패를 새 POST로 대체하지 않는다.
+- “저장 다시 확인”은 read/같은 private 후보의 commit만 재시도하며 새 발급을 하지 않는다. 첫 read/호스트 오류 뒤 empty만 확인되면 해당 실행에서는 막힌 상태로 남긴다. 새 앱 실행의 정확한 empty→pending 확인과 구분한다.
+- 관리 게스트의 API 주소는 고정 HTTPS다. relative 경로는 호스트 origin에 고정한다. 일반 앱에 insecure/test-only 주소 fallback을 넣지 않는다. 합성 fetch fixture/실제 Node loopback HTTP 검증은 운영 TLS 성공이 아니다.
+- 앱 pagehide에서 화면/인증 문맥을 종료한다. bfcache pageshow는 저장 기록을 다시 읽는 새 문맥으로 시작한다. 종료된 async 응답이 복원된 화면을 바꾸지 않게 한다.
+- token callback만 제공한 기존 호스트 모드는 보존한다. 명시적 미리보기는 실제 인증/저장/fetch 0회를 유지한다. 저장 호스트가 없는 일반 실행은 게스트 미연결 화면으로 막는다.
+- 서버/엔진·기존 학습 제어기/HTTP 전송·언어팩 service/controller/view·canonical API/Tier A/schema/migration·Validation 판정 규칙은 보존한다.
+- 실제 Keystore/bridge adapter·Android 프로젝트/SDK/APK·실제 PG/HTTPS·콘텐츠 검수/배포·학습 효과는 이번 검증 완료로 승격하지 않는다.

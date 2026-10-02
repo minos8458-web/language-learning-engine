@@ -55,6 +55,14 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### MOBILE-05 클라이언트 구현 착수 체크포인트 — 2026-10-02
+
+- 최신 사용자 직접 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
+- `MOBILE_GUEST_START_BRIEF.md`의 게스트 제어기·adapter/화면 연결 구현을 시작한다. 아직 소스/테스트/네이티브 저장 완료가 아니다.
+- 기준 후보 `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. 원격/로컬 기준선과 출처를 직접 대조했다.
+- 이번 범위는 클라이언트와 선택 검증·문서다. `initial_practice` 구현·네이티브 호스트/SDK 설치·APK·운영 PG/TLS 연결은 섞지 않는다.
+- 직접 점검/향후 실행 증거: `VALIDATION_STATUS.md` §I. 최신 위치/완료·검증·막힌 부분/다음 행동은 `MOBILE_APP_HANDOFF.md`를 따른다.
+
 ### MOBILE-05 경계 설계 완료 체크포인트 — 2026-10-02
 
 - 설계 완료: `MOBILE_GUEST_START_BRIEF.md`. 기존 게스트 API/모바일 전송·제어기/팩 캐시를 재사용하며 저장 확인 전 학습 차단, 발급 pending·동일 사용자 재실행·만료/401·저장/응답 유실·화면 종료 경계를 정의했다.

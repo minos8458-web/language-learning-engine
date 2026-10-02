@@ -78,6 +78,13 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### MOBILE-05 클라이언트 구현 착수 — 2026-10-02
+
+사용자 직접 지시 (2026-10-02T21:46:25+09:00) “다음작업 계속 진행해”에 따라, 최신 원격 `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`의 단일 다음 행동을 확인했다.
+`MOBILE_GUEST_START_BRIEF.md` §1–10을 소비하는 게스트 준비 제어기·저장 adapter 경계·모바일 진입 구현과 선택 검증을 시작한다.
+현재는 구현 착수이며 런타임/네이티브 저장/APK 완료가 아니다. 범위·세부 실행 선택은 해당 문서 §11, 직접 점검은 `VALIDATION_STATUS.md` §I, 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+기존 발급 서버·학습 제어기/전송·다운로드/캐시·API/schema/Validation 규칙을 재작성하지 않는다. 다른 API/APK 작업을 동시에 시작하지 않는다.
+
 ### MOBILE-05 게스트 첫 시작·보안 저장 경계 설계 완료 — 2026-10-02
 
 이번 한 작업의 설계를 `MOBILE_GUEST_START_BRIEF.md`에 완료했다.
