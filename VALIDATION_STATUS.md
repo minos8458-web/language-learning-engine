@@ -666,3 +666,12 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 이번 런타임/DOM 테스트·모바일 빌드·실제 PG/DB/migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩 다운로드·학습 효과: NOT RUN. §C–F의 기존 실행 수치를 새 결과로 보고하지 않는다.
 - 엔진/클라이언트/서버 소스·테스트·package/lock·canonical API/Tier A·schema/migration·Validation 판정 규칙은 보존한다. 실제 검수 팩·Android/PG/HTTPS·같은 게스트 만료 뒤 복구는 여전히 미완료/미확인이다.
 - 최종 설계 저장 identity는 원격 작업 브랜치/Git 이력과 `MOBILE_APP_HANDOFF.md`를 따른다. 저장 후 원문/브랜치/PR를 재확인하며 main·독립 리뷰·lifecycle·출시·기기 성공 판정을 바꾸지 않는다.
+
+## I. MOBILE-05 게스트 클라이언트 연결 — 착수 점검
+
+- 사용자 직접 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”. 기존 단일 다음 행동의 구현/선택 검증이다.
+- 시작 후보: `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`, tree `7f7de901f02f331859e34a6e3e999cc220d35bfe`; main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. PR #2 open/draft/unmerged.
+- 직접 preflight: 저장소/.git/최상위/브랜치/HEAD·fetch·origin/main, clean worktree/stage, upstream 0/0, main 관계 17/0. remote main 필수 7문서는 직전 확인 원문과 같은 blob이며, 작업 후보 문서/소스/테스트/package 24개도 pinned remote/local hash-object와 일치했다.
+- 현재 구현 범위/대기 한도·재시도/HTTPS/수명주기 실행 선택은 `MOBILE_GUEST_START_BRIEF.md` §11을 따른다. 착수 기록을 먼저 외부 저장한다.
+- 이 중간 체크포인트에서 런타임 테스트·모바일 빌드·PostgreSQL·migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩·운영 TLS·학습 효과는 NOT RUN. 구현 결과/최종 선택 실행은 같은 §I에 추가 기록한다.
+- 기존 API/schema/학습 정책·Validation 판정 규칙을 보존하고 이전 §C–H의 실행/미실행을 새 증거로 재보고하지 않는다.
