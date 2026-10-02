@@ -424,9 +424,10 @@ function runBundle(context, search, { standalone = false, config, indexedDB, fet
   return { root: document.getElementById('learning-root'), document, window, fetchCalls: () => fetchCalls };
 }
 
-test('최종 브라우저 번들의 기본 진입은 언어팩 선택이며 미설치 언어로 학습하지 않는다', (context) => {
+test('최종 브라우저 번들은 인증 host 없이 게스트 연결 대기 화면에서 학습을 막는다', (context) => {
   const app = runBundle(context, '');
-  assert.equal(app.root.dataset.screen, 'LANGUAGE_PACKS');
+  assert.equal(app.root.dataset.screen, 'GUEST_AUTH');
+  assert.equal(app.root.dataset.guestStatus, 'HOST_UNAVAILABLE');
   assert.equal(app.root.querySelector('[data-action="start"]'), null);
   assert.equal(app.document.getElementById('preview-controls').hidden, true);
   assert.equal(app.document.getElementById('preview-notice').hidden, true);
@@ -588,13 +589,13 @@ test('번들은 선택한 팩 하나만 받고 설치 후 선택 언어로 기�
   assert.equal(calls.length, 2);
 });
 
-test('다운로드 완료 후에도 인증 미연결이면 학습 요청은 비활성 상태다', async (context) => {
+test('언어팩 목록만 연결하면 인증 host 확인 전 다운로드와 학습을 시작하지 않는다', async (context) => {
   const app = runBundle(context, '', { indexedDB: new IDBFactory(), config: { languagePackCatalog: PACK_CATALOG }, fetchImpl: async () => new Response(PACK_BYTES) });
-  await waitForDom(app, () => app.root.querySelector('[data-pack-id]')?.disabled === false);
-  app.root.querySelector('[data-pack-id]').click(); app.root.querySelector('[data-action="pack-confirm"]').click();
-  await waitForDom(app, () => app.root.dataset.screen === 'HOME');
-  assert.equal(app.root.querySelector('[data-action="start"]').disabled, true);
-  assert.equal(app.fetchCalls(), 1);
+  assert.equal(app.root.dataset.screen, 'GUEST_AUTH');
+  assert.equal(app.root.dataset.guestStatus, 'HOST_UNAVAILABLE');
+  assert.equal(app.root.querySelector('[data-pack-id]'), null);
+  assert.equal(app.root.querySelector('[data-action="start"]'), null);
+  assert.equal(app.fetchCalls(), 0);
 });
 
 test('학습 언어를 바꾸면 새 세션을 만들고 이전 언어의 대화 확인을 넘기지 않는다', async (context) => {

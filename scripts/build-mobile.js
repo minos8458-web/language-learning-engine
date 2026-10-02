@@ -9,6 +9,8 @@ const MODULES = [
   'src/client/learningFlowTransportContract.js',
   'src/client/learningSessionController.js',
   'src/client/httpLearningFlowTransport.js',
+  'src/client/guestSessionController.js',
+  'src/client/mobileGuestView.js',
   'src/client/mobileSessionView.js',
   'src/client/languagePackService.js',
   'src/client/languagePackController.js',

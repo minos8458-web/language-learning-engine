@@ -2,7 +2,7 @@
 
 ## 1. 목적·근거·상태
 
-MOBILE-05의 이번 단일 작업은 **기존 게스트 발급 API를 소비하는 최초 실행·보안 저장·재실행 경계 설계**다.
+MOBILE-05는 **기존 게스트 발급 API를 소비하는 최초 실행·보안 저장·재실행 경계 설계와 클라이언트 구현**이다. §1–10은 설계 기준이며 현재 구현/연결 상태는 §12가 갱신한다.
 `CLIENT_BRIEF.md` §4/§7, `API_LAYER_BRIEF.md` §3과 `GUEST_AUTH_BRIEF.md`를 구체화한다.
 새 인증 API·서명 방식·users schema·학습 정책을 만들지 않는다.
 
@@ -12,7 +12,7 @@ MOBILE-05의 이번 단일 작업은 **기존 게스트 발급 API를 소비하�
 - 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
 - 시작 작업 기준선: `d80a91958bacddbbb4fb113071c89aee3128aca9`; 승인 저장/설계 기준선: `a2cecd593c4da92d2371169eff5592d2f9cb44dc` (tree `928fe493ffd8b7a2b4dfa587f00cc0026fcf00bf`).
 - 작업 브랜치: `development/mobile-01-session-ui-20261001`; 초안 PR #2 open/draft/unmerged.
-- 현재 상태: 설계 문서 완료. 이 문서의 adapter·인증 제어기·화면·네이티브 저장은 **아직 구현하지 않았다**. 직접 점검은 `VALIDATION_STATUS.md` §H.
+- 현재 상태: 주입 저장 adapter 계약을 소비하는 인증 제어기·화면/모바일 진입과 선택 개발 검증 완료 (§12 / `VALIDATION_STATUS.md` §I.1). 실제 native adapter·OS 보안 저장·APK는 미구현/미검증이다. 설계 당시 직접 점검은 §H에 보존한다.
 - `initial_practice`의 정확한 계약 보완/코드, APK 호스트 선택/구현, 갱신/복구는 이번 작업에 섞지 않는다.
 
 ## 2. 재사용할 코드와 현재 공백
@@ -192,7 +192,9 @@ UI DOM 검증과 실제 렌더링/터치·Keystore/bridge·앱 종료·설치·O
 
 ## 10. 다음 행동 하나
 
-**이 문서를 소비하는 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다.**
+**현재 다음 행동 하나:** 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+
+아래는 완료한 클라이언트 구현의 파일/보존 경계다.
 
 예정 파일 범위는 `src/client/guestSessionController.js`, `src/client/mobileGuestView.js`,
 `mobile/browserEntry.js`, `mobile/styles.css`, `scripts/build-mobile.js`,
@@ -205,7 +207,7 @@ UI DOM 검증과 실제 렌더링/터치·Keystore/bridge·앱 종료·설치·O
 ## 11. 클라이언트 구현 착수 범위 — 2026-10-02
 
 사용자 직접 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
-위 §1–10 설계를 소비하는 한 작업을 시작한다. 코드/테스트 완료는 아직 선언하지 않는다.
+위 §1–10 설계를 소비하는 작업을 시작한 당시의 범위 기록이다. 현재 코드/선택 개발 검증 완료 상태는 §12를 따른다.
 
 - 구현 파일: `src/client/guestSessionController.js`, `src/client/mobileGuestView.js`, `mobile/browserEntry.js`, `mobile/styles.css`, `scripts/build-mobile.js`.
 - 검증 파일: `tests/guestSessionClient.test.js`, 필요한 `tests/mobileClient.test.js` 기대값/번들 연결 검사. `package.json`의 `test:mobile`에 새 검증 파일만 추가한다. 새 dependency·lock 변경 없음.
@@ -216,3 +218,19 @@ UI DOM 검증과 실제 렌더링/터치·Keystore/bridge·앱 종료·설치·O
 - token callback만 제공한 기존 호스트 모드는 보존한다. 명시적 미리보기는 실제 인증/저장/fetch 0회를 유지한다. 저장 호스트가 없는 일반 실행은 게스트 미연결 화면으로 막는다.
 - 서버/엔진·기존 학습 제어기/HTTP 전송·언어팩 service/controller/view·canonical API/Tier A/schema/migration·Validation 판정 규칙은 보존한다.
 - 실제 Keystore/bridge adapter·Android 프로젝트/SDK/APK·실제 PG/HTTPS·콘텐츠 검수/배포·학습 효과는 이번 검증 완료로 승격하지 않는다.
+
+## 12. 클라이언트 구현 결과·호스트 연결 — 2026-10-02
+
+- `src/client/guestSessionController.js`: private 인증/후보·정확한 tagged 저장 검증, 원자 발급 표시 저장 재확인 후 POST, commit/read 같은 기록 확인 후 READY, 유효 기록 복구, 실패/timeout/만료/401 처리.
+- `src/client/mobileGuestView.js`: 준비/저장/실패/만료/미연결 화면과 “저장 다시 확인”. 토큰/내부 진단을 표시하지 않는다.
+- `mobile/browserEntry.js`: READY 후 기존 mountPicker(true)·설치 팩 복구/선택 언어로 기존 세션·같은 게스트를 유지하는 언어 변경·pagehide 종료/persisted pageshow 새 문맥. 오래된 async 결과의 화면 변경을 막는다.
+- 관리형 `window.LLE_APP_CONFIG.guestStore`는 §3의 실제 host adapter를 주입해야 한다. `baseUrl`은 고정 HTTPS이며 생략 시 HTTPS 앱 origin이다. 관리형 user_id는 확인된 저장 기록에서 얻는다.
+- getAccessToken callback만 있으면 기존 host 모드다. guestStore와 callback 동시 설정/둘 다 미설정이면 HOST_UNAVAILABLE이다. 명시적 preview는 실제 store/토큰/fetch 0회다.
+- flow fetch는 허용된 두 경로/POST/현재 Bearer만 전송하며 원본 응답을 그대로 반환한다. 401은 현재 인증을 막고 원문/error_code/capacity 표식을 바꾸지 않는다. 일반 오류/503은 기존 재시도를 유지한다.
+- 발급은 JSON까지 대기 한도를 적용한다. 저장 확인 timeout/취소 후 쓰기가 늦게 끝날 수 있다. UI 종료가 저장 rollback/서버 INSERT 취소를 보장하지 않는다.
+- 받은 flow 응답 본문은 기존 HTTP 전송이 읽는다. 호출자의 signal은 본문 읽기 동안 연결한다. 이미 넘긴 본문을 재파싱/감싸거나 그 401 응답을 취소하지 않는다.
+- expiry는 기록 복구/getState/getUserId/getAccessToken/flow 요청·응답 시 확인한다. 백그라운드 타이머로 만료 즉시 화면 전환을 보장하지 않는다.
+- 실제 Keystore/앱 전용 암호문/신뢰 origin bridge·backup 제외/OS 재부팅 저장 검증은 없다. production store 기본 구현·평문 fallback을 넣지 않았다. 테스트의 합성 store를 앱에 넣지 않는다.
+- 빌드 whitelist에 두 클라이언트 파일만 추가하고 test:mobile 목록을 확장했다. 기존 엔진/서버/학습 제어기·전송/팩 service·controller·view/API/schema/lock은 원문 그대로다.
+- 선택 개발 검증/빌드·정확한 명령·미실행 경계는 `VALIDATION_STATUS.md` §I.1이 소유한다. Android 첫 실행/안전 저장/팩·단원·진도 성공으로 승격하지 않는다.
+- 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.

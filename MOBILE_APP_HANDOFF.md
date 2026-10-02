@@ -15,30 +15,38 @@
 
 ## 현재 체크포인트
 
-- 날짜: 2026-10-02 (Asia/Seoul).
-- 최신 사용자 직접 지시: 2026-10-02T21:46:25+09:00, “다음작업 계속 진행해”. 이전 21:10 승인은 아래 범위에 보존한다.
-- 직전 승인 질문/범위: 온라인 학습·유효 토큰 내 재실행 첫 시연 한정과 `ANDROID_VI_DEMO_ASSESSMENT.md` §5.1의 `start_explicit_study.initial_practice` 보완 방향. 이 두 항목이 승인됐다. 정확한 계약 보완/구현은 후속 단일 작업이며 아직 변경하지 않았다.
-- 승인에서 제외: refresh/같은 게스트 복구·장기 토큰 수명·서버 원문 채점·schema/migration·새 Android 호스트 구조·유료 서비스·main 병합·출시·P1 활성화.
-- 이번 진행: 최신 원격/로컬 기준선을 직접 대조하고 `MOBILE_GUEST_START_BRIEF.md`의 단일 다음 행동인 클라이언트 게스트 준비 제어기·저장 경계·화면 진입 구현/선택 검증에 착수했다. 이 중간 저장에서는 코드/런타임 완료를 선언하지 않는다.
-- 직접 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92` (tree `e3ad28a5ccc837dd0bc137bd7d4f36492185cba2`, 변경 없음).
-- 이번 시작 기준선: `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7` (tree `7f7de901f02f331859e34a6e3e999cc220d35bfe`). fetch 성공, 로컬/원격/PR head 일치, dirty/staging 0, upstream 0/0, main 대비 17/0을 직접 확인했다.
-- 설계 기준선/승인 저장: `a2cecd593c4da92d2371169eff5592d2f9cb44dc` (tree `928fe493ffd8b7a2b4dfa587f00cc0026fcf00bf`), 원격 6문서 exact read-back·로컬 clean·upstream 0/0·main 16/0 확인.
-- 이전 평가: `d80a91958bacddbbb4fb113071c89aee3128aca9:ANDROID_VI_DEMO_ASSESSMENT.md`. 평가 당시 미승인 표현은 위 두 승인 항목에 한해 갱신됐다. 부족분·환경·검수 미완료는 유지한다.
-- 안전한 이전 작업: 미저장 진행 작업이 없다. MOBILE-04 서버/모바일 다운로드/캐시를 다시 만들지 않는다.
-- 이전 게스트 코드: `7093a43acc035793223d8a500210a848d24f0dfa` (tree `170bee426c0766d05f6710f1148c17fc09546aaf`, parent `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`).
-- 이전 HTTP 코드: `c5285b23ea5f1ddd936a6743217b7e2cfb365035`; 모바일/미리보기 출처: `16e793dc454482652f46329d3d0959fba35a2312`. 검증은 해당 Git 이력 및 Validation 기록에 보존한다.
-- 저장소: `minos8458-web/language-learning-engine`. 작업 브랜치: `development/mobile-01-session-ui-20261001`.
-- 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2 (open/draft/unmerged). main 반영·출시·독립 리뷰·CLOSED는 선언하지 않는다.
-- 완료한 내용: 이전 설계/승인의 원격 기준선을 확인했다. main 필수 7문서와 후보 문서·코드/테스트/package 24개의 출처/local blob을 대조했고 이번 파일/대기 한도·재시도·수명주기 구현 범위를 기록했다. 기존 서버/엔진/다운로드 코드를 재작성하지 않는다.
-- 검증 결과: 이번 착수 preflight·출처/blob 점검은 `VALIDATION_STATUS.md` §I. 중간 저장에서는 런타임/빌드를 아직 실행하지 않았다. 이전 §C–H와 새 실행을 분리하며 최종 저장/원문과 직접 테스트 결과를 해당 §I에 추가한다.
-- 목표 판정: Android 여섯 단계 실제 시연 미완료. 클라이언트 보안 저장/첫 게스트, Android 호스트/APK, PG/HTTPS, 실제 팩/본문 읽기·설명/문제/제출/피드백·동일 사용자 진도 연결이 남아 있다.
-- 콘텐츠 차단: 기존 `GRAMMAR_VI_DA` 설명/예문/입력 QUIZ의 서비스 전 별도 검수가 남아 있다. `human_reviewed=true`나 문서 정합성을 독립 검수 완료로 승격하지 않는다. 파일/실측 용량도 아직 없다.
-- 환경 차단/미확인: 이전 직접 환경 점검(§G)에서 Android 프로젝트·SDK/컴파일러/adb·PG 실행기/실제 PG·HTTPS 호스트가 없었다. 사용자 PC/Android 기종·OS·키보드·검수 일정은 미확인이다. 이번 승인 기록만으로 환경 확보를 선언하지 않는다.
-- 만료 경계: 기본 게스트 토큰 24시간, 갱신/복구 미구현. 만료/401/저장 실패를 새 게스트 자동 생성으로 숨기지 않는다.
-- 기간: 이전 조건부 전체 추정 35–65 집중 개발/검증 시간은 실행 측정값이 아니다. API 방향의 승인 대기는 해소됐으나 정확한 계약·환경·검수·기기 피드백은 남는다. 이번 중간 저장에서 시간을 임의 차감하지 않는다.
-- 다음 행동 하나: `MOBILE_GUEST_START_BRIEF.md`를 소비하는 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다. 실제 안전한 호스트 adapter 부재 시 일반 앱은 미연결로 닫는다. `initial_practice` 구현/APK 제작을 동시에 시작하지 않는다.
-- 이 문서의 저장 head는 원격 브랜치/Git 이력에서 조회한다. 저장 후 원문을 다시 읽는다.
-- 이전 화면 검증/브라우저 보안 차단·보존 HTML 출처를 유지한다. 웹 미리보기·자동 검증·APK 생성·휴대폰 완주는 각각 별개 상태다.
+- 날짜: 2026-10-02 (Asia/Seoul). 최신 사용자 직접 지시: 21:46:25+09:00 “다음작업 계속 진행해”.
+- 승인: 이전 21:10:42 “승인”은 온라인·유효 토큰 내 재실행 첫 시연과 §5.1 initial_practice 방향에 한정한다. 정확한 학습 API 계약/코드는 이번에 변경하지 않았다.
+- 승인 제외: refresh/만료 뒤 동일 게스트 복구·수명 연장·새 원문 채점/API/schema/migration·새 Android host 구조·유료 서비스·main 병합/출시·P1/인간 데이터 승인.
+- 완료: MOBILE-05 게스트 제어기·주입 저장 경계·게스트 화면·기존 팩/flow 진입·종료/재개 연결과 선택 개발 검증/모바일 빌드.
+- 구현 파일: `src/client/guestSessionController.js`, `src/client/mobileGuestView.js`, `mobile/browserEntry.js`, `mobile/styles.css`, `scripts/build-mobile.js`, `tests/guestSessionClient.test.js`, `tests/mobileClient.test.js`, `package.json`와 상태/인계 문서. dependency/lock 변경 없음.
+- 동작: empty→pending 원자 저장 재확인 후 기존 게스트 POST 1회, 후보 commit/read 같은 기록 확인 후 READY. 준비 전 학습 차단·같은 유효 게스트 복구·만료/401·실패의 로컬 저장 재확인·오래된 응답 차단.
+- 기존 서버/엔진/학습 제어기·HTTP 전송/팩 다운로드·캐시·API/schema/Validation 규칙은 재작성하지 않았다.
+- 실제 adapter 부재: 일반 앱은 HOST_UNAVAILABLE에서 팩/학습 요청을 막는다. production 합성 store/평문 fallback 없음. token callback만 있는 기존 host·명시적 preview 유지.
+- 직접 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, tree `e3ad28a5ccc837dd0bc137bd7d4f36492185cba2`, 변경 없음.
+- 시작 기준선: `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`, tree `7f7de901f02f331859e34a6e3e999cc220d35bfe`; fetch/remote·local·PR head 일치·clean/upstream 0/0·main 17/0 확인.
+- 착수 범위 원격 저장: `7465b14f278ea73b70357de0c41c6bab74288f72`, tree `401c7be8e0da2f782c398bb1414fb6cadb208a26`; 5문서 exact read-back·clean/upstream 0/0·main 18/0 확인. 최종 구현 저장 식별자는 후속 원격 확인에 기록한다.
+- 저장소/브랜치: `minos8458-web/language-learning-engine` / `development/mobile-01-session-ui-20261001`.
+- 초안 PR: https://github.com/minos8458-web/language-learning-engine/pull/2 (open/draft/unmerged). main 반영/독립 리뷰/CLOSED/출시 선언 없음.
+- 검증 결과: 선택 개발 검증·모바일 빌드 통과. 정확한 명령/수치/해시/합성 vs 실제 Node HTTP 구분/미실행은 `VALIDATION_STATUS.md` §I.1이 소유한다. 기존 §C–H는 이전 증거다.
+- 목표: Android 여섯 단계 실제 시연 미완료. 분류/기간은 아래와 `ANDROID_VI_DEMO_ASSESSMENT.md` §0.1.
+- 콘텐츠 차단: DA 설명/예문/직접 입력 QUIZ의 별도 검수·실제 파일/용량이 없다. human_reviewed=true/문서 정합성을 실제 독립 검수로 승격하지 않는다. 다국어 팩 선택/본문 분리 유지.
+- 환경 차단: 22:20 직접 재확인에서 javac/gradle/adb/sdkmanager/psql/postgres/initdb/docker는 PATH에 없다. Android host/APK·실제 PG/HTTPS를 준비하지 않았다. 사용자 기종/OS/키보드/PC·검수 일정 미확인.
+- 만료: 기존 기본 24시간. 만료/401/저장 실패를 새 게스트 자동 생성으로 숨기지 않는다. refresh/복구는 승인 제외.
+- 기간: 남은 5묶음의 조건부 **32–59 집중 개발/검증 시간** (§0.1). 경과 시간의 단순 차감/완료 약속이 아니다. 환경·host 선택·검수·기기 피드백 대기는 별도 달력 시간.
+- 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+- 저장 head는 원격/Git 이력에서 조회한다. 최종 원격 저장 뒤 원문을 재확인한다.
+- 웹 합성 preview/자동 개발 검증/APK 생성/휴대폰 완주는 별개다. 기존 브라우저 보안 차단 재시도/우회 없음. 이전 사용자 제공 preview 파일 변경 없음.
+
+### 실제 시연까지 남은 상태
+
+| 분류 | 최신 상태 |
+|---|---|
+| 구현 완료 | 기존 게스트 서버·새 클라이언트 제어기/주입 저장 소비/게스트 화면·팩 목록/팝업/다운로드/캐시·두 flow HTTP 경계. 선택 개발 검증 완료인 코드 범위다. |
+| 연결 필요 | 실제 secure-store host·PG/키/HTTPS·VI catalog/파일/서버 자산 일치·동일 사용자 진도 최신 판단. |
+| 미구현 | Android 프로젝트/APK·native adapter·학습용 팩 본문 형식/읽기·initial_practice exact 계약·설명/문제/제출/피드백 조정/API/UI. 만료 뒤 복구는 승인 제외. |
+| 실기기 미검증 | 설치·첫 게스트/안전 저장·실제 VI 다운로드/재시도·단원 정오답/피드백·종료/재부팅 후 팩/같은 사용자/진도 보존 전체. |
+| 웹/자동 검증 | 합성 preview·Node DOM/HTTP/store/DB 코드 경계만 검증. 브라우저 배치/터치/CSP·실제 PG/TLS·기기 완료로 승격하지 않는다. |
 
 ## 이전 구현 (MOBILE-02, 이번 시작 시 확인)
 
@@ -100,12 +108,11 @@
 
 ## 다음 행동 하나
 
-`MOBILE_GUEST_START_BRIEF.md`를 소비하는 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결을 구현하고 선택 검증한다.
-구현 파일·완료 기준은 해당 문서 §9/§10, 사용자 승인 범위는 `ANDROID_VI_DEMO_ASSESSMENT.md` §0을 따른다.
-서버 발급·다운로드 UI/캐시·기존 엔진/학습 제어기를 재사용하고, API/schema/네이티브 호스트·복구·출시 변경은 이번 클라이언트 구현에 섞지 않는다.
-MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목으로 유지한다.
-기존 다운로드 안내와 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용하며 브라우저 제한을 우회하지 않는다.
-자동 검증만으로 실제 인증·DB·기기·콘텐츠 연결을 완료 처리하지 않는다.
+승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+기존 승인된 방향·경로/입력·Content projection/state/five-code registry/schema·PRE_MADE EXAMPLE 보존을 기준으로 후보 설계를 작성한다.
+방향 승인 밖의 새 구조/필드/채점/복구/host가 필요하면 이유/영향을 먼저 설명하고 구현 전 승인을 확인한다.
+MOBILE-05 제어기·서버·다운로드를 다시 만들지 않는다. APK/PG/TLS 연결은 별도 작업이다.
+허용된 휴대폰 화면·팝업·취소·언어 변경 검증은 별도 대기 항목이며 기존 브라우저 제한을 우회하지 않는다.
 
 ## 재현 명령
 
@@ -115,14 +122,14 @@ npm run build:mobile
 npm run test:mobile
 npm run test:api
 npm run start:api
-node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js
+node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js tests/guestSessionClient.test.js
 ```
 
 생성 파일은 `mobile/dist/`이며 Git에서 제외한다.
 실제 앱에 언어팩 목록을 연결하는 방법은 `LANGUAGE_PACK_DOWNLOAD_BRIEF.md`를 따른다.
 API 실행·호스트 연결은 `LEARNING_API_SERVER_BRIEF.md`를 따른다. 기본 CLI는 미연결 503이다.
 게스트 PG 호스트·키 환경 설정은 `GUEST_AUTH_BRIEF.md`를 따른다. 실제 키·DB는 이 세션에서 준비하지 않았다.
-위 명령은 재현 절차다. 이전 MOBILE-04 실행 수치는 `VALIDATION_STATUS.md` §F만 인용한다.
+위 명령은 재현 절차다. 이번 MOBILE-05는 `VALIDATION_STATUS.md` §I.1, 이전 MOBILE-04는 §F를 따른다. 실제 native guestStore 경계는 `MOBILE_GUEST_START_BRIEF.md` §3/§12다.
 이전 평가는 문서/환경 점검 (§G), 이번 작업은 승인 기록·게스트 클라이언트 경계 설계/문서 점검 (§H)이며 위 런타임 명령을 재실행하지 않았다.
 
 ## 보존된 다운로드 파일 출처 (MOBILE-02)

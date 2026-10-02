@@ -675,3 +675,25 @@ This is the bounded Evidence Foundation P0 finalization writer runtime-validatio
 - 현재 구현 범위/대기 한도·재시도/HTTPS/수명주기 실행 선택은 `MOBILE_GUEST_START_BRIEF.md` §11을 따른다. 착수 기록을 먼저 외부 저장한다.
 - 이 중간 체크포인트에서 런타임 테스트·모바일 빌드·PostgreSQL·migration·Android 도구 설치/빌드·APK/에뮬레이터/실기기·실제 팩·운영 TLS·학습 효과는 NOT RUN. 구현 결과/최종 선택 실행은 같은 §I에 추가 기록한다.
 - 기존 API/schema/학습 정책·Validation 판정 규칙을 보존하고 이전 §C–H의 실행/미실행을 새 증거로 재보고하지 않는다.
+
+### I.1 MOBILE-05 클라이언트 구현·선택 개발 검증 — 2026-10-02
+
+- 착수 범위 저장: `7465b14f278ea73b70357de0c41c6bab74288f72`, tree `401c7be8e0da2f782c398bb1414fb6cadb208a26`, parent `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`. 5문서 pinned exact UTF-8 read-back/local tree 일치·clean/upstream 0/0·main 18/0 확인.
+- 구현: 게스트 제어기·주입 저장 소비 경계·게스트 화면·모바일 진입/종료/재개·빌드 whitelist·test:mobile 목록. 실제 native adapter/production fallback store는 없다.
+- 초기 직접 실행: `node --test --test-concurrency=1 tests/guestSessionClient.test.js tests/mobileClient.test.js`, exit 0; tests/pass 68, suites 0, fail/cancelled/skipped/todo 0, duration_ms 1725.120258.
+- 최종 선택 직접 실행: 아래 명령, exit 0; tests/pass **184**, suites **4**, fail/cancelled/skipped/todo **0**, duration_ms **2846.911439**. 새 게스트 클라이언트 테스트 33개와 기존 선택 검증을 포함한다.
+
+```bash
+node --test --test-concurrency=1 tests/aiGenerationEngine.test.js tests/generationEngine.test.js tests/mobileClient.test.js tests/languagePackClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js tests/guestSessionClient.test.js
+npm run build:mobile
+```
+
+- 직접 정적 검사: 새 제어기/화면/진입/테스트 node --check와 git diff --check 통과. 기존 LearningSessionController·HttpLearningFlowTransport·팩 service/controller/view·canonical API·각 CONTENT/GRAMMAR/PROGRESS/CONCEPT/VOCABULARY schema·package-lock byte 일치. server/transport/engines/db diff 0. 구현 source/package는 허용한 8파일로 한정했다.
+- 주요 확인: 저장 intent/commit/read-back 전 학습 차단·동시 시작/원자 begin의 POST 1회·유효 기록 복구·손상/부분 기록·읽기/발급/저장 실패와 timeout·pending 재실행 신규 POST 0·same candidate 로컬 재시도·다른 guest 차단·private 값/진단 비노출·expiry/401·일반 오류/503·capacity 재조회·취소/dispose·본문 이후 호출자 취소 연결.
+- 최종 번들/Node DOM: 합성 store 준비 후 기존 팩 다운로드/팝업/캐시/게스트 복구·언어 변경의 대화 확인 초기화·미설정/동시 설정 차단·preview 실제 인증/저장/fetch 0회·401 게스트 화면·bfcache/늦은 flow/발급 결과 차단.
+- 실제 Node HTTP 통합: 기존 서버/service/codec의 HS256 발급/검증·Bearer로 확인한 user_id/401과 새 클라이언트를 연결했다. DB/store는 합성 fixture다. HTTPS 형식의 주입 주소를 테스트 소유 loopback HTTP 소켓으로 매핑했으며 운영 TLS/CORS·브라우저 차단 우회/배포의 증거가 아니다.
+- 최종 모바일 빌드 exit 0. `mobile/dist/app.js`: 71055 bytes, SHA-256 `721e3d2a92afb5b8f1103ac4718dfbe719c5341c12af1cad003e6a5100fd467d`. `mobile/dist/lle-mobile-preview.html`: 84443 bytes, SHA-256 `dca09b9761cdcfad2f2d938c0a654c314655d4cba76a8f93093b210f8057dbda`. source meta는 7465b14f와 작업 파일 변경 표시다. 생성물은 Git 제외이며 source 저장 뒤 같은 binary/hash라고 가정하지 않는다. 이전 사용자 제공 preview 파일은 수정하지 않았다.
+- 빌드의 npm http-proxy 환경 경고는 있었으며 exit 0이었다. dependency 설치/lock 변경 없음.
+- 환경 재확인 (2026-10-02T22:20:36+09:00): javac/gradle/adb/sdkmanager/psql/postgres/initdb/docker는 PATH에 없다. SDK/PG를 설치하거나 사용자 PC/기기를 탐색하지 않았다. 별도 환경/독립 검수/기기 피드백 일정은 미확인이다.
+- NOT RUN: 전체 npm test(독립 PG 미확보)·실제 PostgreSQL/migration·운영 키/인증·운영 HTTPS·실제 팩/검수 콘텐츠/단원 제출·OS Keystore/bridge/backup/재부팅·APK/에뮬레이터/실기기·실제 브라우저/CSP 집행/모바일 배치·AI 공급자/학습 효과. 기존 브라우저 차단 재시도/우회 없음.
+- 이 결과는 작업 브랜치 개발 증거다. Validation Level/판정 규칙·main/독립 리뷰/CLOSED·P1/인간 데이터 승인·출시 상태를 바꾸지 않는다. 원격 저장 식별자는 후속 읽기 확인/인계에 기록한다.
