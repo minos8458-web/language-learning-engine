@@ -803,3 +803,22 @@ npm run build:mobile
 - production source/test·MOBILE-05·엔진/DB/schema/API/Validation 판정 규칙 변경 없음. 전체 suite·PG·운영 HTTPS·Android·실기기는 이번 NOT RUN. 이전 §O/§M 결과는 재실행으로 취급하지 않는다.
 - CP-IP-01 CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 원격 스레드 resolve·독립 재리뷰·main 병합·CLOSED 없음. 커밋 전 동일 작업 파일의 실행 결과다.
 - 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+
+
+## Q. CP-IP-04 HTTP 401 정제 안내 보존 — 2026-10-04
+
+- 승인: 2026-10-04T07:34:34+09:00 사용자 CP-IP-04 ONLY. 시작 HEAD/remote/PR `6a3471f15d1b25f6ede0c4b685c9010ded42b8c4`; main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. 승인 경로/.git/top-level/branch, fetch exit 0, clean/index/untracked 0, upstream 0/0, main 34/0, PR #2 open/draft/unmerged 직접 확인.
+- PR 증거: `PRRT_kwDOTQ7IWM6opsXP`, comment `4174041729`는 착수 시 unresolved/non-outdated. Copilot `PRR_kwDOTQ7IWM8AAAABQfiOMw`는 PR 리뷰 증거·외부 지적이며, 정식 milestone-final fresh read-only Independent Review가 아니다. 정식 검토는 후속 별도 `40 Independent Review` 단계다.
+- Production 수정: `src/client/httpLearningFlowTransport.js` 한 파일. 비공개 ExpiredSessionError는 기존 HTTP 401 분기에서만 생성하고 고정 안내 `학습 연결이 만료됐어요. 다시 연결해 주세요.`만 담는다. PUBLIC_ERRORS·capacity 보존 뒤 기존 timeout 분기를 유지한 다음 내부 타입만 통과시킨다. JSON 파싱 순서·공개 exports·API·schema·서버/엔진·MOBILE-05 재작성 없음. refresh/renewal/새 게스트/자동 retry 없음.
+- 회귀 수정: `tests/mobileClient.test.js`. 기존 401 제어기 검사의 정확한 안내 단언 추가, 일반 fetch/500 오류의 정확한 일반 안내 단언 및 외부 오류의 name/status/message 모방 거절 추가. 최초 학습 401의 고정 안내·공개 code 없음·capacity 아님·진단/토큰 비노출·단일 요청 검사 1건 추가. 관련 없는 테스트 재작성 없음.
+- 실행 환경: Linux, Node `v20.19.0`, npm `10.8.2`; `PATH=/tmp/node-v20.19.0-linux-x64/bin:$PATH`. 기존 node_modules의 linkedom/fake-indexeddb/pg 사용 가능 확인. 설치 미실행, package.json/package-lock.json 변경 0.
+- 수정 전 재현: `node --test --test-name-pattern='인증 만료|명시적 학습의 401|서버 진단과 토큰' tests/mobileClient.test.js` → exit 1, tests 40 / pass 1 / fail 2 / skipped 37. 강화한 두 401 검사가 일반 연결 안내를 받아 실패했다. 필터로 제외된 37건이며 최종 회귀에서는 제외 없음.
+- 최종 수정 파일 직접 실행:
+  - `node --test tests/mobileClient.test.js` → exit 0, tests 40 / pass 40 / fail 0 / cancelled 0 / skipped 0 / todo 0.
+  - `npm run test:mobile` → exit 0, tests 99 / pass 99 / fail 0 / cancelled 0 / skipped 0 / todo 0. 위 40건을 포함하므로 합산하지 않는다.
+  - `node --test tests/explicitStudyClient.test.js` → exit 0, tests 5 / pass 5 / fail 0 / cancelled 0 / skipped 0 / todo 0. 변경된 HTTP 경계를 사용하는 CP-IP-02/03 exact 응답·손상 거절·합성 preview 보존 확인을 위해 추가 실행.
+  - `npm run build:mobile` → exit 0. mobile/dist는 Git 제외 생성물이며 배포·APK·실기기 완료 증거가 아니다.
+- 기존 PUBLIC_ERRORS 다섯 코드·capacity 단일 재조회·일반 계약 위반 비재분류·timeout·잘못된 최초 학습 응답 거절·preview 검사가 위 선택 회귀에서 통과했다. 합성 fixture 및 Node DOM/HTTP 경계 증거이며 실제 PostgreSQL·운영 HTTPS·Actual-provider·Android/APK·실기기·학습 효능 검증을 새로 실행하지 않았다. 전체 npm test 미실행.
+- 테스트·빌드는 커밋 직전 동일 source/test 내용에서 실행했다. 커밋 후 재실행으로 주장하지 않는다. git diff --check 통과 및 허용 파일 외 tracked diff 없음 확인. 수정 commit/tree는 MOBILE_APP_HANDOFF.md의 저장 기록을 따른다.
+- CP-IP-04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-IP-01/02/03 같은 상태 유지. CP-IP-05/06 = DOCUMENT CORRECTION / RE-CHECK PENDING. PR 스레드 resolve·리뷰 요청·정식 Independent Review·main 병합 미실행.
+- 다음 행동 하나: Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다.
