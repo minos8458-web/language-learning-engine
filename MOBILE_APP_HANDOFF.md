@@ -19,10 +19,11 @@
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged.
 - 시작 local/remote/PR `92a9b70262b8df6bf8e67a3e03f517594699e139`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch/경로/.git/top-level/브랜치/clean 확인, upstream 0/0·main 29/0.
 - 수행: Copilot reviewer 요청 API 1회, 검토 패킷 작성, PR 본문을 현행 initial_practice 구현과 검토 범위로 정정.
-- 관찰: 요청 API 성공 응답이나 requested_reviewers null, reviews/comments/threads 빈 배열. **리뷰 접수 미확인·결과 미수신**. 자체 검토를 독립 승인으로 대체하지 않는다.
+- 후속 수신: Copilot review `PRR_kwDOTQ7IWM8AAAABQfiOMw`, COMMENTED / Changes recommended, High 2·Medium 2·Low 2. 요청 직후 접수 미확인 상태는 해소됐다. reviewed commit SHA는 도구 모델에 없어 미확인이며 대상 코드와 문서 후속 head의 blob 동일만 확인했다.
+- 분류: CP-IP-01–04 코드 관련 OPEN. CP-IP-05/06 오래된 Next Action 문서는 이번 후보에서 정정. 상세 INITIAL_PRACTICE_REVIEW_PACKET.md. 6개 원격 스레드 resolve/재리뷰 미실행.
 - 고정 검토 대상: `92a9b70262b8df6bf8e67a3e03f517594699e139`, bounded diff base `18c3f6223b4bb08641be1dc28630eb97ee8936c7`. 상세 `INITIAL_PRACTICE_REVIEW_PACKET.md`.
-- 증거 소유: VALIDATION_STATUS.md §N(요청 관찰), §M(PG), §L(HTTP/모바일). 이번 runtime/PG/build 미실행. production source/test·MOBILE-05·schema/계약 불변.
-- 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+- 증거 소유: VALIDATION_STATUS.md §N(요청 관찰), §M(PG), §L(HTTP/모바일). 이번 injected-fetch 지적 재현만 실행, 전체 runtime/PG/build 미실행. production source/test·MOBILE-05·schema/계약 불변.
+- 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
 - main 병합·UI/제출/Android·검수 팩/운영/실기기 미완료 유지. 최종 저장 head는 Git에서 조회하며 문서만 추가된 head를 새 코드 리뷰 대상으로 혼동하지 않는다.
 
 ## 이전 체크포인트 — 실제 PostgreSQL 검증 (2026-10-03, 보존)
