@@ -78,6 +78,13 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### 최초 학습 서버 독립 리뷰 요청 — 2026-10-03
+
+- 사용자 22:51:34+09:00 “다음” 지시로 PR #2의 `92a9b70262b8df6bf8e67a3e03f517594699e139`에 Copilot 리뷰 요청 API를 호출했다.
+- API 성공 응답과 달리 requested_reviewers null/제출 결과 없음으로 **접수 미확인·독립 리뷰 결과 미수신**이다. 승인·main 병합·CLOSED를 선언하지 않는다.
+- 검토 대상/계약/증거/반환 형식: `INITIAL_PRACTICE_REVIEW_PACKET.md`. PR 본문의 이전 state-only 설명을 정정했다. 코드·테스트는 변경하지 않았다.
+- 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+
 ### 최초 학습 서버 경계 PostgreSQL 검증 — 2026-10-03
 
 - 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 직전 인계의 실제 PostgreSQL 검증 한 작업을 진행했다.
@@ -232,7 +239,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+현재 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.
