@@ -1,4 +1,4 @@
-const { CapacityAdmissionConflictError } = require('./learningFlowTransportContract');
+const { CapacityAdmissionConflictError, assertExplicitStudyResult } = require('./learningFlowTransportContract');
 
 const CAPACITY_REJECTION_PREFIX = 'active Grammar Node limit 초과:';
 const PUBLIC_ERRORS = Object.freeze({
@@ -73,8 +73,8 @@ class HttpLearningFlowTransport {
     return assertSessionDecision(await this.#post('/flow/start-session', body));
   }
 
-  startExplicitStudy(_userId, nodeId) {
-    return this.#post('/flow/start-explicit-study', { node_id: nodeId });
+  async startExplicitStudy(_userId, nodeId) {
+    return assertExplicitStudyResult(await this.#post('/flow/start-explicit-study', { node_id: nodeId }), nodeId);
   }
 
   async #post(path, body) {

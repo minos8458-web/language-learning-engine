@@ -35,7 +35,7 @@ async function fixture(t, options = {}) {
     },
     transport: {
       startSession: async (...args) => { calls.push(['session', ...args]); return { next_action: 'IDLE' }; },
-      startExplicitStudy: async (...args) => { calls.push(['study', ...args]); return { state: 'INTRODUCED' }; },
+      startExplicitStudy: async (...args) => { calls.push(['study', ...args]); return { explanation: null, state: 'INTRODUCED', initial_practice: null }; },
     },
     ...options,
   });
@@ -86,7 +86,7 @@ function rawRequest(baseUrl, { headers, chunks = [], method = 'POST', route = SE
 test('HTTP의 두 경로에서 토큰으로 확인한 사용자만 기존 전송에 전달한다', async (t) => {
   const f = await fixture(t);
   assert.deepEqual(await f.client.startSession(ATTACKER_ID, 'VI'), { next_action: 'IDLE' });
-  assert.deepEqual(await f.client.startExplicitStudy(ATTACKER_ID, 'VI_NODE_A'), { state: 'INTRODUCED' });
+  assert.deepEqual(await f.client.startExplicitStudy(ATTACKER_ID, 'VI_NODE_A'), { explanation: null, state: 'INTRODUCED', initial_practice: null });
   assert.deepEqual(f.calls, [['session', USER_ID, 'VI', undefined], ['study', USER_ID, 'VI_NODE_A']]);
   assert.deepEqual(f.authCalls, [TOKEN, TOKEN]);
 });
@@ -104,7 +104,7 @@ test('다섯 서버 분기와 복습 필드·순서·interleaving 중복을 HTTP
   ];
   let index = 0;
   const f = await fixture(t, { transport: {
-    startSession: async () => decisions[index++], startExplicitStudy: async () => ({ state: 'INTRODUCED' }),
+    startSession: async () => decisions[index++], startExplicitStudy: async () => ({ explanation: null, state: 'INTRODUCED', initial_practice: null }),
   } });
   for (const decision of decisions) assert.deepEqual(await f.client.startSession(USER_ID, 'VI'), decision);
 });
@@ -116,7 +116,7 @@ test('ack 생략·false·true를 그대로 전달하고 대화 확인은 새 앱
       acks.push(ack);
       return { next_action: ack ? 'IDLE' : 'CONVERSATION' };
     },
-    startExplicitStudy: async () => ({ state: 'INTRODUCED' }),
+    startExplicitStudy: async () => ({ explanation: null, state: 'INTRODUCED', initial_practice: null }),
   } });
   await f.client.startSession(USER_ID, 'VI');
   const first = new LearningSessionController({ transport: f.client, userId: USER_ID, language: 'VI' });
@@ -315,7 +315,7 @@ test('기술 실패·잘못된 내부 결과는 503이며 앱의 IDLE이나 empt
   let result;
   const f = await fixture(t, { transport: {
     startSession: async () => { if (result instanceof Error) throw result; return result; },
-    startExplicitStudy: async () => ({ state: 'INTRODUCED' }),
+    startExplicitStudy: async () => ({ explanation: null, state: 'INTRODUCED', initial_practice: null }),
   } });
   const circular = {}; circular.self = circular;
   for (result of [new Error(PRIVATE_DIAGNOSTIC), null, [], circular]) {
@@ -448,7 +448,7 @@ test('명시적인 합성 호스트 모듈을 주입하면 CLI 공통 실행 함
     resolveUserId: (token) => token === ${JSON.stringify(TOKEN)} ? ${JSON.stringify(USER_ID)} : null,
     transport: {
       startSession: async (userId) => ({ next_action: userId === ${JSON.stringify(USER_ID)} ? 'IDLE' : 'INVALID' }),
-      startExplicitStudy: async () => ({ state: 'INTRODUCED' })
+      startExplicitStudy: async () => ({ explanation: null, state: 'INTRODUCED', initial_practice: null })
     }
   };`);
   let log = '';

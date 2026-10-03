@@ -54,10 +54,31 @@ test('명시적 학습 시작에는 서버가 제안한 node_id만 보낸다', a
   let observed;
   const transport = transportFor(async (url, options) => {
     observed = { url, body: JSON.parse(options.body) };
-    return ok({ node_id: 'NODE_MOBILE_TEST_A', state: 'INTRODUCED' });
+    return ok({ explanation: null, state: 'INTRODUCED', initial_practice: null });
   });
   await transport.startExplicitStudy(USER_ID, 'NODE_MOBILE_TEST_A');
   assert.deepEqual(observed, { url: '/flow/start-explicit-study', body: { node_id: 'NODE_MOBILE_TEST_A' } });
+});
+
+test('잘못된 최초 학습 HTTP 응답을 학습 시작 성공으로 표시하지 않는다', async () => {
+  for (const invalid of [{}, { state: 'INTRODUCED' },
+    { explanation: null, state: 'INTRODUCED', initial_practice: {} }]) {
+    const calls = [];
+    const transport = transportFor(async (url) => {
+      calls.push(url);
+      return ok(url.endsWith('/start-session')
+        ? { next_action: 'NEW_GRAMMAR', node_id: 'NODE_MOBILE_TEST_A' } : invalid);
+    });
+    const { root, view } = createView(transport);
+    await view.refresh();
+    root.querySelector('[data-action="admit"]').click();
+    await settle();
+    assert.equal(root.dataset.screen, 'ERROR');
+    assert.equal(root.textContent.includes('학습을 시작했어요'), false);
+    assert.equal(root.querySelector('[data-action="admit"]'), null);
+    assert.equal(calls.length, 2, 'invalid content must not trigger capacity retry or replay');
+    view.destroy();
+  }
 });
 
 test('다섯 서버 응답을 변경 없이 소비한다', async () => {
@@ -331,7 +352,7 @@ test('학습 시작 버튼의 연속 클릭은 요청 하나이며 성공 후 �
   assert.equal(admissionCalls, 1);
   assert.equal(root.dataset.screen, 'LOADING');
   assert.equal(root.getAttribute('aria-busy'), 'true');
-  resolveAdmission({ node_id: 'NODE_MOBILE_TEST_A', state: 'INTRODUCED' });
+  resolveAdmission({ explanation: null, state: 'INTRODUCED', initial_practice: null });
   await settle();
   assert.equal(root.querySelector('[data-action="admit"]').disabled, true);
   assert.equal(root.getAttribute('aria-busy'), 'false');

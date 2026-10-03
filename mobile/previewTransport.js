@@ -26,8 +26,8 @@ function createPreviewTransport(scene = 'home') {
       }
       return { next_action: 'NEW_GRAMMAR', node_id: nodeIds[0] };
     },
-    async startExplicitStudy(_userId, nodeId) {
-      return { node_id: nodeId, preview: true };
+    async startExplicitStudy(_userId, _nodeId) {
+      return { explanation: null, state: 'INTRODUCED', initial_practice: null };
     },
   };
 }

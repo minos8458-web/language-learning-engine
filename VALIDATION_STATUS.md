@@ -777,3 +777,15 @@ npm run build:mobile
 - 요청 target 92a9b70262b8df6bf8e67a3e03f517594699e139; reviewer의 reviewed commit은 도구 모델에 없어 미확인. 수신 당시 dcf9598613ac489dda338b4bb2d3a365371758e7는 문서만 추가되어 source/test 동일. PR 전체 리뷰이며 서버 bounded APPROVE로 확대하지 않는다.
 - 작성자의 지적 확인: injected fetch로 HTTP startExplicitStudy가 `{}`와 `{state:'INTRODUCED'}`를 성공 resolve함, 401이 일반 연결 오류 메시지로 바뀜을 직접 재현(exit 0). 이는 재현 실험이지 새 회귀 suite PASS가 아니다. Preview 응답·Node engine 선언/lock 불일치·두 current Next Action 모순은 원문 대조로 확인했다.
 - CP-IP-01–04 OPEN. CP-IP-05/06은 LLE_CURRENT_STATE §10과 PROJECT_STATUS §5.1의 current Next Action을 이번 문서 후보에서 정정했다. 원격 스레드 resolve·재리뷰·main 통합·CLOSED 미실행. 상세 finding 표는 INITIAL_PRACTICE_REVIEW_PACKET.md.
+
+## O. CP-IP-02/03 최초 학습 클라이언트 응답·preview 보완 — 2026-10-04
+
+- 사용자 직접 지시 2026-10-04T02:18:41+09:00 “다음”; 직전 인계의 CP-IP-02/03 한 작업. preflight 승인 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 31/0, local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- Production 변경 3파일: learningFlowTransportContract의 assertExplicitStudyResult, httpLearningFlowTransport의 성공 반환 전 검증, mobile/previewTransport의 exact nullable 응답. 상태머신·게스트 저장소·팩·서버/엔진 코드 재작성 없음.
+- 신규 tests/explicitStudyClient.test.js 5개 및 tests/mobileClient.test.js 화면 거절 검증 1개. 기존 HTTP/guestAuth/guestSessionClient/mobileClient의 정상 성공 fixture를 exact 응답으로 맞췄다. malformed 입력 회귀를 제거하거나 skip하지 않았다.
+- 최종 실행: `node --test --test-reporter=spec tests/explicitStudyClient.test.js tests/mobileClient.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js tests/guestSessionClient.test.js tests/languagePackClient.test.js tests/initialPractice.test.js` → exit 0 / **168 tests / 168 pass / 0 fail / 0 skipped**.
+- 직접 검증: 6 state × 독립 null/Content 조합 그대로 반환, exact top-level/Content keys와 요청 노드/type, malformed body/metadata/answer_key/difficulty 거절, 내부 값 비노출, 재전송·capacity 재조회 0회, preview 6개 scene 계약 일치. Node DOM 화면에서 `{}`·state-only·손상 QUIZ 응답이 ERROR로 표시되며 학습 시작 성공으로 표시되지 않음을 확인했다.
+- `npm run build:mobile` exit 0. 빌드 산출물 mobile/dist는 Git 제외; 작업 파일 변경 상태의 번들로서 배포/실기기 검증이 아니다. 기존 401 일반 연결 오류 문제는 이번 수정에 포함하지 않았다.
+- git diff --check 통과. 서버/Progress/Generation·db/schema/migration·게스트 및 팩 production 코드·package/lock·API/ENGINE_INTERFACE/CLIENT_BRIEF/VALIDATION_LEVEL3 원문 변경 0. 실제 PostgreSQL/운영 HTTPS/Android/APK/실기기·검수 데이터·학습 효과 검증은 이번 NOT RUN. 기존 §M PG 결과는 재실행으로 바꾸지 않는다.
+- CP-IP-02/03 구현 후보 보완 완료, 독립 재리뷰·원격 스레드 resolve·main 병합·CLOSED 없음. 저장 전 최종 코드에서 실행한 결과이며 커밋 후 재실행으로 주장하지 않는다.
+- 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.

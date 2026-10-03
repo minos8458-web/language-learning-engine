@@ -78,6 +78,15 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### 최초 학습 클라이언트 응답 검증 보완 — 2026-10-04
+
+- 사용자 2026-10-04T02:18:41+09:00 “다음” 지시로 CP-IP-02/03 한 작업을 수행했다. 시작 local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch·clean·upstream 0/0·main 31/0 확인.
+- HTTP startExplicitStudy에 exact 3키·6 state·Content exact 6키/null·요청 노드/type·본문/answer_key 검증을 추가했다. malformed/state-only 응답은 성공 전에 거절하며 값 정규화/자동 재전송은 없다. Preview도 null/INTRODUCED/null 계약으로 정합화했다.
+- CP-IP-02/03: CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 독립 승인이나 원격 스레드 resolve는 아니다. 실행 증거는 VALIDATION_STATUS.md §O.
+- MOBILE-05 게스트 구현과 팩 저장/복구, 서버·Progress·Generation·API/schema/판정 규칙은 보존했다. 게스트/HTTP/mobile 테스트의 성공 fixture만 새 계약으로 맞췄다. 설명/문제 UI·제출은 이번 미구현이다.
+- 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+- 아래 리뷰/구현 기록은 각 시점의 이력이다.
+
 ### 최초 학습 서버 독립 리뷰 수신 — 2026-10-03
 
 - 사용자 22:51:34+09:00 “다음” 지시로 Copilot review를 요청했고 최종 확인 중 결과를 수신했다. PR #2, reviewer `copilot-pull-request-reviewer`, review ID `PRR_kwDOTQ7IWM8AAAABQfiOMw`, COMMENTED / Changes recommended.
@@ -240,7 +249,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
+현재 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.
