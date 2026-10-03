@@ -15,12 +15,15 @@
 
 ## 현재 체크포인트
 
+- 저장 차단: 코드 수정 commit `86335017fbaca6c7f1d9ae5778fa4b7951f5c607`과 증거 commit `dee1cd731f26a6c512941ba6f57200de3a81ca1f`는 로컬에 저장했다. 일반 `git push origin HEAD:refs/heads/development/mobile-01-session-ui-20261001`는 exit 128, `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. 연결 API 쓰기 대체·재시도·ref 강제 정렬은 하지 않았다.
+- 실패 후 원격/PR head는 여전히 `6a3471f15d1b25f6ede0c4b685c9010ded42b8c4`, main은 지정 SHA 유지, PR open/draft/unmerged, CP-IP-04 스레드 unresolved/non-outdated를 직접 확인했다. 구현 완료는 로컬 후보만 해당하며 원격 반영 완료가 아니다. push 권한 자체와 인증 복구 방법은 미확인이다.
+- 차단 해제 조건: 현재 실행 환경에 승인된 저장소의 일반 HTTPS push 인증을 제공한 뒤, 원격이 위 기준선 그대로인지 재확인하고 기존 ordinary commit들을 일반 push한다. 코드/테스트 재작성·리뷰 요청·main 통합은 시작하지 않는다.
 - 최신 사용자 지시: 2026-10-04T07:34:34+09:00 CP-IP-04 ONLY. 20 Development 역할의 401 안내 보존과 한정 회귀·일반 commit/push만 승인.
 - 시작 local/remote/PR head `6a3471f15d1b25f6ede0c4b685c9010ded42b8c4`, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 승인 경로/.git/top-level/branch·fetch exit 0·clean·upstream 0/0·main 34/0, PR #2 open/draft/unmerged 직접 확인.
 - 완료: CP-IP-04 내부 ExpiredSessionError로 정제된 401 안내를 보존했다. 기존 timeout 분기 뒤에서만 전용 오류를 통과시키며 공개 오류·capacity 동작은 유지한다. 최종 수정 파일에서 지정 테스트·빌드 통과. 증거 소유자는 VALIDATION_STATUS.md §Q다. 코드·테스트 ordinary commit `86335017fbaca6c7f1d9ae5778fa4b7951f5c607`, tree `2f08594f638ea6c36b4b53bc0e31fed9350dffe6`, parent `6a3471f15d1b25f6ede0c4b685c9010ded42b8c4`에 저장했다. 후속 증거 문서 commit은 실행 코드와 구분한다. 원격 push·최종 clean 확인은 최종 실행 보고로 대조하며, 이 저장 시점에는 아직 성공으로 선언하지 않는다.
 - CP-IP-01/02/03/04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-IP-05/06 = DOCUMENT CORRECTION / RE-CHECK PENDING. main 통합·Android/APK/실기기 완료 없음, 학습 효능 미검증·Actual-provider 검증 미확립.
 - MOBILE-05·CP-IP-01/02/03·API/schema/Tier A 보존. Copilot은 PR 리뷰 증거이며 정식 최종 `40 Independent Review`는 별도 후속 단계다. 리뷰 thread resolve·정식 리뷰 요청·main 병합·Android 작업 금지.
-- 다음 행동 하나: Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다. 이 세션에서는 리뷰 요청·스레드 해결·정식 Independent Review·통합을 시작하지 않는다.
+- 다음 행동 하나: 일반 Git push 인증을 복구한 뒤, 기준선을 재확인하고 저장된 CP-IP-04 커밋들을 일반 push한다. 구현·검증은 다시 시작하지 않는다.
 
 ## 이전 체크포인트 — 컨트롤타워 보고 (2026-10-04, 보존)
 
