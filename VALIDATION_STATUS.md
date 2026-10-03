@@ -746,4 +746,5 @@ npm run build:mobile
 - 보존: Progress/Generation source, `src/client`, mobile, db/schema/migration, package/lock 원문 변경 없음. API/ENGINE_INTERFACE/CLIENT_BRIEF·Tier A·VALIDATION_LEVEL3 판정 규칙 변경 없음. git diff --check 통과. MOBILE-05 재작성 없음.
 - 모바일 테스트에 포함된 번들 동작 검증은 실행됐으나 별도의 `npm run build:mobile`, 운영 PG/HTTPS, 검수 콘텐츠/팩, Android/APK/실기기, 학습 효과는 NOT RUN. 독립 리뷰/main 통합/CLOSED/출시/P1 승격 없음.
 - 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
-- 원격 저장 및 원문 read-back 결과는 최종 인계에서 확인한다.
+- 구현 원격 저장 확인: `4e7d14b938a732fa72ea6297faffb0ae7408db7d`, tree `5285960afebf366c2e8c9a1652a6cfc75781ddda`, parent `18c3f6223b4bb08641be1dc28630eb97ee8936c7`. 변경 10파일 pinned UTF-8 원문 exact read-back·local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 26/0, PR #2 draft/unmerged 확인. 실행 대상 소스와 저장 소스가 동일하며 커밋 후 테스트 재실행은 아니다.
+- 이 후속 저장은 인계/검증 결과 2문서만 갱신한다. 최종 head는 Git에서 조회하며 새 코드·런타임 검증·main 통합을 주장하지 않는다.
