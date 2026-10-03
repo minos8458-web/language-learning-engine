@@ -822,3 +822,5 @@ npm run build:mobile
 - 테스트·빌드는 커밋 직전 동일 source/test 내용에서 실행했다. 커밋 후 재실행으로 주장하지 않는다. git diff --check 통과 및 허용 파일 외 tracked diff 없음 확인. 수정 commit/tree는 MOBILE_APP_HANDOFF.md의 저장 기록을 따른다.
 - CP-IP-04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-IP-01/02/03 같은 상태 유지. CP-IP-05/06 = DOCUMENT CORRECTION / RE-CHECK PENDING. PR 스레드 resolve·리뷰 요청·정식 Independent Review·main 병합 미실행.
 - 다음 행동 하나: Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다.
+
+- 저장 결과 보충: 코드와 증거는 로컬 ordinary commit에 저장했으나 일반 push가 HTTPS 인증정보 부재로 exit 128 실패했다. 원격/PR head는 시작 SHA 그대로다. 위 PASS는 로컬 후보의 개발 증거이며 원격 반영·재리뷰 완료가 아니다. 해제 조건과 단일 다음 행동은 MOBILE_APP_HANDOFF.md를 따른다.

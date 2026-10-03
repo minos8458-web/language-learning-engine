@@ -91,4 +91,4 @@ CP-IP-01/02/03/04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-I
 
 ## 다음 행동 하나
 
-Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다.
+일반 Git push 인증을 복구한 뒤 기준선을 재확인하고 기존 CP-IP-04 커밋들을 일반 push한다. 로컬 수정·검증은 완료됐지만 원격 반영은 인증 부재로 차단됐다. PR 재확인·정식 Independent Review는 아직 요청하지 않는다.
