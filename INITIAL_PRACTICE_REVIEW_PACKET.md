@@ -77,6 +77,10 @@ Reviewer identity, reviewed commit, APPROVE/REQUEST_CHANGES 또는 판단 보류
 
 사용자 02:18:41+09:00 “다음” 지시에 따라 HTTP 응답 validator와 preview exact 응답을 구현했다. CP-IP-02/03은 CORRECTED IN CANDIDATE / RE-REVIEW PENDING이다. 원격 스레드는 resolve하지 않았고 다른 4개 지적의 상태를 임의 승격하지 않는다. 이전 표는 리뷰 수신 당시 상태다. 검증 직접 증거는 VALIDATION_STATUS.md §O를 따른다. 클라이언트 잘못된 응답 거절이 서버 admission rollback을 의미하지 않는다. 설명/문제 제출 UI 구현은 별도다.
 
+## CP-IP-01 후속 보완 — 2026-10-04
+
+사용자 06:06:21+09:00 “다음” 지시로 root/package-lock의 Node engines를 >=20.19.0으로 정합화하고 README 안내를 추가했다. 잠금 의존성은 변경하지 않았다. CP-IP-01은 CORRECTED IN CANDIDATE / RE-REVIEW PENDING이며 원격 스레드는 resolve하지 않았다. Node 20.19.0 실제 설치/검증 근거는 VALIDATION_STATUS.md §P. CP-IP-04는 OPEN이다. 위 최초 수신 표는 당시 이력이다.
+
 ## 다음 행동 하나
 
-Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.

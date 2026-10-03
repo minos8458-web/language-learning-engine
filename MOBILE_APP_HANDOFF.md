@@ -15,6 +15,18 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 지시: 2026-10-04T06:06:21+09:00 “다음”. Node 최소 지원 버전 불일치 CP-IP-01 한 작업.
+- 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged. main과 후보를 구분한다.
+- 시작 local/remote `282d31f21abcb2603eb670ed0aac113fdf85cadf`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 32/0 확인.
+- 완료: package.json과 lock root의 Node 최소 요구 >=20.19.0 정합화, README 환경 안내. 잠금 의존성·production source/test·MOBILE-05·schema/계약/판정 규칙 보존.
+- 증거 소유: VALIDATION_STATUS.md §P의 실제 최소 Node 설치·선택 검증·빌드. 기존 §O 클라이언트, §N 독립 리뷰, §M PG는 이전 증거다.
+- CP-IP-01 CORRECTED IN CANDIDATE / RE-REVIEW PENDING. CP-IP-02/03도 후보 수정 완료, CP-IP-05/06 문서 후보 정정. CP-IP-04 OPEN. 독립 재리뷰·원격 스레드 resolve·main 병합은 미실행이다.
+- 미완료: 401 안내 보존, 독립 재리뷰/main 통합, 학습 UI·제출/피드백·검수 팩·운영 PG/HTTPS·native adapter/APK·실기기.
+- 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+- 최종 저장 head는 Git에서 조회한다. 저장 후 변경 원문·tree·브랜치/PR를 확인한다. 이번 후보를 과거 독립 리뷰에서 승인받은 것으로 취급하지 않는다.
+
+## 이전 체크포인트 — CP-IP-02/03 (2026-10-04, 보존)
+
 - 최신 사용자 지시: 2026-10-04T02:18:41+09:00 “다음”. CP-IP-02/03 최초 학습 클라이언트 응답 검증과 preview 계약 보완 한 작업.
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2. main Source of Truth와 작업 후보는 구분한다.
 - 시작 local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 경로/.git/top-level/브랜치·fetch·clean 확인, upstream 0/0·main 31/0.
