@@ -15,6 +15,18 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 직접 지시: 2026-10-03T21:09:38+09:00 “ok 다음”. 승인된 최초 학습 계약의 서버 경계 구현 한 작업을 진행했다.
+- 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged. main 권위는 그대로이며 작업 브랜치 후보를 main 구현으로 간주하지 않는다.
+- 시작 local/remote `18c3f6223b4bb08641be1dc28630eb97ee8936c7`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 25/0 확인.
+- 완료: R1 Content 선택·서버 KO/BEGINNER 구성·Learning Flow admission→설명→QUIZ·exact 3키 응답/독립 null·손상 선택 결과 기술 실패·in-process 연결. 신규 서버 경계 검증 추가.
+- 검증 소유: VALIDATION_STATUS.md §L. 구현 후보와 선택 회귀 완료, 실제 PG 검증·독립 리뷰·main 통합 대기. 기존 MOBILE-05 증거는 §I, 승인 계약 문서 증거는 §K.
+- 보존: MOBILE-05 클라이언트, 기존 Progress/Generation 로직, API·schema·Validation 판정 규칙. UI/제출/Android는 이번 미착수.
+- 미확인/차단: 실제 PG SQL 선택·transaction/멱등/capacity 회귀, 독립 리뷰, 검수 팩/DB 자산 일치, 설명/문제 화면·제출/피드백, native adapter/APK·운영 HTTPS·실기기 완주.
+- 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
+- 최종 저장 head는 Git 이력에서 조회한다. 저장 뒤 원문·tree·브랜치/PR를 확인하며 실패하면 마지막 확인 원격 위치를 보고한다.
+
+## 이전 체크포인트 — 승인 계약 문서 반영 (2026-10-03, 보존)
+
 - 최신 사용자 직접 승인: 2026-10-03T19:35:16+09:00 “승인”. 직전 initial_practice 설계 후보와 R1 및 정식 계약 문서 반영 한 작업 승인이다. 14:38 clone 승인과 구분한다.
 - 시작 기준: 작업/로컬/PR `75ea09a8317c6f0f671d61155d8137261062a4b9`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. fetch 성공·승인 경로/.git/top-level/브랜치·clean worktree/stage·upstream 0/0·main 23/0 확인. PR #2 open/draft/unmerged.
 - 완료: API_CONTRACT 1.32 §7.1.1/§10.1, ENGINE_INTERFACE 1.20, CLIENT_BRIEF 1.3, LEARNING_API_SERVER_BRIEF에 승인 계약을 반영하고 Backlog 1.82에 승인 근거를 추가했다. 후보 원문은 승인 전 이력으로 보존하고 정식 문서 포인터를 추가했다.
