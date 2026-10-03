@@ -718,4 +718,6 @@ npm run build:mobile
 - 이번 런타임 테스트·모바일 빌드·전체 npm test·PG/migration·APK·실기기·실제 팩/검수·AI/학습 효과: NOT RUN. 기존 §I 수치를 이번 PASS로 보고하지 않는다.
 - 직접 문서 검증: 7개 문서의 UTF-8·fence 균형·충돌 표식 부재·후보 참조·변경 파일 집합 점검 통과. 초기 diff --check의 MOBILE_APP_BRIEF.md 말미 빈 줄을 정리한 뒤 재검사 exit 0. 기존 상태 문서의 오래된 현재 다음 행동도 최신 후보 승인 단계로 연결했다.
 - 보존 검증: 시작 후보 대비 source/테스트/mobile/scripts/db/package·lock/API/ENGINE_INTERFACE/CONTENT_SCHEMA/PROGRESS_SCHEMA/VALIDATION_LEVEL3/Backlog diff 0; MOBILE-05 코드 저장점 00f7909aefbc447999bfc77e32dae90e99aa9580 대비 source/테스트/mobile/scripts/db/package·lock diff 0.
-- 원격 read-back은 저장 후 별도로 확인한다. 정식 Validation PASS·독립 리뷰·CLOSED·병합/출시를 선언하지 않는다.
+- 원격 저장 확인: `d27b6f606ed13ed4a65abdb771fa68aa29a5bc31`, parent `c14166731d5179e40783a1515de8e82f0925b094`, tree `327029803d7f29603e5238ff9eb2f94dec925785`. 변경 7문서의 pinned connector UTF-8 원문이 로컬과 정확히 같았고, 원격 tree도 로컬 준비 tree와 일치했다. fetch 후 local/upstream/PR head 일치, clean·upstream 0/0·main 22/0, main 유지·PR open/draft/unmerged 확인.
+- 직접 git push는 로그인 정보 부재로 실패했으므로 연결된 GitHub 쓰기로 동일 tree를 저장했다. 미전송 로컬 커밋 `427608c0e40c87908f7a1e5800cc7b8faad984c2`와 원격 tree를 비교한 후 로컬 ref를 원격 커밋에 정렬했다. 원격 강제 갱신이나 main 변경은 없었다.
+- 이 후속 인계/Validation 기록은 문서뿐이며 새 런타임 증거가 아니다. 정식 Validation PASS·독립 리뷰·CLOSED·병합/출시를 선언하지 않는다.

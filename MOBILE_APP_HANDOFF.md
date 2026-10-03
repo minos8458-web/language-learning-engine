@@ -26,7 +26,9 @@
 - 현재 변경은 신규 후보 설계와 인계/상태/연결 문서뿐이다. 런타임 테스트·빌드·PG·APK·실기기·검수·학습 효과는 이번 미실행이다. 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.
 - 기존 차단 유지: 실제 검수 팩·서버/팩 자산 일치·제출/피드백·Android host/APK·native adapter·실제 PG/HTTPS·기기 완주. 새 환경의 SDK/PG 도구 존재는 이번 미확인. 만료 뒤 복구는 승인 제외.
 - 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
-- 최종 저장 identity는 작업 브랜치 Git 이력에서 조회한다. 원격 저장 후 변경 문서 원문과 브랜치/PR를 다시 확인한다. 이번 설계의 완료와 원격 저장 완료는 구분한다.
+- 설계 원격 저장 확인: `d27b6f606ed13ed4a65abdb771fa68aa29a5bc31`, tree `327029803d7f29603e5238ff9eb2f94dec925785`, parent `c14166731d5179e40783a1515de8e82f0925b094`. 변경 7문서 pinned UTF-8 원문 exact read-back·local tree 일치, 로컬/원격/PR head 일치, clean·upstream 0/0·main 22/0을 확인했다.
+- 저장 경로: 직접 git push는 로그인 정보 부재로 실패했다. 연결된 GitHub 경로로 동일 tree를 저장했고, 미전송 로컬 커밋 `427608c0e40c87908f7a1e5800cc7b8faad984c2`와 내용이 같음을 확인한 후 로컬 ref만 저장된 커밋에 맞췄다. 소스 변경·merge/rebase/reset/force-push 없음.
+- 이 후속 저장은 원격 검증 결과를 인계/Validation 문서에 기록하는 작업뿐이다. 최종 head는 Git 이력에서 조회하고 저장 뒤 다시 확인한다.
 
 ## 이전 체크포인트 — 2026-10-02 (보존)
 
