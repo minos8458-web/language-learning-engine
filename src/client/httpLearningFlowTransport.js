@@ -9,6 +9,13 @@ const PUBLIC_ERRORS = Object.freeze({
   CONTRACT_VIOLATION: '학습 상태가 달라졌어요. 최신 상태를 확인해 주세요.',
 });
 
+// HTTP 401에서만 생성하며 외부 오류의 이름·메시지·status로 판별하지 않는다.
+class ExpiredSessionError extends Error {
+  constructor() {
+    super('학습 연결이 만료됐어요. 다시 연결해 주세요.');
+  }
+}
+
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -101,7 +108,7 @@ class HttpLearningFlowTransport {
       } catch {
         throw new Error('학습 연결에서 올바른 응답을 받지 못했어요.');
       }
-      if (response.status === 401) throw new Error('학습 연결이 만료됐어요. 다시 연결해 주세요.');
+      if (response.status === 401) throw new ExpiredSessionError();
       if (isObject(envelope) && envelope.status === 'error' && Object.hasOwn(PUBLIC_ERRORS, envelope.error_code)) {
         const error = new Error(PUBLIC_ERRORS[envelope.error_code]);
         error.code = envelope.error_code;
@@ -119,6 +126,7 @@ class HttpLearningFlowTransport {
     } catch (error) {
       if (error instanceof CapacityAdmissionConflictError || Object.hasOwn(PUBLIC_ERRORS, error?.code)) throw error;
       if (controller.signal.aborted) throw new Error('응답이 늦어지고 있어요. 연결을 확인한 뒤 다시 시도해 주세요.');
+      if (error instanceof ExpiredSessionError) throw error;
       // fetch 예외·서버 원문·토큰·DB 진단을 화면에 전달하지 않는다.
       throw new Error('학습 연결을 확인한 뒤 다시 시도해 주세요.');
     } finally {
