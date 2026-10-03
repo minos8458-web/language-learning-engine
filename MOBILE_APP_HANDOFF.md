@@ -23,6 +23,7 @@
 - 보존: MOBILE-05 클라이언트, 기존 Progress/Generation 로직, API·schema·Validation 판정 규칙. UI/제출/Android는 이번 미착수.
 - 미확인/차단: 실제 PG SQL 선택·transaction/멱등/capacity 회귀, 독립 리뷰, 검수 팩/DB 자산 일치, 설명/문제 화면·제출/피드백, native adapter/APK·운영 HTTPS·실기기 완주.
 - 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
+- 구현 원격 저장 확인: `4e7d14b938a732fa72ea6297faffb0ae7408db7d`, tree `5285960afebf366c2e8c9a1652a6cfc75781ddda`, parent `18c3f6223b4bb08641be1dc28630eb97ee8936c7`. 변경 10파일 pinned UTF-8 원문 exact read-back·local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 26/0, PR #2 draft/unmerged 확인. 실행 대상 소스와 저장 소스가 동일하며 커밋 후 테스트 재실행은 아니다.
 - 최종 저장 head는 Git 이력에서 조회한다. 저장 뒤 원문·tree·브랜치/PR를 확인하며 실패하면 마지막 확인 원격 위치를 보고한다.
 
 ## 이전 체크포인트 — 승인 계약 문서 반영 (2026-10-03, 보존)
