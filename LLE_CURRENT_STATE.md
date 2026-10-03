@@ -9015,6 +9015,58 @@ See §10.
 
 ## 5. Validation Branch and Canonical Artifacts
 
+### MOBILE-04 — 게스트 인증·기존 사용자 저장 서버
+
+- 최신 지시: 2026-10-01T21:29:43+09:00 제작 계속. 이전 다음 행동의 users/게스트 계약을 직접 확인하고 한정된 구현을 선택했다.
+- 시작 기준선: `3db8f6ab365e2ba1f9ab1516b3bbdeed04cdcf79`; 계획 저장: `9e84ebf4126badc6214ca4d6ca2bb4a93066bd02`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §9와 `GUEST_AUTH_BRIEF.md`.
+- 기존 users GUEST 저장·서명 토큰·현재 GUEST/만료 확인·HTTP/CLI 호스트 연결 코드와 선택 자동 검증·모바일 빌드 완료.
+- 직접 증거: `VALIDATION_STATUS.md` §F. 실제 HTTP/Node crypto와 합성 DB fixture이며 실제 PostgreSQL·운영 인증·기기 검증은 아니다.
+- 아래 MOBILE-03의 당시 인증/저장 미구현은 이번 서버 코드 범위에서만 갱신한다. 모바일 보안 저장/초기화·갱신/복구·계정 전환·운영 DB/TLS·콘텐츠/팩·APK는 미완료/미확인이다.
+- schema/migration·엔진/전송/학습 계약·Validation 판정 규칙·기존 lifecycle/Pilot/학습 효과 비완료와 기기 검증 대기/브라우저 보안 차단은 보존한다.
+- 코드·원격 저장 상태는 `MOBILE_APP_HANDOFF.md`. main 반영·출시·독립 리뷰·CLOSED는 선언하지 않는다.
+
+### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결
+
+- 최신 사용자 지시: 2026-10-01T14:47:29+09:00 제작 계속. AI가 기존 모바일 HTTP 전송과 in-process 학습 전송을 연결하는 어댑터를 선택했다.
+- 시작 기준선: `e89c4d027f4470d4e572fd89856afbb5ca41a62b`; 계획 저장: `110b9b8dfffc9b8270e0877746d75ea636875357`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §8와 `LEARNING_API_SERVER_BRIEF.md`.
+- 두 기존 POST 경로·호스트 인증 콜백·요청/시간 제한·공개 오류 매핑의 코드 후보 구현과 실제 HTTP 자동 검증·모바일 빌드 완료.
+- 직접 실행 증거: `VALIDATION_STATUS.md` §E. 테스트의 인증·학습 전송은 합성이며 실제 운영 토큰·DB·공급자 검증이 아니다.
+- 실제 인증 발급·사용자 저장·DB 배포·동일 출처 연결·EXPLANATION 콘텐츠·나머지 세 API·팩 배포·APK는 미구현/미확인이다.
+- MOBILE-01/02 실제 화면 검증 대기·보안 차단·기존 lifecycle·API/엔진/스키마/Validation 판정 규칙과 Pilot/학습 효과 비완료 경계를 보존한다.
+- 코드 커밋·원격 저장 상태와 다음 세션 기준은 `MOBILE_APP_HANDOFF.md`에서 확인한다. main 반영·출시·CLOSED는 선언하지 않는다.
+
+### MOBILE-02 — 사용자 지정 나라·언어별 선택 다운로드
+
+- 최신 사용자 직접 지시: 2026-10-01T06:27:14+09:00. 초기 용량 부담을 줄이고 언어팩 목록에서 선택한 팩만 받으며, 확인 팝업·예상 용량·큰 파일의 Wi-Fi 권장 안내를 추가한다.
+- 이 지시로 이번 클라이언트 범위를 변경했다. MOBILE-01 실제 시각 검증 대기·보안 접근 제한은 유지하고 CLOSED로 바꾸지 않는다.
+- 시작 기준선: `0e07e90ff1ecfcd8304b089f870dd10401d9d634`; 계획 저장: `bf84224ec94f9d879947fcebe420ef1630ee46b1`; 확인 main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`. 범위: `MOBILE_APP_BRIEF.md` §7.
+- 코드 후보 구현: 목록·확인 팝업·선택 다운로드·진행률·취소·크기/해시 검증·기기 캐시·설치 후 언어별 새 세션 진입 완료.
+- 직접 실행 증거: `VALIDATION_STATUS.md` §D. 코드와 미리보기 출처·최신 저장 상태는 `MOBILE_APP_HANDOFF.md`에서 확인한다.
+- 실제 배포 팩·용량·목록·콘텐츠 연결·휴대폰 시각/터치·대용량 성능·APK: 미확인/후속 작업. 합성 목록과 가상 진행률을 실제 팩으로 취급하지 않는다.
+- 기존 엔진·Tier A·API·PostgreSQL schema/migration·Validation 판정 규칙·Pilot/학습 효과 비완료 경계는 변경하지 않는다.
+
+### MOBILE-01 — 사용자 지시에 따른 모바일 화면 제작 착수
+
+- 기록일: 2026-10-01 (Asia/Seoul).
+- 최신 사용자 지시: 2026-09-30 앱 제작 착수 및 완성 시 테스트 안내 요청,
+  2026-10-01 계속 진행 지시.
+- 첫 작업: 기존 `LearningSessionController`와 모바일 화면·HTTP 연결 경계 구현.
+- 상태: 코드 후보 구현 완료 / 자동 검증 통과 / 실제 브라우저·휴대폰 화면 검증 미확인.
+- 추가 검증 준비: 단일 HTML 미리보기 빌드·합성 모드 고정·수동 화면 검사 안내 구현과 관련 자동 검증을 완료했다.
+- 최신 사용자 계속 빌드 지시: 2026-10-01T05:48:50+09:00. 준비 범위는 `MOBILE_APP_BRIEF.md` §6, 직접 검증 증거는 `VALIDATION_STATUS.md` §C.2, 수동 확인 순서는 `MOBILE_SCREEN_TEST_GUIDE.md`에서 확인한다.
+- 기준 `main`: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`.
+- 브랜치: `development/mobile-01-session-ui-20261001`.
+- 파일 범위와 완료 기준: `MOBILE_APP_BRIEF.md`.
+- 구현·인계 상태: `MOBILE_APP_HANDOFF.md`, 상세 검증 상태: `VALIDATION_STATUS.md` §C.
+- 기존 엔진·Tier A·API·DB schema·migration·Validation 규칙은 보존한다.
+- 이 사용자 지시는 기존 문서 동기화 후보의 독립 검토·종료를 대신하지 않는다.
+  그 lifecycle과 기존 비완료 경계는 보존하며 앱·실제 AI·출시·학습 효과 완료를 선언하지 않는다.
+
+> 최신 앱 제작 작업 기록은 이 §5의 `MOBILE-04` 추가 기록과 `MOBILE_APP_HANDOFF.md`를 따른다. MOBILE-01/02/03 기록은 이전 빌드의 출처로 보존한다.
+
 - Validation branch:
   `validation/vi-p1-raw-source-core-contract-20260829`
 - Original documentation candidate:
@@ -12524,6 +12576,12 @@ historical ledger does not.
   this record (§10)
 
 ## 10. Next Action
+
+현재 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+2026-10-03 Copilot CP-IP-05 정정: 이전 MOBILE-05 설계 지시는 완료 이력이며 재시작하지 않는다. 최신 구현/검증/리뷰 상태는 PROJECT_STATUS.md·VALIDATION_STATUS.md §N·MOBILE_APP_HANDOFF.md를 따른다.
+MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
+
+### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)
 
 - Candidate stage (pending, gated): a fresh, separate, read-only
   Independent Review of this exact Post-Closure Roadmap / Status

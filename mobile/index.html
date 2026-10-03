@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#174e46">
+  <title>LLE — 배운 표현이 내 말이 되도록</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#learning-root">학습 화면으로 이동</a>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="LLE 시작 화면"><span class="brand-icon" aria-hidden="true">L</span><span>LLE<small>배운 것을, 내 말로</small></span></a>
+      <div class="header-language"><span class="language-pill" id="connection-label">언어 선택</span><button type="button" class="language-button" id="language-button" hidden>언어팩 변경</button></div>
+    </header>
+    <aside id="preview-notice" class="preview-notice" hidden>
+      <strong>화면 미리보기</strong><span>언어팩 용량은 예시이며 다운로드는 가상이에요. 실제 학습 기록은 저장하지 않아요.</span>
+    </aside>
+    <form id="preview-controls" class="preview-controls" hidden>
+      <label for="preview-scene">살펴볼 화면</label>
+      <select id="preview-scene" name="scene">
+        <option value="languages">언어팩 선택</option>
+        <option value="home">시작 화면</option>
+        <option value="review">복습</option>
+        <option value="new">새 문법</option>
+        <option value="interleaving">교차 연습</option>
+        <option value="conversation">대화 연습 준비</option>
+        <option value="idle">학습 완료</option>
+        <option value="error">연결 실패</option>
+      </select>
+    </form>
+    <main id="learning-root" tabindex="-1" aria-live="polite" aria-atomic="false"></main>
+    <footer class="app-footer"><span>기억에서 꺼내고, 연결해서 말해요.</span><a id="preview-link" href="./?preview=1">화면 미리보기</a></footer>
+  </div>
+  <noscript>학습 화면을 보려면 JavaScript를 사용할 수 있는 브라우저가 필요해요.</noscript>
+</body>
+</html>

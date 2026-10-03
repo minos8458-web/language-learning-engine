@@ -78,6 +78,163 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### Node 최소 지원 버전 정합성 보완 — 2026-10-04
+
+- 사용자 2026-10-04T06:06:21+09:00 “다음”에 따라 CP-IP-01 한 작업을 수행했다. 시작 local/remote `282d31f21abcb2603eb670ed0aac113fdf85cadf`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch·clean·upstream 0/0·main 32/0 확인.
+- package.json 및 lock root의 Node 최소 요구를 >=20.19.0으로 맞추고 README 설치 안내를 추가했다. 잠금 의존성 버전·integrity와 MOBILE-05/production source/test는 그대로다.
+- CP-IP-01: CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 최소 버전 설치·선택 검증·빌드 증거는 VALIDATION_STATUS.md §P가 소유한다. 독립 승인·스레드 resolve·main 병합은 미실행이다.
+- 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+- 아래 구현/리뷰 기록은 각 시점의 이력이다.
+
+### 최초 학습 클라이언트 응답 검증 보완 — 2026-10-04
+
+- 사용자 2026-10-04T02:18:41+09:00 “다음” 지시로 CP-IP-02/03 한 작업을 수행했다. 시작 local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch·clean·upstream 0/0·main 31/0 확인.
+- HTTP startExplicitStudy에 exact 3키·6 state·Content exact 6키/null·요청 노드/type·본문/answer_key 검증을 추가했다. malformed/state-only 응답은 성공 전에 거절하며 값 정규화/자동 재전송은 없다. Preview도 null/INTRODUCED/null 계약으로 정합화했다.
+- CP-IP-02/03: CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 독립 승인이나 원격 스레드 resolve는 아니다. 실행 증거는 VALIDATION_STATUS.md §O.
+- MOBILE-05 게스트 구현과 팩 저장/복구, 서버·Progress·Generation·API/schema/판정 규칙은 보존했다. 게스트/HTTP/mobile 테스트의 성공 fixture만 새 계약으로 맞췄다. 설명/문제 UI·제출은 이번 미구현이다.
+- 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+- 아래 리뷰/구현 기록은 각 시점의 이력이다.
+
+### 최초 학습 서버 독립 리뷰 수신 — 2026-10-03
+
+- 사용자 22:51:34+09:00 “다음” 지시로 Copilot review를 요청했고 최종 확인 중 결과를 수신했다. PR #2, reviewer `copilot-pull-request-reviewer`, review ID `PRR_kwDOTQ7IWM8AAAABQfiOMw`, COMMENTED / Changes recommended.
+- High 2·Medium 2·Low 2를 `INITIAL_PRACTICE_REVIEW_PACKET.md`의 CP-IP-01–06으로 분류했다. 코드 관련 4건 OPEN, 오래된 Next Action 문서 2건은 이번 후보에서 정정했다. 스레드 resolve/리뷰어 재확인은 미실행이다.
+- 요청 target `92a9b70262b8df6bf8e67a3e03f517594699e139`; 도구 결과에 reviewed SHA가 없어 정확한 리뷰 커밋은 미확인이다. 문서 후속 head와 대상 runtime/test blob은 동일하다. PR 전체 리뷰를 최초 서버 범위의 무조건 승인으로 해석하지 않는다.
+- 직접 관찰·한계는 VALIDATION_STATUS.md §N. production source/test 변경 없음. main 병합·CLOSED 보류.
+- 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
+
+### 최초 학습 서버 경계 PostgreSQL 검증 — 2026-10-03
+
+- 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 직전 인계의 실제 PostgreSQL 검증 한 작업을 진행했다.
+- 시작 local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch 성공·clean·upstream 0/0·main 27/0.
+- 격리된 PostgreSQL 16.15에서 기존 13개 migration과 합성 fixture로 R1 제외 조건·응답·중복/손상·SQL 실패 후 admission 보존·동시성/멱등/capacity를 검증했다. 직접 실행 결과는 `VALIDATION_STATUS.md` §M이 소유한다.
+- 신규 PG 테스트와 승인된 API 10.1/Content 호출을 반영한 기존 Flow 정적 테스트만 수정했다. runtime source·MOBILE-05·schema/계약/Validation 판정 규칙은 불변이다.
+- **작업 브랜치 구현 후보 / 선택 실제 PostgreSQL 검증 완료 / 독립 리뷰·main 통합 대기**. 운영 PostgreSQL/HTTPS·검수 콘텐츠·팩 일치·Android/기기 완주와 학습 효과는 미검증이다.
+- 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- 아래 구현·계약 기록은 각 시점의 이력이다.
+
+### 최초 학습 서버 경계 구현 — 2026-10-03
+
+- 사용자 직접 지시: 2026-10-03T21:09:38+09:00 “ok 다음”. 직전 인계의 서버 경계 구현 한 작업을 진행했다.
+- 시작 작업/원격/PR 기준 `18c3f6223b4bb08641be1dc28630eb97ee8936c7`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch 성공, clean, upstream 0/0, main 25/0.
+- 구현: Content.getContent opt-in EXPLICIT_STUDY의 입력 검증·검수/대표/단일 노드 SQL 조건, KO/BEGINNER 서버 구성, Flow.startExplicitStudy의 admission→설명→QUIZ와 exact 3키 응답/독립 null/손상 결과 기술 오류, in-process 연결.
+- 기존 Progress 구현·Generation EXAMPLE 경로·MOBILE-05 클라이언트·schema·API/Validation 판정 규칙은 변경하지 않았다. Content의 기존 프로필 미지정 호출과 6키 projection은 보존한다.
+- **작업 브랜치 구현 후보 완료 / 실제 PostgreSQL 검증·독립 리뷰·main 통합 대기**. 설명/문제 UI·제출·실제 검수 팩·Android/기기 완주는 미완료다.
+- 직접 실행 증거와 한계는 `VALIDATION_STATUS.md` §L이 소유한다. 합성 DB/엔진 경계와 실제 Node HTTP 검증이며 실제 PG 검증으로 해석하지 않는다.
+- 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
+- 아래 계약 반영·설계 기록은 당시 상태로 보존한다.
+
+### 최초 학습 응답·R1 계약 승인/문서 반영 — 2026-10-03
+
+- 사용자 직접 승인: 2026-10-03T19:35:16+09:00 “승인”. 승인 대상은 직전 설계 후보/R1과 정식 계약 문서 반영 한 작업이다.
+- 계약 반영: `API_CONTRACT.md` 1.32(§7.1.1/§10.1), `ENGINE_INTERFACE.md` 1.20, `CLIENT_BRIEF.md` 1.3, `LEARNING_API_SERVER_BRIEF.md`; 승인 provenance는 Backlog 1.82에 기록했다.
+- 정확한 explanation/state/initial_practice·기존 6키 projection·독립 null, Content opt-in EXPLICIT_STUDY 선택, Progress-first·멱등/오류/capacity 경계를 확정했다.
+- **문서 반영 완료 / 코드 미구현 / 독립 리뷰·main 통합 대기**. 기존 state-only 구현을 새 계약 준수로 재분류하지 않는다. MOBILE-05 코드 및 선택 검증 기록은 유지한다.
+- 이번 직접 문서 점검은 `VALIDATION_STATUS.md` §K. 런타임/빌드/PG/실기기 미실행이며 기존 §I의 증거와 구분한다.
+- 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+- 아래는 각 시점의 이력이다. 이전 후보 승인 대기는 이번 승인으로 해소됐지만 구현·실기기 차단은 남아 있다.
+
+### 최초 학습 응답 계약 후보 설계 완료 — 2026-10-03
+
+- 사용자 요청의 다음 한 작업을 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`로 작성했다. 정확한 계약 승인 대기이며 구현/독립 리뷰 완료가 아니다.
+- 후보: 성공 data의 필수 `explanation`, `state`, `initial_practice`; 기존 6키 Content projection; 독립 null; 기존 admission을 먼저 수행하고 콘텐츠 조회; 멱등/capacity 및 부분 실패 의미.
+- 추가 확인: 현재 getContent는 검수/대표/단일 노드 선택을 보장하지 않는다. 기존 경로를 보존하는 내부 선택 프로필 R1을 제안했으며 추가 계약 승인이 필요하다. Flow 직접 SQL이나 projection 확장은 제안하지 않는다.
+- MOBILE-05와 source/API/schema/Validation 판정 규칙은 그대로다. 이번 직접 문서 점검·미실행 증거는 `VALIDATION_STATUS.md` §J, 기존 런타임 증거는 §I.1–I.2다.
+- 현재 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+- 아래 기록은 각 시점의 이력이며 위 최신 설계 위치를 대체하지 않는다.
+
+### MOBILE-05 클라이언트 구현·선택 개발 검증 완료 — 2026-10-02
+
+- 사용자 직접 계속 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
+- 게스트 제어기·주입 저장 경계·게스트 화면·기존 팩/flow 진입을 구현했다. pending 저장 확인 후 기존 POST, 후보 commit/read 동일 기록 확인 후 READY, 동일 유효 게스트 복구·만료/401 차단·로컬 저장 재확인·종료/재개·이전 응답 차단을 포함한다.
+- 선택 개발 검증/모바일 빌드 통과. 실행 증거는 `VALIDATION_STATUS.md` §I.1, 내부 계약/실제 연결 부족분은 `MOBILE_GUEST_START_BRIEF.md` §12, 최신 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+- 합성 store/DB·Node DOM·실제 Node HTTP 코드 경계의 완료다. 실제 native adapter/OS 보안 저장·Android host/APK·PG/운영 HTTPS·검수 팩·단원 학습/진도·실기기는 미완료다.
+- 실제 안전 저장 host가 없는 일반 실행은 HOST_UNAVAILABLE에서 팩/학습 요청을 막는다. 기존 token callback host와 명시적 합성 preview는 유지한다.
+- 기존 엔진·서버·학습 제어기/HTTP 전송·팩 service/controller/view·API/schema/Validation 판정 규칙·dependency/lock 변경 없음. main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92` 유지. 병합·독립 리뷰·CLOSED·출시는 선언하지 않는다.
+- 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+- 아래 설계/착수/이전 빌드 체크포인트는 당시 기록이며 현재 구현 상태를 대체하지 않는다.
+
+### MOBILE-05 클라이언트 구현 착수 — 2026-10-02 (착수 당시 기록)
+
+사용자 직접 지시 (2026-10-02T21:46:25+09:00) “다음작업 계속 진행해”에 따라, 최신 원격 `80fe5ac3be1f2064bcab5e81c7a742c1ab414ac7`의 단일 다음 행동을 확인했다.
+`MOBILE_GUEST_START_BRIEF.md` §1–10을 소비하는 게스트 준비 제어기·저장 adapter 경계·모바일 진입 구현과 선택 검증을 시작한다.
+현재는 구현 착수이며 런타임/네이티브 저장/APK 완료가 아니다. 범위·세부 실행 선택은 해당 문서 §11, 직접 점검은 `VALIDATION_STATUS.md` §I, 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+기존 발급 서버·학습 제어기/전송·다운로드/캐시·API/schema/Validation 규칙을 재작성하지 않는다. 다른 API/APK 작업을 동시에 시작하지 않는다.
+
+### MOBILE-05 게스트 첫 시작·보안 저장 경계 설계 완료 — 2026-10-02
+
+이번 한 작업의 설계를 `MOBILE_GUEST_START_BRIEF.md`에 완료했다.
+기존 발급/전송/제어기·팩 캐시를 재사용하고, empty/pending/stored 저장 경계·저장 확인 후 학습·같은 유효 게스트 재실행·만료/401/불확실 발급 처리와 구현 검증 기준을 고정했다.
+클라이언트/네이티브 코드·API/schema·APK는 아직 변경하지 않았다. 설계/실행 증거를 구분하며 직접 문서 점검은 `VALIDATION_STATUS.md` §H를 따른다.
+다음 행동 하나는 이 설계의 MOBILE-05 클라이언트 게스트 준비 제어기·adapter 경계·모바일 진입 연결 구현과 선택 검증이다.
+`initial_practice` 방향 승인은 유효하며 정확한 계약 보완/구현은 후속 단일 작업으로 남긴다. 이전 상태·기기 검증 대기·main/lifecycle 경계를 유지한다.
+
+### 첫 시연 범위 승인·MOBILE-05 착수 — 2026-10-02
+
+사용자 직접 응답 (2026-10-02T21:10:42+09:00) “승인”을 직전 질문에 연결했다.
+온라인 학습·유효 토큰 내 재실행과 `start_explicit_study.initial_practice` 보완 방향이 승인됐다.
+계약/코드 변경과 새 운영/출시/복구 범위 승인은 아니다. 상세 승인은 `ANDROID_VI_DEMO_ASSESSMENT.md` §0 및 `MOBILE_APP_BRIEF.md` §10을 따른다.
+현재 다음 행동 하나인 MOBILE-05 보안 저장·최초 게스트 흐름 설계에 착수한다.
+이번 중간 체크포인트는 승인/상태 문서만 저장하며 이전 런타임 검증과 main/lifecycle 경계를 유지한다.
+
+### Android 베트남어 첫 시연 부족분 평가 — 2026-10-02
+
+사용자 지시 (2026-10-02T06:58:37+09:00)의 여섯 단계 목표를 최신 원격 기준선/코드/환경과 대조했다.
+MOBILE-04 코드·인계는 안전하게 저장돼 있고 미저장 작업이 없었다. 이번에는 평가/상태/인계 문서만 갱신했다.
+Android 설치판·실제 검수 팩·팩 본문 소비·설명/문제/제출/피드백·동일 사용자 진도/환경 연결과 실기기 검증이 남았다.
+정식 PRE_MADE EXAMPLE과 최초 QUIZ 제공의 차이를 확인해 `initial_practice` 보완안을 제안/미승인으로 기록했다. 상세 분류·소량 콘텐츠·기간 추정·변경 승인 경계는 `ANDROID_VI_DEMO_ASSESSMENT.md`, 이번 직접 점검은 `VALIDATION_STATUS.md` §G를 따른다.
+이전 런타임 검증을 재실행하거나 main 반영·실제 시연 성공·독립 검수·출시·CLOSED를 선언하지 않는다.
+다음 행동 하나는 기존의 모바일 보안 저장소 경계와 최초 게스트 시작 흐름 설계 (MOBILE-05)다.
+
+### MOBILE-04 — 게스트 인증·기존 사용자 저장 서버 (작업 브랜치)
+
+2026-10-01T21:29:43+09:00 사용자의 계속 지시와 이전 다음 행동을 근거로 기존 게스트/users 계약을 확인했다.
+새 UUID의 GUEST 저장·서명 토큰 발급·서명/만료/현재 GUEST 확인을 기존 HTTP 경계와 호스트에 구현했다.
+합성 저장 fixture와 실제 HTTP·crypto/기존 클라이언트의 선택 자동 검증·모바일 빌드 완료.
+실제 PostgreSQL·운영 키/토큰·모바일 보안 저장·갱신/복구·계정 전환·APK는 미구현/미확인이다.
+상세 증거는 `VALIDATION_STATUS.md` §F, 연결은 `GUEST_AUTH_BRIEF.md`, 최신 코드/저장은 `MOBILE_APP_HANDOFF.md`를 따른다.
+schema/migration·엔진/전송/학습 API·Validation 판정 규칙을 바꾸지 않았으며 main 반영·독립 리뷰·lifecycle CLOSED·출시는 선언하지 않는다.
+다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+아래 MOBILE-01/02/03은 이전 체크포인트다. 당시 인증 미구현 기록은 이번 서버 코드 범위에서만 갱신되며 실제 운영/기기 비완료 경계는 유지한다.
+
+### MOBILE-03 — 기존 학습 전송의 HTTP 서버 연결 (작업 브랜치)
+
+2026-10-01T14:47:29+09:00 사용자의 제작 계속 지시 안에서 AI가 다음 항목을 선택했다.
+기존 세션 시작·명시적 학습 시작 두 POST 경로의 서버 어댑터와 인증 검증 콜백 경계를 구현했다.
+요청 크기·JSON·입력·시간 제한과 기존 오류 매핑, 실제 HTTP를 거친 클라이언트 흐름의 자동 검증·빌드를 완료했다.
+상세 실행 증거는 `VALIDATION_STATUS.md` §E, 연결 방법은 `LEARNING_API_SERVER_BRIEF.md`를 따른다.
+실제 인증 발급·사용자 저장·운영 DB·동일 출처 연결·EXPLANATION 콘텐츠·나머지 세 API는 미구현/미확인이다.
+이전 화면 검증 대기·기존 lifecycle·main 기준선·학습 효과 비완료 경계를 유지하며 CLOSED로 바꾸지 않는다.
+다음 행동 하나는 기존 users schema와 `/auth/guest` 계약을 확인해 MOBILE-04 게스트 인증 발급 연결을 설계하는 것이다.
+최신 코드와 원격 저장 상태는 `MOBILE_APP_HANDOFF.md`를 따른다.
+
+### MOBILE-02 — 사용자 지정 언어팩 선택 다운로드 (작업 브랜치)
+
+2026-10-01T06:27:14+09:00 사용자가 다음 빌드에 나라·언어별 선택 다운로드,
+확인 팝업 하나, 예상 용량과 큰 파일의 Wi-Fi 안내를 지정했다.
+이 명시적 지시로 이번 클라이언트 범위를 변경했다 (`MOBILE_APP_BRIEF.md` §7).
+선택 다운로드·파일 검증·기기 캐시·설치 후 언어별 세션 진입의 코드 후보와 자동 검증·빌드를 완료했다.
+실제 배포용 팩·용량·목록 연결과 휴대폰 표시·터치는 미확인이다.
+이전 MOBILE-01의 시각 검증 대기 상태와 모든 기존 lifecycle 경계를 유지하며 CLOSED로 바꾸지 않는다.
+실행 증거는 `VALIDATION_STATUS.md` §D, 구현 설명은 `LANGUAGE_PACK_DOWNLOAD_BRIEF.md`,
+최신 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+
+### MOBILE-01 — 모바일 세션 화면 연결 (작업 브랜치)
+
+2026-09-30의 사용자 앱 제작 착수 지시와 2026-10-01의 계속 진행 지시에 따라,
+`ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`에서
+`development/mobile-01-session-ui-20261001`을 준비했다.
+이전 작업은 기존 세션 제어기와 모바일 화면 연결이다. 코드 후보 구현과 자동 검증을 마쳤으며,
+실제 브라우저·휴대폰 화면 검증은 환경 제한으로 미확인이다. Lifecycle CLOSED를 선언하지 않는다.
+같은 작업의 검증 준비로 단일 HTML 미리보기 빌드와 수동 확인 안내를 추가했다.
+준비 코드와 관련 자동 검증은 완료했으며, 실제 화면 검증은 미확인으로 유지한다.
+준비 범위는 `MOBILE_APP_BRIEF.md` §6, 수동 확인 순서는 `MOBILE_SCREEN_TEST_GUIDE.md`를 따른다.
+범위는 `MOBILE_APP_BRIEF.md`, 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
+기존 엔진·스키마·Validation 규칙을 보존하고, 검토·종료되지 않은 기존 문서
+동기화 lifecycle을 종료로 재분류하지 않는다. 앱 출시·실제 AI·학습 효과 완료를 선언하지 않는다.
+
+### 제작 착수 전 기준선 기록 (보존)
+
 No bounded implementation milestone is currently active. The `VI P1 Measurement Readiness — METRIC_RESULT Unseen Transfer v2 Runtime` implementation lifecycle is `INDEPENDENT REVIEW PASSED / CANONICAL ON MAIN / POST-MERGE WINDOWS-LOCAL POSTGRESQL 17.10 VERIFIED / VALIDATED / REVIEW-RECORDED / CLOSED` and is recorded above as the Last Completed Bounded Milestone. The previously selected read-only Unseen Transfer v2 Runtime implementation-readiness re-pre-analysis is fulfilled and superseded (Control Tower adjudicated readiness `READY`, and the bounded Runtime lifecycle has since closed). Milestone selection returns to Control Tower; no next milestone is selected or started by this document.
 
 ## Remaining Blocking-Gap Sequence
@@ -99,6 +256,13 @@ VI Empirical Pilot P1 activation remains gated on the following implementation/d
 B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not the sole condition for P1 activation. `VI_EMPIRICAL_PILOT_SPEC.md` remains Proposed; the pilot manifests remain `approved_for_pilot=false`; canonical pre-P1 instrumentation requirements include Pilot Spec approval, which is still required before n=1~3 instrumentation; and P1 activation is a separate explicit decision. VI Empirical Pilot P1 remains NOT ACTIVATED; human-data collection remains NOT AUTHORIZED; learning efficacy remains NOT VERIFIED.
 
 ## Next Action
+
+현재 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
+`MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
+최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.
+
+### 제작 착수 전 다음 행동 기록 (보존)
 
 Return to Control Tower for post-sync milestone selection. This applies only after this three-file post-closure roadmap/status synchronization candidate (branch `validation/post-closure-status-roadmap-sync-20260923`, parent `d41829f4d6f71d78cdbda80b96ee7af41e44a715`) has had a fresh, separate Independent Review and has been integrated onto main.
 

@@ -150,7 +150,30 @@ function projectContent(row) {
   };
 }
 
-async function getContent(pool, identifier, contentType, metaLanguage, explanationLevel) {
+async function getContent(pool, identifier, contentType, metaLanguage, explanationLevel, selectionProfile) {
+  if (selectionProfile !== undefined) {
+    if (typeof selectionProfile !== 'string') {
+      throw new ContractViolationError('selectionProfile는 string이어야 합니다');
+    }
+    if (selectionProfile !== 'EXPLICIT_STUDY') {
+      throw new OutOfRangeValueError('지원하지 않는 selectionProfile');
+    }
+    if (contentType !== 'EXPLANATION' && contentType !== 'QUIZ') {
+      throw new ContractViolationError('EXPLICIT_STUDY는 EXPLANATION/QUIZ 조건 조회만 지원합니다');
+    }
+    if (metaLanguage === undefined) throw new MissingRequiredFieldError('metaLanguage는 필수입니다');
+    if (typeof metaLanguage !== 'string') throw new ContractViolationError('metaLanguage는 string이어야 합니다');
+    if (!/^[A-Z]{2}$/.test(metaLanguage)) throw new OutOfRangeValueError('metaLanguage 형식 오류');
+    if (contentType === 'EXPLANATION') {
+      if (explanationLevel === undefined) throw new MissingRequiredFieldError('explanationLevel은 필수입니다');
+      if (typeof explanationLevel !== 'string') throw new ContractViolationError('explanationLevel은 string이어야 합니다');
+      if (!['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(explanationLevel)) {
+        throw new OutOfRangeValueError('explanationLevel 범위 오류');
+      }
+    } else if (explanationLevel !== undefined) {
+      throw new ContractViolationError('QUIZ는 explanationLevel을 받지 않습니다');
+    }
+  }
   if (identifier === undefined) throw new MissingRequiredFieldError('node_id 또는 content_id는 필수입니다');
   if (identifier === null || typeof identifier !== 'string' || identifier.trim().length === 0) {
     throw new ContractViolationError('node_id 또는 content_id는 비어 있지 않은 string이어야 합니다');
@@ -180,6 +203,10 @@ async function getContent(pool, identifier, contentType, metaLanguage, explanati
                   AND content_type = $2
                   AND source = 'HUMAN_AUTHORED'
                   AND is_active = true`;
+  if (selectionProfile === 'EXPLICIT_STUDY') {
+    filters += ` AND grammar_node_ids = $1::jsonb
+                 AND human_reviewed = true AND is_canonical = true`;
+  }
   if (metaLanguage !== undefined) {
     if (metaLanguage === null || typeof metaLanguage !== 'string' || metaLanguage.trim().length === 0) {
       throw new ContractViolationError('meta_language는 비어 있지 않은 string이어야 합니다');

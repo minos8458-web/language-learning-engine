@@ -40,7 +40,7 @@ Learning Flow Engine
 
 이 다이어그램은 Learning Flow Engine이 한 사용자의 학습 흐름을 진행시킬 때 **직접 조율하는** 하위 Engine 관계를 보여준다.
 
-**예외 경로**: Learning Flow Engine은 Content Engine도 직접 호출할 수 있다 — 명시적 학습 단계에서 문제 생성과 무관하게 레슨 설명(`EXPLANATION` 콘텐츠)을 보여줘야 하기 때문이다(GRAMMAR_GRAPH §4.4). 다이어그램에는 편의상 Generation Engine 아래에만 표기했지만, Content Engine의 실제 호출 주체는 **Generation Engine(사다리 3단계, `EXAMPLE` 조회)과 Learning Flow Engine(레슨 설명, `EXPLANATION` 조회) 둘 다**이다. 이는 "부모가 자식을 직접 호출"하는 것이지 형제 간 호출이 아니므로 2.2의 규칙을 위반하지 않는다.
+**예외 경로**: Learning Flow Engine은 Content Engine도 직접 호출할 수 있다 — 명시적 학습 단계에서 문제 생성과 무관하게 레슨 설명(`EXPLANATION` 콘텐츠)과 승인된 최초 `QUIZ`를 제공해야 하기 때문이다(설명은 GRAMMAR_GRAPH §4.4, 최초 QUIZ는 2026-10-03 승인/API_CONTRACT §10.1). 다이어그램에는 편의상 Generation Engine 아래에만 표기했지만, Content Engine의 실제 호출 주체는 **Generation Engine(사다리 3단계, `EXAMPLE` 조회)과 Learning Flow Engine(레슨 설명 `EXPLANATION` 및 `EXPLICIT_STUDY` 프로필의 최초 `QUIZ` 조회) 둘 다**이다. 이는 "부모가 자식을 직접 호출"하는 것이지 형제 간 호출이 아니므로 2.2의 규칙을 위반하지 않는다.
 
 **AC-017 Pattern A 저장 경로**: AI 생성 Content는 Generation Engine이 오케스트레이션하고 Content Engine이 유일한 쓰기 경로를 소유한다. AI Generation Engine은 provider 결과를 검증해 Layer 2 candidate만 반환하고 Content Engine을 직접 호출하지 않는다. Generation Engine은 candidate를 받아 Content Engine의 `save_generated_content`를 호출한 뒤, 그 canonical 반환 projection을 재계산 없이 Layer 3 public `content`로 사용한다.
 
@@ -74,10 +74,14 @@ Learning Flow Engine
 | **2. 하지 않는 일** | 상태를 직접 변경하지 않는다(Progress Engine에 요청). 선행 관계를 직접 탐색하지 않는다(Graph Engine에 위임). 복습 대상을 직접 계산하지 않는다(Review Engine에 위임). 문제/문장을 직접 만들지 않는다(Generation Engine에 위임). Conversation acknowledgement를 저장하거나 그 사실만으로 Progress를 변경하지 않는다. Conversation Engine을 신설·대행하지 않는다. `progress`·`grammar_nodes`·`concepts` 테이블을 직접 조회하지 않고 다른 Engine의 canonical API만 호출한다. NEW_GRAMMAR 후보 admission을 직접 강제하지 않는다 |
 | **3. 입력 데이터** | 사용자 액션 이벤트 — 명시적 학습 시작(`start_explicit_study`), 인출 시도 제출·결과(`submit_attempt`), 연습 문제 요청(`request_practice`), 자기보고 Confidence(`submit_self_reported_confidence`), **세션 시작(`start_session`, historical draft `MIGRATION_GUIDE_ENTRIES_004_005.md` Entry 005 — 2026-07-07 신설; optional `conversationBoundaryAcknowledged`, canonical `MIGRATION_GUIDE.md` Entry 005 / AC-012)**. 이 5개가 외부에 노출되는 API 전부다(API_CONTRACT.md §10.1~10.5) |
 | **4. 출력 데이터** | 사용자에게 다음에 보여줄 화면 구성 지시(어떤 하위 Engine의 결과를 어떤 순서로 조합할지), Progress Engine에 대한 상태 전이 요청 |
-| **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION 콘텐츠를 직접 조회하기 위한 예외적 직접 호출, GRAMMAR_GRAPH §4.4 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
+| **5. 호출 가능한 하위 Engine** | Graph Engine, Progress Engine, Generation Engine, Review Engine, Interleaving Engine, **Content Engine**(명시적 학습 단계에서 EXPLANATION과 EXPLICIT_STUDY 프로필의 최초 QUIZ를 직접 조회하기 위한 예외적 직접 호출, 설명: GRAMMAR_GRAPH §4.4, QUIZ: 2026-10-03 승인/API_CONTRACT §10.1 / `submit_attempt` 처리 중 `content_id` 단독 조회로 SELF/TRANSFER 진단 정보를 얻기 위한 예외적 직접 호출, AC-008 2026-07-08 Resolved) |
 | **6. 의존하면 안 되는 Engine** | 없음(최상위 진입점). 단, **다른 어떤 Engine으로부터도 호출되어서는 안 된다** — 이 Engine은 오직 최초 진입점 |
 | **7. 관련 상위 문서** | GRAMMAR_GRAPH §4(Learning Flow Engine, 실수 처리 루프) |
 | **8. 향후 구현 시 주의사항** | 오케스트레이션만 하는 "얇은 조정자"로 유지해야 한다. 실제 판단 로직이 이 Engine 안으로 스며들면(예: 여기서 직접 필터링·계산을 시작하면) God Object가 되어 2장의 책임 분리가 무의미해진다. **Review 호출의 `max_cascade_depth`를 하드코딩하지 않고 Engine 설정값을 전달한다(현재 기본값 2 유지, AUD-004). AC-012의 PRACTICING+ 최소 기준 기본값 3도 Engine 설정값으로 소비한다. §9 검증 전 REVIEW·NEW_GRAMMAR·INTERLEAVING·CONVERSATION·IDLE 전체 `start_session` 경로를 production 코드로 구현해야 하며, CONVERSATION-only 부분 구현이나 다른 분기의 production mock은 허용하지 않는다** |
+
+**최초 학습 응답/R1 승인 계약(2026-10-03)**: `startExplicitStudy(pool, userId, nodeId)`는 Progress.recordExplicitStudy를 1회 호출해 성공한 뒤 Content의 EXPLICIT_STUDY 프로필로 설명을 조회·검사하고, 이어 QUIZ를 조회·검사한다. 입력/응답/오류의 정확한 계약은 `API_CONTRACT.md` §7.1.1/§10.1이 소유한다. Flow는 0건→해당 필드 null, 1건→6키 projection 그대로, 2건 이상/손상 응답→일반화된 기술 오류로 처리한다. state는 Progress 원문을 전달하고 검수/대표/단일 노드 선택은 Content에 위임한다. 직접 SQL·검수 필터·상태 재계산·문제 생성은 하지 않는다.
+
+Progress 거절 시 Content 호출은 없고, 검증된 capacity 거절만 기존 transport의 CapacityAdmissionConflictError로 전달한다. 일반 오류를 capacity로 바꾸지 않는다. Progress commit 후 Content 실패는 이미 저장된 admission을 rollback하지 않는다. 새 공통 트랜잭션·보상 삭제·자동 재시도는 없다. 멱등은 admission 범위이며 동일 Content 버전이나 submit_attempt 중복 방지 보장이 아니다. Generation은 이 경로에 호출하지 않으며 정식 PRE_MADE EXAMPLE과 사다리는 그대로다.
 
 **AC-012 경계 책임**: `conversationBoundaryAcknowledged`는 요청 단위 사실이며 Learning Flow Engine이나 다른 Engine의 저장 상태가 아니다. `true`일 때 동일 호출에서 CONVERSATION을 재선택하지 않되, 기존 우선순위의 다른 action은 계속 평가한다. Conversation Engine 자체는 이번 Clarification에서 설계·구현하지 않는다.
 
@@ -198,6 +202,10 @@ Raw schema·rule·validator false는 최초 1회+재생성 최대 2회의 shared
 | **6. 의존하면 안 되는 Engine** | 나머지 7개 Engine 전부 |
 | **7. 관련 상위 문서** | GRAMMAR_SCHEMA §3, GRAMMAR_GRAPH §6.2(3단계) |
 | **8. 향후 구현 시 주의사항** | `save_generated_content`는 normalized node order, 내부 MAX difficulty, `IDENTIFIER_STANDARD.md` §5 ID와 AI 고정 필드를 한 경계에서 확정하고 UUID/PK 충돌을 내부 재시도하지 않는다. 일반 DB 인프라 실패는 공통 입력 오류로 위장하거나 raw PostgreSQL/SQL/connection 정보를 노출하지 않는다. `get_content`와 `get_recent_generated_content`의 정상 0건은 명확한 빈 결과로 반환한다 |
+
+---
+
+**R1 선택 책임(2026-10-03 승인)**: Content의 기존 getContent에 optional `selectionProfile`을 추가한다. EXPLICIT_STUDY에서 기존 컬럼의 HUMAN_AUTHORED·active·human_reviewed·canonical·정확히 대상 단일 노드·meta_language와 설명 수준 조건을 적용한다. 입력 규칙과 기존 미지정 호출 보존은 API §7.1.1이 소유한다. 선택 후 public 반환은 기존 6키 projection이므로 검수 플래그나 version을 추가하지 않는다. 이는 정적 콘텐츠 선택이며 사용자 학습 수준을 판정하는 Progress 필터가 아니다. 리프 책임과 기존 write 경로는 유지한다.
 
 ---
 
@@ -678,3 +686,4 @@ Observation persistence가 승인되기 전 Recorder는 다음을 일반-purpose
 | 1.17 | 2026-07-22 | AC-018 Tier C Architecture Clarification — Concept 존재성·canonical node label 경로, exact provider/validator boundary와 shared regeneration, PRE_MADE cardinality·lazy validation, Generation/AI Generation factory composition validation과 fail-closed production adapter 책임을 확정. 외부 API 5·내부 27·전체 32, 기존 positional API·leaf/sibling 원칙·Tier A는 불변, prerequisite implementation 미착수 |
 | 1.18 | 2026-07-30 | Evidence Foundation P0 bounded error-classification finalization writer clarification — non-Engine Evidence Repository의 `finalizeAttempt(pool, input)` 단일 writer, static caller boundary, RULE-only evaluation, finalization·evaluation·correction atomic transaction 및 production/test separation을 확정. 별도 `evidenceRecorder.js`, assignment/session lifecycle, Learning Flow/Public integration 및 production dual-write는 도입하지 않음 |
 | 1.19 | 2026-08-06 | Current Status Ledger Reconciliation — status-boundary reconciliation only. §18.5.1 stale current-state sentence updated: current bounded `finalizeAttempt` repository operation(§18.10.2)이 구현됨을 기록하고, 별도 recorder·full retry lifecycle·assignment/session lifecycle·Learning Flow/Public integration·production dual-write가 deferred임을 명시. Engine, API, schema, behavior 변경 없음 |
+| 1.20 | 2026-10-03 | 사용자 승인 initial_practice/R1: §2.1/§3의 최초 QUIZ 직접 조회 허용과 Progress→Content 조정·부분 실패 책임, §8의 opt-in Content 선택 책임 명시. leaf/Progress-only 쓰기·Generation 경계 유지. 문서 반영이며 코드·schema·검증 규칙·main 변경 없음. |

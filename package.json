@@ -7,13 +7,21 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test --test-concurrency=1",
-    "migrate": "node db/migrate.js"
+    "migrate": "node db/migrate.js",
+    "build:mobile": "node scripts/build-mobile.js",
+    "start:mobile": "node scripts/serve-mobile.js",
+    "test:mobile": "node --test tests/mobileClient.test.js tests/languagePackClient.test.js tests/guestSessionClient.test.js",
+    "start:api": "node scripts/serve-learning-api.js",
+    "test:api": "node --test tests/learningFlowHttpServer.test.js tests/guestAuth.test.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "pg": "^8.13.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "fake-indexeddb": "6.2.5",
+    "linkedom": "0.18.13"
+  }
 }
