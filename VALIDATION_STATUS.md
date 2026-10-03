@@ -731,4 +731,5 @@ npm run build:mobile
 - 이번 테스트·모바일 빌드·PostgreSQL/migration·Android/APK·실기기·실제 콘텐츠 검수/다운로드·AI/학습 효과: NOT RUN. 문서 점검을 정식 Validation PASS나 기존 §I 실행의 재실행으로 승격하지 않는다.
 - 직접 문서 검증: 12파일 허용 범위·UTF-8·fence 균형·충돌 표식 부재·승인 원문의 응답/오류 표 반영·기존 개정 이력 행과 후보 §0–10 원문 보존·git diff --check 통과.
 - 보존 대조: API §4.3/§5–6/§7.2부터 §10.1 전까지/§10.2부터 개정 이력 전까지 원문 동일. MOBILE-05 source/테스트/mobile/scripts/db/package·lock은 구현 저장점 00f7909aefbc447999bfc77e32dae90e99aa9580과 동일. Tier A/schema·VALIDATION_LEVEL3 판정 규칙 변경 없음.
-- 원격 read-back은 저장 후 별도 확인한다. 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.
+- 계약 반영 원격 저장 확인: `a07ec7b2fc0856024e9d0cfb133b77d21c41cdc6`, tree `795c3903913de123577980ebbda734df9e68de26`, parent `75ea09a8317c6f0f671d61155d8137261062a4b9`. 변경 12문서의 pinned UTF-8 원문 exact read-back과 local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 24/0 및 PR #2 open/draft/unmerged를 확인했다.
+- 이 후속 저장은 인계·검증 결과 2문서 기록만 포함한다. 최종 head는 Git 이력에서 조회하며 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.

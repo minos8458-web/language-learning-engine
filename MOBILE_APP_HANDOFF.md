@@ -24,6 +24,7 @@
 - 직접 검증 소유: VALIDATION_STATUS.md §K(문서), 기존 MOBILE-05 실행 증거 §I.1–I.2. 런타임/빌드/PG/APK/실기기/실제 검수는 이번 미실행.
 - 남은 차단: 서버 새 계약 구현·설명/문제 UI·제출/피드백·검수 콘텐츠/팩 자산 일치·Android host/native adapter/APK·운영 PG/HTTPS·실기기. 갱신/만료 뒤 복구·새 채점/schema·유료 서비스·main 병합/출시·P1/인간 데이터 승인은 포함하지 않는다.
 - 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+- 계약 반영 원격 저장 확인: `a07ec7b2fc0856024e9d0cfb133b77d21c41cdc6`, tree `795c3903913de123577980ebbda734df9e68de26`, parent `75ea09a8317c6f0f671d61155d8137261062a4b9`. 변경 12문서의 pinned UTF-8 원문 exact read-back과 local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 24/0 및 PR #2 open/draft/unmerged를 확인했다.
 - 원격 최종 저장 head는 Git 이력에서 조회한다. 저장 후 변경 원문·브랜치·PR를 재확인하고, 실패하면 마지막 확인 원격 위치를 보고한다.
 
 ## 이전 체크포인트 — 계약 후보 작성/저장 (2026-10-03, 보존)
