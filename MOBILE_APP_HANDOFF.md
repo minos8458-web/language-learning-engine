@@ -15,6 +15,18 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 지시: 2026-10-03T22:51:34+09:00 “다음”; 최초 학습 서버 후보 독립 리뷰 진행.
+- 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged.
+- 시작 local/remote/PR `92a9b70262b8df6bf8e67a3e03f517594699e139`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch/경로/.git/top-level/브랜치/clean 확인, upstream 0/0·main 29/0.
+- 수행: Copilot reviewer 요청 API 1회, 검토 패킷 작성, PR 본문을 현행 initial_practice 구현과 검토 범위로 정정.
+- 관찰: 요청 API 성공 응답이나 requested_reviewers null, reviews/comments/threads 빈 배열. **리뷰 접수 미확인·결과 미수신**. 자체 검토를 독립 승인으로 대체하지 않는다.
+- 고정 검토 대상: `92a9b70262b8df6bf8e67a3e03f517594699e139`, bounded diff base `18c3f6223b4bb08641be1dc28630eb97ee8936c7`. 상세 `INITIAL_PRACTICE_REVIEW_PACKET.md`.
+- 증거 소유: VALIDATION_STATUS.md §N(요청 관찰), §M(PG), §L(HTTP/모바일). 이번 runtime/PG/build 미실행. production source/test·MOBILE-05·schema/계약 불변.
+- 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+- main 병합·UI/제출/Android·검수 팩/운영/실기기 미완료 유지. 최종 저장 head는 Git에서 조회하며 문서만 추가된 head를 새 코드 리뷰 대상으로 혼동하지 않는다.
+
+## 이전 체크포인트 — 실제 PostgreSQL 검증 (2026-10-03, 보존)
+
 - 최신 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 실제 PostgreSQL 검증 한 작업을 수행했다.
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 draft. main Source of Truth와 작업 브랜치 후보를 구분한다.
 - 시작 local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 .git/top-level/브랜치·fetch·clean·upstream 0/0·main 27/0 확인.
