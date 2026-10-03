@@ -129,9 +129,11 @@ test('토큰이 없거나 잘못되면 네트워크 호출을 하지 않는다',
 test('서버 진단과 토큰은 일반 오류 메시지에 포함하지 않는다', async () => {
   for (const fetchImpl of [
     async () => { throw new Error(`SQL connection password=${TOKEN}`); },
+    async () => { throw Object.assign(new Error('학습 연결이 만료됐어요. 다시 연결해 주세요.'), { name: 'ExpiredSessionError', status: 401 }); },
     async () => Response.json({ status: 'error', message: `SQL password=${TOKEN}` }, { status: 500 }),
   ]) {
     await assert.rejects(transportFor(fetchImpl).startSession(USER_ID, 'VI'), (error) => {
+      assert.equal(error.message, '학습 연결을 확인한 뒤 다시 시도해 주세요.');
       assert.equal(error.message.includes(TOKEN), false);
       assert.equal(error.message.includes('SQL'), false);
       return true;
@@ -156,7 +158,25 @@ test('인증 만료는 재생성·미리보기 대체·자동 재시도 없이 �
   const state = await controller.start();
   assert.equal(state.requestStatus, 'ERROR');
   assert.equal(state.currentScreen, null);
+  assert.equal(state.error.message, '학습 연결이 만료됐어요. 다시 연결해 주세요.');
   assert.equal(state.error.message.includes(TOKEN), false);
+  assert.equal(calls, 1);
+});
+
+test('명시적 학습의 401도 공개 코드·capacity 재조회 없이 정제된 만료 안내를 보존한다', async () => {
+  let calls = 0;
+  const transport = transportFor(async () => {
+    calls += 1;
+    return errorResponse('CONTRACT_VIOLATION', `active Grammar Node limit 초과: SQL password=${TOKEN}`, 401);
+  });
+  await assert.rejects(transport.startExplicitStudy(USER_ID, 'NODE_MOBILE_TEST_A'), (error) => {
+    assert.equal(error.message, '학습 연결이 만료됐어요. 다시 연결해 주세요.');
+    assert.equal(error.code, undefined);
+    assert.equal(error instanceof CapacityAdmissionConflictError, false);
+    assert.equal(error.message.includes(TOKEN), false);
+    assert.equal(error.message.includes('SQL'), false);
+    return true;
+  });
   assert.equal(calls, 1);
 });
 
