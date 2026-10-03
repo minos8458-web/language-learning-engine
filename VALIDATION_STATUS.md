@@ -761,4 +761,4 @@ npm run build:mobile
 - 테스트 변경만 있음: 신규 `tests/initialPractice.postgres.test.js`, 기존 `tests/learningFlowEngine.test.js`의 승인된 호출 경계 정합성 보완. Production src·MOBILE-05·db/migration·package/lock·API/ENGINE_INTERFACE/CLIENT_BRIEF·Tier A·VALIDATION_LEVEL3 판정 규칙 변경 0. git diff --check 통과.
 - 한계: 선택한 여섯 suite의 실제 Linux PostgreSQL 검증이며 전체 npm test·Windows PostgreSQL 17.10·운영 PG/HTTPS·검수 콘텐츠/팩·Android/APK·실기기·학습 효과 검증은 아니다. Generation suite에는 기존 mock 기반 검사도 포함된다. §L의 HTTP/모바일 162건은 이번에 재실행하지 않았고 별도 증거로 보존한다. 독립 리뷰·main 통합·CLOSED·출시/P1 활성화 없음.
 - 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
-- 원격 저장과 pinned 원문 read-back은 최종 저장 단계에서 확인한다.
+- PG 검증 원격 저장 확인: `35e2d9235667671da2c01b4094b983412067ad45`, tree `f34d27b1f94d7e5fb3bd18402ff6f21799215360`, parent `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`. 변경 7파일 pinned UTF-8 원문 exact read-back 및 local tree 일치, local/remote/PR head 일치·clean·upstream 0/0·main 28/0·PR #2 draft/unmerged를 확인했다. 실행한 최종 테스트 파일과 저장 파일이 동일하며 커밋 후 재실행은 아니다.

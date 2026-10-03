@@ -24,6 +24,7 @@
 - 보존: MOBILE-05, production src, db/schema/migration, API/Validation 판정 규칙. UI/제출/Android 미착수.
 - 미완료: 독립 리뷰, 검수 콘텐츠/팩·DB 자산 일치, 설명/문제 UI·제출/피드백, 운영 PG/HTTPS·native adapter/APK·실기기 완주.
 - 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- PG 검증 원격 저장 확인: `35e2d9235667671da2c01b4094b983412067ad45`, tree `f34d27b1f94d7e5fb3bd18402ff6f21799215360`, parent `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`. 변경 7파일 pinned UTF-8 원문 exact read-back 및 local tree 일치, local/remote/PR head 일치·clean·upstream 0/0·main 28/0·PR #2 draft/unmerged를 확인했다. 실행한 최종 테스트 파일과 저장 파일이 동일하며 커밋 후 재실행은 아니다.
 - 최종 원격 head는 Git 이력에서 조회한다. 저장 뒤 변경 원문·tree·브랜치/PR를 재확인한다.
 
 ## 이전 체크포인트 — 서버 경계 구현 (2026-10-03, 보존)
