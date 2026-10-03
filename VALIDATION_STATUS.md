@@ -705,3 +705,17 @@ npm run build:mobile
 - §I.1의 실행 대상 작업 파일과 저장된 소스는 byte-identical이다. 코드 커밋 뒤 런타임 재실행 결과로 바꾸지 않는다. 빌드 생성물은 Git 제외이며 이전 보존 preview도 수정하지 않았다.
 - PR #2 제목/본문을 최종 구현/검증/미완료 경계로 갱신하고 exact read-back 확인. 상태 open/draft/unmerged와 base main을 유지했다.
 - 이 후속 인계/검증 문서 저장은 소스 변경이 없으며 새 런타임/빌드/PG/기기 검증을 주장하지 않는다. 마지막 문서 head는 원격/Git 이력에서 조회하며 원문을 다시 읽는다.
+
+## J. 최초 학습 응답 계약 후보 — 2026-10-03 문서 점검
+
+- 사용자 범위: MOBILE-05 재작성 없이 다음 계약 설계 한 작업. 14:38:26+09:00 새 clone/기존 브랜치 연결 승인 후 실행했다.
+- 기본 clone은 네트워크 프록시 연결 오류로 실패했으며 권한 확장 재시도는 exit 0, 후속 fetch도 exit 0. 이는 환경 복구이며 제품 테스트가 아니다.
+- 시작 preflight: 실제 top-level `/workspace/scratch/2f8f7d39d1fd/language-learning-engine`, .git 존재, 승인 브랜치 `development/mobile-01-session-ui-20261001`, HEAD/upstream/PR `c14166731d5179e40783a1515de8e82f0925b094`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, worktree/stage clean, upstream 0/0·main 21/0.
+- 원격 main의 BOOTSTRAP·필수 7문서·API/ENGINE_INTERFACE/CONTENT_SCHEMA/PROGRESS_SCHEMA를 commit-pinned connector로 읽고 local origin/main Git blob과 일치함을 대조했다. API/ENGINE_INTERFACE/CONTENT_SCHEMA/PROGRESS_SCHEMA/PROJECT_VISION/VALIDATION_LEVEL3/Backlog/IMPLEMENTATION_NOTES는 작업 기준과 main 간 변경이 없다.
+- 직접 대조: API §4.3/§5.1/§7.1/§10.1–10.3/§11–12, Content projection/조건 SQL, Progress.recordExplicitStudy의 lock·기존 행 우선·capacity·commit, in-process state-only 경계, HTTP 입력/응답/오류와 client capacity 재조회, Tier A Content/Progress, 검수 표준과 시연 평가 §5.1.
+- 발견: 현재 조건 조회는 HUMAN_AUTHORED/active/노드 포함만 보장하며 human_reviewed/is_canonical/단일 노드 판정이 없다. 기존 6키 projection에는 그 판단 정보도 없다. 후보 §4의 opt-in 프로필 R1은 추가 승인 대기이며 canonical 계약으로 승격하지 않았다.
+- 산출물: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`. 3키 응답·6키 projection·null 네 조합·기존 state·capacity/멱등·admission 후 읽기 실패·재시도 한계·후속 검증 목록을 문서화했다. IP-01~IP-12는 미래 검증 항목이며 실행 결과가 아니다.
+- 이번 런타임 테스트·모바일 빌드·전체 npm test·PG/migration·APK·실기기·실제 팩/검수·AI/학습 효과: NOT RUN. 기존 §I 수치를 이번 PASS로 보고하지 않는다.
+- 직접 문서 검증: 7개 문서의 UTF-8·fence 균형·충돌 표식 부재·후보 참조·변경 파일 집합 점검 통과. 초기 diff --check의 MOBILE_APP_BRIEF.md 말미 빈 줄을 정리한 뒤 재검사 exit 0. 기존 상태 문서의 오래된 현재 다음 행동도 최신 후보 승인 단계로 연결했다.
+- 보존 검증: 시작 후보 대비 source/테스트/mobile/scripts/db/package·lock/API/ENGINE_INTERFACE/CONTENT_SCHEMA/PROGRESS_SCHEMA/VALIDATION_LEVEL3/Backlog diff 0; MOBILE-05 코드 저장점 00f7909aefbc447999bfc77e32dae90e99aa9580 대비 source/테스트/mobile/scripts/db/package·lock diff 0.
+- 원격 read-back은 저장 후 별도로 확인한다. 정식 Validation PASS·독립 리뷰·CLOSED·병합/출시를 선언하지 않는다.

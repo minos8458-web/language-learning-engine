@@ -78,6 +78,15 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### 최초 학습 응답 계약 후보 설계 완료 — 2026-10-03
+
+- 사용자 요청의 다음 한 작업을 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`로 작성했다. 정확한 계약 승인 대기이며 구현/독립 리뷰 완료가 아니다.
+- 후보: 성공 data의 필수 `explanation`, `state`, `initial_practice`; 기존 6키 Content projection; 독립 null; 기존 admission을 먼저 수행하고 콘텐츠 조회; 멱등/capacity 및 부분 실패 의미.
+- 추가 확인: 현재 getContent는 검수/대표/단일 노드 선택을 보장하지 않는다. 기존 경로를 보존하는 내부 선택 프로필 R1을 제안했으며 추가 계약 승인이 필요하다. Flow 직접 SQL이나 projection 확장은 제안하지 않는다.
+- MOBILE-05와 source/API/schema/Validation 판정 규칙은 그대로다. 이번 직접 문서 점검·미실행 증거는 `VALIDATION_STATUS.md` §J, 기존 런타임 증거는 §I.1–I.2다.
+- 현재 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+- 아래 기록은 각 시점의 이력이며 위 최신 설계 위치를 대체하지 않는다.
+
 ### MOBILE-05 클라이언트 구현·선택 개발 검증 완료 — 2026-10-02
 
 - 사용자 직접 계속 지시: 2026-10-02T21:46:25+09:00 “다음작업 계속 진행해”.
@@ -192,7 +201,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
+현재 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.

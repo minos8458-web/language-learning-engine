@@ -15,6 +15,21 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 지시: 2026-10-03T14:38:26+09:00 “승인한다”. 직전 요청의 새 clone·기존 작업 브랜치 연결 승인이다. 원래 범위는 MOBILE-05 재작성 금지와 다음 계약 설계 한 작업이다.
+- 직접 복구: 기본 네트워크 clone은 프록시 연결 실패. 승인된 clone을 실행 권한 확장으로 재시도해 성공했으며 `git fetch origin`도 성공했다. 자동 승인 거절은 없었다.
+- 실제 작업 경로: `/workspace/scratch/2f8f7d39d1fd/language-learning-engine`. 유효한 .git/top-level·승인 브랜치·clean worktree/stage를 확인했다.
+- 시작 local/remote/PR head: `c14166731d5179e40783a1515de8e82f0925b094`. main: `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. upstream 0/0, main 대비 21/0. PR #2 open/draft/unmerged.
+- 완료: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` 후보 작성. 정확한 3키 응답/6키 Content projection·필수/null·공백/오류·Progress-first 순서·멱등/admission/capacity·실패 후 진도 의미·후속 검증 목록을 정리했다.
+- 직접 발견: 현재 Content 조회와 projection만으로 검수 완료·대표·단일 노드 조건을 보장할 수 없다. Content 내부 opt-in 선택 프로필 R1을 추가 승인 후보로 제안했다. 기존 getContent와 Generation 동작은 그대로 보존하는 안이다.
+- 승인 구분: initial_practice 방향과 이번 설계/clone은 사용자 승인. 세부 응답/순서/R1은 AI 설계 후보이며 정확한 계약 승인 대기. canonical API·코드·Android host·schema 변경 승인이 아니다.
+- MOBILE-05 source 기준 `00f7909aefbc447999bfc77e32dae90e99aa9580`의 구현을 다시 만들거나 수정하지 않았다. 기존 검증은 `VALIDATION_STATUS.md` §I.1–I.2, 이번 직접 점검과 미실행은 §J가 소유한다.
+- 현재 변경은 신규 후보 설계와 인계/상태/연결 문서뿐이다. 런타임 테스트·빌드·PG·APK·실기기·검수·학습 효과는 이번 미실행이다. 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.
+- 기존 차단 유지: 실제 검수 팩·서버/팩 자산 일치·제출/피드백·Android host/APK·native adapter·실제 PG/HTTPS·기기 완주. 새 환경의 SDK/PG 도구 존재는 이번 미확인. 만료 뒤 복구는 승인 제외.
+- 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+- 최종 저장 identity는 작업 브랜치 Git 이력에서 조회한다. 원격 저장 후 변경 문서 원문과 브랜치/PR를 다시 확인한다. 이번 설계의 완료와 원격 저장 완료는 구분한다.
+
+## 이전 체크포인트 — 2026-10-02 (보존)
+
 - 날짜: 2026-10-02 (Asia/Seoul). 최신 사용자 질문: 22:40:32+09:00 “다음 작업은 매우 긴 작업시간이 필요한가? 세션을 새로 교체해야 할 필요성은?”. 이번에는 일정/세션 판단과 인계만 갱신하고 신규 개발을 시작하지 않았다.
 - 승인: 이전 21:10:42 “승인”은 온라인·유효 토큰 내 재실행 첫 시연과 §5.1 initial_practice 방향에 한정한다. 정확한 학습 API 계약/코드는 이번에 변경하지 않았다.
 - 승인 제외: refresh/만료 뒤 동일 게스트 복구·수명 연장·새 원문 채점/API/schema/migration·새 Android host 구조·유료 서비스·main 병합/출시·P1/인간 데이터 승인.
@@ -129,11 +144,9 @@
 
 ## 다음 행동 하나
 
-승인된 `start_explicit_study.initial_practice` 방향의 정확한 응답·null·오류 계약을 기존 API/Content·Generation·Progress와 대조해 검토 가능한 설계로 구체화한다. canonical API/코드 변경과 새 Android host 구현은 동시에 시작하지 않는다.
-기존 승인된 방향·경로/입력·Content projection/state/five-code registry/schema·PRE_MADE EXAMPLE 보존을 기준으로 후보 설계를 작성한다.
-방향 승인 밖의 새 구조/필드/채점/복구/host가 필요하면 이유/영향을 먼저 설명하고 구현 전 승인을 확인한다.
-MOBILE-05 제어기·서버·다운로드를 다시 만들지 않는다. APK/PG/TLS 연결은 별도 작업이다.
-허용된 휴대폰 화면·팝업·취소·언어 변경 검증은 별도 대기 항목이며 기존 브라우저 제한을 우회하지 않는다.
+`INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+
+MOBILE-05 재작성·서버/UI/APK 구현을 동시에 시작하지 않는다. 기존 평가의 32–59시간을 이번 경과 시간만큼 임의 차감하지 않는다.
 
 ## 재현 명령
 

@@ -151,6 +151,8 @@ AI가 같은 초안을 즉시 재검토한 것을 사람의 검수로 기록하�
 
 ### 5.1 최소 API 보완안 — 방향 승인/미구현
 
+2026-10-03 추가: 정확한 응답 후보는 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`에 작성했다. 아래는 방향 승인 당시 기록이다. Content의 검수/대표 선택 프로필 R1은 추가 계약 승인 대기이며, canonical API와 코드는 아직 변경하지 않았다. 현재 다음 행동은 후보 검토·승인 후 계약 문서 반영 한 작업이다.
+
 **변경 이유:** 현재 첫 학습은 state만 갱신하고, Generation의 정식 PRE_MADE 응답은 EXAMPLE이다.
 검수된 QUIZ 한 개를 받고 그 서버 발급 content_id로 답안을 제출할 연결이 없다.
 
