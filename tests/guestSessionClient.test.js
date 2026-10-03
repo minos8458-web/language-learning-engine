@@ -641,7 +641,7 @@ test('실제 Node HTTP 서버의 기존 발급·Bearer·401을 클라이언트�
     now: () => START });
   const server = createLearningFlowHttpServer({ ...authService, transport: {
     async startSession(...args) { learningCalls.push(args); return { next_action: 'IDLE' }; },
-    async startExplicitStudy() { return { state: 'INTRODUCED' }; },
+    async startExplicitStudy() { return { explanation: null, state: 'INTRODUCED', initial_practice: null }; },
   } });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   t.after(async () => { const closed = once(server, 'close'); server.close(); server.closeAllConnections(); await closed; });

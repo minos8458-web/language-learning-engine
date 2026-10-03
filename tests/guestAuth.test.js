@@ -70,7 +70,7 @@ async function fixture(t, options = {}) {
       calls.push(['session', ...args]);
       return { next_action: args[2] ? 'IDLE' : 'CONVERSATION' };
     },
-    startExplicitStudy: async (...args) => { calls.push(['study', ...args]); return { state: 'INTRODUCED' }; },
+    startExplicitStudy: async (...args) => { calls.push(['study', ...args]); return { explanation: null, state: 'INTRODUCED', initial_practice: null }; },
   };
   const server = createLearningFlowHttpServer({ ...auth, transport, ...options.serverOptions });
   server.listen(0, '127.0.0.1');
@@ -279,7 +279,7 @@ test('HTTP 발급한 실제 서명 토큰으로 기존 앱 전송과 대화 확�
   await controller.start();
   await controller.acknowledgeConversationBoundary();
   assert.equal(controller.getState().currentScreen.kind, 'IDLE');
-  assert.deepEqual(await client.startExplicitStudy(AUTH_ID, 'VI_NODE_A'), { state: 'INTRODUCED' });
+  assert.deepEqual(await client.startExplicitStudy(AUTH_ID, 'VI_NODE_A'), { explanation: null, state: 'INTRODUCED', initial_practice: null });
   assert.deepEqual(f.calls, [['session', data.user_id, 'VI', false], ['session', data.user_id, 'VI', true], ['study', data.user_id, 'VI_NODE_A']]);
   assert.equal(f.pool.users.size, 1);
 });

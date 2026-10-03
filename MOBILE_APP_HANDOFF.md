@@ -15,6 +15,18 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 지시: 2026-10-04T02:18:41+09:00 “다음”. CP-IP-02/03 최초 학습 클라이언트 응답 검증과 preview 계약 보완 한 작업.
+- 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2. main Source of Truth와 작업 후보는 구분한다.
+- 시작 local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 경로/.git/top-level/브랜치·fetch·clean 확인, upstream 0/0·main 31/0.
+- 완료: HTTP 최초 학습 exact 응답/상태/콘텐츠/null·요청 노드 검증, 잘못된 응답의 화면 성공 처리 차단, preview exact nullable 응답, 정상 test fixture 정합성 보완.
+- 증거 소유: VALIDATION_STATUS.md §O(이번 선택 회귀/빌드), §N(독립 리뷰), §M(PG). CP-IP-02/03 CORRECTED IN CANDIDATE / RE-REVIEW PENDING; 리뷰어 재확인·스레드 resolve 없음.
+- 보존: MOBILE-05 게스트/팩 구현, 서버/Progress/Generation, schema/계약/Validation 판정 규칙. 설명/문제 UI·제출·Android는 이번 미착수.
+- 미완료: CP-IP-01 Node 지원 범위, CP-IP-04 401 안내, 독립 재리뷰·main 통합, 검수 팩/DB 자산 일치, 학습 UI·제출/피드백·운영 PG/HTTPS·native adapter/APK·실기기.
+- 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+- 원격 최종 head는 Git에서 조회한다. 저장 후 변경 원문·tree·브랜치/PR를 확인한다. 이전 리뷰 대상 SHA와 이번 수정 후보를 구분하며 자동 승인/병합하지 않는다.
+
+## 이전 체크포인트 — Copilot 리뷰 수신 (2026-10-03, 보존)
+
 - 최신 사용자 지시: 2026-10-03T22:51:34+09:00 “다음”; 최초 학습 서버 후보 독립 리뷰 진행.
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged.
 - 시작 local/remote/PR `92a9b70262b8df6bf8e67a3e03f517594699e139`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch/경로/.git/top-level/브랜치/clean 확인, upstream 0/0·main 29/0.

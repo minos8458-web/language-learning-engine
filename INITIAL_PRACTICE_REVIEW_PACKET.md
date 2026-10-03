@@ -73,6 +73,10 @@ PR 전체는 MOBILE-01–05를 포함한 더 큰 변경이다. 위 bounded 범�
 
 Reviewer identity, reviewed commit, APPROVE/REQUEST_CHANGES 또는 판단 보류, finding별 severity·파일/위치·재현/계약 근거·필수 수정 여부, 검증 직접 실행/미실행, 범위 밖 항목을 구분한다. 작성자의 자체 점검을 독립 리뷰로 포장하지 않는다.
 
+## CP-IP-02/03 후속 보완 — 2026-10-04
+
+사용자 02:18:41+09:00 “다음” 지시에 따라 HTTP 응답 validator와 preview exact 응답을 구현했다. CP-IP-02/03은 CORRECTED IN CANDIDATE / RE-REVIEW PENDING이다. 원격 스레드는 resolve하지 않았고 다른 4개 지적의 상태를 임의 승격하지 않는다. 이전 표는 리뷰 수신 당시 상태다. 검증 직접 증거는 VALIDATION_STATUS.md §O를 따른다. 클라이언트 잘못된 응답 거절이 서버 admission rollback을 의미하지 않는다. 설명/문제 제출 UI 구현은 별도다.
+
 ## 다음 행동 하나
 
-최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
+Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
