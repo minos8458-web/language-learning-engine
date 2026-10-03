@@ -108,7 +108,9 @@ describe('Learning Flow Engine (AC-016)', () => {
     test('exports startSession with the canonical four-argument signature', () => {
       assert.equal(typeof learningFlowEngine.startSession, 'function');
       assert.equal(learningFlowEngine.startSession.length, 4);
-      assert.deepEqual(Object.keys(learningFlowEngine), ['startSession']);
+      // API 10.1 approved 2026-10-03 adds explicit study without changing startSession.
+      assert.deepEqual(Object.keys(learningFlowEngine).sort(), ['startExplicitStudy', 'startSession']);
+      assert.equal(learningFlowEngine.startExplicitStudy.length, 3);
     });
 
     test('treats omitted, explicit undefined, and false acknowledgement identically', async () => {
@@ -561,7 +563,7 @@ describe('Learning Flow Engine (AC-016)', () => {
       assert.doesNotMatch(source, /UNBOUNDED_UNTIL_INPUT_AVAILABLE\s*['"]/);
     });
 
-    test('imports only Graph, Progress, Interleaving, and engineConfig', () => {
+    test('imports only approved Graph, Progress, Interleaving, Content, and engineConfig', () => {
       const source = fs.readFileSync(
         path.join(__dirname, '../src/engines/learningFlowEngine.js'),
         'utf8'
@@ -571,18 +573,21 @@ describe('Learning Flow Engine (AC-016)', () => {
         './graphEngine',
         './progressEngine',
         './interleavingEngine',
+        './contentEngine',
         '../config/engineConfig',
       ]);
       assert.doesNotMatch(source, /\bpool\.query\b|\bpool\.connect\b|\bclient\.query\b/);
       assert.doesNotMatch(source, /\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b/);
     });
 
-    test('contains no write API, cascade job, internal payload metadata, or disabled tests', () => {
+    test('startSession remains read-only; explicit study only uses approved Progress admission', () => {
       const source = fs.readFileSync(
         path.join(__dirname, '../src/engines/learningFlowEngine.js'),
         'utf8'
       );
-      assert.doesNotMatch(source, /recordExplicitStudy|recordAttempt|cascade_jobs/);
+      assert.doesNotMatch(learningFlowEngine.startSession.toString(), /recordExplicitStudy|recordAttempt|cascade_jobs/);
+      assert.equal([...source.matchAll(/progressEngine\.recordExplicitStudy\s*\(/g)].length, 1);
+      assert.doesNotMatch(source, /recordAttempt|cascade_jobs/);
       assert.doesNotMatch(source, /candidate_set|selection_tuple|internal_score/);
       const testSource = fs.readFileSync(__filename, 'utf8');
       assert.doesNotMatch(testSource, /\.only\s*\(|\.skip\s*\(|\bxtest\s*\(|\bxdescribe\s*\(/);

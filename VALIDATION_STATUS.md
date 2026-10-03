@@ -748,3 +748,17 @@ npm run build:mobile
 - 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
 - 구현 원격 저장 확인: `4e7d14b938a732fa72ea6297faffb0ae7408db7d`, tree `5285960afebf366c2e8c9a1652a6cfc75781ddda`, parent `18c3f6223b4bb08641be1dc28630eb97ee8936c7`. 변경 10파일 pinned UTF-8 원문 exact read-back·local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 26/0, PR #2 draft/unmerged 확인. 실행 대상 소스와 저장 소스가 동일하며 커밋 후 테스트 재실행은 아니다.
 - 이 후속 저장은 인계/검증 결과 2문서만 갱신한다. 최종 head는 Git에서 조회하며 새 코드·런타임 검증·main 통합을 주장하지 않는다.
+
+## M. 최초 학습 서버 경계 실제 PostgreSQL 검증 — 2026-10-03
+
+- 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. §L 다음 작업인 실제 PG 검증만 수행했다.
+- preflight: 승인 경로/.git/top-level/브랜치 확인, local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, fetch 성공·clean worktree/stage·upstream 0/0·main 27/0.
+- 환경: Ubuntu 24.04, Node v24.19.0, PostgreSQL **16.15** (Ubuntu 16.15-0ubuntu0.24.04.1). 이번 임시 환경에 apt로 도구 설치. 운영 DB 접속 없이 `/tmp/lle-ip-pg/data`의 새 cluster, 접근 제한 Unix socket `/tmp/lle-ip-pg/socket`, port 55438, DB `lle_ip_validation`, `listen_addresses=''`로 실행했다. 합성 사용자/노드/Content만 사용했다.
+- 기존 migration 001–013을 적용했고 최종 `schema_migrations` count 13을 확인했다. 테스트는 disposable DB의 public schema를 초기화한다. 장애 주입은 그 DB 안에서 content 테이블 임시 rename/복원만 수행했다. 저장소 DDL/migration 파일과 운영 데이터는 변경하지 않았다. 검증 후 임시 서버 fast shutdown 성공.
+- 첫 실행: 146 tests, 140 pass, 6 fail. 신규 fixture의 `TRUNCATE content` 외래키 위반 3건은 CASCADE 초기화로 수정했다. 기존 Flow의 export/import/쓰기 금지 정적 단언 3건은 승인된 API 10.1의 startExplicitStudy·Content 호출·Progress admission을 반영해 갱신했다. startSession read-only 및 직접 SQL/recordAttempt/cascade 금지는 유지한다. 실패를 숨기거나 skip하지 않았다.
+- 최종 실행: `PGHOST=/tmp/lle-ip-pg/socket PGPORT=55438 PGUSER=postgres PGDATABASE=lle_ip_validation node --test --test-concurrency=1 --test-reporter=spec tests/initialPractice.postgres.test.js tests/contentEngine.test.js tests/generationEngine.test.js tests/progressEngine.test.js tests/learningFlowEngine.test.js tests/learningSessionController.e2e.test.js` → **exit 0 / 146 tests / 29 suites / 146 pass / 0 fail / 0 skipped**. 저장 전 최종 작업 파일에서 실행했다.
+- 신규 PG 8개: R1 각 제외 조건(source/review/canonical/active/exact node/meta language/설명 수준/type)과 legacy 조회 보존, 설명/QUIZ 4개 존재 조합과 3키/6키 projection/metadata/media 보존, 중복 canonical 기술 실패·수정 후 멱등, 저장된 본문/answer_key 손상, 실제 SQL 42P01 후 commit된 admission 유지·재요청 Progress 원문 불변, 동일 노드 8개 동시 요청→진도 1개, 다른 노드 3개 동시 요청→2개 성공/1개 capacity 및 기존 6 state 보존, user/node/capacity 거절 시 Content 미접근.
+- 테스트 변경만 있음: 신규 `tests/initialPractice.postgres.test.js`, 기존 `tests/learningFlowEngine.test.js`의 승인된 호출 경계 정합성 보완. Production src·MOBILE-05·db/migration·package/lock·API/ENGINE_INTERFACE/CLIENT_BRIEF·Tier A·VALIDATION_LEVEL3 판정 규칙 변경 0. git diff --check 통과.
+- 한계: 선택한 여섯 suite의 실제 Linux PostgreSQL 검증이며 전체 npm test·Windows PostgreSQL 17.10·운영 PG/HTTPS·검수 콘텐츠/팩·Android/APK·실기기·학습 효과 검증은 아니다. Generation suite에는 기존 mock 기반 검사도 포함된다. §L의 HTTP/모바일 162건은 이번에 재실행하지 않았고 별도 증거로 보존한다. 독립 리뷰·main 통합·CLOSED·출시/P1 활성화 없음.
+- 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- 원격 저장과 pinned 원문 read-back은 최종 저장 단계에서 확인한다.
