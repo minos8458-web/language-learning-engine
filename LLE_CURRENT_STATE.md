@@ -12577,8 +12577,8 @@ historical ledger does not.
 
 ## 10. Next Action
 
-현재 다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
-최신 사용자 제작 계속 지시를 근거로 선택했다. `MOBILE_APP_BRIEF.md` §9의 후속 경계를 따른다.
+현재 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
+2026-10-03 Copilot CP-IP-05 정정: 이전 MOBILE-05 설계 지시는 완료 이력이며 재시작하지 않는다. 최신 구현/검증/리뷰 상태는 PROJECT_STATUS.md·VALIDATION_STATUS.md §N·MOBILE_APP_HANDOFF.md를 따른다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 
 ### 앱 제작 착수 전 다음 행동 기록 (기존 lifecycle 경계 보존)

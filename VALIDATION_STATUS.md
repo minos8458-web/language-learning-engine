@@ -769,4 +769,11 @@ npm run build:mobile
 - Copilot reviewer 요청 API 한 번 실행: Action completed / isError=false. returned/requested_reviewers null; reviews/comments/threads 빈 배열을 직접 확인. 접수 미확인·결과 미수신이며 독립 리뷰 PASS/APPROVE가 아니다.
 - PR 본문 정정과 대상 SHA/범위/검증 증거 명시. `INITIAL_PRACTICE_REVIEW_PACKET.md`는 작성자의 검토 자료이며 외부 리뷰 결과가 아니다.
 - 이번 production source/test/schema/API 계약 변경 0. runtime/PG/build 재실행 없음. 이전 §L·§M 결과를 새 실행으로 재분류하지 않는다. main 병합·독립 리뷰 완료·CLOSED 없음.
-- 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+- 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
+
+### N.1 후속 재조회 — 독립 리뷰 수신 및 지적 재현
+
+- §N의 접수 미확인은 요청 직후 상태다. 최종 재조회에서 Copilot `PRR_kwDOTQ7IWM8AAAABQfiOMw` / COMMENTED / Changes recommended를 수신했다. submitted_at은 도구 원문 `2026-10-03T17:03:17Z`. High 2, Medium 2, Low 2; 원격 스레드 6개 unresolved 유지.
+- 요청 target 92a9b70262b8df6bf8e67a3e03f517594699e139; reviewer의 reviewed commit은 도구 모델에 없어 미확인. 수신 당시 dcf9598613ac489dda338b4bb2d3a365371758e7는 문서만 추가되어 source/test 동일. PR 전체 리뷰이며 서버 bounded APPROVE로 확대하지 않는다.
+- 작성자의 지적 확인: injected fetch로 HTTP startExplicitStudy가 `{}`와 `{state:'INTRODUCED'}`를 성공 resolve함, 401이 일반 연결 오류 메시지로 바뀜을 직접 재현(exit 0). 이는 재현 실험이지 새 회귀 suite PASS가 아니다. Preview 응답·Node engine 선언/lock 불일치·두 current Next Action 모순은 원문 대조로 확인했다.
+- CP-IP-01–04 OPEN. CP-IP-05/06은 LLE_CURRENT_STATE §10과 PROJECT_STATUS §5.1의 current Next Action을 이번 문서 후보에서 정정했다. 원격 스레드 resolve·재리뷰·main 통합·CLOSED 미실행. 상세 finding 표는 INITIAL_PRACTICE_REVIEW_PACKET.md.

@@ -13,9 +13,32 @@
 - Runtime implementation: `4e7d14b938a732fa72ea6297faffb0ae7408db7d`
 - PG test changes: `35e2d9235667671da2c01b4094b983412067ad45`
 
-## 독립 실행 요청의 직접 관찰
+## 수신한 독립 리뷰 및 분류
 
-GitHub connector `request_pull_request_reviewers`에 `copilot-pull-request-reviewer[bot]`을 지정해 한 번 요청했다. 도구 응답은 Action completed / isError=false였으나 반환 및 재조회 PR의 requested_reviewers는 null이었다. 제출 리뷰·review thread·comments 조회도 빈 배열이다. 따라서 요청 호출은 실행됐지만 **리뷰어 배정/실행 접수는 미확인**, 독립 리뷰 결과는 미수신이다. 실패 또는 대기 중 어느 쪽인지 추정하지 않는다. 동일 요청을 무한 재전송하지 않는다.
+최종 재조회에서 Copilot 리뷰를 수신했다. 앞선 접수 미확인 기록은 요청 직후 관찰이며 현재 상태는 **REVIEW RECEIVED / CHANGES RECOMMENDED**다.
+
+- Reviewer: `copilot-pull-request-reviewer`
+- Review ID: `PRR_kwDOTQ7IWM8AAAABQfiOMw`
+- GitHub state: `COMMENTED`; overview: `Changes recommended`
+- submitted_at: `2026-10-03T17:03:17Z` (도구 반환 원문 시각; 사용자 요청 시각과 별개)
+- 6 open threads: High 2 / Medium 2 / Low 2. 이 severity는 Copilot 분류다.
+- 요청 당시 target은 `92a9b70262b8df6bf8e67a3e03f517594699e139`. 응답 모델에 reviewed commit SHA가 노출되지 않아 정확한 reviewed SHA는 미확인이다. 수신 당시 HEAD `dcf9598613ac489dda338b4bb2d3a365371758e7`는 문서만 추가했으며 runtime/test blob은 요청 target과 동일하다. 요청 target을 확인되지 않은 reviewed SHA로 바꾸지 않는다.
+- 실제 리뷰는 PR 전체를 다뤘다. 최초 학습 서버 4개 runtime 파일에 직접 inline finding은 없으나, 이를 해당 범위의 APPROVE 또는 PR 전체 병합 자격으로 해석하지 않는다.
+
+| ID | Copilot 등급 / thread comment | 직접 대조 및 처리 |
+|---|---|---|
+| CP-IP-01 | High / 4174041597 | root Node >=20과 lock의 boolbase >=20.19.0 불일치 확인. 최초 서버 diff 이전 의존성 변경 영역. OPEN, 후속 설치 호환성 수정. Node 20.0–20.18 설치 실험은 미실행. |
+| CP-IP-02 | High / 4174041649 | HTTP startExplicitStudy가 data를 검증 없이 반환. injected fetch로 `{}` 및 state-only가 resolve됨 직접 재현. 승인된 CLIENT_BRIEF 후속 연결 공백. OPEN, 다음 작업. |
+| CP-IP-03 | Medium / 4174041693 | previewTransport가 `{node_id,preview}`를 반환함 원문 확인. 새 exact 응답 계약과 불일치. OPEN, CP-IP-02와 함께 보완. |
+| CP-IP-04 | Medium / 4174041729 | 401 전용 Error가 catch에서 일반 연결 오류로 바뀜 injected fetch로 직접 재현. legacy token-callback 사용자 안내 문제. OPEN, 별도 후속 수정. 인증 우회나 토큰 재발급 증거는 아님. |
+| CP-IP-05 | Low / 4174041772 | LLE_CURRENT_STATE §10이 완료된 MOBILE-05 설계를 다음 작업으로 명시함 확인. 이번 문서 기록에서 현재 작업으로 정정. CORRECTED IN DOCUMENT CANDIDATE, 리뷰어 재확인/스레드 resolve 미실행. |
+| CP-IP-06 | Low / 4174041807 | PROJECT_STATUS §5.1이 서버 구현 미착수로 표기함 확인. 최신 상단 기록과 모순되어 이번 문서에서 정정. CORRECTED IN DOCUMENT CANDIDATE, 리뷰어 재확인/스레드 resolve 미실행. |
+
+모든 원본 지적: https://github.com/minos8458-web/language-learning-engine/pull/2/files (discussion_r 뒤 comment ID). 원격 스레드 6개는 임의로 resolve하지 않았다. 추가 runtime/test 수정, main 병합, lifecycle CLOSED 없음.
+
+## 독립 실행 요청 직후 관찰 (이력)
+
+GitHub connector `request_pull_request_reviewers`에 `copilot-pull-request-reviewer[bot]`을 지정해 한 번 요청했다. 도구 응답은 Action completed / isError=false였으나 반환 및 재조회 PR의 requested_reviewers는 null이었다. 제출 리뷰·review thread·comments 조회도 빈 배열이다. 따라서 요청 호출은 실행됐지만 **리뷰어 배정/실행 접수는 미확인**, 당시 독립 리뷰 결과는 미수신이었다. 실패 또는 대기 중 어느 쪽인지 추정하지 않는다. 동일 요청을 무한 재전송하지 않는다.
 
 공식 요청 경로 확인 자료: https://docs.github.com/en/copilot/how-tos/copilot-on-github/use-copilot-agents/copilot-code-review
 
@@ -52,4 +75,4 @@ Reviewer identity, reviewed commit, APPROVE/REQUEST_CHANGES 또는 판단 보류
 
 ## 다음 행동 하나
 
-PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.

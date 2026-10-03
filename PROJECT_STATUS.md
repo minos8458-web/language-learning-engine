@@ -55,12 +55,13 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
-### 최초 학습 서버 독립 리뷰 요청 — 2026-10-03
+### 최초 학습 서버 독립 리뷰 수신 — 2026-10-03
 
-- 사용자 22:51:34+09:00 “다음” 지시로 PR #2의 `92a9b70262b8df6bf8e67a3e03f517594699e139`에 Copilot 리뷰 요청 API를 호출했다.
-- API 성공 응답과 달리 requested_reviewers null/제출 결과 없음으로 **접수 미확인·독립 리뷰 결과 미수신**이다. 승인·main 병합·CLOSED를 선언하지 않는다.
-- 검토 대상/계약/증거/반환 형식: `INITIAL_PRACTICE_REVIEW_PACKET.md`. PR 본문의 이전 state-only 설명을 정정했다. 코드·테스트는 변경하지 않았다.
-- 다음 행동 하나: PR #2에서 Copilot 리뷰 접수/제출 여부와 대상 commit을 확인하고 최초 학습 서버 범위의 지적을 분류한다. 결과 미수신 시 독립 리뷰 승인으로 처리하지 않는다.
+- 사용자 22:51:34+09:00 “다음” 지시로 Copilot review를 요청했고 최종 확인 중 결과를 수신했다. PR #2, reviewer `copilot-pull-request-reviewer`, review ID `PRR_kwDOTQ7IWM8AAAABQfiOMw`, COMMENTED / Changes recommended.
+- High 2·Medium 2·Low 2를 `INITIAL_PRACTICE_REVIEW_PACKET.md`의 CP-IP-01–06으로 분류했다. 코드 관련 4건 OPEN, 오래된 Next Action 문서 2건은 이번 후보에서 정정했다. 스레드 resolve/리뷰어 재확인은 미실행이다.
+- 요청 target `92a9b70262b8df6bf8e67a3e03f517594699e139`; 도구 결과에 reviewed SHA가 없어 정확한 리뷰 커밋은 미확인이다. 문서 후속 head와 대상 runtime/test blob은 동일하다. PR 전체 리뷰를 최초 서버 범위의 무조건 승인으로 해석하지 않는다.
+- 직접 관찰·한계는 VALIDATION_STATUS.md §N. production source/test 변경 없음. main 병합·CLOSED 보류.
+- 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
 
 ### 최초 학습 서버 경계 PostgreSQL 검증 — 2026-10-03
 
@@ -263,7 +264,7 @@ Likewise: the ITEM Lineage-Authority Writer Correction lifecycle is `CLOSED`, an
 
 ### 5.1 Next Action
 
-현재 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+현재 다음 행동 하나: 최초 학습 클라이언트 응답 검증과 합성 preview 계약 정합성을 한 작업으로 보완한다(CP-IP-02/03). Node 지원 범위(CP-IP-01)와 401 안내 보존(CP-IP-04)은 별도 후속 수정으로 남기며 main 병합은 보류한다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 작업 범위·승인 근거는 `MOBILE_APP_BRIEF.md` §10, 세션 인계는 `MOBILE_APP_HANDOFF.md`를 따른다.
 
