@@ -789,3 +789,17 @@ npm run build:mobile
 - git diff --check 통과. 서버/Progress/Generation·db/schema/migration·게스트 및 팩 production 코드·package/lock·API/ENGINE_INTERFACE/CLIENT_BRIEF/VALIDATION_LEVEL3 원문 변경 0. 실제 PostgreSQL/운영 HTTPS/Android/APK/실기기·검수 데이터·학습 효과 검증은 이번 NOT RUN. 기존 §M PG 결과는 재실행으로 바꾸지 않는다.
 - CP-IP-02/03 구현 후보 보완 완료, 독립 재리뷰·원격 스레드 resolve·main 병합·CLOSED 없음. 저장 전 최종 코드에서 실행한 결과이며 커밋 후 재실행으로 주장하지 않는다.
 - 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+
+## P. CP-IP-01 Node 최소 지원 버전 정합성 — 2026-10-04
+
+- 사용자 직접 지시: 2026-10-04T06:06:21+09:00 “다음”. 시작 local/remote `282d31f21abcb2603eb670ed0aac113fdf85cadf`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 32/0 확인. main의 필수 권위 문서를 pinned 원문으로 재조회했다.
+- root Node >=20 선언과 잠금 의존성 9개의 >=20.19.0 불일치를 확인했다. package.json과 package-lock.json root engines만 >=20.19.0으로 변경하고 README 개발 환경 안내를 추가했다.
+- 공식 https://nodejs.org/dist/v20.19.0/ 의 Linux x64 archive와 SHASUMS256.txt를 내려받아 SHA-256 `b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5` 일치 확인. 초기 tar의 소유권 복원 오류 후 `tar --no-same-owner`로 정상 재추출하고 아래 검증을 순서대로 재실행했다.
+- 직접 실행 환경: Linux / Node v20.19.0 / npm 10.8.2. PATH에 `/tmp/node-v20.19.0-linux-x64/bin`을 선행했다. 기존 시스템 Node는 교체하지 않았다.
+- `npm ci --engine-strict --ignore-scripts --no-audit --no-fund`: exit 0, 35 packages 설치. 설치 스크립트 및 audit 검증은 실행하지 않았다.
+- `node --test --test-reporter=spec tests/explicitStudyClient.test.js tests/mobileClient.test.js tests/guestSessionClient.test.js tests/languagePackClient.test.js`: exit 0, **103 tests / 103 pass / 0 fail / 0 skipped**. 잠금 개발 의존성을 사용하는 DOM·IndexedDB 및 클라이언트 응답 경계 선택 검증이다.
+- 같은 Node/npm의 `npm run build:mobile`: exit 0. mobile/dist는 Git 제외이며 배포·실기기 검증이 아니다.
+- npm bundled semver로 모든 lock Node 범위가 20.19.0을 허용하고 새 root 범위가 20.18.0을 거절함 확인. 이는 범위 단언이며 Node 20.18.0 실행 실험이 아니다. JSON deep equality로 lock 변경이 root engines 한 값뿐임, package/lock engines 일치 확인. git diff --check 통과.
+- production source/test·MOBILE-05·엔진/DB/schema/API/Validation 판정 규칙 변경 없음. 전체 suite·PG·운영 HTTPS·Android·실기기는 이번 NOT RUN. 이전 §O/§M 결과는 재실행으로 취급하지 않는다.
+- CP-IP-01 CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 원격 스레드 resolve·독립 재리뷰·main 병합·CLOSED 없음. 커밋 전 동일 작업 파일의 실행 결과다.
+- 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.

@@ -15,7 +15,7 @@
     "test:api": "node --test tests/learningFlowHttpServer.test.js tests/guestAuth.test.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "pg": "^8.13.1"

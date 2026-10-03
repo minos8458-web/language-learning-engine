@@ -16,6 +16,10 @@ This README is orientation-only. It does not own current SHA, test totals, PASS 
 - Implementation/Product Readiness → `PROJECT_STATUS.md`
 - Architecture Clarification → `ARCHITECTURE_CLARIFICATION_BACKLOG.md`
 
+## 개발 환경
+
+Node.js **20.19.0 이상**이 필요하다. `package-lock.json`에 고정된 개발 의존성의 최소 요구 버전에 맞춘 범위다. 의존성 설치 시 `npm ci --engine-strict`로 버전 호환성을 확인한다.
+
 ## Current Direction
 
 - Measurement foundation first.

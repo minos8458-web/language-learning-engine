@@ -78,6 +78,14 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### Node 최소 지원 버전 정합성 보완 — 2026-10-04
+
+- 사용자 2026-10-04T06:06:21+09:00 “다음”에 따라 CP-IP-01 한 작업을 수행했다. 시작 local/remote `282d31f21abcb2603eb670ed0aac113fdf85cadf`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch·clean·upstream 0/0·main 32/0 확인.
+- package.json 및 lock root의 Node 최소 요구를 >=20.19.0으로 맞추고 README 설치 안내를 추가했다. 잠금 의존성 버전·integrity와 MOBILE-05/production source/test는 그대로다.
+- CP-IP-01: CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 최소 버전 설치·선택 검증·빌드 증거는 VALIDATION_STATUS.md §P가 소유한다. 독립 승인·스레드 resolve·main 병합은 미실행이다.
+- 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+- 아래 구현/리뷰 기록은 각 시점의 이력이다.
+
 ### 최초 학습 클라이언트 응답 검증 보완 — 2026-10-04
 
 - 사용자 2026-10-04T02:18:41+09:00 “다음” 지시로 CP-IP-02/03 한 작업을 수행했다. 시작 local/remote `fdf69607405ac171752feed8096fcc7dbd5e3779`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch·clean·upstream 0/0·main 31/0 확인.
@@ -249,7 +257,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+현재 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.

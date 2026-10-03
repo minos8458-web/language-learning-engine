@@ -12577,7 +12577,7 @@ historical ledger does not.
 
 ## 10. Next Action
 
-현재 다음 행동 하나: Node 지원 버전 선언과 잠금 의존성의 최소 버전 불일치(CP-IP-01)를 한 작업으로 보완한다. 401 안내 보존(CP-IP-04)·재리뷰·main 병합은 별도 후속으로 남긴다.
+현재 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
 2026-10-03 Copilot CP-IP-05 정정: 이전 MOBILE-05 설계 지시는 완료 이력이며 재시작하지 않는다. 최신 구현/검증/리뷰 상태는 PROJECT_STATUS.md·VALIDATION_STATUS.md §N·MOBILE_APP_HANDOFF.md를 따른다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 
