@@ -15,6 +15,19 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 실제 PostgreSQL 검증 한 작업을 수행했다.
+- 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 draft. main Source of Truth와 작업 브랜치 후보를 구분한다.
+- 시작 local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 .git/top-level/브랜치·fetch·clean·upstream 0/0·main 27/0 확인.
+- 완료: 격리 PostgreSQL 16.15에서 R1 조회·중복/손상·등록 후 SQL 실패·동시 요청/멱등/capacity와 기존 Content/Generation/Progress/Flow/E2E 회귀 검증. 신규 PG 테스트와 승인 계약을 반영한 기존 Flow 정적 단언 보완. 런타임 코드는 변경하지 않았다.
+- 증거 소유: VALIDATION_STATUS.md §M(이번 실제 PG), §L(기존 서버/HTTP 합성 경계), §I(MOBILE-05). 실제 PG 선택 검증 완료 / 독립 리뷰·main 통합 대기. 전체 Validation PASS/CLOSED가 아니다.
+- 실행 환경: 신규 disposable cluster/합성 데이터/로컬 Unix socket만 사용; 운영 데이터 미접근. 임시 서버 종료 완료. 재현 시 독립 disposable DB를 준비하고 §M 명령을 사용한다.
+- 보존: MOBILE-05, production src, db/schema/migration, API/Validation 판정 규칙. UI/제출/Android 미착수.
+- 미완료: 독립 리뷰, 검수 콘텐츠/팩·DB 자산 일치, 설명/문제 UI·제출/피드백, 운영 PG/HTTPS·native adapter/APK·실기기 완주.
+- 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- 최종 원격 head는 Git 이력에서 조회한다. 저장 뒤 변경 원문·tree·브랜치/PR를 재확인한다.
+
+## 이전 체크포인트 — 서버 경계 구현 (2026-10-03, 보존)
+
 - 최신 사용자 직접 지시: 2026-10-03T21:09:38+09:00 “ok 다음”. 승인된 최초 학습 계약의 서버 경계 구현 한 작업을 진행했다.
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged. main 권위는 그대로이며 작업 브랜치 후보를 main 구현으로 간주하지 않는다.
 - 시작 local/remote `18c3f6223b4bb08641be1dc28630eb97ee8936c7`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 실제 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 25/0 확인.

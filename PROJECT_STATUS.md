@@ -55,6 +55,16 @@ Prior commit-pinned evidence for the ITEM Lineage-Authority Writer Correction an
 
 ## 3. Product Readiness
 
+### 최초 학습 서버 경계 PostgreSQL 검증 — 2026-10-03
+
+- 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 직전 인계의 실제 PostgreSQL 검증 한 작업을 진행했다.
+- 시작 local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch 성공·clean·upstream 0/0·main 27/0.
+- 격리된 PostgreSQL 16.15에서 기존 13개 migration과 합성 fixture로 R1 제외 조건·응답·중복/손상·SQL 실패 후 admission 보존·동시성/멱등/capacity를 검증했다. 직접 실행 결과는 `VALIDATION_STATUS.md` §M이 소유한다.
+- 신규 PG 테스트와 승인된 API 10.1/Content 호출을 반영한 기존 Flow 정적 테스트만 수정했다. runtime source·MOBILE-05·schema/계약/Validation 판정 규칙은 불변이다.
+- **작업 브랜치 구현 후보 / 선택 실제 PostgreSQL 검증 완료 / 독립 리뷰·main 통합 대기**. 운영 PostgreSQL/HTTPS·검수 콘텐츠·팩 일치·Android/기기 완주와 학습 효과는 미검증이다.
+- 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- 아래 구현·계약 기록은 각 시점의 이력이다.
+
 ### 최초 학습 서버 경계 구현 — 2026-10-03
 
 - 사용자 직접 지시: 2026-10-03T21:09:38+09:00 “ok 다음”. 직전 인계의 서버 경계 구현 한 작업을 진행했다.

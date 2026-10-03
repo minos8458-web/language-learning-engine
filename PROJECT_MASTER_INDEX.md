@@ -78,6 +78,16 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### 최초 학습 서버 경계 PostgreSQL 검증 — 2026-10-03
+
+- 사용자 직접 지시: 2026-10-03T22:16:33+09:00 “다음”. 직전 인계의 실제 PostgreSQL 검증 한 작업을 진행했다.
+- 시작 local/remote `dc2082345f055ee9199b5a31fcc5ccb984f5e9bb`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch 성공·clean·upstream 0/0·main 27/0.
+- 격리된 PostgreSQL 16.15에서 기존 13개 migration과 합성 fixture로 R1 제외 조건·응답·중복/손상·SQL 실패 후 admission 보존·동시성/멱등/capacity를 검증했다. 직접 실행 결과는 `VALIDATION_STATUS.md` §M이 소유한다.
+- 신규 PG 테스트와 승인된 API 10.1/Content 호출을 반영한 기존 Flow 정적 테스트만 수정했다. runtime source·MOBILE-05·schema/계약/Validation 판정 규칙은 불변이다.
+- **작업 브랜치 구현 후보 / 선택 실제 PostgreSQL 검증 완료 / 독립 리뷰·main 통합 대기**. 운영 PostgreSQL/HTTPS·검수 콘텐츠·팩 일치·Android/기기 완주와 학습 효과는 미검증이다.
+- 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
+- 아래 구현·계약 기록은 각 시점의 이력이다.
+
 ### 최초 학습 서버 경계 구현 — 2026-10-03
 
 - 사용자 직접 지시: 2026-10-03T21:09:38+09:00 “ok 다음”. 직전 인계의 서버 경계 구현 한 작업을 진행했다.
@@ -222,7 +232,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
+현재 다음 행동 하나: 최초 학습 서버 경계 구현 후보와 이번 PostgreSQL 검증 변경의 독립 리뷰를 진행한다. main 병합·UI·제출·Android 작업은 별도 후속으로 남긴다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.
