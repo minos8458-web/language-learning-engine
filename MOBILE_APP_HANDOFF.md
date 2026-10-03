@@ -15,6 +15,15 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 지시: 2026-10-04T07:01:16+09:00 컨트롤타워 전달용 진행 보고서 작성.
+- 직접 확인: local/remote/PR head `2a32da0630a6d5296ac4a62068ceb16931de143e`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch 성공·clean·upstream 0/0·main 33/0. PR #2 open/draft/unmerged.
+- 완료: `LLE_CONTROL_TOWER_REPORT_20261004.md` 작성. 승인/구현/선택 검증/리뷰 후속/안드로이드 미완료를 구분하고 고정 출처를 연결했다. 보고서와 이 인계 기록만 변경한다.
+- 이번 테스트·빌드·PG 재실행 없음. 기존 증거는 VALIDATION_STATUS.md §M/§O/§P. CP-IP-01/02/03은 후보 수정 완료·재리뷰 대기, CP-IP-05/06 문서 정정, CP-IP-04 미수정이다.
+- 다음 행동 하나: HTTP 401의 세션 만료 안내 보존(CP-IP-04). 이번 요청에서는 착수하지 않았다. 독립 재리뷰·main 병합은 별도 후속이다.
+- 컨트롤타워 별도 메시지 전송이나 다른 검증 세션/브랜치 변경은 수행하지 않았다. 문서 후속 커밋을 구현·검증 기준 SHA와 구분하며 저장 후 원격 원문을 확인한다.
+
+## 이전 체크포인트 — CP-IP-01 (2026-10-04, 보존)
+
 - 최신 사용자 지시: 2026-10-04T06:06:21+09:00 “다음”. Node 최소 지원 버전 불일치 CP-IP-01 한 작업.
 - 저장소 `minos8458-web/language-learning-engine`, 브랜치 `development/mobile-01-session-ui-20261001`, PR #2 open/draft/unmerged. main과 후보를 구분한다.
 - 시작 local/remote `282d31f21abcb2603eb670ed0aac113fdf85cadf`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 경로/.git/top-level/브랜치·fetch·clean·upstream 0/0·main 32/0 확인.
