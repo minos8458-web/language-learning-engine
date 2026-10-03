@@ -81,6 +81,14 @@ Reviewer identity, reviewed commit, APPROVE/REQUEST_CHANGES 또는 판단 보류
 
 사용자 06:06:21+09:00 “다음” 지시로 root/package-lock의 Node engines를 >=20.19.0으로 정합화하고 README 안내를 추가했다. 잠금 의존성은 변경하지 않았다. CP-IP-01은 CORRECTED IN CANDIDATE / RE-REVIEW PENDING이며 원격 스레드는 resolve하지 않았다. Node 20.19.0 실제 설치/검증 근거는 VALIDATION_STATUS.md §P. CP-IP-04는 OPEN이다. 위 최초 수신 표는 당시 이력이다.
 
+## CP-IP-04 후속 보완 및 리뷰 분류 정정 — 2026-10-04
+
+사용자 07:34:34+09:00 CP-IP-04 ONLY 지시에 따라 내부 ExpiredSessionError로 HTTP 401의 고정 안내를 catch 이후에도 보존했다. 일반 오류·공개 코드·capacity·timeout 처리는 보존했다. 정확한 안내와 단일 요청, 내부 진단 비노출의 회귀를 강화했다. 실행 증거는 VALIDATION_STATUS.md §Q를 따른다.
+
+CP-IP-01/02/03/04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-IP-05/06 = DOCUMENT CORRECTION / RE-CHECK PENDING. 앞선 OPEN 표기와 다음 작업은 당시 이력이다. CP-IP-04 스레드 `PRRT_kwDOTQ7IWM6opsXP`는 착수 시 unresolved/non-outdated를 직접 확인했으며 resolve하지 않는다.
+
+상단과 이전 이력의 Copilot “독립 리뷰” 표현은 PR 리뷰 증거·외부 지적으로 분류한다. Copilot `PRR_kwDOTQ7IWM8AAAABQfiOMw`는 governed milestone-final fresh read-only Independent Review가 아니다. 정식 검토는 후속 별도 `40 Independent Review` 단계이며 이번 세션은 이를 요청하거나 수행하지 않았다. main 통합·CLOSED 판정 없음.
+
 ## 다음 행동 하나
 
-HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
+Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다.
