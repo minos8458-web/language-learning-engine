@@ -37,11 +37,10 @@ class InProcessLearningFlowTransport {
 
   async startExplicitStudy(userId, nodeId) {
     try {
-      return await progressEngine.recordExplicitStudy(
+      return await learningFlowEngine.startExplicitStudy(
         this.pool,
         userId,
-        nodeId,
-        new Date().toISOString()
+        nodeId
       );
     } catch (error) {
       if (isAuthoritativeCapacityRejection(error)) {

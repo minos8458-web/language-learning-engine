@@ -733,3 +733,17 @@ npm run build:mobile
 - 보존 대조: API §4.3/§5–6/§7.2부터 §10.1 전까지/§10.2부터 개정 이력 전까지 원문 동일. MOBILE-05 source/테스트/mobile/scripts/db/package·lock은 구현 저장점 00f7909aefbc447999bfc77e32dae90e99aa9580과 동일. Tier A/schema·VALIDATION_LEVEL3 판정 규칙 변경 없음.
 - 계약 반영 원격 저장 확인: `a07ec7b2fc0856024e9d0cfb133b77d21c41cdc6`, tree `795c3903913de123577980ebbda734df9e68de26`, parent `75ea09a8317c6f0f671d61155d8137261062a4b9`. 변경 12문서의 pinned UTF-8 원문 exact read-back과 local staged tree 일치 확인. fetch 후 local/remote/PR head 일치·clean·upstream 0/0·main 24/0 및 PR #2 open/draft/unmerged를 확인했다.
 - 이 후속 저장은 인계·검증 결과 2문서 기록만 포함한다. 최종 head는 Git 이력에서 조회하며 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.
+
+## L. 최초 학습 서버 경계 구현 — 2026-10-03
+
+- 사용자 지시: 2026-10-03T21:09:38+09:00 “ok 다음”; §K의 승인 계약에 따른 서버 경계 구현 한 작업.
+- preflight: 실제 경로 `/workspace/scratch/2f8f7d39d1fd/language-learning-engine`, .git/top-level/승인 브랜치 확인; local/remote `18c3f6223b4bb08641be1dc28630eb97ee8936c7`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, fetch 성공·clean worktree/stage·upstream 0/0·main 25/0.
+- 코드 4파일: `src/config/engineConfig.js`, `src/engines/contentEngine.js`, `src/engines/learningFlowEngine.js`, `src/transport/inProcessLearningFlowTransport.js`. 신규 테스트 `tests/initialPractice.test.js` 9개. 기존 테스트 원문은 변경하지 않았다.
+- Node v24.19.0, 기존 lock 기반 `npm ci --ignore-scripts` 성공. package/lock 변경 없음. 기본 제한 환경에서 첫 test 실행은 파일 수준 exit 1(개별 진단 미출력); 로컬 HTTP socket을 허용한 실행에서는 성공했다. 초기 3파일 실행은 63/63, 추가 경계와 모바일 회귀를 포함한 최종 실행은 아래와 같다.
+- 실행: `node --test --test-reporter=spec tests/initialPractice.test.js tests/learningFlowHttpServer.test.js tests/guestAuth.test.js tests/mobileClient.test.js tests/guestSessionClient.test.js tests/languagePackClient.test.js` → exit 0, **162 tests / 162 pass / 0 fail / 0 skipped**. 저장 직전 작업 파일에서 실행한 결과이며 커밋 후 재실행은 아니다.
+- 신규 검증: R1 입력 오류 및 DB 호출 전 차단, parameterized SQL 필터/배열 projection·미지정 legacy 호출 동일, 6개 state × 설명/QUIZ 0/1 조합과 순서, admission 거절 후 Content 0회·capacity class 구분, 중복/손상 projection/answer_key fail-closed, 부분 실패 후 명시적 재시도, 실제 Progress/Content를 통과하는 합성 SQL seam의 commit-before-read 및 멱등 분기, 실제 HTTP/in-process/Flow 연결·503 정제·timeout 무재전송.
+- 증거 한계: Content SQL 조건은 query/parameter assertion이고 SQL 실행·제외 행 검증은 아니다. DB/엔진 fixture는 합성이다. 실제 PostgreSQL 바이너리/psql을 환경에서 찾지 못했으며 PG 기반 Content/Generation/Progress/Flow/E2E suite는 NOT RUN. transaction 격리·실제 SQL 필터 동작의 증거로 확대하지 않는다.
+- 보존: Progress/Generation source, `src/client`, mobile, db/schema/migration, package/lock 원문 변경 없음. API/ENGINE_INTERFACE/CLIENT_BRIEF·Tier A·VALIDATION_LEVEL3 판정 규칙 변경 없음. git diff --check 통과. MOBILE-05 재작성 없음.
+- 모바일 테스트에 포함된 번들 동작 검증은 실행됐으나 별도의 `npm run build:mobile`, 운영 PG/HTTPS, 검수 콘텐츠/팩, Android/APK/실기기, 학습 효과는 NOT RUN. 독립 리뷰/main 통합/CLOSED/출시/P1 승격 없음.
+- 다음 행동 하나: 실제 PostgreSQL의 격리된 합성 fixture에서 R1 선택 제외 조건·중복·admission 멱등/capacity 및 기존 Content/Generation/Flow 회귀를 검증한다. UI·제출·Android 구현은 동시에 시작하지 않는다.
+- 원격 저장 및 원문 read-back 결과는 최종 인계에서 확인한다.

@@ -2,12 +2,14 @@
 //
 // AC-014/AC-016: REVIEW -> NEW_GRAMMAR -> INTERLEAVING -> CONVERSATION -> IDLE
 // priority chain. This orchestration layer owns no persistence and calls only the
-// canonical Graph, Progress, and Interleaving Engine APIs.
+// canonical Graph, Progress, Interleaving, and Content Engine APIs.
 
 const graphEngine = require('./graphEngine');
 const progressEngine = require('./progressEngine');
 const interleavingEngine = require('./interleavingEngine');
+const contentEngine = require('./contentEngine');
 const {
+  EXPLICIT_STUDY,
   ACTIVE_NODE_LIMIT,
   INTERLEAVING_LIMITS,
   SESSION_BUDGET_MODES,
@@ -17,6 +19,51 @@ const {
 
 const ACTIVE_INTERLEAVING_STATES = new Set(['INTRODUCED', 'STUDYING']);
 const SATISFIED_PREREQUISITE_STATES = new Set(['MASTERED', 'AUTOMATIC']);
+
+// Reject invalid deployment configuration before any admission side effect.
+if (!/^[A-Z]{2}$/.test(EXPLICIT_STUDY.metaLanguage) ||
+    !['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(EXPLICIT_STUDY.explanationLevel)) {
+  throw new TypeError('Invalid explicit study configuration');
+}
+
+const CONTENT_KEYS = ['content_id', 'grammar_node_ids', 'content_type',
+  'media_assets', 'difficulty', 'type_specific_metadata'];
+const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isText = (value) => typeof value === 'string' && value.trim().length > 0;
+
+function explicitStudyContent(results, nodeId, contentType) {
+  // Stored-content corruption is a technical failure, not a caller error or empty result.
+  const invalid = () => { throw new Error('Invalid explicit study content result'); };
+  if (!Array.isArray(results) || results.length > 1) invalid();
+  if (results.length === 0) return null;
+  const item = results[0];
+  if (!isObject(item) || Object.keys(item).length !== CONTENT_KEYS.length ||
+      !CONTENT_KEYS.every((key) => Object.hasOwn(item, key)) ||
+      !isText(item.content_id) || item.content_type !== contentType ||
+      !Array.isArray(item.grammar_node_ids) || item.grammar_node_ids.length !== 1 ||
+      item.grammar_node_ids[0] !== nodeId ||
+      !Number.isFinite(item.difficulty) || item.difficulty < 1 || item.difficulty > 5 ||
+      !Array.isArray(item.media_assets) || item.media_assets.length === 0 ||
+      !item.media_assets.every((asset) => isObject(asset) &&
+        ['TEXT', 'AUDIO', 'IMAGE', 'VIDEO'].includes(asset.media_format) && isText(asset.asset_ref) &&
+        (asset.role === undefined || ['PRIMARY', 'SUPPLEMENTARY'].includes(asset.role))) ||
+      !(item.type_specific_metadata === null || isObject(item.type_specific_metadata))) invalid();
+  if (contentType === 'QUIZ' &&
+      (!isObject(item.type_specific_metadata) || !isText(item.type_specific_metadata.answer_key))) invalid();
+  return item;
+}
+
+async function startExplicitStudy(pool, userId, nodeId) {
+  const { state } = await progressEngine.recordExplicitStudy(pool, userId, nodeId, new Date().toISOString());
+  const explanation = explicitStudyContent(await contentEngine.getContent(
+    pool, nodeId, 'EXPLANATION', EXPLICIT_STUDY.metaLanguage,
+    EXPLICIT_STUDY.explanationLevel, 'EXPLICIT_STUDY'
+  ), nodeId, 'EXPLANATION');
+  const initialPractice = explicitStudyContent(await contentEngine.getContent(
+    pool, nodeId, 'QUIZ', EXPLICIT_STUDY.metaLanguage, undefined, 'EXPLICIT_STUDY'
+  ), nodeId, 'QUIZ');
+  return { explanation, state, initial_practice: initialPractice };
+}
 
 function validateConversationBoundaryAcknowledged(value) {
   if (value !== undefined && typeof value !== 'boolean') {
@@ -271,5 +318,6 @@ async function startSession(pool, userId, language, conversationBoundaryAcknowle
 }
 
 module.exports = {
+  startExplicitStudy,
   startSession,
 };

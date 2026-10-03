@@ -102,7 +102,11 @@ const AI_GENERATION = {
   maxRegenerationAttempts: 2,
 };
 
+// API 7.1.1: approved first-demo explanation configuration, independent of target language.
+const EXPLICIT_STUDY = Object.freeze({ metaLanguage: 'KO', explanationLevel: 'BEGINNER' });
+
 module.exports = {
+  EXPLICIT_STUDY,
   STATE_ORDER,
   STATE_ORDINAL,
   PROMOTION,
