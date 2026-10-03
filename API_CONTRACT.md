@@ -560,13 +560,38 @@ Generation Engine closure는 주입된 dependency만 사용한다. Graph/Progres
 | 항목 | 내용 |
 |---|---|
 | API 이름 | `get_content` |
-| 호출 주체 | Generation Engine(`EXAMPLE` 조회), Learning Flow Engine(`EXPLANATION` 조회, `content_id` 단독 조회로 진단 정보 조회) |
-| 입력 | 조건 기반 모드: `node_id`, `content_type`, `meta_language`(선택), `explanation_level`(선택) / **단독 정확 조회 모드(AC-008, 2026-07-08 Resolved)**: `content_id` 단독 — 기존 조건 기반 조회와 별개 모드로, 정확히 그 레코드 하나만 반환 |
+| JavaScript 구현명 | `getContent` |
+| positional signature | `getContent(pool, identifier, contentType, metaLanguage, explanationLevel, selectionProfile)` — 마지막 프로필은 optional, 미지정 호출은 기존 계약 유지 |
+| 호출 주체 | Generation Engine(`EXAMPLE` 조회), Learning Flow Engine(`EXPLANATION` 조회, `EXPLICIT_STUDY` 프로필의 최초 `QUIZ` 조회, `content_id` 단독 조회로 진단 정보 조회) |
+| 입력 | 조건 기반 모드: `node_id`, `content_type`, `meta_language`(선택), `explanation_level`(선택), `selection_profile`(선택; 아래 프로필별 필수값 규칙 적용) / **단독 정확 조회 모드(AC-008, 2026-07-08 Resolved)**: `content_id` 단독 — 기존 조건 기반 조회와 별개 모드로, 정확히 그 레코드 하나만 반환 |
 | 출력 | 조건에 맞는 Content 레코드 목록(조건 기반) / 단일 Content 레코드(단독 조회) — `type_specific_metadata` 포함(Learning Flow Engine이 SELF/TRANSFER 분류에 사용) |
 | 빈 결과 | 조건에 맞는 콘텐츠가 없음 → 빈 목록(정상, Generation Engine의 사다리 4단계 판단 근거) |
 | 에러 | `node_id` 미존재, `content_id` 미존재(단독 조회 모드), `content_type`이 정의되지 않은 값 |
 | 호출 가능한 하위 Engine | 없음 |
 | 금지 사항 | 콘텐츠가 없을 때 유사한 다른 콘텐츠로 임의 대체해 반환하지 않는다 — 빈 결과는 빈 결과 그대로, 대체 판단은 호출자의 몫 |
+
+#### 7.1.1 명시적 학습 선택 프로필 R1
+
+```text
+getContent(pool, identifier, contentType, metaLanguage, explanationLevel, selectionProfile)
+selectionProfile: omitted/undefined | "EXPLICIT_STUDY"
+```
+
+- 기존 5인자 호출/미지정 호출은 동작을 그대로 보존한다. Generation의 EXAMPLE 조회·재시도·cardinality·단독 content_id 조회는 이 프로필을 사용하지 않는다.
+- 새 프로필은 Learning Flow의 최초 학습 조정에서만 사용한다. 호출 주체는 본 절과 `ENGINE_INTERFACE.md` §2.1/§3/§8을 따른다.
+- null/문자열 외 프로필은 `CONTRACT_VIOLATION`, 알 수 없는 문자열은 `OUT_OF_RANGE_VALUE`다. 기존 다섯 코드 내 처리이며 신규 코드를 만들지 않는다.
+- EXPLICIT_STUDY에서는 `contentType`이 EXPLANATION 또는 QUIZ여야 한다. 다른 타입 또는 단독 ID 모드와 함께 쓰면 `CONTRACT_VIOLATION`이다.
+- 이 프로필에서 metaLanguage는 필수 대문자 2글자, EXPLANATION의 explanationLevel은 BEGINNER/INTERMEDIATE/ADVANCED 중 하나로 필수다. 필수 undefined는 `MISSING_REQUIRED_FIELD`, null/비문자열은 `CONTRACT_VIOLATION`, 형식/enum 범위 밖은 `OUT_OF_RANGE_VALUE`. QUIZ의 explanationLevel은 undefined여야 하며 그 외는 `CONTRACT_VIOLATION`이다. 기존 미지정 프로필의 느슨한 검증을 함께 바꾸지 않는다.
+- 첫 시연의 승인된 서버 구성값은 metaLanguage `KO`, explanationLevel `BEGINNER`다. 이는 목표 언어 VI를 엔진에 하드코딩하는 것이 아니다. 잘못된 구성은 배포 전 차단하고 유사 언어/수준으로 fallback하지 않는다.
+
+Content Engine이 기존 컬럼으로 아래 조건을 모두 적용하고 기존 6키로 projection한다. Flow·transport·UI에는 SQL이나 검수 필터를 넣지 않는다.
+
+1. `grammar_node_ids`가 요청 노드 하나와 정확히 일치한다. 다른 노드를 추가로 포함한 복합 QUIZ를 초심자에게 내보내지 않는다.
+2. 요청한 content_type, `source='HUMAN_AUTHORED'`, `is_active=true`, `human_reviewed=true`, `is_canonical=true`.
+3. 서버가 지정한 meta_language와 일치, EXPLANATION은 explanation_level도 일치.
+4. 반환은 기존 조건 조회와 같이 배열이다. 0건은 정상 빈 배열, 1건은 그대로 사용. Flow는 2건 이상을 내부 불변식 오류로 거절하고 임의 첫 행이나 null로 대체하지 않는다. 배열이 아닌 반환, 잘못된 타입/노드/6키 형태 역시 정상 empty가 아닌 내부 오류다.
+
+이 프로필은 2026-10-03T19:35:16+09:00 사용자 승인으로 확정했다. 기존 미지정 호출·단독 ID 모드·§5.1 Generation·6키 projection·DB schema는 그대로다. 계약 반영과 런타임 구현은 별개이며 현재 구현은 `PROJECT_STATUS.md`를 따른다.
 
 ### 7.2 save_generated_content
 
@@ -677,16 +702,113 @@ Content Engine은 `grammarNodeIds`를 dedupe한 뒤 문자열 사전순으로 �
 
 ### 10.1 start_explicit_study
 
+2026-10-03T19:35:16+09:00 사용자 승인: 최초 설명/QUIZ 응답과 R1 계약을 확정한다. 기준 후보는 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`(승인 시 Git `75ea09a8317c6f0f671d61155d8137261062a4b9`)다. 이 절은 계약이며 현재 코드의 구현 완료를 선언하지 않는다.
+
 | 항목 | 내용 |
 |---|---|
-| API 이름 | `start_explicit_study` |
+| API 이름 / JavaScript 구현명 | `start_explicit_study` / `startExplicitStudy` |
 | 호출 주체 | 외부 클라이언트(사용자) |
-| 입력 | `user_id`, `node_id` |
-| 출력 | `EXPLANATION` 콘텐츠, 갱신된 `state`(INTRODUCED) |
-| 빈 결과 | 해당 노드의 `EXPLANATION` 콘텐츠가 아직 없음(콘텐츠 공백) → 콘텐츠 필드 null, `state`는 정상 갱신(콘텐츠 부재가 상태 전이를 막지 않는다) |
-| 에러 | `node_id` 미존재. 이미 INTRODUCED 이상인 상태에서의 중복 호출은 에러가 아니라 멱등 처리(4.3과 동일 정책) |
-| 호출 가능한 하위 Engine | Content Engine, Progress Engine |
-| 금지 사항 | 없음(외부 진입점, 공통 규칙만 준수) |
+| 내부 입력 | `user_id`, `node_id` — HTTP의 user_id는 인증에서만 얻음 |
+| 출력 | exact `{explanation, state, initial_practice}` — 아래 필수/null 계약 |
+| 빈 결과 | Content 0건인 필드만 null. 상태 갱신은 정상 유지 |
+| 에러 | 기존 five-code registry 및 기술 오류 경계. 멱등/admission은 §4.3 유지 |
+| 호출 가능한 하위 Engine | Progress Engine, Content Engine |
+| 금지 사항 | Flow의 직접 SQL/상태 재계산·검수 필터·문제 생성, 신규 error_code, 임의 콘텐츠 대체 |
+
+#### 10.1.1 요청
+
+```http
+POST /flow/start-explicit-study
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{"node_id":"GRAMMAR_VI_DA"}
+```
+
+- 경로·메서드·body 허용 키는 기존과 같다. `user_id`는 토큰으로 확인한 서버 값이다. 클라이언트가 body에 넣으면 기존 추가 키 거절 규칙을 적용한다.
+- `node_id` 누락은 `MISSING_REQUIRED_FIELD`, null/문자열 외 값은 `CONTRACT_VIOLATION`. 문자열이지만 없는 ID는 `INVALID_ID`; 빈 문자열/공백 문자열을 trim해서 다른 ID로 바꾸지 않는다. 현재 HTTP 경계는 문자열 형식만 검사하고 존재성은 Progress가 판정한다.
+- language, meta_language, explanation_level, selection_profile, content_id를 외부 입력으로 추가하지 않는다. 서버 구성의 설명 언어/수준을 사용한다.
+- 내부 Flow 호출 이름은 `startExplicitStudy(pool, userId, nodeId)`이다. timestamp는 서버가 기존 방식으로 생성해 Progress에 전달한다. 새 외부 API가 아니다.
+
+#### 10.1.2 성공 응답
+
+HTTP 200의 기존 envelope `{status:"ok", data:…}` 안에 아래 data를 넣는다. in-process 반환은 data 객체 자체다.
+
+| 키 | 필수 여부 | 값 |
+|---|---|---|
+| `explanation` | 항상 존재 | 아래 6필드 Content projection 또는 명시적 null |
+| `state` | 항상 존재 | Progress.recordExplicitStudy가 반환한 state 그대로 |
+| `initial_practice` | 항상 존재 | 아래 6필드 QUIZ Content projection 또는 명시적 null |
+
+새 성공 data의 추가 top-level 키는 허용하지 않는다. `content`, `content_id`, `source`, `ladder_step`, `reason`, `ready`를 중복 추가하지 않는다. 두 콘텐츠 필드는 optional이 아니며 `undefined`/필드 생략/빈 배열로 null을 대신하지 않는다.
+
+`state`는 기존 Progress의 6개 enum(`NOT_INTRODUCED`, `INTRODUCED`, `STUDYING`, `PRACTICING`, `MASTERED`, `AUTOMATIC`) 이외 값을 만들지 않는다. 정상 신규 admission은 INTRODUCED, 기존 행은 현재 상태 그대로다. 기존 저장 행의 NOT_INTRODUCED도 Progress 구현이 그대로 반환할 수 있으므로 Flow가 이를 INTRODUCED로 고치지 않는다. 해당 경우 클라이언트는 문제 제출 가능으로 판정하지 않고, 기존 데이터/진입 정책을 별도 확인한다. 이번에 저장 행을 보정하지 않는다.
+
+두 projection은 `contentEngine.js:projectContent`의 아래 6키를 그대로 사용한다.
+
+| 키 | 설명 | 최초 문제 |
+|---|---|---|
+| `content_id` | 실제 저장 ID | 실제 저장 ID, 추후 제출 시 그대로 사용 |
+| `grammar_node_ids` | 정확히 요청 node_id 하나 | 정확히 요청 node_id 하나 |
+| `content_type` | `EXPLANATION` | `QUIZ` |
+| `media_assets` | 저장된 Content 배열 | 저장된 Content 배열 |
+| `difficulty` | 기존 projection의 숫자 | 기존 projection의 숫자 |
+| `type_specific_metadata` | 저장 object 또는 null | 기존 object, 유효한 answer_key 필수 |
+
+metadata 안에 설명 수준·검수 플래그를 새로 삽입하지 않는다. `explanation_level`은 AC-004의 기존 컬럼에 남으며 public projection에 추가하지 않는다. QUIZ metadata를 AI 생성 전용 exact `{answer_key}`로 강제로 축소하지 않는다. HUMAN_AUTHORED QUIZ의 기존 distractors 등 타입별 메타데이터는 원문을 보존한다. Media Asset의 선택 필드 역시 Core Standard를 따른다. AI 생성 경로의 1개 TEXT/PRIMARY 제약을 일반 Content에 소급하지 않는다.
+
+첫 시연 데이터는 검수된 직접 입력 TEXT 문제를 준비한다. 형식/본문/answer_key가 손상된 선택 결과는 null로 숨기거나 정상 문제로 제공하지 않는다. answer_key는 기존 Content 계약에 따라 전달되며 앱 화면은 제출 전 정답을 표시하지 않는다. 이를 서버 비밀 정답/부정행위 방지 계약으로 부르지 않는다.
+
+정확한 정상 공백 예시:
+
+```json
+{
+  "status": "ok",
+  "data": {
+    "explanation": null,
+    "state": "INTRODUCED",
+    "initial_practice": null
+  }
+}
+```
+
+이는 전체 `{status:"empty"}` 응답이 아니다. Progress 요청이 정상 처리된 §10.1의 부분 콘텐츠 공백이다.
+
+#### 10.1.3 처리 순서와 실패·멱등 의미
+
+승인된 순서는 **기존 admission 완료 → 설명 조회 → QUIZ 조회 → 응답 조립**이다.
+
+1. 기존 HTTP 인증/입력 검사를 통과한다. 토큰의 동일 사용자로만 진행한다.
+2. Flow가 기존 Progress.recordExplicitStudy를 정확히 1회 호출한다. idempotency-before-capacity, advisory lock, transaction, state 반환을 그대로 소비한다.
+3. Progress 거절이면 Content를 조회하지 않고 오류를 전달한다. authoritative capacity 거절만 기존 CapacityAdmissionConflictError 경계를 유지한다.
+4. 성공하면 §7.1.1의 EXPLANATION 조회와 0/1/cardinality·형식 검사를 수행한 뒤 QUIZ에도 같은 순서를 적용한다. 기술적 실패 시 이 Flow에서 자동 재시도하지 않는다.
+5. Content가 정상 empty이면 해당 필드를 null로 넣고 성공한다. 하나가 없다고 다른 하나를 지우지 않는다.
+
+이 순서를 선택한 이유는 기존 admission/capacity 응답 우선순위를 보존하고, 콘텐츠 공백이 상태 전이를 막지 않는 §10.1을 그대로 지키기 위해서다. 먼저 콘텐츠를 읽는 대안은 기술 실패 시 불필요한 admission을 줄이지만, 콘텐츠 오류가 기존 capacity 거절을 가릴 수 있다. 이 순서는 이번 승인으로 명시한 계약이며 이전 원문에 이미 존재했다고 주장하지 않는다.
+
+**원자성 한계:** Progress와 두 Content 조회는 하나의 새 트랜잭션이 아니다. Progress commit 이후 Content 오류·timeout·응답 유실이 발생하면 요청은 실패해도 admission은 이미 저장됐을 수 있다. 실패가 Progress rollback을 뜻하지 않으며 Flow가 보상 삭제/원래 state 복원을 하지 않는다. 새 transaction API·schema·요청 식별자를 만들지 않는다.
+
+**멱등 범위:** 같은 사용자/노드의 재요청은 admission을 중복 생성하거나 state를 낮추지 않는다. 기존 행이면 capacity 초과여도 현재 상태를 반환하고 콘텐츠를 다시 읽는다. 이 보장은 동일 응답 byte·동일 콘텐츠 버전·동일 화면 보장과 다르다. Content는 같은 ID의 버전이 바뀔 수 있고, 두 조회도 동일 snapshot을 보장하지 않는다.
+
+HTTP 취소/기한 종료로 이미 실행한 Progress 호출이 취소됐다고 보장하지 않는다. 서버 자동 replay는 없다. 사용자가 동일 요청을 명시적으로 재시도하면 기존 멱등 admission을 사용한다. 이 성질을 submit_attempt의 중복 반영 방지로 확대하지 않는다.
+
+#### 10.1.4 결과별 처리
+
+| 조건 | HTTP/data | Progress/클라이언트 의미 |
+|---|---|---|
+| 설명 1·QUIZ 1 | 200, 두 객체 | 설명 표시 후 문제 진입 가능. state가 학습 진입 가능 상태인지도 확인 |
+| 설명 0·QUIZ 1 | 200, explanation null | 진도 유지, 설명 준비 중. 첫 시연에서는 설명을 건너뛰어 자동 문제 진입하지 않음 |
+| 설명 1·QUIZ 0 | 200, initial_practice null | 설명 표시 가능, 문제/제출 비활성 |
+| 둘 다 0 | 200, 둘 다 null | 진도 유지, 준비 중. 전체 오류나 NO_CONTENT 사다리 응답으로 바꾸지 않음 |
+| 검수/대표/언어/수준 조건 미충족 | 조건에 맞는 행 0이면 위 정상 공백 | 다른 언어·EXAMPLE·AI 문항·비대표 행으로 대체하지 않음 |
+| 조회 실패·중복 canonical·손상 projection/필수 metadata | 503, 기존 일반 HTTP 오류, 성공 data 없음 | 이미 admission됐을 수 있음. 오류를 empty로 바꾸지 않음 |
+| 존재하지 않는 node_id/user_id | 404, INVALID_ID | 기존 Progress가 거절, 정상 성공 data 없음 |
+| 검증된 신규 admission capacity 거절 | 422, CONTRACT_VIOLATION 및 기존 capacity 표식 | 기존 controller의 최신 start_session 재조회 1회, Content 조회 없음 |
+| capacity가 아닌 CONTRACT_VIOLATION | 422, 일반 오류 | capacity 표식 금지, 자동 start_session 재조회 없음 |
+| 인증 불가/만료 | 기존 401 | 새 게스트 자동 생성/만료 연장 없음 |
+| DB·host·인증 확인 기술 오류 | 기존 503 | error_code를 새로 만들어 five-code registry에 넣지 않음 |
+
+Content의 기존 INVALID_ID/MISSING_REQUIRED_FIELD/UNAUTHORIZED_CALLER/OUT_OF_RANGE_VALUE/CONTRACT_VIOLATION은 일반화된 기존 HTTP 매핑으로 전달한다. 503은 기술 오류 경계이지 여섯 번째 엔진 error_code가 아니다. 내부 SQL·row·토큰·검수자 정보를 응답 message에 넣지 않는다.
 
 ### 10.2 submit_attempt
 
@@ -3544,3 +3666,4 @@ Current production `record_attempt`은 empirical idempotency identity 또는 dur
 | 1.29 | 2026-09-08 | VI P1 Measurement Readiness METRIC_RESULT Common Contract + Retention First Reducer Tier C 사용자 승인 반영 — §13.10.11.1 직후 §13.10.11.2에 internal `queryMetricResult(pool, input)`(synthetic P0 Retention v1 전용, `queryRawEvidenceForMetricRebuild()`를 호출하지 않는 별도 DB-backed operation)를 정의. Exact 5-key input(`formulaId`/`formulaVersion`/`analysisCutoff`/`aggregationGrain`/`filters`)과 exact 5-key filters(`assignmentIds`/`attemptIds` 금지, `enrollmentIds`/`conditionReferences` 중 하나 이상 nonempty 필수), 구조화 `conditionReferences`/`itemFamilyReferences` reference exactness, 고정 aggregation grain·group key·group ordering, 14-key closed FORMULA definition v1(`populationPolicy` 미허용), candidate admission·denominator eligibility·attempt/completion integrity를 FIRST_MATCH exclusion(14-step precedence, 10-bucket 상호배타 partition)과 명시적으로 분리해 정의한다. Retention numerator/denominator, timeliness(EARLY/ON_TIME/LATE 경계 포함) 규칙과 synthetic fixture 값(`minimumSample=2`, `earlyToleranceMs=lateToleranceMs=3600000`, 실제 P1 calibration 아님을 명시)을 확정하고, exact 7-key output envelope·19-key group row·fixed 6-decimal HALF_UP ratio·group/top-level OK·INSUFFICIENT status contract·per-group/response-wide `sourceRebuildReference`(`exposureIds=[]` 고정)를 정의한다. 정확히 하나의 `REPEATABLE READ`/`READ ONLY` transaction에서 frozen source로부터 reduction하며 zero side effect다. 기존 five-code registry만 사용, 신규 error code 없음. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract·RAW_SOURCE input/output/`empty_result`는 semantically 불변이다. Unseen-transfer metric(F-MR-ARCH-06)은 계속 OPEN/DEFERRED다. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)·test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection을 승인하지 않으며 F-MR-ARCH-01~05를 포함한 어떤 finding도 이 patch로 close하지 않는다. |
 | 1.30 | 2026-09-11 | VI P1 Measurement Readiness METRIC_RESULT Unseen Transfer Tier C 사용자 승인 반영 — §13.10.11.2 직후 §13.10.11.3에 동일 internal `queryMetricResult(pool, input)`의 FORMULA `definitionVersion` 기반 dispatch(`definitionVersion 1`=RETENTION 불변, `definitionVersion 2`=UNSEEN_TRANSFER 신설, 상호 배타·closed)를 정의한다. Exact six-axis aggregation grain(`ITEM_FAMILY` 추가)·nine-key group key, assignment-time immutable lineage authority(`resolved_item_lineage`/`exposure_history_cutoff_ordinal`/same-enrollment first-exposure history, `DIFFERENT_ITEM_FAMILY` primary eligibility, null lineage 비변환), 4-value lineage priority(fuzzy/edit-distance/token-overlap/transitive inference 금지), 별도 node-level prior target exposure 요건(`NODE_PRIOR_EXPOSURE_ABSENT` 정상 bucket, source contradiction만 `CONTRACT_VIOLATION`)을 정의하고, scenario를 별도 stratification axis로 유지(1차 eligibility·grain·groupKey에서 제외, stratified output deferred)한다. Exact 16-rule FIRST_MATCH 순서(rule 15/16이 rule 1–14 생존 candidate에만 적용됨을 명시)와 numerator/denominator, `itemFamilyId`/`itemFamilyVersion` 확장 groupKey·`lineageNotDifferentCount`/`noPriorNodeExposureCount` 2개 count 추가 group row, exposureIds가 `[]`로 고정되지 않는 provenance 확장, 동일 `REPEATABLE READ`/`READ ONLY` 단일 transaction·zero side effect·기존 five-code registry를 정의한다. Exact 16-key closed FORMULA v2(`lineagePolicy`/`scenarioPolicy` subobject 포함)와 optional versioned ITEM `lineageAuthority`(신규 `reference_kind` 없음, `EXACT_REPEAT`/`SURFACE_VARIANT`/`SAME_ITEM_FAMILY`/`DIFFERENT_ITEM_FAMILY` 우선순위, fuzzy inference 금지) 계약을 확정한다. BIGINT(`exposure_ordinal`/`exposure_history_cutoff_ordinal`) exactness(JS `Number` 비교/정렬/영속/round-trip 금지)와 stored/recomputed lineage null-safe 비교, candidate filter가 lineage 재계산에 필요한 same-enrollment 이력을 truncate하지 않는 source/filter 분리 경계를 명시한다. Retention v1(§13.10.11.2, `definitionVersion 1`, 5-axis grain, 7-key envelope, 19-key group row, 10-bucket exclusion count, `exposureIds=[]`, 상태/수치/transaction/error semantics)은 문서 레벨에서 완전히 보존되며 이 patch로 silently mutate되지 않는다. §13.10.11.1 `queryRawEvidenceForMetricRebuild` contract는 semantically 불변이다. 기존 five-code registry만 사용, 신규 error code 없음. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime(`src/instrumentation/evidenceMetrics.js` 포함)/test 변경, 실제 P1 timing calibration/anchor 확정, human-data collection, scenario-stratified reducer, efficacy 결론을 승인하지 않으며 `F-MR-ARCH-06`·`F-MR-UT-01`–`F-MR-UT-09`를 포함한 어떤 finding도 이 patch로 close하지 않는다. |
 | 1.31 | 2026-09-12 | BIGINT writer/digest output representation D1–D5 사용자 승인 반영 — §13.10.4 `createAssignment` Success snapshot의 `exposure_history_cutoff_ordinal`과 §13.10.4.1 `recordAssignmentItemExposure` Exact success result의 `exposureOrdinal`이 PostgreSQL BIGINT exact value의 base-10 decimal string이며 JavaScript `Number`가 caller-visible 표현 권위가 아님을 명시(동일 BIGINT ordinal domain, 동일 표현 공유). Corrected assignment-snapshot digesting 전용 canonical `normalization_version` = `evidence-assignment-snapshot-v2`(기존 generic `evidence-semantic-v1`은 frozen 유지)를 `EVIDENCE_FOUNDATION_P0_SCHEMA.md` §5.9 clarification에 대한 pointer로 명시. `normalization_version = evidence-semantic-v1`으로 저장된 historical assignment snapshot row의 data state는 `UNKNOWN / NOT INSPECTED`로 유지되며 자동 re-digest·rewrite·backfill은 승인하지 않는다. Existing API count, five-code registry, RAW_SOURCE projection(§13.10.11.1)·Retention/Unseen Transfer METRIC_RESULT(§13.10.11.2/§13.10.11.3) 계약은 변경 없음. Foundation finding `F-R02`는 계속 `OPEN`/`NON-BLOCKING`이며 이 patch로 close하지 않는다. Owner value 불요; Tier A·migration·DDL·physical schema·Runtime/test 변경, historical-data inspection/remediation, human-data collection, P1 activation, efficacy 결론을 승인하지 않는다. |
+| 1.32 | 2026-10-03 | 사용자 승인(19:35:16+09:00)에 따른 initial_practice/R1 계약 반영. §7.1 opt-in EXPLICIT_STUDY 선택·입력 규칙, §10.1 exact 3키/6키 projection·null·admission-first·오류/멱등 의미 확정. §5.1 PRE_MADE EXAMPLE 및 §4.3·§10.2–10.5·§11 registry·schema 불변. 문서만 반영, 구현/검증/독립 리뷰/main 병합 선언 없음. |

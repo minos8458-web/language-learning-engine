@@ -15,6 +15,19 @@
 
 ## 현재 체크포인트
 
+- 최신 사용자 직접 승인: 2026-10-03T19:35:16+09:00 “승인”. 직전 initial_practice 설계 후보와 R1 및 정식 계약 문서 반영 한 작업 승인이다. 14:38 clone 승인과 구분한다.
+- 시작 기준: 작업/로컬/PR `75ea09a8317c6f0f671d61155d8137261062a4b9`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. fetch 성공·승인 경로/.git/top-level/브랜치·clean worktree/stage·upstream 0/0·main 23/0 확인. PR #2 open/draft/unmerged.
+- 완료: API_CONTRACT 1.32 §7.1.1/§10.1, ENGINE_INTERFACE 1.20, CLIENT_BRIEF 1.3, LEARNING_API_SERVER_BRIEF에 승인 계약을 반영하고 Backlog 1.82에 승인 근거를 추가했다. 후보 원문은 승인 전 이력으로 보존하고 정식 문서 포인터를 추가했다.
+- 확정 내용: 필수 explanation/state/initial_practice·기존 6키 projection·독립 null·Content 선택 프로필 R1·기존 admission→설명→QUIZ 순서·부분 실패/멱등/capacity·화면/HTTP 소비 경계.
+- 상태 구분: 사용자 승인 / 작업 브랜치 계약 문서 반영 완료. 새 계약 코드 구현·독립 리뷰·main 통합·CLOSED는 미완료다. 현재 state-only 경계를 새 API 구현 완료로 보고하지 않는다.
+- 보존: MOBILE-05 코드와 기존 검증, Generation PRE_MADE EXAMPLE, Progress state/admission, five-code registry, Tier A/schema/migration·Validation 판정 규칙. 이번에는 소스·테스트·package/lock을 변경하지 않는다.
+- 직접 검증 소유: VALIDATION_STATUS.md §K(문서), 기존 MOBILE-05 실행 증거 §I.1–I.2. 런타임/빌드/PG/APK/실기기/실제 검수는 이번 미실행.
+- 남은 차단: 서버 새 계약 구현·설명/문제 UI·제출/피드백·검수 콘텐츠/팩 자산 일치·Android host/native adapter/APK·운영 PG/HTTPS·실기기. 갱신/만료 뒤 복구·새 채점/schema·유료 서비스·main 병합/출시·P1/인간 데이터 승인은 포함하지 않는다.
+- 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+- 원격 최종 저장 head는 Git 이력에서 조회한다. 저장 후 변경 원문·브랜치·PR를 재확인하고, 실패하면 마지막 확인 원격 위치를 보고한다.
+
+## 이전 체크포인트 — 계약 후보 작성/저장 (2026-10-03, 보존)
+
 - 최신 사용자 지시: 2026-10-03T14:38:26+09:00 “승인한다”. 직전 요청의 새 clone·기존 작업 브랜치 연결 승인이다. 원래 범위는 MOBILE-05 재작성 금지와 다음 계약 설계 한 작업이다.
 - 직접 복구: 기본 네트워크 clone은 프록시 연결 실패. 승인된 clone을 실행 권한 확장으로 재시도해 성공했으며 `git fetch origin`도 성공했다. 자동 승인 거절은 없었다.
 - 실제 작업 경로: `/workspace/scratch/2f8f7d39d1fd/language-learning-engine`. 유효한 .git/top-level·승인 브랜치·clean worktree/stage를 확인했다.
@@ -146,9 +159,9 @@
 
 ## 다음 행동 하나
 
-`INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
 
-MOBILE-05 재작성·서버/UI/APK 구현을 동시에 시작하지 않는다. 기존 평가의 32–59시간을 이번 경과 시간만큼 임의 차감하지 않는다.
+기존 MOBILE-05를 다시 만들지 않는다. 이번 계약 문서 반영만으로 남은 시연 시간 추정을 임의 차감하지 않는다.
 
 ## 재현 명령
 

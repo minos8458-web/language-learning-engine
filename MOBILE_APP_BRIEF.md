@@ -201,3 +201,15 @@ Android host/SDK/APK·실제 PG/TLS·독립 검수/배포 팩·본문 학습 소
 - 추가 확인: 현재 getContent는 검수/대표/단일 노드 선택을 보장하지 않는다. 기존 경로를 보존하는 내부 선택 프로필 R1을 제안했으며 추가 계약 승인이 필요하다. Flow 직접 SQL이나 projection 확장은 제안하지 않는다.
 - MOBILE-05와 source/API/schema/Validation 판정 규칙은 그대로다. 이번 직접 문서 점검·미실행 증거는 `VALIDATION_STATUS.md` §J, 기존 런타임 증거는 §I.1–I.2다.
 - 현재 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+
+## 13. 최초 학습 계약 반영 — 2026-10-03
+
+### 최초 학습 응답·R1 계약 승인/문서 반영 — 2026-10-03
+
+- 사용자 직접 승인: 2026-10-03T19:35:16+09:00 “승인”. 승인 대상은 직전 설계 후보/R1과 정식 계약 문서 반영 한 작업이다.
+- 계약 반영: `API_CONTRACT.md` 1.32(§7.1.1/§10.1), `ENGINE_INTERFACE.md` 1.20, `CLIENT_BRIEF.md` 1.3, `LEARNING_API_SERVER_BRIEF.md`; 승인 provenance는 Backlog 1.82에 기록했다.
+- 정확한 explanation/state/initial_practice·기존 6키 projection·독립 null, Content opt-in EXPLICIT_STUDY 선택, Progress-first·멱등/오류/capacity 경계를 확정했다.
+- **문서 반영 완료 / 코드 미구현 / 독립 리뷰·main 통합 대기**. 기존 state-only 구현을 새 계약 준수로 재분류하지 않는다. MOBILE-05 코드 및 선택 검증 기록은 유지한다.
+- 이번 직접 문서 점검은 `VALIDATION_STATUS.md` §K. 런타임/빌드/PG/실기기 미실행이며 기존 §I의 증거와 구분한다.
+- 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+- 아래는 각 시점의 이력이다. 이전 후보 승인 대기는 이번 승인으로 해소됐지만 구현·실기기 차단은 남아 있다.

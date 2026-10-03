@@ -78,6 +78,16 @@ B-5 (candidate `d75b518c01724059b45f6adc1a93b602c86a69c4`, main `37eb97a295df10b
 
 ## Current Active Milestone
 
+### 최초 학습 응답·R1 계약 승인/문서 반영 — 2026-10-03
+
+- 사용자 직접 승인: 2026-10-03T19:35:16+09:00 “승인”. 승인 대상은 직전 설계 후보/R1과 정식 계약 문서 반영 한 작업이다.
+- 계약 반영: `API_CONTRACT.md` 1.32(§7.1.1/§10.1), `ENGINE_INTERFACE.md` 1.20, `CLIENT_BRIEF.md` 1.3, `LEARNING_API_SERVER_BRIEF.md`; 승인 provenance는 Backlog 1.82에 기록했다.
+- 정확한 explanation/state/initial_practice·기존 6키 projection·독립 null, Content opt-in EXPLICIT_STUDY 선택, Progress-first·멱등/오류/capacity 경계를 확정했다.
+- **문서 반영 완료 / 코드 미구현 / 독립 리뷰·main 통합 대기**. 기존 state-only 구현을 새 계약 준수로 재분류하지 않는다. MOBILE-05 코드 및 선택 검증 기록은 유지한다.
+- 이번 직접 문서 점검은 `VALIDATION_STATUS.md` §K. 런타임/빌드/PG/실기기 미실행이며 기존 §I의 증거와 구분한다.
+- 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
+- 아래는 각 시점의 이력이다. 이전 후보 승인 대기는 이번 승인으로 해소됐지만 구현·실기기 차단은 남아 있다.
+
 ### 최초 학습 응답 계약 후보 설계 완료 — 2026-10-03
 
 - 사용자 요청의 다음 한 작업을 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`로 작성했다. 정확한 계약 승인 대기이며 구현/독립 리뷰 완료가 아니다.
@@ -201,7 +211,7 @@ B-3 is the only unresolved item in the named B-1…B-5 sequence, but it is not t
 
 ## Next Action
 
-현재 다음 행동 하나: `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` §3–6의 정확한 응답/실패 순서와 §4의 Content 선택 프로필 R1을 검토·승인한 뒤 canonical 계약 문서에만 반영한다. 승인 전 코드/API 원문 변경을 시작하지 않는다.
+현재 다음 행동 하나: 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
 `MOBILE_SCREEN_TEST_GUIDE.md`를 사용한다. 실제 배포 팩·콘텐츠·APK는 미완료 상태로 남긴다.
 최신 사용자 범위와 다음 세션 인계는 `MOBILE_APP_BRIEF.md` §10–11 / `MOBILE_APP_HANDOFF.md`를 따른다.
