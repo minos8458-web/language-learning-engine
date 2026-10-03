@@ -149,9 +149,9 @@ AI가 같은 초안을 즉시 재검토한 것을 사람의 검수로 기록하�
 기존 Frozen Core, §9 acknowledgement/학습 순서, API five-code registry, schema/migration과 Validation 판정 기준을 유지한다.
 개인 기술 시연을 P1 연구 활성화나 학습 효과 검증으로 확장하지 않는다. 운영 서비스 비용·실제 사용자 DB·앱스토어 출시는 별도 결정이다.
 
-### 5.1 최소 API 보완안 — 방향 승인/미구현
+### 5.1 최소 API 보완안 — 정확한 계약 승인/문서 반영·미구현
 
-2026-10-03 추가: 정확한 응답 후보는 `INITIAL_PRACTICE_CONTRACT_PROPOSAL.md`에 작성했다. 아래는 방향 승인 당시 기록이다. Content의 검수/대표 선택 프로필 R1은 추가 계약 승인 대기이며, canonical API와 코드는 아직 변경하지 않았다. 현재 다음 행동은 후보 검토·승인 후 계약 문서 반영 한 작업이다.
+2026-10-03T19:35:16+09:00 추가: 사용자가 정확한 설계 후보와 R1을 승인했다. API_CONTRACT.md 1.32 §7.1.1/§10.1, ENGINE_INTERFACE.md 1.20, CLIENT_BRIEF.md 1.3와 HTTP 연결 문서에 반영했다. 아래는 이전 방향 승인 당시 기록이며, 이전 추가 승인 대기는 해소됐다. 현재 코드는 여전히 state-only 경계로 새 계약은 미구현이다. 다음 한 작업은 MOBILE_APP_HANDOFF.md를 따른다.
 
 **변경 이유:** 현재 첫 학습은 state만 갱신하고, Generation의 정식 PRE_MADE 응답은 EXAMPLE이다.
 검수된 QUIZ 한 개를 받고 그 서버 발급 content_id로 답안을 제출할 연결이 없다.

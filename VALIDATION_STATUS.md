@@ -721,3 +721,14 @@ npm run build:mobile
 - 원격 저장 확인: `d27b6f606ed13ed4a65abdb771fa68aa29a5bc31`, parent `c14166731d5179e40783a1515de8e82f0925b094`, tree `327029803d7f29603e5238ff9eb2f94dec925785`. 변경 7문서의 pinned connector UTF-8 원문이 로컬과 정확히 같았고, 원격 tree도 로컬 준비 tree와 일치했다. fetch 후 local/upstream/PR head 일치, clean·upstream 0/0·main 22/0, main 유지·PR open/draft/unmerged 확인.
 - 직접 git push는 로그인 정보 부재로 실패했으므로 연결된 GitHub 쓰기로 동일 tree를 저장했다. 미전송 로컬 커밋 `427608c0e40c87908f7a1e5800cc7b8faad984c2`와 원격 tree를 비교한 후 로컬 ref를 원격 커밋에 정렬했다. 원격 강제 갱신이나 main 변경은 없었다.
 - 이 후속 인계/Validation 기록은 문서뿐이며 새 런타임 증거가 아니다. 정식 Validation PASS·독립 리뷰·CLOSED·병합/출시를 선언하지 않는다.
+
+## K. 최초 학습 응답·R1 승인 계약 반영 — 2026-10-03
+
+- 사용자 승인: 2026-10-03T19:35:16+09:00 “승인”. 대상 원문 `75ea09a8317c6f0f671d61155d8137261062a4b9:INITIAL_PRACTICE_CONTRACT_PROPOSAL.md` 및 직전 최종 답변의 다음 정식 계약 문서 반영 작업이다.
+- preflight: 동일 local/remote/PR head `75ea09a8317c6f0f671d61155d8137261062a4b9`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`, 승인 브랜치/경로/.git/top-level, clean worktree/stage, fetch 성공, upstream 0/0·main 23/0. 이전 설계 기준선 이후 동시 변경 없음.
+- 변경 범위: API/ENGINE_INTERFACE/CLIENT_BRIEF/LEARNING_API_SERVER_BRIEF/Backlog 5문서와 후보/평가/모바일 brief/인계/위치/구현 상태/Validation 7문서. 새 API entry나 오류 code를 추가하지 않고 기존 getContent의 opt-in 인자와 start_explicit_study 응답을 보완한다.
+- API 1.32·ENGINE_INTERFACE 1.20·CLIENT_BRIEF 1.3·Backlog 1.82. 기존 revision 행은 보존하며 후보의 승인 전 본문도 보존했다. 문서 승인·작업 브랜치 반영·main 통합·런타임 구현을 각각 구분한다.
+- 이번 테스트·모바일 빌드·PostgreSQL/migration·Android/APK·실기기·실제 콘텐츠 검수/다운로드·AI/학습 효과: NOT RUN. 문서 점검을 정식 Validation PASS나 기존 §I 실행의 재실행으로 승격하지 않는다.
+- 직접 문서 검증: 12파일 허용 범위·UTF-8·fence 균형·충돌 표식 부재·승인 원문의 응답/오류 표 반영·기존 개정 이력 행과 후보 §0–10 원문 보존·git diff --check 통과.
+- 보존 대조: API §4.3/§5–6/§7.2부터 §10.1 전까지/§10.2부터 개정 이력 전까지 원문 동일. MOBILE-05 source/테스트/mobile/scripts/db/package·lock은 구현 저장점 00f7909aefbc447999bfc77e32dae90e99aa9580과 동일. Tier A/schema·VALIDATION_LEVEL3 판정 규칙 변경 없음.
+- 원격 read-back은 저장 후 별도 확인한다. 독립 리뷰·main 병합·CLOSED·출시는 선언하지 않는다.

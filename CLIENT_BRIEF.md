@@ -58,6 +58,21 @@
 
 ---
 
+### 2.1 최초 설명·문제 응답 소비 — 2026-10-03 승인
+
+`start_explicit_study`의 성공 data는 `API_CONTRACT.md` §10.1의 exact `{explanation, state, initial_practice}`다. 두 콘텐츠는 기존 6키 Content projection 또는 명시적 null이며 필드 생략을 null로 보정하지 않는다. state-only 구 응답이나 손상된 새 응답은 계약 불일치로 처리한다. state는 그대로 표시하고 클라이언트가 승격시키지 않는다.
+
+- 설명·QUIZ가 모두 있으면 설명을 먼저 보여준 후 문제로 진행한다. NOT_INTRODUCED state가 반환되면 제출 가능으로 판정하지 않고 기존 데이터/진입 정책 확인이 필요하다.
+- explanation=null이면 설명 준비 중으로 표시하고 최초 시연에서 설명을 건너뛰어 자동 문제 진입하지 않는다. initial_practice=null이면 문제/제출을 비활성화한다. 둘 다 null이어도 서버의 정상 admission 성공을 오류로 바꾸지 않는다.
+- 받은 QUIZ content_id를 후속 submit_attempt에 그대로 전달한다. ID 조합·임의 다운로드 팩 문제 대체·제출 전 answer_key 표시를 하지 않는다. 검수 허용 답안의 제한된 앱 비교 방향은 유지하지만 새 원문/서버 채점 계약은 추가하지 않는다.
+- 검증된 capacity 거절에서만 start_session을 새로 1회 호출한다. 일반 CONTRACT_VIOLATION/Content 기술 오류에서는 자동 재조회하지 않는다.
+- Content 조회 오류·HTTP timeout·응답 유실 때 admission은 이미 저장됐을 수 있다. 오류를 정상 null/진도 rollback으로 추정하지 않는다. 동일 사용자/노드 명시적 재시도는 기존 admission 멱등 경계를 사용하며 자동 replay하지 않는다. §5의 submit_attempt 큐 정책을 이 요청으로 확대하지 않는다.
+- 6키 projection에는 version이 없으므로 동일 콘텐츠 버전·정확한 화면 재개를 보장하지 않는다. 첫 시연은 검수된 서버/설치 팩의 동일 릴리스 자산을 고정해야 하며, 새 version handshake·화면 영속 상태·만료 복구를 만들지 않는다.
+
+이는 소비 계약 반영이며 실제 설명/문제 화면·제출·피드백·실기기 구현/검증 완료가 아니다. 게스트/팩/수명주기 경계의 완료 상태는 PROJECT_STATUS.md, 검증 증거는 VALIDATION_STATUS.md를 따른다.
+
+---
+
 ## 3. 자기보고 Confidence UI 트리거
 
 `DOMAIN_LOGIC_BRIEF.md` §4.3이 "State 승격 시점을 체크포인트로 삼는다"고 정의했던 것의 구체적 트리거다.
@@ -149,3 +164,4 @@
 | 1.0 | 2026-07-07 | 최초 작성 — `LEARNING_PROTOCOL.md` §11 하루 프로토콜을 화면 흐름으로 매핑, `start_session`의 `next_action` 기반 세션 흐름 정의(배치/시퀀스 소진 시 재호출 원칙), 자기보고 Confidence 모달의 구체적 트리거(State 승격 감지, 세션당 최대 1회)와 비강제 원칙, 게스트 시작/계정 전환 클라이언트 흐름, 오프라인 전송 실패 로컬 큐잉 정책(서버 아웃박스와 대칭), Reflection 화면을 기존 데이터 조합으로 구성(신규 저장 없음), 클라이언트 상태 관리 원칙(SSOT는 서버, 예외는 인증 토큰과 오프라인 큐뿐). Production 문서 로드맵(0~5) 완료 선언 |
 | 1.1 | 2026-07-17 | AC-012 Tier C Architecture Clarification — §2에 정상 Conversation boundary 표시→세션 메모리 acknowledgement→`start_session(true)` 재호출 흐름 추가, §7에 비영속 in-memory 상태와 세션 종료/앱 재시작 초기화 규칙 명시, §8의 미정의 범위를 실제 Conversation Engine UI로 한정. 클라이언트의 서버 `next_action` 임의 무시·정책 재판단 금지 유지 |
 | 1.2 | 2026-07-19 | AC-014 Tier C Architecture Clarification — `start_session`이 제안한 NEW_GRAMMAR node의 admission이 동시 capacity race로 `CONTRACT_VIOLATION`에 실패하면 같은 호출에서 재선택하지 않고 새 `start_session`을 호출하는 별도 client flow를 추가. 배치 소진 재호출과 구분하며 별도 Conversation/server session state는 만들지 않음 |
+| 1.3 | 2026-10-03 | 승인된 최초 학습 응답 소비 규칙 추가: 필수 3키/독립 null·설명 선행·state 원문·content_id 전달·capacity 한정 재조회·부분 실패/명시적 재시도. 기존 전송/게스트/오프라인 정책과 실제 구현 상태를 구분. |

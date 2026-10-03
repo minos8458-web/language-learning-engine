@@ -21,6 +21,18 @@ MOBILE-03은 기존 `HttpLearningFlowTransport`와 `InProcessLearningFlowTranspo
 기존 in-process 명시적 학습 전송은 `{ state }`를 반환한다. 이 서버는 EXPLANATION 콘텐츠 조회를 추가하지 않는다.
 따라서 `API_CONTRACT.md` §10.1 전체 외부 응답 구현은 아직 완료되지 않는다.
 
+## 승인된 최초 학습 계약 연결 — 2026-10-03, 미구현
+
+19:35:16+09:00 사용자 승인으로 API_CONTRACT.md §7.1.1/§10.1과 ENGINE_INTERFACE.md에 R1/initial_practice 계약을 반영했다. 위 state-only 설명은 현재 코드 상태이며 아래는 후속 구현이 충족할 계약이다.
+
+- 기존 POST 경로·body `{node_id}`·인증에서 얻는 user_id·200 `{status:"ok",data}`를 유지한다. 내부 getContent의 selectionProfile·metaLanguage·explanationLevel을 HTTP 입력으로 노출하지 않는다.
+- 성공 data는 exact `{explanation,state,initial_practice}`이고 두 Content 필드는 6키 projection 또는 명시적 null이다. 상태-only 응답·필드 생략을 정상 공백으로 승격하지 않는다.
+- Content 선택/조회는 Flow→Content에서, admission은 기존 Progress에서 수행한다. HTTP는 SQL·검수 판단·상태 전이를 소유하지 않는다.
+- 기존 다섯 엔진 오류 매핑과 capacity 표식은 유지한다. 선택 결과 중복/손상·기술적 조회 실패는 성공 data 없는 503으로 처리하고 신규 engine error_code를 만들지 않는다. 정상 0건은 200의 해당 필드 null이다.
+- Progress 성공 후 Content 실패/timeout/연결 종료가 발생해도 admission rollback을 보장하지 않는다. 서버 자동 재전송·보상 삭제는 없으며 같은 사용자/노드의 명시적 재시도는 기존 멱등을 소비한다.
+- 첫 시연의 서버 설명 구성은 KO/BEGINNER이며 목표 언어를 엔진에 고정하지 않는다. 기존 Generation EXAMPLE 호출은 새 프로필을 사용하지 않는다.
+- 구현/HTTP·PG 검증은 아직 하지 않았다. 기존 MOBILE-03/04/05 증거를 새 계약 검증으로 바꾸지 않는다.
+
 ## 호스트 경계
 
 호스트가 검증된 인증 콜백과 학습 전송을 주입한다. 토큰을 단순 디코딩하거나 UUID를 클라이언트에서 받아 신뢰하지 않는다.
@@ -93,6 +105,6 @@ factory의 `maxBodyBytes`, `operationTimeoutMs`, `requestTimeoutMs`로 본문·�
 휴대폰 화면·팝업·터치·브라우저 CSP·대용량 팩 성능·APK 및 실제 운영 서버는 미확인이다.
 기존 브라우저 보안 제한을 우회하지 않는다. MOBILE-01/02의 화면 검증 대기도 유지한다.
 
-다음 행동 하나: 모바일 보안 저장소 경계와 최초 게스트 시작 흐름을 설계한다 (MOBILE-05).
+현재 다음 행동은 MOBILE_APP_HANDOFF.md를 따른다. MOBILE-05는 이미 구현·선택 검증된 범위이며 반복하지 않는다.
 게스트 서버 발급·사용자 저장 코드는 MOBILE-04에서 추가했으며 실제 PG·운영 인증·모바일 저장 검증은 미확인이다.
 콘텐츠와 나머지 세 학습 API는 현재 미구현이다. main 병합·출시·lifecycle CLOSED는 선언하지 않는다.
