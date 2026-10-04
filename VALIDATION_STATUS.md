@@ -841,3 +841,19 @@ npm run build:mobile
 - git diff --check 통과. 최종 diff는 production/test 위 두 파일과 MOBILE_APP_HANDOFF.md·VALIDATION_STATUS.md 네 파일뿐이다. 다른 production·package/lock·API/schema/migration/Tier A 변경 없음. 새로운 PostgreSQL/Actual-provider/학습 효능/실기기/전체 npm test 검증 없음. 기존 CP-IP-04 transport/controller·capacity·timeout·malformed explicit-study 화면 회귀는 모바일 선택 실행에 포함된다.
 - IR-MOBILE-01 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 전체 후보 REQUEST CHANGES 유지; IR-MOBILE-02/03 HOLD/open. 이 실행은 개발 증거이며 Independent Review PASS/VALIDATED/CLOSED가 아니다. 재리뷰 요청·스레드 resolve·main 병합 미실행. 역사적 상태 문구 정리는 수행하지 않았다.
 - 다음 행동 하나: Control Tower가 IR-MOBILE-01 수정 증거를 확인한 뒤 IR-MOBILE-02의 착수 여부를 결정한다.
+
+## S. IR-MOBILE-02 NOT_INTRODUCED 입학 성공 표시 차단 — 2026-10-05
+
+- 사용자 직접 승인: 2026-10-05T07:01:56+09:00 IR-MOBILE-02 ONLY. 시작 local/remote/PR head `413dd5ea9353117938b5f26924d8aad512ab7b64`, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; 승인 경로/.git/top-level/origin/branch, fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0, main 39/0, PR #2 open/draft/unmerged 직접 확인.
+- Production: `src/client/mobileSessionView.js` 한 파일. explicit-study 결과가 존재하고 controller 상태 반환이 아니며 state가 NOT_INTRODUCED가 아닐 때만 admittedNodeId를 설정한다. CLIENT_BRIEF §2.1의 미도입 상태를 클라이언트가 입학 성공으로 승격하지 않는다. 나머지 5개 유효 상태는 기존 표시를 보존하고 transport 6상태 검증/응답 내용은 변경하지 않는다.
+- Test: `tests/mobileClient.test.js`에 상태별 DOM 회귀 6개와 capacity DOM 회귀 1개 추가. 실제 HttpLearningFlowTransport→LearningSessionController→mountMobileSession 경로에서 6상태 × explanation/initial_practice의 독립 null/non-null 4조합 = 24조합을 확인한다. NOT_INTRODUCED는 READY/NEW_GRAMMAR를 유지하되 성공 문구·비활성 학습 시작됨 버튼이 없고, 다른 5상태는 기존 성공 표시를 유지한다. 각 조합은 session 1회 + explicit-study 1회뿐이다. capacity 충돌 후 같은 node의 새 제안도 성공 표시하지 않고 session→study→session 순서만 실행한다.
+- 수정 전 재현: `node --test --test-name-pattern='명시적 학습 DOM|capacity 충돌 뒤 같은' tests/mobileClient.test.js` → exit 1, tests 7 / pass 6 / fail 1 / cancelled 0 / skipped 0 / todo 0. NOT_INTRODUCED의 거짓 성공 문구 단언이 실패했다.
+- 실행 환경: GPT Work Linux / Node `v24.19.0` / npm `11.9.0`, repository engines `>=20.19.0` 충족. 기존 node_modules 사용 가능 확인 후 설치 미실행. npm http-proxy 환경 경고 있음. package.json/package-lock.json tracked diff 0.
+- 최종 수정 파일 직접 실행:
+  - `node --test tests/mobileClient.test.js` → exit 0, tests 50 / pass 50 / fail 0 / cancelled 0 / skipped 0 / todo 0.
+  - `npm run test:mobile` → exit 0, tests 109 / pass 109 / fail 0 / cancelled 0 / skipped 0 / todo 0. 위 50건을 포함하므로 합산하지 않는다.
+  - `npm run build:mobile` → exit 0, PASS. mobile/dist는 Git 제외 생성물이며 배포/APK/실기기 증거가 아니다.
+- 기존 IR-MOBILE-01 DOM 안내 및 CP-IP-04 transport/controller·capacity·일반 계약 오류·timeout·malformed 응답 회귀가 위 모바일 선택 검증에서 통과했다. 일반 네트워크 오류·guest lifecycle·자동 retry/replay 정책을 변경하지 않았다. 설명/문제/제출/피드백 UI, 다른 production, API/schema/migration/Tier A 및 의존성 파일 변경 없음. 실제 PostgreSQL/Actual-provider/학습 효능/Android/실기기/전체 npm test 검증 미실행.
+- git diff --check 통과. 허용된 production/test와 MOBILE_APP_HANDOFF.md·VALIDATION_STATUS.md의 최소 증거만 변경했다. 실행한 source/test를 ordinary local commit으로 저장하고 원본 SHA를 보존하는 bundle을 전달한다. Work push 재시도 없음; 원격 반영 완료를 주장하지 않는다.
+- IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-01 같은 상태 유지. IR-MOBILE-03 = HOLD / OPEN; 전체 후보 REQUEST CHANGES 유지. Independent Review PASS/CLOSED·재리뷰 요청·스레드 resolve·main 병합 없음. 역사적 상태 문구의 광범위 정리 없음.
+- 다음 행동 하나: Control Tower가 IR-MOBILE-02 bundle의 정확한 커밋 원격 저장을 판정한다.

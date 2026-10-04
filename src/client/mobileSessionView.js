@@ -147,8 +147,10 @@ function mountMobileSession({ root, createController, labelForNode, connected = 
       } else if (action === 'admit') {
         const proposedNodeId = controller.getState().currentScreen.nodeId;
         operation = controller.startProposedExplicitStudy().then((result) => {
-          // capacity 충돌의 최신 화면 반환은 입학 성공으로 표시하지 않는다.
-          if (!result || !Object.hasOwn(result, 'requestStatus')) admittedNodeId = proposedNodeId;
+          // capacity 재조회와 서버의 미도입 상태는 입학 성공으로 표시하지 않는다.
+          if (result && !Object.hasOwn(result, 'requestStatus') && result.state !== 'NOT_INTRODUCED') {
+            admittedNodeId = proposedNodeId;
+          }
         });
       } else if (action === 'acknowledge') {
         operation = controller.acknowledgeConversationBoundary();

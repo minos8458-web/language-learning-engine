@@ -13,6 +13,18 @@
 사용자 승인, AI 제안, 이전 보고, 직접 검증 결과를 구분하며, 확인하지 못한 것은 `미확인`으로 남긴다.
 새 세션의 시작 규칙은 `BOOTSTRAP.md`를 따른다.
 
+## IR-MOBILE-02 작업 체크포인트 — 2026-10-05
+
+- 사용자 직접 승인: 2026-10-05T07:01:56+09:00 IR-MOBILE-02 ONLY. NOT_INTRODUCED의 거짓 입학 성공 표시만 수정하고 로컬 ordinary commit 및 정확한 Git bundle으로 전달한다. Work push는 재시도하지 않는다.
+- 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`.
+- 시작 local/remote/PR head `413dd5ea9353117938b5f26924d8aad512ab7b64`, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0, main 39/0, PR #2 open/draft/unmerged 직접 확인.
+- 완료: mobileSessionView의 입학 성공 표시에 explicit-study 응답 state를 반영했다. NOT_INTRODUCED는 성공 문구/비활성 학습 시작됨 버튼으로 표시하지 않으며 나머지 유효 5상태의 기존 동작과 capacity 재조회는 보존한다. 콘텐츠 null 여부로 입학을 판단하지 않는다.
+- 직접 개발 검증 소유: VALIDATION_STATUS.md §S. 생산 코드·회귀·최소 증거 4파일만 변경하며 구현 commit/tree/parent는 이 절을 포함한 Git 커밋으로 식별한다. 커밋 후 테스트 재실행으로 주장하지 않는다.
+- 상태: IR-MOBILE-01/02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-03 = HOLD / OPEN. 사용자 전달 Independent Review 판정 REQUEST CHANGES를 유지한다. 정식 재리뷰·스레드 resolve·main 통합·Android/APK 작업 없음.
+- 저장 경계: 이번 수정은 로컬 후보이며 원격 반영 완료가 아니다. 알려진 HTTPS 인증 차단에 따라 push는 미시도한다. 승인된 전달물은 prerequisite `413dd5ea9353117938b5f26924d8aad512ab7b64`의 `LLE_IR_MOBILE_02_LOCAL_COMMITS_20261005.bundle`이며, 커밋 후 정확한 chain/tree/files와 bundle을 검증하여 전달한다.
+- 다음 행동 하나: Control Tower가 IR-MOBILE-02 bundle의 정확한 커밋 원격 저장을 판정한다.
+- 아래 역사적 기록과 오래된 상태 문구는 보존한다. IR-MOBILE-03 정리는 수행하지 않았다.
+
 ## IR-MOBILE-01 작업 체크포인트 — 2026-10-05
 
 - 사용자 승인: 2026-10-05T06:18:28+09:00 IR-MOBILE-01 ONLY / RECOVERED CHECKOUT. 허용 범위는 승인된 만료 안내의 DOM 보존, 한정 회귀, 최소 증거 기록과 ordinary commit/push다.

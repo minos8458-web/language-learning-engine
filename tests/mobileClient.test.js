@@ -419,6 +419,69 @@ test('노드 표시 문자열을 HTML로 실행하지 않고 텍스트로 표시
   view.destroy();
 });
 
+for (const state of ['NOT_INTRODUCED', 'INTRODUCED', 'STUDYING', 'PRACTICING', 'MASTERED', 'AUTOMATIC']) {
+  test(`명시적 학습 DOM은 콘텐츠의 독립 null과 무관하게 서버 ${state}로 입학 표시를 결정한다`, async () => {
+    const nodeId = 'NODE_MOBILE_TEST_A';
+    const content = (type) => ({
+      content_id: `CONTENT_${type}`, grammar_node_ids: [nodeId], content_type: type,
+      media_assets: [{ media_format: 'TEXT', asset_ref: 'synthetic content' }],
+      difficulty: 1, type_specific_metadata: type === 'QUIZ' ? { answer_key: 'synthetic answer' } : null,
+    });
+    for (const explanation of [null, content('EXPLANATION')]) {
+      for (const initial_practice of [null, content('QUIZ')]) {
+        const calls = [];
+        const transport = transportFor(async (url, options) => {
+          calls.push({ url, body: JSON.parse(options.body) });
+          return ok(url.endsWith('/start-session')
+            ? { next_action: 'NEW_GRAMMAR', node_id: nodeId }
+            : { explanation, state, initial_practice });
+        });
+        const { root, view } = createView(transport);
+        await view.refresh();
+        root.querySelector('[data-action="admit"]').click();
+        await settle();
+        assert.equal(view.getState().requestStatus, 'READY');
+        assert.equal(view.getState().error, null);
+        assert.equal(root.dataset.screen, 'NEW_GRAMMAR');
+        assert.equal(root.querySelector('.node-item').dataset.nodeId, nodeId);
+        const admitted = state !== 'NOT_INTRODUCED';
+        const button = root.querySelector('[data-action="admit"]');
+        assert.equal(root.textContent.includes('문법 학습을 시작했어요'), admitted);
+        assert.equal(root.textContent.includes('학습 시작됨'), admitted);
+        assert.equal(button.textContent, admitted ? '학습 시작됨' : '문법 학습 시작');
+        assert.equal(button.disabled, admitted);
+        assert.equal(root.getAttribute('aria-busy'), 'false');
+        assert.deepEqual(calls, [
+          { url: '/flow/start-session', body: { language: 'VI', conversation_boundary_acknowledged: false } },
+          { url: '/flow/start-explicit-study', body: { node_id: nodeId } },
+        ]);
+        view.destroy();
+      }
+    }
+  });
+}
+
+test('capacity 충돌 뒤 같은 제안의 새 판단도 DOM 입학 성공이나 자동 재전송으로 바뀌지 않는다', async () => {
+  const calls = [];
+  const transport = transportFor(async (url) => {
+    calls.push(url);
+    return url.endsWith('/start-session')
+      ? ok({ next_action: 'NEW_GRAMMAR', node_id: 'NODE_MOBILE_TEST_A' })
+      : errorResponse('CONTRACT_VIOLATION', 'active Grammar Node limit 초과: 합성 capacity 충돌');
+  });
+  const { root, view } = createView(transport);
+  await view.refresh();
+  root.querySelector('[data-action="admit"]').click();
+  await settle();
+  assert.equal(view.getState().requestStatus, 'READY');
+  assert.equal(root.dataset.screen, 'NEW_GRAMMAR');
+  assert.equal(root.textContent.includes('문법 학습을 시작했어요'), false);
+  assert.equal(root.querySelector('[data-action="admit"]').textContent, '문법 학습 시작');
+  assert.equal(root.querySelector('[data-action="admit"]').disabled, false);
+  assert.deepEqual(calls, ['/flow/start-session', '/flow/start-explicit-study', '/flow/start-session']);
+  view.destroy();
+});
+
 test('학습 시작 버튼의 연속 클릭은 요청 하나이며 성공 후 같은 제안을 재전송하지 않는다', async () => {
   let admissionCalls = 0;
   let resolveAdmission;
