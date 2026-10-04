@@ -1,5 +1,7 @@
 const { REQUEST_STATUS, SESSION_STATUS, SCREEN_KIND } = require('./learningSessionController');
 
+const AUTH_EXPIRY_GUIDANCE = '학습 연결이 만료됐어요. 다시 연결해 주세요.';
+
 const SCREEN_COPY = Object.freeze({
   REVIEW: ['복습', '배운 문법을 다시 꺼내볼까요?', '서버가 정한 순서대로 복습할 항목이에요.'],
   NEW_GRAMMAR: ['새 문법', '표현의 재료를 하나 더', '학습을 시작하면 이 문법을 연습할 준비가 돼요.'],
@@ -16,7 +18,11 @@ function mobileScreenModel(state) {
     return { kind: 'LOADING', tag: '준비 중', title: '다음 학습을 준비하고 있어요', description: '잠시만 기다려 주세요.', nodeIds: [] };
   }
   if (state.requestStatus === REQUEST_STATUS.ERROR) {
-    return { kind: 'ERROR', tag: '연결 확인', title: '학습을 불러오지 못했어요', description: '연결을 확인한 뒤 다시 시도해 주세요. 학습 완료로 처리하지 않았어요.', nodeIds: [] };
+    // 승인된 고정 문구만 허용하고 나머지 오류 원문은 화면에 복사하지 않는다.
+    const description = state.error?.message === AUTH_EXPIRY_GUIDANCE
+      ? AUTH_EXPIRY_GUIDANCE
+      : '연결을 확인한 뒤 다시 시도해 주세요. 학습 완료로 처리하지 않았어요.';
+    return { kind: 'ERROR', tag: '연결 확인', title: '학습을 불러오지 못했어요', description, nodeIds: [] };
   }
   if (state.requestStatus === REQUEST_STATUS.IDLE) {
     return { kind: 'HOME', tag: '오늘의 언어 학습', title: '배운 표현이\n내 말이 되도록', description: '기억을 꺼내고, 문법을 연결하고, 새로운 문장으로 이어가요.', nodeIds: [] };

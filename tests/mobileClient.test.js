@@ -323,6 +323,70 @@ function createView(transport, options = {}) {
   return { root, view };
 }
 
+test('HTTP 401의 정제된 만료 안내가 실제 제어기를 거쳐 DOM에 유지된다', async () => {
+  let calls = 0;
+  const transport = transportFor(async () => {
+    calls += 1;
+    return errorResponse('INVALID_ID', `SQL internal diagnostic password=${TOKEN}`, 401);
+  });
+  const { root, view } = createView(transport);
+  await view.refresh();
+  await settle();
+  assert.equal(view.getState().requestStatus, 'ERROR');
+  assert.equal(view.getState().currentScreen, null);
+  assert.equal(root.dataset.screen, 'ERROR');
+  assert.equal(root.querySelector('.hero-description').textContent, '학습 연결이 만료됐어요. 다시 연결해 주세요.');
+  assert.equal(root.textContent.includes('연결을 확인한 뒤 다시 시도해 주세요.'), false);
+  for (const privateText of [TOKEN, 'SQL', 'internal diagnostic', 'password=']) {
+    assert.equal(root.textContent.includes(privateText), false);
+  }
+  assert.equal(calls, 1);
+  view.destroy();
+});
+
+test('HTTP fetch 실패는 DOM에 일반 안내만 표시하고 자동 재시도하지 않는다', async () => {
+  let calls = 0;
+  const transport = transportFor(async () => {
+    calls += 1;
+    throw new Error(`SQL internal diagnostic password=${TOKEN}`);
+  });
+  const { root, view } = createView(transport);
+  await view.refresh();
+  await settle();
+  assert.equal(view.getState().requestStatus, 'ERROR');
+  assert.equal(root.dataset.screen, 'ERROR');
+  assert.equal(root.querySelector('.hero-description').textContent, '연결을 확인한 뒤 다시 시도해 주세요. 학습 완료로 처리하지 않았어요.');
+  assert.equal(root.textContent.includes('학습 연결이 만료됐어요. 다시 연결해 주세요.'), false);
+  for (const privateText of [TOKEN, 'SQL', 'internal diagnostic', 'password=']) {
+    assert.equal(root.textContent.includes(privateText), false);
+  }
+  assert.equal(calls, 1);
+  view.destroy();
+});
+
+test('제어기에 남은 임의 오류와 만료 안내의 부분 일치는 DOM 허용 대상이 아니다', async () => {
+  for (const message of [
+    `SQL internal diagnostic password=${TOKEN}`,
+    `학습 연결이 만료됐어요. 다시 연결해 주세요. SQL password=${TOKEN}`,
+  ]) {
+    let calls = 0;
+    const transport = transportFor(async () => { throw new Error('호출되면 안 됨'); }, {
+      getAccessToken: () => { calls += 1; throw new Error(message); },
+    });
+    const { root, view } = createView(transport);
+    await view.refresh();
+    assert.equal(view.getState().error.message, message);
+    assert.equal(root.dataset.screen, 'ERROR');
+    assert.equal(root.querySelector('.hero-description').textContent, '연결을 확인한 뒤 다시 시도해 주세요. 학습 완료로 처리하지 않았어요.');
+    assert.equal(root.textContent.includes(message), false);
+    assert.equal(root.textContent.includes(TOKEN), false);
+    assert.equal(root.textContent.includes('SQL'), false);
+    assert.equal(root.textContent.includes('학습 연결이 만료됐어요.'), false);
+    assert.equal(calls, 1);
+    view.destroy();
+  }
+});
+
 test('실제 화면 렌더 함수가 다섯 서버 상태를 DOM으로 옮긴다', async () => {
   for (const [scene, kind] of [['review', 'REVIEW'], ['new', 'NEW_GRAMMAR'], ['interleaving', 'INTERLEAVING'], ['conversation', 'CONVERSATION_BOUNDARY'], ['idle', 'IDLE']]) {
     const { root, view } = createView(createPreviewTransport(scene), { preview: true });
