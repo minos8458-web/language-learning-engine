@@ -13,6 +13,18 @@
 사용자 승인, AI 제안, 이전 보고, 직접 검증 결과를 구분하며, 확인하지 못한 것은 `미확인`으로 남긴다.
 새 세션의 시작 규칙은 `BOOTSTRAP.md`를 따른다.
 
+## IR-MOBILE-01 작업 체크포인트 — 2026-10-05
+
+- 사용자 승인: 2026-10-05T06:18:28+09:00 IR-MOBILE-01 ONLY / RECOVERED CHECKOUT. 허용 범위는 승인된 만료 안내의 DOM 보존, 한정 회귀, 최소 증거 기록과 ordinary commit/push다.
+- 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`.
+- 시작 local/remote/PR head `cf8dfb07dc32e76e4fc4afe5fb4061618bc0367d`, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`. fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0, main 37/0, PR #2 open/draft/unmerged 직접 확인.
+- 완료: mobileSessionView에서 오류 메시지가 승인된 만료 안내와 정확히 같을 때만 고정 안내를 표시한다. 나머지는 기존 일반 안내다. 다른 production 파일·admittedNodeId/NOT_INTRODUCED·API/schema/Tier A 변경 없음.
+- 직접 개발 검증: VALIDATION_STATUS.md §R. 실제 HttpLearningFlowTransport→LearningSessionController→mountMobileSession의 합성 HTTP/Node DOM 경로에서 만료 안내, 일반 오류, 임의 원문 및 부분 일치의 비노출을 확인했다. 구현·검증 커밋은 이 절을 포함한 Git 커밋에서 식별하며 커밋 후 재실행으로 주장하지 않는다.
+- 상태: IR-MOBILE-01 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 사용자 전달 Independent Review 판정은 REQUEST CHANGES로 유지한다. IR-MOBILE-02/03 = HOLD/open. 정식 재리뷰·스레드 resolve·main 통합·Android/APK 작업 미실행.
+- 저장: 이 문서 작성 시 commit/push 후 원격 확인은 아직 대기다. 최종 실행 보고에서 로컬/원격 SHA와 clean 상태를 구분한다.
+- 다음 행동 하나: Control Tower가 IR-MOBILE-01 수정 증거를 확인한 뒤 IR-MOBILE-02의 착수 여부를 결정한다.
+- 이전 기록은 아래 원문으로 보존한다. 오래된 current-authority 문구의 광범위 정리는 IR-MOBILE-03 소관이며 이번에 수행하지 않는다.
+
 ## 현재 체크포인트
 
 - 저장 차단: 코드 수정 commit `86335017fbaca6c7f1d9ae5778fa4b7951f5c607`과 증거 commit `dee1cd731f26a6c512941ba6f57200de3a81ca1f`는 로컬에 저장했다. 일반 `git push origin HEAD:refs/heads/development/mobile-01-session-ui-20261001`는 exit 128, `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. 연결 API 쓰기 대체·재시도·ref 강제 정렬은 하지 않았다.

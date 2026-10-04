@@ -824,3 +824,20 @@ npm run build:mobile
 - 다음 행동 하나: Control Tower가 CP-IP-01–06 후속 PR 재확인 범위를 결정한다.
 
 - 저장 결과 보충: 코드와 증거는 로컬 ordinary commit에 저장했으나 일반 push가 HTTPS 인증정보 부재로 exit 128 실패했다. 원격/PR head는 시작 SHA 그대로다. 위 PASS는 로컬 후보의 개발 증거이며 원격 반영·재리뷰 완료가 아니다. 해제 조건과 단일 다음 행동은 MOBILE_APP_HANDOFF.md를 따른다.
+
+
+## R. IR-MOBILE-01 정제된 인증 만료 안내의 DOM 보존 — 2026-10-05
+
+- 승인: 2026-10-05T06:18:28+09:00 사용자 IR-MOBILE-01 ONLY / RECOVERED CHECKOUT. Independent Review의 REQUEST CHANGES 및 IR-MOBILE-01/02/03 open 상태는 사용자 전달 판정이다. 이번 개발 세션이 독립 판정을 수행한 것은 아니다.
+- 직접 preflight: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`, 승인 origin URL/branch, local/remote/PR `cf8dfb07dc32e76e4fc4afe5fb4061618bc0367d`, main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`; fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0, main 37/0, PR #2 open/draft/unmerged.
+- Production: `src/client/mobileSessionView.js` 한 파일. state.error.message가 `학습 연결이 만료됐어요. 다시 연결해 주세요.`와 엄격히 일치할 때 동일 고정 상수를 description으로 반환한다. 나머지는 기존 일반 안내. 임의 원문 복사·부분 일치 허용 없음. transport/controller·PUBLIC_ERRORS·capacity·timeout·retry·admittedNodeId/NOT_INTRODUCED 변경 없음.
+- Test: `tests/mobileClient.test.js`의 DOM 회귀 3개 추가. 실제 HttpLearningFlowTransport→LearningSessionController→mountMobileSession 경로에서 (1) 401의 ERROR/화면 설명 exact·일반 안내 대체 없음·단일 요청·토큰/SQL/진단 비노출, (2) fetch 예외의 일반 안내·만료 안내 없음·단일 요청, (3) getAccessToken 예외를 통해 controller에 남은 임의 원문과 만료 안내+진단 문자열의 DOM 비노출을 확인한다. 기존 CP-IP-04 테스트는 그대로 보존한다.
+- 환경: GPT Work Linux / Node `v24.19.0` / npm `11.9.0`; repository engines `>=20.19.0`에 부합. 기존 `/tmp/node-v20.19.0-linux-x64/bin/node`는 이번 환경에 없어 현재 호환 runtime 사용. 새 clone의 linkedom/fake-indexeddb 부재를 확인하고 승인된 `npm ci --ignore-scripts` 실행 → exit 0, 35 packages 설치. npm http-proxy 환경 경고 있음. 설치 후 tracked 변화 0, package.json/package-lock.json 변경 0.
+- 수정 전 재현: `node --test --test-name-pattern='HTTP 401의 정제된|HTTP fetch 실패는 DOM|제어기에 남은 임의 오류' tests/mobileClient.test.js` → exit 1, tests 3 / pass 2 / fail 1 / cancelled 0 / skipped 0 / todo 0. 기존 UI가 만료 안내 대신 일반 안내를 표시하여 exact DOM assertion 실패.
+- 최종 수정 파일 직접 실행:
+  - `node --test tests/mobileClient.test.js` → exit 0, tests 43 / pass 43 / fail 0 / cancelled 0 / skipped 0 / todo 0.
+  - `npm run test:mobile` → exit 0, tests 102 / pass 102 / fail 0 / cancelled 0 / skipped 0 / todo 0. 위 43건 포함, 합산하지 않는다.
+  - `npm run build:mobile` → exit 0. mobile/dist는 Git 제외 생성물. 배포/APK/실기기 완료 증거가 아니다.
+- git diff --check 통과. 최종 diff는 production/test 위 두 파일과 MOBILE_APP_HANDOFF.md·VALIDATION_STATUS.md 네 파일뿐이다. 다른 production·package/lock·API/schema/migration/Tier A 변경 없음. 새로운 PostgreSQL/Actual-provider/학습 효능/실기기/전체 npm test 검증 없음. 기존 CP-IP-04 transport/controller·capacity·timeout·malformed explicit-study 화면 회귀는 모바일 선택 실행에 포함된다.
+- IR-MOBILE-01 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 전체 후보 REQUEST CHANGES 유지; IR-MOBILE-02/03 HOLD/open. 이 실행은 개발 증거이며 Independent Review PASS/VALIDATED/CLOSED가 아니다. 재리뷰 요청·스레드 resolve·main 병합 미실행. 역사적 상태 문구 정리는 수행하지 않았다.
+- 다음 행동 하나: Control Tower가 IR-MOBILE-01 수정 증거를 확인한 뒤 IR-MOBILE-02의 착수 여부를 결정한다.
