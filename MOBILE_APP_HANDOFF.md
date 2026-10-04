@@ -21,8 +21,8 @@
 - 완료: mobileSessionView에서 오류 메시지가 승인된 만료 안내와 정확히 같을 때만 고정 안내를 표시한다. 나머지는 기존 일반 안내다. 다른 production 파일·admittedNodeId/NOT_INTRODUCED·API/schema/Tier A 변경 없음.
 - 직접 개발 검증: VALIDATION_STATUS.md §R. 실제 HttpLearningFlowTransport→LearningSessionController→mountMobileSession의 합성 HTTP/Node DOM 경로에서 만료 안내, 일반 오류, 임의 원문 및 부분 일치의 비노출을 확인했다. 구현·검증 커밋은 이 절을 포함한 Git 커밋에서 식별하며 커밋 후 재실행으로 주장하지 않는다.
 - 상태: IR-MOBILE-01 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. 사용자 전달 Independent Review 판정은 REQUEST CHANGES로 유지한다. IR-MOBILE-02/03 = HOLD/open. 정식 재리뷰·스레드 resolve·main 통합·Android/APK 작업 미실행.
-- 저장: 이 문서 작성 시 commit/push 후 원격 확인은 아직 대기다. 최종 실행 보고에서 로컬/원격 SHA와 clean 상태를 구분한다.
-- 다음 행동 하나: Control Tower가 IR-MOBILE-01 수정 증거를 확인한 뒤 IR-MOBILE-02의 착수 여부를 결정한다.
+- 저장 차단: 코드·테스트·증거 ordinary commit `b7e4a590b73eede0015f3453d494205d2d979242`, tree `128f833406d6ea59354bd1702906bd4ec7ed094f`, parent `cf8dfb07dc32e76e4fc4afe5fb4061618bc0367d`는 로컬에 저장했다. `GIT_TERMINAL_PROMPT=0 git push origin HEAD:refs/heads/development/mobile-01-session-ui-20261001`는 exit 128, `fatal: could not read Username for 'https://github.com': terminal prompts disabled`로 실패했다. 원격/PR head는 `cf8dfb07dc32e76e4fc4afe5fb4061618bc0367d`, PR open/draft/unmerged, main 지정 SHA 유지로 직접 재확인했다. 원격 저장 완료가 아니며 API 대체·push 재시도 없음. 수정·PASS는 로컬 후보에 한정한다.
+- 다음 행동 하나: Control Tower가 보존된 IR-MOBILE-01 로컬 커밋의 원격 저장 경로를 판정한다. 해제 조건은 승인된 일반 push 인증 또는 별도로 승인된 정확한 커밋 전달 경로이며, IR-MOBILE-02/03은 그동안 HOLD/open이다.
 - 이전 기록은 아래 원문으로 보존한다. 오래된 current-authority 문구의 광범위 정리는 IR-MOBILE-03 소관이며 이번에 수행하지 않는다.
 
 ## 현재 체크포인트
