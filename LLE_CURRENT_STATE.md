@@ -12577,6 +12577,21 @@ historical ledger does not.
 
 ## 10. Next Action
 
+### 현재 권위 — IR-MOBILE-03 문서 동기화 (2026-10-05)
+
+- IR-MOBILE-03 착수 기준: PR #2 후보 `d521dc5b41f5395b84aeca193fddc2fff06f0fd6`. fresh fetch 및 PR 조회로 local/remote/PR head 일치, PR #2 open / draft / unmerged, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 직접 확인했다.
+- IR-MOBILE-01 / IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-02는 위 기준 SHA에 원격 저장됐다. 기존 개발 검증은 VALIDATION_STATUS.md §R/§S이며 이번에 재실행하지 않는다.
+- IR-MOBILE-03은 마지막 OPEN 정식 지적의 문서 동기화다. 이 변경의 로컬 커밋 후 상태는 CORRECTED IN LOCAL CANDIDATE / PERSISTENCE + RE-REVIEW PENDING이며, 정확한 원격 저장 확인 전에는 저장 완료로 취급하지 않는다.
+- 사용자 전달 정식 Independent Review 판정은 REQUEST CHANGES로 유지한다. 새 독립 재리뷰가 실제 통과하기 전 Independent Review PASS, VALIDATED, CLOSED 또는 main 통합 완료로 승격하지 않는다.
+
+현재 다음 행동 하나: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
+
+리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
+
+### 이전 모바일 다음 행동 기록 — SUPERSEDED / 역사 보존
+
+아래 CP-IP-04 및 MOBILE-05 관련 지시는 당시 기록이며 현재 실행 지시가 아니다.
+
 현재 다음 행동 하나: HTTP 401의 세션 만료 안내가 일반 연결 오류로 바뀌는 문제(CP-IP-04)를 한 작업으로 보완한다. 독립 재리뷰·main 병합은 별도 후속으로 남긴다.
 2026-10-03 Copilot CP-IP-05 정정: 이전 MOBILE-05 설계 지시는 완료 이력이며 재시작하지 않는다. 최신 구현/검증/리뷰 상태는 PROJECT_STATUS.md·VALIDATION_STATUS.md §N·MOBILE_APP_HANDOFF.md를 따른다.
 MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언어 전환 검증은 별도 대기 항목이다.
