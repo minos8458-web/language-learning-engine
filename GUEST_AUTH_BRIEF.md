@@ -1,6 +1,21 @@
 # GUEST_AUTH_BRIEF.md
 
-## 범위·근거·현재 상태
+## 현재 프로젝트 권위 — IR-MOBILE-03 (2026-10-05)
+
+MOBILE-05 클라이언트 게스트 준비 제어기·주입 저장/adapter 경계·모바일 진입 연결은 현재 후보에 이미 구현돼 있다. 이 brief는 해당 구현을 다시 열지 않는다. 실제 native 보안 저장소·기기 완료로 확대하지 않는다. 현재 프로젝트 권위와 다음 행동은 LLE_CURRENT_STATE.md §10 / PROJECT_STATUS.md §3·§5.1 / MOBILE_APP_HANDOFF.md의 최상단 현재 체크포인트가 소유한다.
+
+- IR-MOBILE-03 착수 기준: PR #2 후보 `d521dc5b41f5395b84aeca193fddc2fff06f0fd6`. fresh fetch 및 PR 조회로 local/remote/PR head 일치, PR #2 open / draft / unmerged, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 직접 확인했다.
+- IR-MOBILE-01 / IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-02는 위 기준 SHA에 원격 저장됐다. 기존 개발 검증은 VALIDATION_STATUS.md §R/§S이며 이번에 재실행하지 않는다.
+- IR-MOBILE-03은 마지막 OPEN 정식 지적의 문서 동기화다. 이 변경의 로컬 커밋 후 상태는 CORRECTED IN LOCAL CANDIDATE / PERSISTENCE + RE-REVIEW PENDING이며, 정확한 원격 저장 확인 전에는 저장 완료로 취급하지 않는다.
+- 사용자 전달 정식 Independent Review 판정은 REQUEST CHANGES로 유지한다. 새 독립 재리뷰가 실제 통과하기 전 Independent Review PASS, VALIDATED, CLOSED 또는 main 통합 완료로 승격하지 않는다.
+
+현재 다음 행동 하나: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
+
+리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
+
+## 범위·근거·당시 상태 — MOBILE-04 역사 기록
+
+이하 구현 경계 설명은 보존한다. 날짜별 당시 상태/미완료/다음 행동은 현재 프로젝트 권위가 아니다.
 
 MOBILE-04는 기존 `API_LAYER_BRIEF.md` §3, `DATA_PERSISTENCE_BRIEF.md` §3.1,
 `CLIENT_BRIEF.md` §4와 `db/migrations/001_create_users.sql`을 소비하는 게스트 인증 서버 구현이다.
@@ -75,6 +90,10 @@ CLI용 설정 파일은 `scripts/postgres-guest-host.js`이며 `LLE_API_HOST_MOD
 키 값은 호스트의 비밀 설정으로 보관한다. 키가 없으면 이 호스트 시작은 실패한다.
 이 세션에서 호스트를 실제 PG에 연결하거나 migration을 실행하지 않았다.
 합성 pool로 HTTP 발급→서명/계정 확인→기존 클라이언트 요청과 종료 hook을 검증했다.
+
+### 이전 MOBILE-05 착수 지시 — SUPERSEDED / 역사 보존
+
+아래 클라이언트 구현 지시는 이미 이행된 당시 다음 행동이다. 현재 프로젝트 작업으로 재개하지 않는다.
 
 후속 MOBILE-05 경계 설계는 `MOBILE_GUEST_START_BRIEF.md`에 완료했다 (2026-10-02).
 클라이언트/네이티브 보안 저장 구현과 실제 PostgreSQL/휴대폰 검증은 아직 완료하지 않았다.

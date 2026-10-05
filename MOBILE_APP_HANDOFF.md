@@ -13,7 +13,23 @@
 사용자 승인, AI 제안, 이전 보고, 직접 검증 결과를 구분하며, 확인하지 못한 것은 `미확인`으로 남긴다.
 새 세션의 시작 규칙은 `BOOTSTRAP.md`를 따른다.
 
-## IR-MOBILE-02 작업 체크포인트 — 2026-10-05
+## 현재 체크포인트 — IR-MOBILE-03 문서 동기화 (2026-10-05)
+
+- 사용자 직접 승인: 2026-10-05T09:06:04+09:00 IR-MOBILE-03 ONLY. 허용 파일은 LLE_CURRENT_STATE.md, PROJECT_STATUS.md, MOBILE_APP_HANDOFF.md, INITIAL_PRACTICE_REVIEW_PACKET.md, GUEST_AUTH_BRIEF.md 다섯 문서뿐이다.
+- 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`. 사전 확인: fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0.
+- IR-MOBILE-03 착수 기준: PR #2 후보 `d521dc5b41f5395b84aeca193fddc2fff06f0fd6`. fresh fetch 및 PR 조회로 local/remote/PR head 일치, PR #2 open / draft / unmerged, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 직접 확인했다.
+- IR-MOBILE-01 / IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-02는 위 기준 SHA에 원격 저장됐다. 기존 개발 검증은 VALIDATION_STATUS.md §R/§S이며 이번에 재실행하지 않는다.
+- IR-MOBILE-03은 마지막 OPEN 정식 지적의 문서 동기화다. 이 변경의 로컬 커밋 후 상태는 CORRECTED IN LOCAL CANDIDATE / PERSISTENCE + RE-REVIEW PENDING이며, 정확한 원격 저장 확인 전에는 저장 완료로 취급하지 않는다.
+- 사용자 전달 정식 Independent Review 판정은 REQUEST CHANGES로 유지한다. 새 독립 재리뷰가 실제 통과하기 전 Independent Review PASS, VALIDATED, CLOSED 또는 main 통합 완료로 승격하지 않는다.
+- 완료 범위: 현재 권위의 CP-IP-04/MOBILE-05 다음 행동과 과거 push 차단의 현재성만 정정했다. 이전 기록 본문·개발/검증 증거는 보존하며 production/test/API/schema/Tier A/의존성은 변경하지 않는다.
+- 문서 검증: `git diff --check` 및 exact 5파일 diff, 역사 본문 보존, 현재 상태·조건부 다음 행동 일치를 확인한다. 테스트: NOT RUN — DOCUMENTATION-ONLY IR-MOBILE-03 CORRECTION. 허용 파일에 VALIDATION_STATUS.md가 없으므로 이번 문서 점검만 여기 기록하고 이전 실행 증거는 재작성하지 않는다.
+- 저장: 알려진 Work HTTPS 인증 차단 때문에 push는 미시도한다. ordinary local commit 후 원본 SHA/parent/tree/files를 감사하고 `LLE_IR_MOBILE_03_LOCAL_COMMITS_20261005.bundle`로 전달한다. prerequisite는 착수 기준 SHA이며 최종 로컬 commit/tree는 이 체크포인트를 포함한 Git 커밋으로 식별한다. bundle 전달은 원격 반영 완료가 아니다.
+- 새 Independent Review 요청/실행 없음. 리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
+- 다음 행동 하나: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
+
+이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존하며, 현재 권위는 이 최상단 체크포인트 하나다. 이전 로컬 저장 차단 문구는 현재 원격 상태를 덮어쓰지 않는다.
+
+## 이전 체크포인트 — IR-MOBILE-02 (2026-10-05, SUPERSEDED / 역사 보존)
 
 - 사용자 직접 승인: 2026-10-05T07:01:56+09:00 IR-MOBILE-02 ONLY. NOT_INTRODUCED의 거짓 입학 성공 표시만 수정하고 로컬 ordinary commit 및 정확한 Git bundle으로 전달한다. Work push는 재시도하지 않는다.
 - 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`.
@@ -25,7 +41,7 @@
 - 다음 행동 하나: Control Tower가 IR-MOBILE-02 bundle의 정확한 커밋 원격 저장을 판정한다.
 - 아래 역사적 기록과 오래된 상태 문구는 보존한다. IR-MOBILE-03 정리는 수행하지 않았다.
 
-## IR-MOBILE-01 작업 체크포인트 — 2026-10-05
+## 이전 체크포인트 — IR-MOBILE-01 (2026-10-05, SUPERSEDED / 역사 보존)
 
 - 사용자 승인: 2026-10-05T06:18:28+09:00 IR-MOBILE-01 ONLY / RECOVERED CHECKOUT. 허용 범위는 승인된 만료 안내의 DOM 보존, 한정 회귀, 최소 증거 기록과 ordinary commit/push다.
 - 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`.
@@ -37,7 +53,7 @@
 - 다음 행동 하나: Control Tower가 보존된 IR-MOBILE-01 로컬 커밋의 원격 저장 경로를 판정한다. 해제 조건은 승인된 일반 push 인증 또는 별도로 승인된 정확한 커밋 전달 경로이며, IR-MOBILE-02/03은 그동안 HOLD/open이다.
 - 이전 기록은 아래 원문으로 보존한다. 오래된 current-authority 문구의 광범위 정리는 IR-MOBILE-03 소관이며 이번에 수행하지 않는다.
 
-## 현재 체크포인트
+## 이전 체크포인트 — CP-IP-04 로컬 push 차단 (2026-10-04, SUPERSEDED / 역사 보존)
 
 - 저장 차단: 코드 수정 commit `86335017fbaca6c7f1d9ae5778fa4b7951f5c607`과 증거 commit `dee1cd731f26a6c512941ba6f57200de3a81ca1f`는 로컬에 저장했다. 일반 `git push origin HEAD:refs/heads/development/mobile-01-session-ui-20261001`는 exit 128, `fatal: could not read Username for 'https://github.com': No such device or address`로 실패했다. 연결 API 쓰기 대체·재시도·ref 강제 정렬은 하지 않았다.
 - 실패 후 원격/PR head는 여전히 `6a3471f15d1b25f6ede0c4b685c9010ded42b8c4`, main은 지정 SHA 유지, PR open/draft/unmerged, CP-IP-04 스레드 unresolved/non-outdated를 직접 확인했다. 구현 완료는 로컬 후보만 해당하며 원격 반영 완료가 아니다. push 권한 자체와 인증 복구 방법은 미확인이다.
@@ -267,7 +283,7 @@
 - 기존 in-process 명시적 학습은 Progress 갱신만 반환한다. 설명 콘텐츠 조회·나머지 세 학습 API·동일 출처 앱 라우팅은 미구현이다.
 - 이미 호출한 엔진 작업은 HTTP 취소로 중단되거나 rollback된다고 보장하지 않는다. 서버 자동 재전송 없음.
 
-## 다음 행동 하나
+## 이전 서버 구현 다음 행동 — SUPERSEDED / 역사 보존
 
 승인된 최초 학습 계약의 서버 경계 구현 한 작업: Content R1·Learning Flow startExplicitStudy·in-process 연결과 관련 검증을 진행한다. UI/제출/Android 작업은 동시에 시작하지 않는다. 이번 문서 반영에서는 구현에 착수하지 않았다.
 

@@ -1,6 +1,17 @@
 # INITIAL_PRACTICE_REVIEW_PACKET.md
 
-## 상태
+## 현재 정식 리뷰 후속 상태 — IR-MOBILE-03 (2026-10-05)
+
+- IR-MOBILE-03 착수 기준: PR #2 후보 `d521dc5b41f5395b84aeca193fddc2fff06f0fd6`. fresh fetch 및 PR 조회로 local/remote/PR head 일치, PR #2 open / draft / unmerged, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 직접 확인했다.
+- IR-MOBILE-01 / IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-02는 위 기준 SHA에 원격 저장됐다. 기존 개발 검증은 VALIDATION_STATUS.md §R/§S이며 이번에 재실행하지 않는다.
+- IR-MOBILE-03은 마지막 OPEN 정식 지적의 문서 동기화다. 이 변경의 로컬 커밋 후 상태는 CORRECTED IN LOCAL CANDIDATE / PERSISTENCE + RE-REVIEW PENDING이며, 정확한 원격 저장 확인 전에는 저장 완료로 취급하지 않는다.
+- 사용자 전달 정식 Independent Review 판정은 REQUEST CHANGES로 유지한다. 새 독립 재리뷰가 실제 통과하기 전 Independent Review PASS, VALIDATED, CLOSED 또는 main 통합 완료로 승격하지 않는다.
+
+Copilot `PRR_kwDOTQ7IWM8AAAABQfiOMw`는 PR-review evidence / external review findings이며 정식 milestone-final Independent Review가 아니다. 아래 당시 독립 리뷰 명칭은 원문 이력으로 보존한다. 새 재리뷰는 별도 `40 Independent Review` 단계다.
+
+리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
+
+## 이전 검토 패킷 상태 — 2026-10-03 역사 보존
 
 2026-10-03T22:51:34+09:00 사용자 “다음”은 직전 서버 구현 후보의 독립 리뷰 진행 지시다. 이 문서는 작성자의 검토 자료이며 독립 리뷰 결과가 아니다.
 
@@ -89,6 +100,12 @@ CP-IP-01/02/03/04 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING, NOT CLOSED. CP-I
 
 상단과 이전 이력의 Copilot “독립 리뷰” 표현은 PR 리뷰 증거·외부 지적으로 분류한다. Copilot `PRR_kwDOTQ7IWM8AAAABQfiOMw`는 governed milestone-final fresh read-only Independent Review가 아니다. 정식 검토는 후속 별도 `40 Independent Review` 단계이며 이번 세션은 이를 요청하거나 수행하지 않았다. main 통합·CLOSED 판정 없음.
 
-## 다음 행동 하나
+## 이전 CP-IP-04 저장 다음 행동 — SUPERSEDED / 역사 보존
+
+아래 인증 복구/push 지시는 당시 기록이며 현재 실행 지시가 아니다.
 
 일반 Git push 인증을 복구한 뒤 기준선을 재확인하고 기존 CP-IP-04 커밋들을 일반 push한다. 로컬 수정·검증은 완료됐지만 원격 반영은 인증 부재로 차단됐다. PR 재확인·정식 Independent Review는 아직 요청하지 않는다.
+
+## 현재 다음 행동 하나
+
+이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
