@@ -30,14 +30,15 @@ function sourceVersion() {
   }
 }
 
-function standalonePreview(runtime) {
+function standalonePreview(runtime, indexHtml = fs.readFileSync(path.join(ROOT, 'mobile/index.html'), 'utf8')) {
   const script = runtime.replace(/<\/script/gi, '<\\/script');
   const styles = fs.readFileSync(path.join(ROOT, 'mobile/styles.css'), 'utf8');
   const icon = fs.readFileSync(path.join(ROOT, 'mobile/icon.svg')).toString('base64');
   const guide = fs.readFileSync(path.join(ROOT, 'mobile/previewGuide.html'), 'utf8');
   const digest = (text) => createHash('sha256').update(text).digest('base64');
   const policy = `default-src 'none'; script-src 'sha256-${digest(script)}'; style-src 'sha256-${digest(styles)}'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
-  return fs.readFileSync(path.join(ROOT, 'mobile/index.html'), 'utf8')
+  // checkout 줄바꿈(CRLF·LF)과 관계없이 같은 결과가 나오도록 치환 전에 LF로 맞춘다.
+  const html = indexHtml.replace(/\r\n/g, '\n')
     .replace('<html lang="ko">', '<html lang="ko" data-lle-preview="standalone">')
     .replace('<meta charset="utf-8">', `<meta charset="utf-8">\n  <meta http-equiv="Content-Security-Policy" content="${policy}">\n  <meta name="lle-source-commit" content="${sourceVersion()}">`)
     .replace('<title>LLE — 배운 표현이 내 말이 되도록</title>', '<title>LLE — 다운로드용 화면 미리보기</title>')
@@ -48,9 +49,10 @@ function standalonePreview(runtime) {
     .replace('href="./?preview=1"', 'href="#preview-controls"')
     .replace('    </form>', `    </form>\n${guide}`)
     .replace('</body>', `<script>${script}</script>\n</body>`);
+  return html;
 }
 
-function buildMobile(outputDirectory = path.join(ROOT, 'mobile', 'dist')) {
+function buildMobile(outputDirectory = path.join(ROOT, 'mobile', 'dist'), { indexHtml } = {}) {
   fs.mkdirSync(outputDirectory, { recursive: true });
   const factories = MODULES.map((id) => `${JSON.stringify(id)}: function(module, exports, require) {\n${fs.readFileSync(path.join(ROOT, id), 'utf8')}\n}`).join(',\n');
   const runtime = `(() => {
@@ -78,7 +80,7 @@ function buildMobile(outputDirectory = path.join(ROOT, 'mobile', 'dist')) {
   for (const file of ['index.html', 'styles.css', 'icon.svg']) {
     fs.copyFileSync(path.join(ROOT, 'mobile', file), path.join(outputDirectory, file));
   }
-  fs.writeFileSync(path.join(outputDirectory, 'lle-mobile-preview.html'), standalonePreview(runtime));
+  fs.writeFileSync(path.join(outputDirectory, 'lle-mobile-preview.html'), standalonePreview(runtime, indexHtml));
   return outputDirectory;
 }
 

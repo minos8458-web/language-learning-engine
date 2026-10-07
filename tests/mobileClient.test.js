@@ -575,12 +575,13 @@ test('전송 실패는 오류 화면과 수동 재시도로 이어지고 원문 
   view.destroy();
 });
 
-function runBundle(context, search, { standalone = false, config, indexedDB, fetchImpl } = {}) {
+function runBundle(context, search, { standalone = false, config, indexedDB, fetchImpl, indexHtml } = {}) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'lle-mobile-bootstrap-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  buildMobile(directory);
+  buildMobile(directory, { indexHtml });
   const file = standalone ? 'lle-mobile-preview.html' : 'index.html';
-  const { document } = parseHTML(fs.readFileSync(path.join(directory, file), 'utf8'));
+  const html = fs.readFileSync(path.join(directory, file), 'utf8');
+  const { document } = parseHTML(html);
   const window = { location: { search, origin: 'https://lle.example' }, LLE_APP_CONFIG: config, indexedDB };
   let fetchCalls = 0;
   const code = standalone ? document.querySelector('script').textContent : fs.readFileSync(path.join(directory, 'app.js'), 'utf8');
@@ -589,7 +590,7 @@ function runBundle(context, search, { standalone = false, config, indexedDB, fet
     setTimeout, clearTimeout,
     fetch: (...args) => { fetchCalls += 1; if (fetchImpl) return fetchImpl(...args); throw new Error('합성 네트워크 차단'); },
   });
-  return { root: document.getElementById('learning-root'), document, window, fetchCalls: () => fetchCalls };
+  return { root: document.getElementById('learning-root'), document, window, html, fetchCalls: () => fetchCalls };
 }
 
 test('최종 브라우저 번들은 인증 host 없이 게스트 연결 대기 화면에서 학습을 막는다', (context) => {
@@ -669,6 +670,34 @@ test('다운로드 빌드의 장면 선택은 일곱 화면과 교차 연습의 
       ]);
     }
   }
+  assert.equal(app.fetchCalls(), 0);
+});
+
+test('CRLF 줄바꿈 index.html로 만든 다운로드 HTML도 LF와 같고 인라인 실행 코드 하나로 합성 미리보기를 시작한다', async (context) => {
+  // checkout·core.autocrlf 설정과 무관하게 LF·CRLF 입력을 직접 만들어 빌더에 넣는다.
+  const source = fs.readFileSync(path.join(__dirname, '../mobile/index.html'), 'utf8');
+  const lfSource = source.replace(/\r\n/g, '\n');
+  const crlfSource = lfSource.replace(/\n/g, '\r\n');
+  assert.equal(crlfSource.includes('  <script src="./app.js" defer></script>\r\n'), true);
+  const lfApp = runBundle(context, '?scene=new', { standalone: true, indexHtml: lfSource });
+  const app = runBundle(context, '?scene=new', { standalone: true, indexHtml: crlfSource });
+  assert.equal(app.html, lfApp.html);
+  const { document } = app;
+  assert.equal(document.querySelectorAll('script').length, 1);
+  assert.equal(document.querySelectorAll('script[src]').length, 0);
+  assert.equal(app.html.includes('./app.js'), false);
+  const script = document.querySelector('script').textContent;
+  assert.equal(script.includes("load('mobile/browserEntry.js')"), true);
+  const policy = document.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+  assert.equal(policy.includes(`script-src 'sha256-${createHash('sha256').update(script).digest('base64')}'`), true);
+  await settle();
+  assert.equal(app.root.dataset.screen, 'NEW_GRAMMAR');
+  assert.equal(document.getElementById('preview-notice').hidden, false);
+  assert.equal(document.getElementById('preview-controls').hidden, false);
+  assert.ok(document.getElementById('preview-guide'));
+  selectScene(app, 'review');
+  await settle();
+  assert.equal(app.root.dataset.screen, 'REVIEW');
   assert.equal(app.fetchCalls(), 0);
 });
 
