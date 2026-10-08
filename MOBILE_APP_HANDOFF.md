@@ -13,7 +13,22 @@
 사용자 승인, AI 제안, 이전 보고, 직접 검증 결과를 구분하며, 확인하지 못한 것은 `미확인`으로 남긴다.
 새 세션의 시작 규칙은 `BOOTSTRAP.md`를 따른다.
 
-## 현재 체크포인트 — IR-MOBILE-03 문서 동기화 (2026-10-05)
+## 현재 체크포인트 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09)
+
+- 역할/경로: Validation/Integration 세션, 예약 통합 worktree `E:/Projects/LLE_INTEGRATION_MOBILE_20261005`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `main`.
+- 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
+- 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (branch `development/mobile-postmerge-crlf-fix-20261007`, parent `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`). 리뷰된 정정 tree: `9438b252e42f51b84b7022b7a280b8c5fdeefe93`. 원격 정정 branch는 변경 없음.
+- Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED. Blocking finding 0.
+- 통합 전 복구: stale 로컬 `refs/heads/main` `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 Control Tower 승인 하에 compare-and-swap `git update-ref`로 `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`에 맞추고 `git switch main` 했다. 시작 main tree: `d662ed8371a96c5d22bc46423760eb20a921741c`.
+- Runtime main 통합 commit: `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (ordinary cherry-pick, parent `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`, `git diff --check` clean, mobile/dist 없음, push `efdfee5..fdfe24f main -> main`, force 없음). Runtime 통합 tree: `9438b252e42f51b84b7022b7a280b8c5fdeefe93` (리뷰된 정정 tree와 동일). main 통합 = COMPLETE.
+- 식별자 구분: 이 체크포인트는 `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` 위의 별도 후속 문서 전용 main commit으로 저장되므로, runtime 통합 commit과 최종 origin/main SHA는 서로 다르다. 최종 SHA는 Git 이력/원격으로 식별한다.
+- Post-merge Windows-local validation = PENDING. NOT VALIDATED. NOT CLOSED. PostgreSQL NOT RUN (이 정정 lifecycle). Review-record NOT COMPLETE. 이 문서 수정 자체는 runtime 검증 증거를 제공하지 않으며 npm/테스트/빌드/PostgreSQL을 실행하지 않았다.
+- Non-blocking 리뷰 노트 (정정 불요): N-01 LOW (sourceVersion 별도 계산에 따른 LF/CRLF 전체 HTML 동등성 테스트의 드문 flakiness 가능성), N-02 LOW (주입된 indexHtml 사용이 marker로 별도 증명되지 않음; 현재 후보는 정확함), N-03 INFO (index.html EOL만 정규화; 현재 기능 영향 없음), N-04 INFO (기존 String.replace의 조용한 target-drift; 범위 밖).
+- 다음 행동 하나: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
+
+이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존하며, 현재 권위는 이 최상단 MOBILE CRLF 체크포인트 하나다.
+
+## 이전 체크포인트 — IR-MOBILE-03 문서 동기화 (2026-10-05, PREVIOUS / SUPERSEDED / 역사 보존)
 
 - 사용자 직접 승인: 2026-10-05T09:06:04+09:00 IR-MOBILE-03 ONLY. 허용 파일은 LLE_CURRENT_STATE.md, PROJECT_STATUS.md, MOBILE_APP_HANDOFF.md, INITIAL_PRACTICE_REVIEW_PACKET.md, GUEST_AUTH_BRIEF.md 다섯 문서뿐이다.
 - 실행 경로: `/workspace/scratch/2f8f7d39d1fd/lle-mobile-ir-recovery`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `development/mobile-01-session-ui-20261001`. 사전 확인: fetch exit 0, clean/staged/untracked/stash 0, upstream 0/0.
@@ -25,9 +40,9 @@
 - 문서 검증: `git diff --check` 및 exact 5파일 diff, 역사 본문 보존, 현재 상태·조건부 다음 행동 일치를 확인한다. 테스트: NOT RUN — DOCUMENTATION-ONLY IR-MOBILE-03 CORRECTION. 허용 파일에 VALIDATION_STATUS.md가 없으므로 이번 문서 점검만 여기 기록하고 이전 실행 증거는 재작성하지 않는다.
 - 저장: 알려진 Work HTTPS 인증 차단 때문에 push는 미시도한다. ordinary local commit 후 원본 SHA/parent/tree/files를 감사하고 `LLE_IR_MOBILE_03_LOCAL_COMMITS_20261005.bundle`로 전달한다. prerequisite는 착수 기준 SHA이며 최종 로컬 commit/tree는 이 체크포인트를 포함한 Git 커밋으로 식별한다. bundle 전달은 원격 반영 완료가 아니다.
 - 새 Independent Review 요청/실행 없음. 리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
-- 다음 행동 하나: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
+- 당시(SUPERSEDED) 다음 행동: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
 
-이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존하며, 현재 권위는 이 최상단 체크포인트 하나다. 이전 로컬 저장 차단 문구는 현재 원격 상태를 덮어쓰지 않는다.
+(당시 기록, SUPERSEDED) 이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존한다. 당시에는 이 IR-MOBILE-03 체크포인트가 권위였으나 지금은 최상단 MOBILE CRLF 체크포인트로 대체되었다. 이전 로컬 저장 차단 문구는 현재 원격 상태를 덮어쓰지 않는다.
 
 ## 이전 체크포인트 — IR-MOBILE-02 (2026-10-05, SUPERSEDED / 역사 보존)
 

@@ -12577,14 +12577,32 @@ historical ledger does not.
 
 ## 10. Next Action
 
-### 현재 권위 — IR-MOBILE-03 문서 동기화 (2026-10-05)
+### 현재 권위 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09)
+
+- 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
+- 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (branch `development/mobile-postmerge-crlf-fix-20261007`, parent `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`). 리뷰된 정정 tree: `9438b252e42f51b84b7022b7a280b8c5fdeefe93`.
+- Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED. Blocking finding 0.
+- Runtime main 통합 commit: `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (ordinary cherry-pick, parent `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`). Runtime 통합 tree: `9438b252e42f51b84b7022b7a280b8c5fdeefe93` (리뷰된 정정 tree와 동일). main 통합 = COMPLETE (원격 main에서 `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` 직접 확인).
+- 이 상태 동기화는 문서 전용 commit을 `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` 위에 별도로 추가한다. 따라서 runtime 통합 commit과 이 동기화 후 최종 origin/main SHA는 서로 다른 식별자다.
+- Post-merge Windows-local validation = PENDING. NOT VALIDATED. NOT CLOSED. PostgreSQL NOT RUN (이 정정 lifecycle). Review-record NOT COMPLETE. 이 문서 동기화는 runtime 검증 증거를 제공하지 않으며 npm/테스트/빌드/PostgreSQL을 실행하지 않았다.
+- Non-blocking 리뷰 노트 (정정 불요):
+  - N-01 LOW / NON-BLOCKING: 별도로 계산되는 sourceVersion으로 인한 LF/CRLF 전체 HTML 동등성 테스트의 드문 flakiness 가능성. 정정 불요.
+  - N-02 LOW / NON-BLOCKING: 주입된 indexHtml 사용이 marker로 별도 증명되지 않음. 현재 후보는 정확함. 정정 불요.
+  - N-03 INFO / NON-BLOCKING: index.html EOL만 정규화함. 현재 기능 영향 없음. 정정 불요.
+  - N-04 INFO / NON-BLOCKING: 기존 String.replace의 조용한 target-drift 동작. 이번 정정 범위 밖. 정정 불요.
+
+현재 다음 행동 하나: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
+
+### 이전 권위 — IR-MOBILE-03 문서 동기화 (2026-10-05, SUPERSEDED / 역사 보존)
+
+아래는 당시 기록이며 현재 권위나 현재 실행 지시가 아니다. 현재 권위는 위의 MOBILE CRLF 항목이다.
 
 - IR-MOBILE-03 착수 기준: PR #2 후보 `d521dc5b41f5395b84aeca193fddc2fff06f0fd6`. fresh fetch 및 PR 조회로 local/remote/PR head 일치, PR #2 open / draft / unmerged, origin/main `ce2dfcc04384962e67d6f4b0ff1ed397cd68aa92`를 직접 확인했다.
 - IR-MOBILE-01 / IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-02는 위 기준 SHA에 원격 저장됐다. 기존 개발 검증은 VALIDATION_STATUS.md §R/§S이며 이번에 재실행하지 않는다.
 - IR-MOBILE-03은 마지막 OPEN 정식 지적의 문서 동기화다. 이 변경의 로컬 커밋 후 상태는 CORRECTED IN LOCAL CANDIDATE / PERSISTENCE + RE-REVIEW PENDING이며, 정확한 원격 저장 확인 전에는 저장 완료로 취급하지 않는다.
 - 사용자 전달 정식 Independent Review 판정은 REQUEST CHANGES로 유지한다. 새 독립 재리뷰가 실제 통과하기 전 Independent Review PASS, VALIDATED, CLOSED 또는 main 통합 완료로 승격하지 않는다.
 
-현재 다음 행동 하나: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
+당시(SUPERSEDED) 다음 행동: 이 IR-MOBILE-03 문서 수정이 PR #2에 정확히 저장되고 Control Tower가 원격 SHA를 확인한 뒤, 그 exact PR #2 후보에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다. 이 Development 세션에서는 요청하거나 시작하지 않는다.
 
 리뷰 스레드 resolve, main 통합, post-merge validation, Android/APK 완료, 실기기 검증, Actual-provider validation, 학습 효능을 주장하지 않는다.
 
