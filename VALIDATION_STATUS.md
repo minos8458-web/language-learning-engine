@@ -874,5 +874,9 @@ npm run build:mobile
 - NOT RUN: `npm test`, `test:api`, PostgreSQL, migration, database 명령, Actual-provider 호출. 어느 NOT RUN 항목도 PASS로 해석하지 않는다.
 - 주장하지 않음: Android/APK 검증, 실기기 검증, 학습 효능.
 - Non-blocking 리뷰 노트: N-01 LOW, N-02 LOW, N-03 INFO, N-04 INFO. 모두 NON-BLOCKING이며 정정 불요.
-- 판정: Post-merge validation = PASS / Control Tower ACCEPTED. 정정 lifecycle = VALIDATED. NOT CLOSED. Review-record = CANDIDATE / PENDING FRESH INDEPENDENT REVIEW. 계획된 additive candidate review-record revision은 ARCHITECTURE_CLARIFICATION_BACKLOG.md `1.83`이며, 이 절은 그 revision이 저장·독립 리뷰·REVIEW-RECORDED·통합·CLOSED 되었음을 주장하지 않는다.
-- 다음 행동 하나 (candidate 저장 후): 정확한 review-record candidate commit에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
+- 판정: Post-merge validation = PASS / Control Tower ACCEPTED (위 `46ec690927c3f83d990bc613389ecfa9ece6fe24`에 고정).
+- Review-record candidate: `691afacde2eec64ca1539a4ea61d4d2214ff62db` (tree `8f6213100b63dc9dd2408ce61786002e7823a5c0`). 새롭고 별도인 읽기 전용 Independent Review: APPROVE, blocking finding 0.
+- Review-record 통합 / 현재 canonical main: `5c09715238b127627c5e8d9e38fc6fbbd6f585a4` (tree `8f6213100b63dc9dd2408ce61786002e7823a5c0`, parent `46ec690927c3f83d990bc613389ecfa9ece6fe24`). Review-record (ARCHITECTURE_CLARIFICATION_BACKLOG.md `1.83`) = REVIEW-RECORDED / CANONICAL ON MAIN.
+- 문서 review-record의 통합은 mobile runtime 검증의 재실행이 아니며, 위 NOT RUN 항목 어느 것도 PASS로 바꾸지 않는다. 이 절의 runtime 증거는 계속 `46ec690927c3f83d990bc613389ecfa9ece6fe24`에만 고정된다.
+- 정정 lifecycle = VALIDATED / REVIEW-RECORDED / CLOSURE-SYNC CANDIDATE / NOT CLOSED. Closure-sync = CANDIDATE / NOT CLOSED (브랜치 `validation/mobile-crlf-closure-sync-20261011`, base `5c09715238b127627c5e8d9e38fc6fbbd6f585a4`).
+- 다음 행동 하나: 이 closure-sync candidate가 원격 저장된 뒤, 그 정확한 candidate에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
