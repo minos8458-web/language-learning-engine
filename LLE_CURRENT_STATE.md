@@ -12577,19 +12577,22 @@ historical ledger does not.
 
 ## 10. Next Action
 
-### 현재 권위 — MOBILE CRLF VALIDATED / REVIEW-RECORD CANDIDATE / NOT CLOSED (2026-10-10)
+### 현재 권위 — MOBILE CRLF VALIDATED / REVIEW-RECORDED / CLOSURE-SYNC CANDIDATE / NOT CLOSED (2026-10-11)
 
 - 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
 - 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED.
 - Runtime main 통합 commit: `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). main 통합 = COMPLETE. 상태 전용 동기화 commit: `46ec690927c3f83d990bc613389ecfa9ece6fe24` (parent `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a`). 상태 동기화 = COMPLETE.
-- 검증된 최종 main: `46ec690927c3f83d990bc613389ecfa9ece6fe24`, tree `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`.
+- Post-merge validation이 수행된 validated runtime/status baseline: `46ec690927c3f83d990bc613389ecfa9ece6fe24`, tree `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`. 이후 문서 전용 main commit은 이 검증 기준 SHA를 바꾸지 않는다.
 - Post-merge Windows-local validation (2026-10-09, 위 exact SHA/tree) = PASS / Control Tower ACCEPTED: `npm ci --ignore-scripts --no-audit --no-fund` PASS, `git diff --check` PASS, `npm run test:mobile` tests 110 / pass 110 / fail 0 / cancelled 0 / skipped 0 / todo 0, `npm run build:mobile` PASS, 최종 tracked/staged/untracked clean, stash 0. 상세 증거는 VALIDATION_STATUS.md §T.
-- 정정 lifecycle = VALIDATED. NOT CLOSED. Review-record = CANDIDATE / PENDING FRESH INDEPENDENT REVIEW (ARCHITECTURE_CLARIFICATION_BACKLOG.md revision `1.83`, branch `validation/mobile-crlf-review-record-20261009`).
+- Review-record candidate: `691afacde2eec64ca1539a4ea61d4d2214ff62db` (tree `8f6213100b63dc9dd2408ce61786002e7823a5c0`, branch `validation/mobile-crlf-review-record-20261009`). 새롭고 별도인 읽기 전용 Independent Review: APPROVE, blocking finding 0.
+- Review-record main 통합: `5c09715238b127627c5e8d9e38fc6fbbd6f585a4` (tree `8f6213100b63dc9dd2408ce61786002e7823a5c0` = 리뷰된 candidate tree, parent `46ec690927c3f83d990bc613389ecfa9ece6fe24`). 이 문서 전용 commit은 runtime 검증이 실행된 SHA가 아니며, mobile runtime 검증 재실행이나 NOT RUN 항목의 PASS 전환을 의미하지 않는다.
+- ARCHITECTURE_CLARIFICATION_BACKLOG.md revision `1.83` = REVIEW-RECORDED / CANONICAL ON MAIN.
+- 정정 lifecycle = VALIDATED / REVIEW-RECORDED / CLOSURE-SYNC CANDIDATE / NOT CLOSED. Closure-sync 브랜치: `validation/mobile-crlf-closure-sync-20261011` (base `5c09715238b127627c5e8d9e38fc6fbbd6f585a4`). 이 closure-sync candidate는 아직 독립 리뷰·통합되지 않았다.
 - NOT RUN: `npm test`(PostgreSQL 연결 테스트 포함으로 범위 제외), `test:api`, PostgreSQL, migration/database 명령, Actual-provider 호출. 어느 NOT RUN도 PASS로 해석하지 않는다.
 - 주장하지 않음: Android/APK 또는 실기기 검증, 학습 효능, 전체 npm test PASS, PostgreSQL PASS.
 - Non-blocking 리뷰 노트 N-01 LOW, N-02 LOW, N-03 INFO, N-04 INFO는 NON-BLOCKING으로 유지되며 정정 불요.
 
-현재 다음 행동 하나: 저장된 이 정확한 review-record candidate commit에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
+현재 다음 행동 하나: 이 정확한 문서 전용 closure-sync candidate가 commit되고 원격 저장된 뒤, 그 정확한 closure-sync candidate에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
 
 ### 이전 권위 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09, SUPERSEDED / 역사 보존)
 
