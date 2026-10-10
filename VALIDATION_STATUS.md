@@ -857,3 +857,22 @@ npm run build:mobile
 - git diff --check 통과. 허용된 production/test와 MOBILE_APP_HANDOFF.md·VALIDATION_STATUS.md의 최소 증거만 변경했다. 실행한 source/test를 ordinary local commit으로 저장하고 원본 SHA를 보존하는 bundle을 전달한다. Work push 재시도 없음; 원격 반영 완료를 주장하지 않는다.
 - IR-MOBILE-02 = CORRECTED IN CANDIDATE / RE-REVIEW PENDING. IR-MOBILE-01 같은 상태 유지. IR-MOBILE-03 = HOLD / OPEN; 전체 후보 REQUEST CHANGES 유지. Independent Review PASS/CLOSED·재리뷰 요청·스레드 resolve·main 병합 없음. 역사적 상태 문구의 광범위 정리 없음.
 - 다음 행동 하나: Control Tower가 IR-MOBILE-02 bundle의 정확한 커밋 원격 저장을 판정한다.
+
+## T. MOBILE CRLF post-merge 정정 — post-merge Windows-local 검증 — 2026-10-09
+
+- 범위: 이 절의 증거는 정확히 main `46ec690927c3f83d990bc613389ecfa9ece6fe24` (tree `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`)에만 고정된다. 이전 절(§A–§S)의 runtime·PostgreSQL·전체 suite 증거를 덮어쓰거나 재해석하지 않는다.
+- 리뷰된 정정: commit `15f562333def8bc0c13efb4e16a01c80d5913de8` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js`. Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED, blocking finding 0.
+- Runtime main 통합: `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93` = 리뷰된 tree). 상태 전용 동기화: `46ec690927c3f83d990bc613389ecfa9ece6fe24` (parent `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a`).
+- 검증된 최종 main/tree: `46ec690927c3f83d990bc613389ecfa9ece6fe24` / `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`.
+- 환경: Windows-local, worktree `E:/Projects/LLE_INTEGRATION_MOBILE_20261005`, Node `v24.18.0`, npm `11.16.0`; repository engines `>=20.19.0` 충족.
+- 실행 결과 (순서대로, 각 단계 fail-fast):
+  1. `npm ci --ignore-scripts --no-audit --no-fund` → PASS.
+  2. `git diff --check` → PASS.
+  3. `npm run test:mobile` → PASS, tests 110 / pass 110 / fail 0 / cancelled 0 / skipped 0 / todo 0.
+  4. `npm run build:mobile` → PASS.
+- 최종 Git 상태: branch `main`, HEAD = origin/main = `46ec690927c3f83d990bc613389ecfa9ece6fe24`, tracked clean, staged clean, untracked clean, stash 0. `mobile/dist`는 Git 제외 생성물(`!! mobile/dist/`)이며 배포/APK/실기기 증거가 아니다.
+- NOT RUN: `npm test`, `test:api`, PostgreSQL, migration, database 명령, Actual-provider 호출. 어느 NOT RUN 항목도 PASS로 해석하지 않는다.
+- 주장하지 않음: Android/APK 검증, 실기기 검증, 학습 효능.
+- Non-blocking 리뷰 노트: N-01 LOW, N-02 LOW, N-03 INFO, N-04 INFO. 모두 NON-BLOCKING이며 정정 불요.
+- 판정: Post-merge validation = PASS / Control Tower ACCEPTED. 정정 lifecycle = VALIDATED. NOT CLOSED. Review-record = CANDIDATE / PENDING FRESH INDEPENDENT REVIEW. 계획된 additive candidate review-record revision은 ARCHITECTURE_CLARIFICATION_BACKLOG.md `1.83`이며, 이 절은 그 revision이 저장·독립 리뷰·REVIEW-RECORDED·통합·CLOSED 되었음을 주장하지 않는다.
+- 다음 행동 하나 (candidate 저장 후): 정확한 review-record candidate commit에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.

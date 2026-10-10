@@ -12577,7 +12577,23 @@ historical ledger does not.
 
 ## 10. Next Action
 
-### 현재 권위 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09)
+### 현재 권위 — MOBILE CRLF VALIDATED / REVIEW-RECORD CANDIDATE / NOT CLOSED (2026-10-10)
+
+- 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
+- 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED.
+- Runtime main 통합 commit: `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). main 통합 = COMPLETE. 상태 전용 동기화 commit: `46ec690927c3f83d990bc613389ecfa9ece6fe24` (parent `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a`). 상태 동기화 = COMPLETE.
+- 검증된 최종 main: `46ec690927c3f83d990bc613389ecfa9ece6fe24`, tree `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`.
+- Post-merge Windows-local validation (2026-10-09, 위 exact SHA/tree) = PASS / Control Tower ACCEPTED: `npm ci --ignore-scripts --no-audit --no-fund` PASS, `git diff --check` PASS, `npm run test:mobile` tests 110 / pass 110 / fail 0 / cancelled 0 / skipped 0 / todo 0, `npm run build:mobile` PASS, 최종 tracked/staged/untracked clean, stash 0. 상세 증거는 VALIDATION_STATUS.md §T.
+- 정정 lifecycle = VALIDATED. NOT CLOSED. Review-record = CANDIDATE / PENDING FRESH INDEPENDENT REVIEW (ARCHITECTURE_CLARIFICATION_BACKLOG.md revision `1.83`, branch `validation/mobile-crlf-review-record-20261009`).
+- NOT RUN: `npm test`(PostgreSQL 연결 테스트 포함으로 범위 제외), `test:api`, PostgreSQL, migration/database 명령, Actual-provider 호출. 어느 NOT RUN도 PASS로 해석하지 않는다.
+- 주장하지 않음: Android/APK 또는 실기기 검증, 학습 효능, 전체 npm test PASS, PostgreSQL PASS.
+- Non-blocking 리뷰 노트 N-01 LOW, N-02 LOW, N-03 INFO, N-04 INFO는 NON-BLOCKING으로 유지되며 정정 불요.
+
+현재 다음 행동 하나: 저장된 이 정확한 review-record candidate commit에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
+
+### 이전 권위 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09, SUPERSEDED / 역사 보존)
+
+아래는 당시 기록이며 현재 권위나 현재 실행 지시가 아니다. 현재 권위는 위의 MOBILE CRLF VALIDATED 항목이다.
 
 - 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
 - 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (branch `development/mobile-postmerge-crlf-fix-20261007`, parent `efdfee5b0036ed0f8b05db210351be0d1b2f8df5`). 리뷰된 정정 tree: `9438b252e42f51b84b7022b7a280b8c5fdeefe93`.
@@ -12591,7 +12607,7 @@ historical ledger does not.
   - N-03 INFO / NON-BLOCKING: index.html EOL만 정규화함. 현재 기능 영향 없음. 정정 불요.
   - N-04 INFO / NON-BLOCKING: 기존 String.replace의 조용한 target-drift 동작. 이번 정정 범위 밖. 정정 불요.
 
-현재 다음 행동 하나: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
+당시(SUPERSEDED) 다음 행동: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
 
 ### 이전 권위 — IR-MOBILE-03 문서 동기화 (2026-10-05, SUPERSEDED / 역사 보존)
 
