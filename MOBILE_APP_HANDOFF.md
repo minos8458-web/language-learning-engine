@@ -13,7 +13,21 @@
 사용자 승인, AI 제안, 이전 보고, 직접 검증 결과를 구분하며, 확인하지 못한 것은 `미확인`으로 남긴다.
 새 세션의 시작 규칙은 `BOOTSTRAP.md`를 따른다.
 
-## 현재 체크포인트 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09)
+## 현재 체크포인트 — MOBILE CRLF VALIDATED / REVIEW-RECORD CANDIDATE / NOT CLOSED (2026-10-10)
+
+- 역할/경로: Validation/Integration 세션, 예약 통합 worktree `E:/Projects/LLE_INTEGRATION_MOBILE_20261005`; 저장소 `minos8458-web/language-learning-engine`; candidate 브랜치 `validation/mobile-crlf-review-record-20261009` (base `46ec690927c3f83d990bc613389ecfa9ece6fe24`).
+- 리뷰된 정정 commit: `15f562333def8bc0c13efb4e16a01c80d5913de8` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`). Independent Review: APPROVE / MAIN-INTEGRATION ELIGIBLE / Control Tower ACCEPTED.
+- Runtime main 통합 commit `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` (tree `9438b252e42f51b84b7022b7a280b8c5fdeefe93`), 상태 전용 동기화 commit `46ec690927c3f83d990bc613389ecfa9ece6fe24`. main 통합 = COMPLETE. 상태 동기화 = COMPLETE.
+- 검증된 최종 main: `46ec690927c3f83d990bc613389ecfa9ece6fe24`, tree `1c1b77f7b5e387772e1f1727dd1ae2f1ffd94ff8`.
+- Post-merge Windows-local validation (2026-10-09) = PASS / Control Tower ACCEPTED: `npm ci --ignore-scripts --no-audit --no-fund` PASS, `git diff --check` PASS, `npm run test:mobile` tests 110 / pass 110 / fail 0 / cancelled 0 / skipped 0 / todo 0, `npm run build:mobile` PASS (`mobile/dist`는 Git 제외 생성물), 최종 clean/stash 0. 상세 VALIDATION_STATUS.md §T.
+- 정정 lifecycle = VALIDATED. NOT CLOSED. Review-record = CANDIDATE / PENDING FRESH INDEPENDENT REVIEW (ARCHITECTURE_CLARIFICATION_BACKLOG.md revision `1.83`, RECORD-ONLY).
+- NOT RUN: `npm test`, `test:api`, PostgreSQL, migration/database 명령, Actual-provider 호출. Android/APK·실기기 검증, 학습 효능, 전체 npm test PASS, PostgreSQL PASS를 주장하지 않는다.
+- Non-blocking 리뷰 노트 N-01 LOW, N-02 LOW, N-03 INFO, N-04 INFO는 NON-BLOCKING으로 유지되며 정정 불요.
+- 다음 행동 하나: 저장된 이 정확한 review-record candidate commit에 대한 새롭고 별도인 읽기 전용 Independent Review를 한 번 진행한다.
+
+이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존하며, 현재 권위는 이 최상단 MOBILE CRLF VALIDATED 체크포인트 하나다.
+
+## 이전 체크포인트 — MOBILE CRLF MAIN INTEGRATED / POST-MERGE VALIDATION PENDING (2026-10-09, PREVIOUS / SUPERSEDED / 역사 보존)
 
 - 역할/경로: Validation/Integration 세션, 예약 통합 worktree `E:/Projects/LLE_INTEGRATION_MOBILE_20261005`; 저장소 `minos8458-web/language-learning-engine`; 브랜치 `main`.
 - 대상: 모바일 standalone build의 post-merge CRLF 정정. 정정 파일은 정확히 `scripts/build-mobile.js`, `tests/mobileClient.test.js` 두 개다.
@@ -24,9 +38,9 @@
 - 식별자 구분: 이 체크포인트는 `fdfe24f6dd9a7f65e6b8f67c41cdcacae6ae753a` 위의 별도 후속 문서 전용 main commit으로 저장되므로, runtime 통합 commit과 최종 origin/main SHA는 서로 다르다. 최종 SHA는 Git 이력/원격으로 식별한다.
 - Post-merge Windows-local validation = PENDING. NOT VALIDATED. NOT CLOSED. PostgreSQL NOT RUN (이 정정 lifecycle). Review-record NOT COMPLETE. 이 문서 수정 자체는 runtime 검증 증거를 제공하지 않으며 npm/테스트/빌드/PostgreSQL을 실행하지 않았다.
 - Non-blocking 리뷰 노트 (정정 불요): N-01 LOW (sourceVersion 별도 계산에 따른 LF/CRLF 전체 HTML 동등성 테스트의 드문 flakiness 가능성), N-02 LOW (주입된 indexHtml 사용이 marker로 별도 증명되지 않음; 현재 후보는 정확함), N-03 INFO (index.html EOL만 정규화; 현재 기능 영향 없음), N-04 INFO (기존 String.replace의 조용한 target-drift; 범위 밖).
-- 다음 행동 하나: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
+- 당시(SUPERSEDED) 다음 행동: 이 상태 전용 동기화가 원격 main에 저장된 뒤, 그 시점의 정확한 최종 origin/main에 대한 새로운 Windows-local post-merge validation을 한 번 진행한다.
 
-이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존하며, 현재 권위는 이 최상단 MOBILE CRLF 체크포인트 하나다.
+(당시 기록, SUPERSEDED) 이하 체크포인트·근거·다음 행동은 각각 당시 기록으로 보존한다. 이 2026-10-09 체크포인트는 역사 기록이며, 현재 권위는 최상단 2026-10-10 MOBILE CRLF VALIDATED 체크포인트 하나다.
 
 ## 이전 체크포인트 — IR-MOBILE-03 문서 동기화 (2026-10-05, PREVIOUS / SUPERSEDED / 역사 보존)
 
