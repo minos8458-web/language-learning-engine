@@ -12659,3 +12659,41 @@ MOBILE-01/02의 허용된 휴대폰 환경에서의 화면·팝업·취소·언�
   milestone. P1 remains `NOT ACTIVATED`; human-data collection remains
   `NOT AUTHORIZED`; learning efficacy remains `NOT VERIFIED`;
   Actual-provider validation remains `NOT ESTABLISHED`.
+
+## 11. F1 Owner Policy Direction Ledger — 2026-10-21 (documentation-only candidate)
+
+> **Governing owner-decision record for F1 direction only.** These 12 decisions were explicitly approved by the Owner in conversation on 2026-10-21 KST. This section records those approvals without altering approved Tier A/Tier C exact contracts or prior milestone histories. The documentation candidate is **NOT INDEPENDENTLY REVIEWED / NOT MAIN-INTEGRATED / NOT VALIDATED / NOT CLOSED**. The current Git `main` baseline at candidate start was `ec934b70ea136b5c3a4c2415c5a243fc81b80398` (tree `7af820a97eef621ff1a99de763e300a9c376ff7f`; Backlog revision 1.83).
+
+### 11.1 Approved policy directions — 12/12 (DIRECTION ONLY)
+
+| Decision key (ledger notation) | Owner-approved policy direction |
+|---|---|
+| F1-ALT-B | Enrollment `COMPLETED` is administrative closure of **all approved protocol obligations**, with no possible future obligation; it is **not** learning success, mastery, efficacy, or cohort evaluation completion. |
+| F1-B02-1 | For each Enrollment, predefine the bounded universe of base and possible conditional obligations under the applicable immutable protocol/condition versions; a currently empty pending-assignment query is insufficient. |
+| F1-B03-1 | Each P1 Enrollment has the same core scope of the selected 18 VI Grammar Nodes linked to Training, Practice, IMMEDIATE, DAY_7, DAY_30. This does **not** approve 86 items or 90 independent responses per participant. |
+| F1-B04-1 | Node-role coverage is the basic obligation identity. Exact version-pinned Item/Assignment allocation and required response counts remain separate decisions. |
+| F1-B05-1 | A valid multi-target Attempt may contribute evidence to multiple eligible Node-role obligations if each Node passes its own evidence conditions; never duplicate the logical response as independent observations or inflate same-obligation repetition. |
+| F1-B06-1 | Normal-performance evidence floor per Node-role: one valid Training activity; one valid Practice execution/submission; one valid scorable Node evaluation separately for IMMEDIATE, DAY_7, DAY_30. This floor is neither the full workload nor a closure predicate. |
+| F1-B07-1 | For the existing 36 response-generating Training/Practice items, use Attempt/finalization as the evidence center, requiring task-related performance evidence. Exposure, clicking, nonblank payload, SCORABLE or Assignment COMPLETED alone is insufficient. |
+| F1-B08-1 | Use bounded deterministic rules pinned to Item/role/version to assess task responsiveness apart from correctness; allow explicitly validated task-relevant errors, and withhold Credit on ambiguity or insufficient evidence. |
+| F1-B09-1 | An approved version-pinned server-side deterministic adjudicator determines Training/Practice responsiveness. An authorized writer/acceptance path validates provenance, frozen inputs, ownership, rule/evaluator versions, idempotency and conflicts; unverifiable decisions confer no Credit. |
+| F1-B10-1 | Node-role Credit is a version-pinned derived projection rebuilt from eligible original Evidence, accepted adjudication/Node evaluation, and approved mapping rules. Deduplicate one logical response within the same obligation; separate Credit, minimum evidence and obligation closure. |
+| F1-B11-1 | Permit explicit obligation-level non-success disposition **only** after approved finite opportunities, obligation-specific evidence and exhaustion of legitimate future follow-up paths are confirmed. It is not normal Credit, academic failure, dropout, Withdrawal or Enrollment COMPLETED. |
+| F1-B12-1 | Model version-pinned finite opportunities and conditional paths per obligation. Distinguish actually offered, used, unused and technically invalid opportunities. Pedagogical retry, replacement and reschedule inherit the original obligation and opportunity limit; new opportunities require an advance-approved rule. Preserve DAY_7/DAY_30 windows, held-out protections and F1-B11-1 explicit disposition. |
+
+Ledger keys identify conversation approvals for traceability; they do not create new runtime reference kinds, schema fields, enums, or canonical contract IDs.
+
+### 11.2 Unapproved exact semantics and governance boundaries
+
+- Still **NOT APPROVED**: exact Item/Assignment selections, repetitions, finite opportunity counts, due windows, expiry/reschedule thresholds, conditional practice allocation, task-responsiveness exact linguistic predicates for the 36 items, adjudicator/writer execution contract, Credit linkage/storage, replay/correction/re-adjudication rules, non-success terminalization predicate, final Enrollment completion declarer/writer, and final no-future-assignment atomicity.
+- F1 remains `MEDIUM / NON-BLOCKING / UNRESOLVED`; B-3 remains `UNRESOLVED`. F2 (§14 completion), F3 (general cohort disposal evidence), F4 (deletion process ordering) and M-new-1 (post-cutoff continuity) remain open. Resolved F-OPS-01 is **not** reopened.
+- P1 is `NOT ELIGIBLE / NOT ACTIVATED`; Pilot Spec remains `Proposed`; the item manifest remains `approved_for_pilot=false`; human-data collection is `NOT AUTHORIZED`; live human-rater remains `DENY-ALL`; Actual-provider/Audio is `NOT AUTHORIZED`; learning efficacy is `NOT VERIFIED`.
+- Do not conflate Assignment `COMPLETED` (implemented narrow B-1b SCORABLE writer) with Node-role Credit/closure or Enrollment `COMPLETED`. Other assignment terminal outcome writers and the Enrollment completion writer are not established by this direction ledger.
+- The approvals do not authorize implementation, schema/API/migration changes, Provider calls, human-data collection, privacy data retention beyond existing policy, P1 activation, or changes to production Progress SSOT and production scheduler. No tests/PostgreSQL/Provider validation was run by this documentation-only record.
+- Existing privacy Withdrawal and Participant deletion rights, Incident `CLOSED — NO RESUME`, retention-end requirements and immutable assignment/exposure/held-out lineage stay unchanged. No new long-term retention authority is created.
+
+### 11.3 Candidate lifecycle and one next action
+
+- Candidate branch: `validation/f1-owner-direction-ledger-20261021`; additive changes permitted only in this Current State file and `ARCHITECTURE_CLARIFICATION_BACKLOG.md` (candidate revision 1.84).
+- This records Owner direction **on a validation branch only** until an exact commit is independently checked and the governed documentation lifecycle is completed. Previous content under §§1–10 remains untouched historical/current-at-its-own-milestone context; this section does not retroactively change those milestones.
+- **Exactly one next action after this candidate is committed and pushed:** Control Tower verifies the exact remote candidate commit, diff, two-file scope and approval 12/12, then routes it for fresh read-only Independent Review. No main cherry-pick/merge is authorized in this step.
